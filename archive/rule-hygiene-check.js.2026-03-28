@@ -1,0 +1,65 @@
+#!/usr/bin/env node
+/**
+ * PostToolUse hook: validates rule files are granular and path-scoped.
+ * Triggers on Write/Edit to any */rules/*.md path.
+ */
+const fs = require('fs');
+
+let input = '';
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', d => input += d);
+process.stdin.on('end', () => {
+  try {
+    const data = JSON.parse(input);
+    const filePath = data.tool_input?.file_path || data.tool_input?.path || '';
+
+    // Only check files in rules directories
+    const normalized = filePath.replace(/\\/g, '/');
+    if (!normalized.includes('/rules/') || !normalized.endsWith('.md')) {
+      process.exit(0);
+    }
+
+    const warnings = [];
+
+    // Check filename
+    const fileName = normalized.split('/').pop().replace('.md', '');
+    const badNames = ['session-', 'gotchas', 'misc', 'notes', 'todo', 'temp'];
+    if (badNames.some(b => fileName.toLowerCase().startsWith(b) || fileName.toLowerCase() === b)) {
+      warnings.push(`Bad rule filename "${fileName}.md" — use a descriptive topic name (e.g. "token-handling.md")`);
+    }
+
+    // Check file content if it exists
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, 'utf8');
+      const lines = content.split('\n');
+
+      if (lines.length > 25) {
+        warnings.push(`Rule file is ${lines.length} lines — keep under 20. Split into multiple files.`);
+      }
+
+      const h2Count = lines.filter(l => l.startsWith('## ')).length;
+      if (h2Count > 2) {
+        warnings.push(`Rule file has ${h2Count} sections (## headers) — likely covers multiple topics. One topic per file.`);
+      }
+    }
+
+    // Check if it should be project-scoped
+    if (normalized.includes('/.claude/rules/') && normalized.includes(process.env.HOME?.replace(/\\/g, '/') || '~')) {
+      // It's in global rules — warn if it seems project-specific
+      const projectKeywords = ['dispatcher', 'bootstrap', 'worker', 'rone', 'teams', 'poller', 'ccc'];
+      if (projectKeywords.some(k => fileName.toLowerCase().includes(k))) {
+        warnings.push(`"${fileName}.md" looks project-specific but is in global rules. Move to the project's .claude/rules/ instead.`);
+      }
+    }
+
+    if (warnings.length > 0) {
+      const result = {
+        decision: "block",
+        reason: "Rule hygiene:\n" + warnings.map(w => `- ${w}`).join('\n')
+      };
+      process.stdout.write(JSON.stringify(result));
+    }
+  } catch (e) {
+    // Don't block on parse errors
+  }
+});

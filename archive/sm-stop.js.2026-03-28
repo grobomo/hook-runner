@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+"use strict";
+var fs = require("fs");
+
+var input = JSON.parse(fs.readFileSync(0, "utf-8"));
+
+// Prevent infinite loop — if we already blocked once this turn, let it through
+if (input.stop_hook_active) process.exit(0);
+
+// Print to TUI so user sees when it fires (stderr goes to terminal, stdout is for Claude)
+process.stderr.write("\x1b[33m⚡ Stop hook: auto-continuing\x1b[0m\n");
+
+// Block with "continue" to auto-approve
+var out = JSON.stringify({
+  decision: "block",
+  reason: "review the jsonl of this convo and see what else can be done, and use your best judgement of what to implement and how, just document your why for future reference"
+});
+process.stdout.write(out);
