@@ -1,8 +1,7 @@
-// Auto-continue: makes Claude keep working instead of stopping to ask
-// Migrated from sm-stop.js
+// Auto-continue: check pending tasks, keep working
 module.exports = function(input) {
   return {
     decision: "block",
-    reason: "review the jsonl of this convo and see what else can be done, and use your best judgement of what to implement and how, just document your why for future reference"
+    reason: "Check TODO.md for pending tasks. If tasks remain, do the next one. If all tasks are complete, think about what an expert dev would do next — clean up, optimize, test, document — and do it. Document your reasoning for future reference."
   };
 };
