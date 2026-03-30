@@ -95,7 +95,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 ## New Modules & Refactor
 - [x] T066: Add SessionStart module: `project-health` (runs --health on session start, warns about issues)
-- [ ] T067: Add PostToolUse module: `test-coverage-check` (warns if test files modified without running tests)
+- [x] T067: Add PostToolUse module: `test-coverage-check` (warns if test files modified without running tests)
 - [ ] T068: Extract main() dispatch into command handler functions (main() is 491 lines)
 
 ## Status
