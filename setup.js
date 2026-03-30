@@ -685,6 +685,8 @@ function main() {
   var listMode = args.indexOf("--list") !== -1;
   var testMode = args.indexOf("--test") !== -1;
   var uninstallMode = args.indexOf("--uninstall") !== -1;
+  var upgradeMode = args.indexOf("--upgrade") !== -1;
+  var openMode = args.indexOf("--open") !== -1;
   var helpMode = args.indexOf("--help") !== -1 || args.indexOf("-h") !== -1;
 
   // --- Help ---
@@ -701,6 +703,7 @@ function main() {
     console.log("  --list          Show catalog vs installed modules with status");
     console.log("  --stats         Quick text summary of hook log activity");
     console.log("  --test          Run all test suites");
+    console.log("  --upgrade       Fetch latest runners from GitHub and update local copies");
     console.log("  --uninstall     Remove hook-runner from settings.json and hooks dir");
     console.log("  --prune [N]     Prune log entries older than N days (default 7)");
     console.log("  --version, -v   Show version");
@@ -709,6 +712,7 @@ function main() {
     console.log("Options:");
     console.log("  --dry-run       Preview changes without modifying anything");
     console.log("  --install       Skip report, just install runners");
+    console.log("  --open          Open report in browser (default: don't open)");
     console.log("  --force         With --uninstall: also remove non-empty module dirs");
     console.log("");
     console.log("Examples:");
@@ -722,6 +726,68 @@ function main() {
   // --- Version ---
   if (versionMode) {
     console.log("hook-runner v" + VERSION);
+    return;
+  }
+
+  // --- Upgrade mode: fetch latest from GitHub and update local copies ---
+  if (upgradeMode) {
+    console.log("[hook-runner] Upgrade");
+    console.log("========================");
+    var source = "grobomo/hook-runner";
+    var branch = "main";
+
+    // Core files to upgrade
+    var coreFiles = [
+      "setup.js", "report.js",
+      "run-pretooluse.js", "run-posttooluse.js", "run-stop.js",
+      "run-sessionstart.js", "run-userpromptsubmit.js",
+      "load-modules.js", "hook-log.js", "run-async.js"
+    ];
+
+    // Check remote version first
+    var remoteSetup = fetchFromGitHub(source, branch, "setup.js");
+    if (!remoteSetup) {
+      console.log("  ERROR: Could not fetch from GitHub. Check network connection.");
+      return;
+    }
+    var remoteVersionMatch = remoteSetup.match(/var VERSION\s*=\s*"([^"]+)"/);
+    var remoteVersion = remoteVersionMatch ? remoteVersionMatch[1] : "unknown";
+    console.log("  Local version:  " + VERSION);
+    console.log("  Remote version: " + remoteVersion);
+    console.log("");
+
+    if (remoteVersion === VERSION && !args.includes("--force")) {
+      console.log("  Already up to date. Use --force to re-download anyway.");
+      return;
+    }
+
+    var updated = 0, skipped = 0;
+    for (var ui = 0; ui < coreFiles.length; ui++) {
+      var fileName = coreFiles[ui];
+      var content = fileName === "setup.js" ? remoteSetup : fetchFromGitHub(source, branch, fileName);
+      if (!content) {
+        console.log("  SKIP: " + fileName + " (not found on remote)");
+        skipped++;
+        continue;
+      }
+      var dest = path.join(HOOKS_DIR, fileName);
+      if (dryRun) {
+        var exists = fs.existsSync(dest);
+        console.log("  " + (exists ? "UPDATE" : "CREATE") + ": " + fileName);
+      } else {
+        fs.writeFileSync(dest, content, "utf-8");
+        console.log("  Updated: " + fileName);
+      }
+      updated++;
+    }
+
+    console.log("");
+    if (dryRun) {
+      console.log("  Dry-run complete. " + updated + " file(s) would be updated.");
+    } else {
+      console.log("  Upgrade complete: " + updated + " file(s) updated" + (skipped ? ", " + skipped + " skipped" : "") + ".");
+      console.log("  Run 'node setup.js --health' to verify.");
+    }
     return;
   }
 
@@ -1099,7 +1165,7 @@ function main() {
   var beforeReport = path.join(REPORT_DIR, "hooks-report-before.html");
   generateReport(scan, beforeReport, hookStats);
   console.log("  Report: " + beforeReport);
-  openFile(beforeReport);
+  if (openMode) openFile(beforeReport);
 
   if (reportOnly) {
     console.log("\n[hook-runner] Report-only mode. Done.");
@@ -1139,7 +1205,7 @@ function main() {
   var afterReport = path.join(REPORT_DIR, "hooks-report.html");
   generateReport(afterScan, afterReport, hookStats);
   console.log("  Report: " + afterReport);
-  openFile(afterReport);
+  if (openMode) openFile(afterReport);
 
   // Summary
   console.log("");

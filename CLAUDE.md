@@ -53,6 +53,7 @@ node setup.js --list        # show catalog vs installed modules
 node setup.js --test        # run all test suites
 node setup.js --uninstall   # remove hook-runner from system
 node setup.js --prune [N]   # prune log entries older than N days (default 7)
+node setup.js --upgrade     # fetch latest from GitHub
 node setup.js --version     # show version
 ```
 
