@@ -15,22 +15,11 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T012: Report fixes — chevron on left, no double line spacing
 - [x] T013: Cleanup — TODO, stale branches, gate fixes documented
 
-## Gate Fixes (in ~/.claude/hooks/run-modules/PreToolUse/)
-These were made to the live hooks, not committed to this repo (user-specific enforcement):
-- **continuous-claude-gate.js**: Renamed to "Tracked Workflow Gate". Removed CONTINUOUS_CLAUDE=1 env bypass. Added bootstrap allowlist (.gitignore, .json, ~/.claude/). Generic dev-team language with WHY reasoning.
-- **spec-gate.js**: Generic dev-team language, kept WHY reasoning.
-- **branch-pr-gate.js**: Generic language. Added rebase/merge/cherry-pick --abort and gh pr close/view/list as allowed repair operations.
-- **root-cause-gate.js**: Removed rebase/merge --abort from cleanup patterns — they're recovery, not symptoms.
-- **remote-tracking-gate.js**: Fixed tool_input parsing to handle object (not just JSON string).
-
-## Active
-- [x] T014: Sync repo example modules with live fixes
-- [x] T015: Sync local skill copy after repo changes
-- [x] T016: Module catalog — move all modules into repo under modules/ directory
-- [x] T017: Config file — modules.yaml format to pick which modules to install
-- [x] T018: Sync command — `setup.js --sync` pulls selected modules from GitHub
-- [x] T019: Update SKILL.md/README with sync workflow, test e2e on fresh install
+## Completed (continued)
+- [x] T014-T015: Sync repo modules with live fixes, sync local skill
+- [x] T016-T019: Module catalog (15 modules), YAML config, sync from GitHub
 - [x] T020: Fix enforcement-gate — dirty-tree check only on main (not task branches)
+- [x] T021: Sync marketplace copy, fix catalog/bundled auto-continue divergence
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
