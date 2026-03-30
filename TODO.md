@@ -61,10 +61,11 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T044: Add secret-scan-gate PreToolUse module
 - [x] T045: Add UserPromptSubmit runner + installer + health check support
 - [x] T046: Update CLAUDE.md with accurate test counts and runner list
+- [x] T047: Add module validation test (loads + calls every module with mock input)
 
 ## Status
 All tasks complete. Project is mature and stable:
-- 46 tasks completed, 0 pending
+- 47 tasks completed, 0 pending
 - 33 tests passing (14 runner + 6 wizard + 13 async)
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
 - Report works for both hook-runner users and standalone hooks users
