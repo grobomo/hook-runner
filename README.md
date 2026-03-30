@@ -33,6 +33,7 @@ No installation required — just clone and run `node setup.js --report`.
 /hook-runner health       # verify all runners and modules load correctly
 /hook-runner sync         # sync modules from GitHub per modules.yaml
 /hook-runner stats        # quick text summary of hook log activity
+/hook-runner list         # show catalog vs installed modules
 /hook-runner prune        # prune log entries older than 7 days
 /hook-runner version      # show hook-runner version
 ```
@@ -181,6 +182,11 @@ Full catalog in `modules/` directory:
 | `no-adhoc-commands` | Blocks raw aws/ssh/docker/kubectl, forces scripts/ |
 | `secret-scan-gate` | Blocks git commit if staged diff contains API keys, tokens, or passwords |
 | `aws-tagging-gate` | Enforces required tags on AWS resource creation (env-configurable) |
+
+### UserPromptSubmit (processes user prompts)
+| Module | Description |
+|--------|-------------|
+| `prompt-logger` | Logs prompts to `~/.claude/hooks/prompt-log.jsonl` for audit (never blocks) |
 
 ### PostToolUse (checks after tool execution)
 | Module | Description |

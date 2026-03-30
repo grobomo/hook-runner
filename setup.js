@@ -18,6 +18,7 @@
  *   node setup.js --sync           # sync modules from GitHub per modules.yaml
  *   node setup.js --sync --dry-run # preview sync without installing
  *   node setup.js --stats           # quick text summary of hook log
+ *   node setup.js --list            # show catalog vs installed modules
  *   node setup.js --prune 7        # prune log entries older than 7 days
  *   node setup.js --prune 7 --dry-run
  *   node setup.js --version        # show version
@@ -1262,6 +1263,7 @@ function main() {
   var versionMode = args.indexOf("--version") !== -1 || args.indexOf("-v") !== -1;
   var pruneMode = args.indexOf("--prune") !== -1;
   var statsMode = args.indexOf("--stats") !== -1;
+  var listMode = args.indexOf("--list") !== -1;
 
   // --- Version ---
   if (versionMode) {
@@ -1320,6 +1322,87 @@ function main() {
     }
     if (!hasActivity) console.log("  No blocks or errors recorded.");
     console.log("");
+    return;
+  }
+
+  // --- List mode: show catalog vs installed modules ---
+  if (listMode) {
+    console.log("[hook-runner] Module List");
+    console.log("========================");
+
+    // Catalog modules (from repo modules/ directory)
+    var catalogDir = path.join(REPO_DIR, "modules");
+    var events = ["PreToolUse", "PostToolUse", "UserPromptSubmit", "Stop", "SessionStart"];
+    var catalog = {};
+    var catalogCount = 0;
+    for (var li = 0; li < events.length; li++) {
+      var evDir = path.join(catalogDir, events[li]);
+      catalog[events[li]] = [];
+      try {
+        var files = fs.readdirSync(evDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+        catalog[events[li]] = files;
+        catalogCount += files.length;
+      } catch(e) {}
+    }
+
+    // Installed modules (from live run-modules/)
+    var liveDir = path.join(HOOKS_DIR, "run-modules");
+    var installed = {};
+    var installedCount = 0;
+    for (var lj = 0; lj < events.length; lj++) {
+      var livEvDir = path.join(liveDir, events[lj]);
+      installed[events[lj]] = [];
+      try {
+        var livFiles = fs.readdirSync(livEvDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+        installed[events[lj]] = livFiles;
+        installedCount += livFiles.length;
+      } catch(e) {}
+    }
+
+    // Display
+    for (var lk = 0; lk < events.length; lk++) {
+      var ev = events[lk];
+      var catMods = catalog[ev];
+      var instMods = installed[ev];
+      if (catMods.length === 0 && instMods.length === 0) continue;
+
+      console.log("");
+      console.log("  " + ev + ":");
+      var allMods = {};
+      for (var cm = 0; cm < catMods.length; cm++) allMods[catMods[cm]] = { catalog: true, installed: false };
+      for (var im = 0; im < instMods.length; im++) {
+        if (!allMods[instMods[im]]) allMods[instMods[im]] = { catalog: false, installed: false };
+        allMods[instMods[im]].installed = true;
+      }
+      var modNames = Object.keys(allMods).sort();
+      for (var mn = 0; mn < modNames.length; mn++) {
+        var m = allMods[modNames[mn]];
+        var status = m.installed && m.catalog ? " [installed]" :
+                     m.installed && !m.catalog ? " [installed, custom]" :
+                     " [available]";
+        console.log("    " + modNames[mn].replace(".js", "") + status);
+      }
+    }
+
+    // Also check for project-scoped modules in live
+    try {
+      var liveEntries = fs.readdirSync(path.join(liveDir, "PreToolUse"), { withFileTypes: true });
+      var projDirs = liveEntries.filter(function(e) { return e.isDirectory(); });
+      if (projDirs.length > 0) {
+        console.log("");
+        console.log("  Project-scoped:");
+        for (var pd = 0; pd < projDirs.length; pd++) {
+          var projPath = path.join(liveDir, "PreToolUse", projDirs[pd].name);
+          var projMods = fs.readdirSync(projPath).filter(function(f) { return f.endsWith(".js"); });
+          for (var pm = 0; pm < projMods.length; pm++) {
+            console.log("    PreToolUse/" + projDirs[pd].name + "/" + projMods[pm].replace(".js", "") + " [installed]");
+          }
+        }
+      }
+    } catch(e) {}
+
+    console.log("");
+    console.log("[hook-runner] " + installedCount + " installed, " + catalogCount + " in catalog");
     return;
   }
 

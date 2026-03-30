@@ -48,6 +48,7 @@ node setup.js --dry-run     # preview changes
 node setup.js --health      # verify runners + modules
 node setup.js --sync        # sync modules from GitHub
 node setup.js --stats       # text summary of hook log
+node setup.js --list        # show catalog vs installed modules
 node setup.js --prune [N]   # prune log entries older than N days (default 7)
 node setup.js --version     # show version
 ```
