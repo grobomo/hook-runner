@@ -32,6 +32,8 @@ No installation required — just clone and run `node setup.js --report`.
 /hook-runner dry-run      # preview changes without modifying anything
 /hook-runner health       # verify all runners and modules load correctly
 /hook-runner sync         # sync modules from GitHub per modules.yaml
+/hook-runner prune        # prune log entries older than 7 days
+/hook-runner version      # show hook-runner version
 ```
 
 The setup wizard will:
@@ -101,7 +103,13 @@ Rules:
 
 ## Logging
 
-Runners log every module invocation to `~/.claude/hooks/hook-log.jsonl`. Each line records the timestamp, event, module name, result (pass/block/error), and context (tool name, command snippet, project). The log auto-rotates at 10MB.
+Runners log every module invocation to `~/.claude/hooks/hook-log.jsonl`. Each line records the timestamp, event, module name, result (pass/block/error), and context (tool name, command snippet, project). The log auto-rotates at 10MB. Stats include both current and rotated log files.
+
+```bash
+/hook-runner prune             # prune entries older than 7 days
+node setup.js --prune 3        # keep only last 3 days
+node setup.js --prune 7 --dry-run  # preview without deleting
+```
 
 The setup report (`/hook-runner report`) reads the log and shows hit counts and sample triggers per module.
 

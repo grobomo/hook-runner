@@ -52,10 +52,11 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 ## Enhancements
 - [x] T039: Log rotation in stats, --prune command, --version flag
+- [x] T040: README — document prune and version commands
 
 ## Status
 All tasks complete. Project is mature and stable:
-- 39 tasks completed, 0 pending
+- 40 tasks completed, 0 pending
 - 33 tests passing (14 runner + 6 wizard + 13 async)
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
 - Report works for both hook-runner users and standalone hooks users
