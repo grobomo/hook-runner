@@ -4,6 +4,7 @@
 var fs = require("fs");
 var path = require("path");
 var loadModules = require("./load-modules");
+var hookLog = require("./hook-log");
 
 var input;
 try {
@@ -12,17 +13,22 @@ try {
   process.exit(0);
 }
 
+var ctx = hookLog.extractContext("PostToolUse", input);
 var modules = loadModules(path.join(__dirname, "run-modules", "PostToolUse"));
 
 for (var i = 0; i < modules.length; i++) {
+  var modName = path.basename(modules[i], ".js");
   try {
     var mod = require(modules[i]);
     var result = mod(input);
     if (result && result.decision) {
+      hookLog.logHook("PostToolUse", modName, result.decision, Object.assign({}, ctx, { reason: result.reason }));
       process.stdout.write(JSON.stringify(result));
       process.exit(0);
     }
+    hookLog.logHook("PostToolUse", modName, "pass", ctx);
   } catch (e) {
-    process.stderr.write("hook-runner PostToolUse " + path.basename(modules[i]) + " error: " + e.message + "\n");
+    hookLog.logHook("PostToolUse", modName, "error", Object.assign({}, ctx, { reason: e.message }));
+    process.stderr.write("hook-runner PostToolUse " + modName + " error: " + e.message + "\n");
   }
 }

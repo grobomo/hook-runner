@@ -21,6 +21,12 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T020: Fix enforcement-gate — dirty-tree check only on main (not task branches)
 - [x] T021: Sync marketplace copy, fix catalog/bundled auto-continue divergence
 
+## Active
+- [ ] T022: Centralized hook logger — JSONL log of every module trigger with context
+- [ ] T023: Stats reader — parse log, compute per-module counts + sample triggers
+- [ ] T024: Report integration — show counts inline, expandable examples per module
+- [ ] T025: Update runners to log, sync all copies, test e2e
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type

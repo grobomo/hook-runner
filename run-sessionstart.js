@@ -5,6 +5,7 @@
 var fs = require("fs");
 var path = require("path");
 var loadModules = require("./load-modules");
+var hookLog = require("./hook-log");
 
 var input;
 try {
@@ -13,18 +14,24 @@ try {
   process.exit(0);
 }
 
+var ctx = hookLog.extractContext("SessionStart", input);
 var modules = loadModules(path.join(__dirname, "run-modules", "SessionStart"));
 var output = [];
 
 for (var i = 0; i < modules.length; i++) {
+  var modName = path.basename(modules[i], ".js");
   try {
     var mod = require(modules[i]);
     var result = mod(input);
     if (result && result.text) {
+      hookLog.logHook("SessionStart", modName, "text", ctx);
       output.push(result.text);
+    } else {
+      hookLog.logHook("SessionStart", modName, "pass", ctx);
     }
   } catch (e) {
-    process.stderr.write("hook-runner SessionStart " + path.basename(modules[i]) + " error: " + e.message + "\n");
+    hookLog.logHook("SessionStart", modName, "error", Object.assign({}, ctx, { reason: e.message }));
+    process.stderr.write("hook-runner SessionStart " + modName + " error: " + e.message + "\n");
   }
 }
 
