@@ -31,6 +31,9 @@ custom_commands:
   - name: health
     command: "node $SKILL_DIR/setup.js --health"
     description: "Verify all runners and modules load correctly"
+  - name: stats
+    command: "node $SKILL_DIR/setup.js --stats"
+    description: "Quick text summary of hook log — blocks, errors, active hooks"
   - name: prune
     command: "node $SKILL_DIR/setup.js --prune 7"
     description: "Prune hook log entries older than 7 days"
