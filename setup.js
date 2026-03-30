@@ -15,6 +15,8 @@
  *   node setup.js --report         # just generate the report
  *   node setup.js --dry-run        # show what would change, don't do it
  *   node setup.js --install        # skip report, just install
+ *   node setup.js --sync           # sync modules from GitHub per modules.yaml
+ *   node setup.js --sync --dry-run # preview sync without installing
  */
 var fs = require("fs");
 var path = require("path");
