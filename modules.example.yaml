@@ -38,6 +38,7 @@ modules:
 
   SessionStart:
     - load-instructions      # inject working instructions at session start
+    # - backup-check         # async: warn if claude-backup is stale (>72h)
 
 # Project-scoped modules (optional)
 # These only run when CLAUDE_PROJECT_DIR basename matches the key
