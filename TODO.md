@@ -74,10 +74,11 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T051: Fix --list to scan project-scoped modules in all events (not just PreToolUse)
 - [x] T052: Update SKILL.md with --list command, UserPromptSubmit runner, and keyword
 - [x] T053: Add GitHub Actions CI test workflow + cross-platform path fix in test scripts
+- [x] T054: Add CI badge to README + marketplace sync
 
 ## Status
 All tasks complete. Project is mature and stable:
-- 53 tasks completed, 0 pending
+- 54 tasks completed, 0 pending
 - 79 tests passing across 5 test files (16 runner + 6 wizard + 13 async + 34 module + 10 sync)
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
 - 17 modules in catalog (11 PreToolUse, 1 PostToolUse, 1 UserPromptSubmit, 2 SessionStart, 2 Stop)
