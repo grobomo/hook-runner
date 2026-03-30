@@ -3,3 +3,4 @@ archive/
 *.log
 .DS_Store
 .test-results/
+SESSION_STATE.md
