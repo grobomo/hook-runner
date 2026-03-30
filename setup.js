@@ -1384,22 +1384,29 @@ function main() {
       }
     }
 
-    // Also check for project-scoped modules in live
-    try {
-      var liveEntries = fs.readdirSync(path.join(liveDir, "PreToolUse"), { withFileTypes: true });
-      var projDirs = liveEntries.filter(function(e) { return e.isDirectory(); });
-      if (projDirs.length > 0) {
-        console.log("");
-        console.log("  Project-scoped:");
+    // Also check for project-scoped modules in all event directories
+    var projScoped = [];
+    for (var pe = 0; pe < events.length; pe++) {
+      try {
+        var liveEvtDir = path.join(liveDir, events[pe]);
+        var liveEntries = fs.readdirSync(liveEvtDir, { withFileTypes: true });
+        var projDirs = liveEntries.filter(function(e) { return e.isDirectory(); });
         for (var pd = 0; pd < projDirs.length; pd++) {
-          var projPath = path.join(liveDir, "PreToolUse", projDirs[pd].name);
+          var projPath = path.join(liveEvtDir, projDirs[pd].name);
           var projMods = fs.readdirSync(projPath).filter(function(f) { return f.endsWith(".js"); });
           for (var pm = 0; pm < projMods.length; pm++) {
-            console.log("    PreToolUse/" + projDirs[pd].name + "/" + projMods[pm].replace(".js", "") + " [installed]");
+            projScoped.push(events[pe] + "/" + projDirs[pd].name + "/" + projMods[pm].replace(".js", ""));
           }
         }
+      } catch(e) {}
+    }
+    if (projScoped.length > 0) {
+      console.log("");
+      console.log("  Project-scoped:");
+      for (var ps = 0; ps < projScoped.length; ps++) {
+        console.log("    " + projScoped[ps] + " [installed]");
       }
-    } catch(e) {}
+    }
 
     console.log("");
     console.log("[hook-runner] " + installedCount + " installed, " + catalogCount + " in catalog");
