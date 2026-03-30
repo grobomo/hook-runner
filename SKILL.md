@@ -9,6 +9,7 @@ keywords:
   - posttooluse
   - stop
   - sessionstart
+  - userpromptsubmit
   - enforcement
   - gate
   - module
@@ -34,6 +35,9 @@ custom_commands:
   - name: stats
     command: "node $SKILL_DIR/setup.js --stats"
     description: "Quick text summary of hook log — blocks, errors, active hooks"
+  - name: list
+    command: "node $SKILL_DIR/setup.js --list"
+    description: "Show catalog vs installed modules with status indicators"
   - name: prune
     command: "node $SKILL_DIR/setup.js --prune 7"
     description: "Prune hook log entries older than 7 days"
@@ -55,9 +59,11 @@ Modular hook runner system for Claude Code. Replaces per-hook entries in setting
   run-posttooluse.js           # PostToolUse runner
   run-stop.js                  # Stop runner
   run-sessionstart.js          # SessionStart runner
+  run-userpromptsubmit.js      # UserPromptSubmit runner
   run-modules/
     PreToolUse/*.js            # gate modules — block or allow tool calls
     PostToolUse/*.js           # observation modules — check tool results
+    UserPromptSubmit/*.js      # prompt modules — validate or log user prompts
     Stop/*.js                  # stop-control modules — block/allow stopping
     SessionStart/*.js          # context modules — inject text at session start
 ```
