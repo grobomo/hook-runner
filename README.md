@@ -2,16 +2,36 @@
 
 Modular hook runner system for Claude Code. One runner per event, modules in folders. Drop a `.js` file in a folder to add behavior — no settings.json editing needed.
 
-## Quick Start
+## Hooks Report (works for everyone)
+
+Even if you don't use hook-runner, you can generate a report of your existing hooks:
+
+```bash
+node setup.js --report    # generates an HTML report and opens it
+```
+
+The report shows:
+- **Every hook** in your `settings.json` — event type, command, matchers, timeout
+- **File status** — whether referenced scripts exist (missing files highlighted in red)
+- **Source code** — expandable view of each hook script with line numbers
+- **Block/error stats** — which hooks are actually blocking tool calls (from `hook-log.jsonl`)
+- **Flow diagram** — visual timeline of hook events from session start to stop
+- **Search + filter** — find hooks by name instantly
+
+No installation required — just clone and run `node setup.js --report`.
+
+## Quick Start (full system)
 
 ```bash
 # Install via grobomo marketplace (if not already added)
 # In Claude Code: /install hook-runner
 
-# Run the setup wizard
+# Commands
 /hook-runner setup        # scan → report → backup → install → verify
 /hook-runner report       # just see current hooks (HTML report)
 /hook-runner dry-run      # preview changes without modifying anything
+/hook-runner health       # verify all runners and modules load correctly
+/hook-runner sync         # sync modules from GitHub per modules.yaml
 ```
 
 The setup wizard will:
@@ -162,3 +182,4 @@ Full catalog in `modules/` directory:
 | Module | Description |
 |--------|-------------|
 | `load-instructions` | Injects working instructions at session start |
+| `backup-check` | Async — warns if claude-backup is stale (>72h) or missing |
