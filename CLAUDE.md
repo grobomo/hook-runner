@@ -9,13 +9,13 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - **Live hooks**: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
 ## File Layout
-- `setup.js` — CLI entry point (setup wizard, report, health, sync, stats, prune, version)
+- `setup.js` — CLI entry point (setup wizard, report, health, sync, stats, test, uninstall, prune, version)
 - `run-*.js` — event runners (one per event: pretooluse, posttooluse, stop, sessionstart, userpromptsubmit)
 - `load-modules.js` — shared module loader (global + project-scoped discovery)
 - `hook-log.js` — centralized logger (appends JSONL per invocation)
 - `run-async.js` — async module executor (Promise detection, 4s timeout)
 - `modules/` — distributable module catalog organized by event type
-- `scripts/test/` — test scripts (79 tests across 5 files)
+- `scripts/test/` — test scripts (80 tests across 5 files)
 
 ## Sync Targets (must stay identical)
 1. Repo: this directory
@@ -49,6 +49,8 @@ node setup.js --health      # verify runners + modules
 node setup.js --sync        # sync modules from GitHub
 node setup.js --stats       # text summary of hook log
 node setup.js --list        # show catalog vs installed modules
+node setup.js --test        # run all test suites
+node setup.js --uninstall   # remove hook-runner from system
 node setup.js --prune [N]   # prune log entries older than N days (default 7)
 node setup.js --version     # show version
 ```

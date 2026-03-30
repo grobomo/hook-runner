@@ -73,6 +73,17 @@ console.log(c.length);
 " 2>/dev/null)
 if [ "$CHANGES" -gt 0 ]; then pass "dry-run returned $CHANGES changes"; else fail "no changes returned"; fi
 
+# Test 7: --uninstall --dry-run runs without modifying settings
+echo "[7] --uninstall --dry-run doesn't modify settings"
+BEFORE=$(md5sum ~/.claude/settings.json 2>/dev/null | cut -d' ' -f1)
+OUTPUT=$(node "$REPO_DIR/setup.js" --uninstall --dry-run 2>/dev/null)
+AFTER=$(md5sum ~/.claude/settings.json 2>/dev/null | cut -d' ' -f1)
+if [ "$BEFORE" = "$AFTER" ] && echo "$OUTPUT" | grep -q "Dry-run complete"; then
+  pass "uninstall dry-run safe"
+else
+  fail "uninstall dry-run modified settings or failed"
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1
