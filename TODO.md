@@ -37,10 +37,10 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 ## Completed (report + async)
 - [x] T031: Report improvements — all events shown, clickable flow, Claude event labels, docs link
 
-## Pending
-- [ ] T032: Marketplace sync — push T030 (async) + T031 (report) to claude-code-skills
-- [ ] T033: Update global rule hooks-must-be-sync.md — now async is supported, update the rule
-- [ ] T034: Create example async SessionStart module for claude-backup integration
+## Completed (marketplace + rules + examples)
+- [x] T032: Marketplace sync — push T030 (async) + T031 (report) to claude-code-skills
+- [x] T033: Update global rule hooks-must-be-sync.md → hooks-module-contract (async now supported)
+- [x] T034: Create example async SessionStart module for claude-backup integration
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
