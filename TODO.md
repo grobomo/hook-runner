@@ -57,10 +57,11 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 ## Docs
 - [x] T042: Document --stats command in README
+- [x] T043: Add CLAUDE.md for project context
 
 ## Status
 All tasks complete. Project is mature and stable:
-- 42 tasks completed, 0 pending
+- 43 tasks completed, 0 pending
 - 33 tests passing (14 runner + 6 wizard + 13 async)
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
 - Report works for both hook-runner users and standalone hooks users
