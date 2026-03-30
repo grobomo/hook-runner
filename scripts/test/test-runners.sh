@@ -28,7 +28,7 @@ if [ "$COUNT" -eq 0 ]; then pass "empty for fake dir"; else fail "returned $COUN
 # Test 4: Each runner script exists and has shebang
 echo "[4] Runner scripts exist with shebang"
 BASH_DIR="$(cd "$(dirname "$0")/../.." && pwd)"  # Git Bash path for file ops
-for runner in run-pretooluse.js run-posttooluse.js run-stop.js run-sessionstart.js; do
+for runner in run-pretooluse.js run-posttooluse.js run-stop.js run-sessionstart.js run-userpromptsubmit.js; do
   if [ -f "$BASH_DIR/$runner" ] && head -1 "$BASH_DIR/$runner" | grep -q "#!/usr/bin/env node"; then
     pass "$runner exists with shebang"
   else
@@ -38,7 +38,7 @@ done
 
 # Test 5: All runners require load-modules
 echo "[5] Runners use load-modules.js"
-for runner in run-pretooluse.js run-posttooluse.js run-stop.js run-sessionstart.js; do
+for runner in run-pretooluse.js run-posttooluse.js run-stop.js run-sessionstart.js run-userpromptsubmit.js; do
   if grep -q 'require("./load-modules")' "$BASH_DIR/$runner"; then
     pass "$runner requires load-modules"
   else

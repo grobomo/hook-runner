@@ -923,7 +923,7 @@ function installRunners(dryRun) {
   if (!dryRun) fs.mkdirSync(HOOKS_DIR, { recursive: true });
 
   // Copy runner scripts + load-modules.js
-  var runnerFiles = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "load-modules.js", "hook-log.js", "run-async.js"];
+  var runnerFiles = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "run-userpromptsubmit.js", "load-modules.js", "hook-log.js", "run-async.js"];
   for (var i = 0; i < runnerFiles.length; i++) {
     var src = path.join(REPO_DIR, runnerFiles[i]);
     var dest = path.join(HOOKS_DIR, runnerFiles[i]);
@@ -936,7 +936,7 @@ function installRunners(dryRun) {
   }
 
   // Create run-modules directories
-  var eventDirs = ["PreToolUse", "PostToolUse", "Stop", "SessionStart"];
+  var eventDirs = ["PreToolUse", "PostToolUse", "Stop", "SessionStart", "UserPromptSubmit"];
   for (var j = 0; j < eventDirs.length; j++) {
     var dir = path.join(HOOKS_DIR, "run-modules", eventDirs[j]);
     if (!fs.existsSync(dir)) {
@@ -979,6 +979,9 @@ function updateSettings(dryRun) {
     PostToolUse: [
       { matcher: "Write", hooks: [{ type: "command", command: 'node "$HOME/.claude/hooks/run-posttooluse.js"', timeout: 5 }] },
       { matcher: "Edit", hooks: [{ type: "command", command: 'node "$HOME/.claude/hooks/run-posttooluse.js"', timeout: 5 }] }
+    ],
+    UserPromptSubmit: [
+      { hooks: [{ type: "command", command: 'node "$HOME/.claude/hooks/run-userpromptsubmit.js"', timeout: 5 }] }
     ]
   };
 
@@ -1453,10 +1456,10 @@ function main() {
 
 function healthCheck() {
   var results = [];
-  var events = ["PreToolUse", "PostToolUse", "Stop", "SessionStart"];
+  var events = ["PreToolUse", "PostToolUse", "Stop", "SessionStart", "UserPromptSubmit"];
 
   // 1. Check runners exist
-  var runners = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "load-modules.js", "hook-log.js"];
+  var runners = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "run-userpromptsubmit.js", "load-modules.js", "hook-log.js"];
   for (var ri = 0; ri < runners.length; ri++) {
     var rPath = path.join(HOOKS_DIR, runners[ri]);
     if (fs.existsSync(rPath)) {

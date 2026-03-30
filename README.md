@@ -53,6 +53,7 @@ The setup wizard will:
   run-posttooluse.js           # PostToolUse runner
   run-stop.js                  # Stop runner
   run-sessionstart.js          # SessionStart runner
+  run-userpromptsubmit.js      # UserPromptSubmit runner
   run-modules/
     PreToolUse/
       *.js                     # global modules (run for all projects)
@@ -98,6 +99,7 @@ Rules:
 | Event | Runner | Matchers | Module Return |
 |-------|--------|----------|---------------|
 | SessionStart | run-sessionstart.js | none | `{text: "..."}` |
+| UserPromptSubmit | run-userpromptsubmit.js | none | `{decision: "block"}` or `null` |
 | PreToolUse | run-pretooluse.js | Edit, Write, Bash | `{decision: "block"}` or `null` |
 | PostToolUse | run-posttooluse.js | Edit, Write | `{decision: "block"}` or `null` |
 | Stop | run-stop.js | none | `{decision: "block"}` or `null` |
