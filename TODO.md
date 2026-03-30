@@ -1,34 +1,30 @@
 # hook-runner — Project Tracking
 
 ## Overview
-Modular hook runner system for Claude Code. Already built and deployed at `~/.claude/hooks/`.
-This repo tracks development, publishes to grobomo GitHub, and provides a marketplace skill with setup wizard.
+Modular hook runner system for Claude Code. One runner per event, modules in folders.
+- Repo: grobomo/hook-runner (public)
+- Marketplace: grobomo/claude-code-skills → plugins/hook-runner
+- Local skill: ~/.claude/skills/hook-runner/
+- Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
-## Tasks
+## Completed
+- [x] T001-T002: Specs, project structure, sync runners with live system
+- [x] T003-T007: Setup wizard (scan → report → backup → install → verify)
+- [x] T008-T010: SKILL.md, marketplace plugin, README
+- [x] T011: Report — flow diagram, expandable modules with source, consistent terminology
+- [x] T012: Report fixes — chevron on left, no double line spacing
+- [x] T013: Cleanup — TODO, stale branches, gate fixes documented
 
-- [x] T001: Create specs and project structure
-- [x] T002: Sync repo runners with live system (load-modules.js)
-- [x] T003: Build setup.js wizard (scan → report → backup → install → verify)
-- [x] T004: Create marketplace plugin entry in grobomo/claude-code-skills
-- [x] T005: Update README.md and push all to grobomo/hook-runner
-- [x] T006: Install skill locally and test end-to-end
+## Gate Fixes (in ~/.claude/hooks/run-modules/PreToolUse/)
+These were made to the live hooks, not committed to this repo (user-specific enforcement):
+- **continuous-claude-gate.js**: Renamed to "Tracked Workflow Gate". Removed CONTINUOUS_CLAUDE=1 env bypass. Added bootstrap allowlist (.gitignore, .json, ~/.claude/). Generic dev-team language with WHY reasoning.
+- **spec-gate.js**: Generic dev-team language, kept WHY reasoning.
+- **branch-pr-gate.js**: Generic language. Added rebase/merge/cherry-pick --abort and gh pr close/view/list as allowed repair operations.
+- **root-cause-gate.js**: Removed rebase/merge --abort from cleanup patterns — they're recovery, not symptoms.
+- **remote-tracking-gate.js**: Fixed tool_input parsing to handle object (not just JSON string).
 
-## Also Done (gate improvements)
-- [x] Fixed continuous-claude-gate.js → renamed to "Tracked Workflow Gate", removed CONTINUOUS_CLAUDE=1 bypass, added bootstrap detection
-- [x] Fixed spec-gate.js, branch-pr-gate.js — replaced hackathon-specific language with generic dev-team language, kept WHY reasoning
-- [x] T011: Upgraded report — flow diagram, expandable modules with source code, consistent terminology, event ordering
-- [x] Fixed report chevron on left side, fixed double line spacing in code blocks
-
-## Session State
-- On branch: 001-T006-local-test (has uncommitted PR #7 open: 001-setup-wizard → main)
-- PR #7 still OPEN — needs merge to main
-- grobomo account must be active for pushes (`gh auth switch --user grobomo`)
-- Marketplace (grobomo/claude-code-skills) already synced with latest setup.js
-- Local skill at ~/.claude/skills/hook-runner/ already synced
-
-## Remaining Work
-- [ ] Merge PR #7 (feature branch → main)
-- [ ] Clean up stale branches (001-T001-sync-source, 001-T003-setup-wizard, 001-T006-local-test, 001-T008-marketplace)
-- [ ] Review: the gate files were edited in ~/.claude/hooks/run-modules/PreToolUse/ but NOT committed to this repo — the repo only has example modules. Consider whether to sync the live gate modules into the repo or keep them separate (user-specific vs generic)
-- [ ] The `remote-tracking-gate.js` and `push-unpushed.js` modules exist in live but aren't in the repo — document or add them
-- [ ] CLAUDE.md in this repo needs updating — it still references the old hook-manager pattern
+## Architecture Notes
+- Repo contains the generic/distributable runner system + example modules
+- Live system at ~/.claude/hooks/ has additional user-specific enforcement modules
+- Gate modules (enforcement-gate, spec-gate, branch-pr-gate, etc.) are user-specific — not in the repo
+- setup.js copies runners from its own directory (skill dir) to ~/.claude/hooks/
