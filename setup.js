@@ -15,6 +15,8 @@
  *   node setup.js --report         # just generate the report
  *   node setup.js --dry-run        # show what would change, don't do it
  *   node setup.js --install        # skip report, just install
+ *   node setup.js --sync           # sync modules from GitHub per modules.yaml
+ *   node setup.js --sync --dry-run # preview sync without installing
  */
 var fs = require("fs");
 var path = require("path");
@@ -705,7 +707,193 @@ function printPreview(scan) {
 }
 
 // ============================================================
-// 6. Main Orchestrator
+// 6. Module Sync (fetch from GitHub per modules.yaml)
+// ============================================================
+
+var MODULES_YAML_PATH = path.join(HOOKS_DIR, "modules.yaml");
+var DEFAULT_SOURCE = "grobomo/hook-runner";
+var DEFAULT_BRANCH = "main";
+
+/**
+ * Minimal YAML parser for modules.yaml format.
+ * Handles: top-level scalars, nested keys (one level), list items (- value).
+ */
+function parseModulesYaml(content) {
+  var result = { source: DEFAULT_SOURCE, branch: DEFAULT_BRANCH, modules: {}, project_modules: {} };
+  var lines = content.split("\n");
+  var currentSection = null;
+  var currentEvent = null;
+  var currentProject = null;
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var trimmed = line.replace(/\s+$/, "");
+    if (/^\s*#/.test(trimmed) || /^\s*$/.test(trimmed)) continue;
+
+    // Top-level scalar: source: value, branch: value
+    var scalarMatch = trimmed.match(/^(\w+):\s+(.+)/);
+    if (scalarMatch) {
+      var key = scalarMatch[1];
+      var val = scalarMatch[2].trim();
+      if (key === "source") { result.source = val; continue; }
+      if (key === "branch") { result.branch = val; continue; }
+    }
+
+    // Section headers
+    if (/^modules:\s*$/.test(trimmed)) { currentSection = "modules"; currentEvent = null; currentProject = null; continue; }
+    if (/^project_modules:\s*$/.test(trimmed)) { currentSection = "project_modules"; currentEvent = null; currentProject = null; continue; }
+
+    // Event key under modules (2-space indent): "  PreToolUse:"
+    var eventMatch = trimmed.match(/^  (\w+):\s*$/);
+    if (eventMatch && currentSection === "modules") {
+      currentEvent = eventMatch[1];
+      if (!result.modules[currentEvent]) result.modules[currentEvent] = [];
+      currentProject = null;
+      continue;
+    }
+
+    // Project key under project_modules (2-space indent)
+    var projMatch = trimmed.match(/^  ([\w-]+):\s*$/);
+    if (projMatch && currentSection === "project_modules") {
+      currentProject = projMatch[1];
+      if (!result.project_modules[currentProject]) result.project_modules[currentProject] = {};
+      currentEvent = null;
+      continue;
+    }
+
+    // Event key under project (4-space indent)
+    var projEventMatch = trimmed.match(/^    (\w+):\s*$/);
+    if (projEventMatch && currentSection === "project_modules" && currentProject) {
+      currentEvent = projEventMatch[1];
+      if (!result.project_modules[currentProject][currentEvent]) result.project_modules[currentProject][currentEvent] = [];
+      continue;
+    }
+
+    // List item under modules event (4-space indent): "    - module-name"
+    var listMatch = trimmed.match(/^    -\s+([\w\/_-]+)/);
+    if (listMatch && currentSection === "modules" && currentEvent) {
+      result.modules[currentEvent].push(listMatch[1]);
+      continue;
+    }
+
+    // List item under project_modules event (6-space indent)
+    var projListMatch = trimmed.match(/^      -\s+([\w\/_-]+)/);
+    if (projListMatch && currentSection === "project_modules" && currentProject && currentEvent) {
+      result.project_modules[currentProject][currentEvent].push(projListMatch[1]);
+      continue;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Fetch a file from GitHub raw content via curl.
+ */
+function fetchFromGitHub(source, branch, filePath) {
+  var url = "https://raw.githubusercontent.com/" + source + "/" + branch + "/" + filePath;
+  try {
+    return cp.execSync('curl -fsSL "' + url + '"', { encoding: "utf-8", timeout: 15000 });
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Sync modules from GitHub per modules.yaml config.
+ * @param {boolean} dryRun - if true, just show what would happen
+ * @returns {Array} list of changes
+ */
+function syncModules(dryRun) {
+  var changes = [];
+
+  if (!fs.existsSync(MODULES_YAML_PATH)) {
+    console.log("  No modules.yaml found at " + MODULES_YAML_PATH);
+    console.log("  Create one from the example:");
+    console.log("    curl -fsSL https://raw.githubusercontent.com/" + DEFAULT_SOURCE + "/" + DEFAULT_BRANCH + "/modules.example.yaml > \"" + MODULES_YAML_PATH + "\"");
+    return changes;
+  }
+
+  var config = parseModulesYaml(fs.readFileSync(MODULES_YAML_PATH, "utf-8"));
+  console.log("  Source: " + config.source + " (branch: " + config.branch + ")");
+
+  // Sync global modules
+  var events = Object.keys(config.modules);
+  for (var i = 0; i < events.length; i++) {
+    var event = events[i];
+    var moduleNames = config.modules[event];
+    var targetDir = path.join(HOOKS_DIR, "run-modules", event);
+    if (!dryRun) fs.mkdirSync(targetDir, { recursive: true });
+
+    for (var j = 0; j < moduleNames.length; j++) {
+      var modName = moduleNames[j];
+      var remotePath = "modules/" + event + "/" + modName + ".js";
+      var localPath = path.join(targetDir, modName + ".js");
+      var existing = fs.existsSync(localPath) ? fs.readFileSync(localPath, "utf-8") : null;
+
+      process.stdout.write("  " + event + "/" + modName + ".js ... ");
+      var content = fetchFromGitHub(config.source, config.branch, remotePath);
+
+      if (!content) {
+        changes.push({ action: "error", file: event + "/" + modName + ".js", reason: "not found in repo" });
+        console.log("NOT FOUND");
+        continue;
+      }
+      if (existing === content) {
+        changes.push({ action: "up-to-date", file: event + "/" + modName + ".js" });
+        console.log("up to date");
+        continue;
+      }
+      if (!dryRun) fs.writeFileSync(localPath, content);
+      var action = dryRun ? "would-" + (existing ? "update" : "install") : (existing ? "updated" : "installed");
+      changes.push({ action: action, file: event + "/" + modName + ".js" });
+      console.log(action);
+    }
+  }
+
+  // Sync project-scoped modules
+  var projects = Object.keys(config.project_modules);
+  for (var pi = 0; pi < projects.length; pi++) {
+    var projName = projects[pi];
+    var projEvents = Object.keys(config.project_modules[projName]);
+    for (var pe = 0; pe < projEvents.length; pe++) {
+      var pEvent = projEvents[pe];
+      var pModules = config.project_modules[projName][pEvent];
+      var pTargetDir = path.join(HOOKS_DIR, "run-modules", pEvent, projName);
+      if (!dryRun) fs.mkdirSync(pTargetDir, { recursive: true });
+
+      for (var pm = 0; pm < pModules.length; pm++) {
+        var pModName = pModules[pm];
+        var pRemotePath = "modules/" + pEvent + "/" + pModName + ".js";
+        var pLocalPath = path.join(pTargetDir, path.basename(pModName) + ".js");
+        var pExisting = fs.existsSync(pLocalPath) ? fs.readFileSync(pLocalPath, "utf-8") : null;
+
+        process.stdout.write("  " + pEvent + "/" + projName + "/" + path.basename(pModName) + ".js ... ");
+        var pContent = fetchFromGitHub(config.source, config.branch, pRemotePath);
+
+        if (!pContent) {
+          changes.push({ action: "error", file: pEvent + "/" + projName + "/" + path.basename(pModName) + ".js", reason: "not found" });
+          console.log("NOT FOUND");
+          continue;
+        }
+        if (pExisting === pContent) {
+          changes.push({ action: "up-to-date", file: pEvent + "/" + projName + "/" + path.basename(pModName) + ".js" });
+          console.log("up to date");
+          continue;
+        }
+        if (!dryRun) fs.writeFileSync(pLocalPath, pContent);
+        var pAction = dryRun ? "would-" + (pExisting ? "update" : "install") : (pExisting ? "updated" : "installed");
+        changes.push({ action: pAction, file: pEvent + "/" + projName + "/" + path.basename(pModName) + ".js" });
+        console.log(pAction);
+      }
+    }
+  }
+
+  return changes;
+}
+
+// ============================================================
+// 7. Main Orchestrator
 // ============================================================
 
 function openFile(filePath) {
@@ -725,6 +913,28 @@ function main() {
   var reportOnly = args.indexOf("--report") !== -1;
   var dryRun = args.indexOf("--dry-run") !== -1;
   var installOnly = args.indexOf("--install") !== -1;
+  var syncMode = args.indexOf("--sync") !== -1;
+
+  // --- Sync mode: fetch modules from GitHub per modules.yaml ---
+  if (syncMode) {
+    console.log("[hook-runner] Module Sync");
+    console.log("========================");
+    console.log("  Config: " + MODULES_YAML_PATH);
+    if (dryRun) console.log("  (dry-run mode)");
+    console.log("");
+    var syncChanges = syncModules(dryRun);
+    var installed = syncChanges.filter(function(c) { return c.action === "installed" || c.action === "updated"; }).length;
+    var upToDate = syncChanges.filter(function(c) { return c.action === "up-to-date"; }).length;
+    var wouldChange = syncChanges.filter(function(c) { return /^would-/.test(c.action); }).length;
+    var errors = syncChanges.filter(function(c) { return c.action === "error"; }).length;
+    console.log("");
+    if (dryRun) {
+      console.log("[hook-runner] Dry-run: " + wouldChange + " would change, " + upToDate + " up to date" + (errors ? ", " + errors + " errors" : ""));
+    } else {
+      console.log("[hook-runner] Sync complete: " + installed + " installed/updated, " + upToDate + " up to date" + (errors ? ", " + errors + " errors" : ""));
+    }
+    return;
+  }
 
   console.log("[hook-runner] Setup Wizard");
   console.log("========================");
@@ -801,6 +1011,6 @@ function main() {
   console.log("============================================");
 }
 
-module.exports = { scanHooks: scanHooks, generateReport: generateReport, backupHooks: backupHooks, installRunners: installRunners };
+module.exports = { scanHooks: scanHooks, generateReport: generateReport, backupHooks: backupHooks, installRunners: installRunners, parseModulesYaml: parseModulesYaml, syncModules: syncModules };
 
 if (require.main === module) main();
