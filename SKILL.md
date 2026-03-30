@@ -108,7 +108,7 @@ module.exports = function(input) {
 };
 ```
 
-- Modules MUST be synchronous (no async/await)
+- Modules can be sync (return value) or async (return Promise, 4s timeout per module)
 - Use `require()` not `import`
 - Return `null` to pass, `{decision: "block", reason: "..."}` to block
 - Modules run alphabetically — prefix with `01-` for ordering

@@ -31,6 +31,12 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 ## Completed (health check)
 - [x] T029: Health check command — verifies runners, modules, settings, log writability
 
+## Completed (async hooks)
+- [x] T030: Async module support — runners detect Promises, await with 4s timeout, sequential execution preserved
+
+## Pending
+- [ ] T031: Report improvements — show all event types (including empty), clickable rules in flow diagram, link to Claude hook docs, remove "Tool executes" block
+
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
 

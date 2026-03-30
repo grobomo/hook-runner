@@ -64,7 +64,8 @@ module.exports = function(input) {
 ```
 
 Rules:
-- **Synchronous only** — no async/await, no Promises, use `require()` not `import`
+- **Sync or async** — modules can return a value (sync) or a Promise (async). Async modules are awaited with a 4s per-module timeout.
+- Use `require()` not `import`
 - **Return null to pass**, `{decision: "block", reason: "..."}` to block
 - **Alphabetical order** — prefix with `01-` to control execution order
 - **Never edit settings.json** — runners are already registered, just add module files
@@ -83,6 +84,22 @@ Rules:
 Runners log every module invocation to `~/.claude/hooks/hook-log.jsonl`. Each line records the timestamp, event, module name, result (pass/block/error), and context (tool name, command snippet, project). The log auto-rotates at 10MB.
 
 The setup report (`/hook-runner report`) reads the log and shows hit counts and sample triggers per module.
+
+### Async Module Example
+
+```javascript
+// run-modules/SessionStart/backup-config.js
+module.exports = function(input) {
+  return new Promise(function(resolve) {
+    var cp = require("child_process");
+    cp.exec("node /path/to/backup.js", function(err) {
+      resolve(err ? null : { text: "Config backup complete" });
+    });
+  });
+};
+```
+
+Async modules have a 4-second timeout per module. If a module times out, it's logged as an error and the next module runs.
 
 ## Project-Scoped Modules
 
