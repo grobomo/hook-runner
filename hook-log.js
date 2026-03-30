@@ -14,7 +14,7 @@ var MAX_LOG_SIZE = 10 * 1024 * 1024; // 10MB — rotate when exceeded
  * @param {string} event - PreToolUse, PostToolUse, Stop, SessionStart
  * @param {string} moduleName - e.g. "enforcement-gate"
  * @param {string} result - "pass", "block", "error", "text"
- * @param {object} context - { tool, command, file, reason, project }
+ * @param {object} context - { tool, command, file, reason, project, ms }
  */
 function logHook(event, moduleName, result, context) {
   try {
@@ -30,6 +30,7 @@ function logHook(event, moduleName, result, context) {
       if (context.file) entry.file = path.basename(context.file);
       if (context.reason) entry.reason = context.reason.substring(0, 200);
       if (context.project) entry.project = context.project;
+      if (typeof context.ms === "number") entry.ms = context.ms;
     }
 
     var line = JSON.stringify(entry) + "\n";

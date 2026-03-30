@@ -21,18 +21,18 @@ var ctx = hookLog.extractContext("UserPromptSubmit", input);
 var modules = loadModules(path.join(__dirname, "run-modules", "UserPromptSubmit"));
 
 runAsync.runModules(modules, input,
-  function handleResult(modName, result, err) {
+  function handleResult(modName, result, err, ms) {
     if (err) {
-      hookLog.logHook("UserPromptSubmit", modName, "error", Object.assign({}, ctx, { reason: err.message }));
+      hookLog.logHook("UserPromptSubmit", modName, "error", Object.assign({}, ctx, { reason: err.message, ms: ms }));
       process.stderr.write("hook-runner UserPromptSubmit " + modName + " error: " + err.message + "\n");
       return false;
     }
     if (result && result.decision) {
-      hookLog.logHook("UserPromptSubmit", modName, result.decision, Object.assign({}, ctx, { reason: result.reason }));
+      hookLog.logHook("UserPromptSubmit", modName, result.decision, Object.assign({}, ctx, { reason: result.reason, ms: ms }));
       process.stdout.write(JSON.stringify(result));
       process.exit(0);
     }
-    hookLog.logHook("UserPromptSubmit", modName, "pass", ctx);
+    hookLog.logHook("UserPromptSubmit", modName, "pass", Object.assign({}, ctx, { ms: ms }));
     return false;
   },
   function handleDone() {

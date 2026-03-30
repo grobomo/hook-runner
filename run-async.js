@@ -62,6 +62,7 @@ function runModules(modulePaths, input, handleResult, handleDone, timeout) {
     var modName = path.basename(modPath, ".js");
     i++;
 
+    var t0 = Date.now();
     try {
       var mod = require(modPath);
       var result = mod(input);
@@ -71,21 +72,25 @@ function runModules(modulePaths, input, handleResult, handleDone, timeout) {
         hasAsync = true;
         withTimeout(result, timeout, modName).then(
           function (val) {
-            if (handleResult(modName, val)) return; // stopped
+            var ms = Date.now() - t0;
+            if (handleResult(modName, val, null, ms)) return; // stopped
             next();
           },
           function (err) {
-            handleResult(modName, null, err);
+            var ms = Date.now() - t0;
+            handleResult(modName, null, err, ms);
             next();
           }
         );
       } else {
         // Sync module — process immediately
-        if (handleResult(modName, result)) return; // stopped
+        var ms = Date.now() - t0;
+        if (handleResult(modName, result, null, ms)) return; // stopped
         next();
       }
     } catch (e) {
-      handleResult(modName, null, e);
+      var ms = Date.now() - t0;
+      handleResult(modName, null, e, ms);
       next();
     }
   }

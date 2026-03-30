@@ -21,17 +21,17 @@ var modules = loadModules(path.join(__dirname, "run-modules", "SessionStart"));
 var output = [];
 
 runAsync.runModules(modules, input,
-  function handleResult(modName, result, err) {
+  function handleResult(modName, result, err, ms) {
     if (err) {
-      hookLog.logHook("SessionStart", modName, "error", Object.assign({}, ctx, { reason: err.message }));
+      hookLog.logHook("SessionStart", modName, "error", Object.assign({}, ctx, { reason: err.message, ms: ms }));
       process.stderr.write("hook-runner SessionStart " + modName + " error: " + err.message + "\n");
       return false;
     }
     if (result && result.text) {
-      hookLog.logHook("SessionStart", modName, "text", ctx);
+      hookLog.logHook("SessionStart", modName, "text", Object.assign({}, ctx, { ms: ms }));
       output.push(result.text);
     } else {
-      hookLog.logHook("SessionStart", modName, "pass", ctx);
+      hookLog.logHook("SessionStart", modName, "pass", Object.assign({}, ctx, { ms: ms }));
     }
     return false; // never stop — collect all text
   },
