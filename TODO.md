@@ -21,11 +21,15 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T020: Fix enforcement-gate — dirty-tree check only on main (not task branches)
 - [x] T021: Sync marketplace copy, fix catalog/bundled auto-continue divergence
 
-## Active
-- [x] T022: Centralized hook logger — JSONL log of every module trigger with context
-- [x] T023: Stats reader — parse log, compute per-module counts + sample triggers
-- [x] T024: Report integration — show counts inline, expandable examples per module
-- [x] T025: Update runners to log, sync all copies, test e2e
+## Completed (logging)
+- [x] T022-T025: Hook logging, stats reader, report hit counts + sample triggers
+
+## Completed (docs & marketplace)
+- [x] T027: Add hook-log.jsonl to .gitignore in modules.example.yaml docs
+- [x] T028: Marketplace push for claude-code-skills (hook-runner runners updated with logging)
+
+## Pending
+- [ ] T026: Modularize chat-export — extract jsonl_parser.py into shared lib, sync repo with skill copy
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
