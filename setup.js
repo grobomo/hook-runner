@@ -300,10 +300,13 @@ function generateReport(scan, outputPath, hookStats) {
     if (usingRunner) break;
   }
 
-  // Order events by user experience flow
+  // Order events by user experience flow — include ALL canonical events even if empty
   var eventNames = [];
   for (var eo = 0; eo < EVENT_ORDER.length; eo++) {
-    if (scan.events[EVENT_ORDER[eo]]) eventNames.push(EVENT_ORDER[eo]);
+    eventNames.push(EVENT_ORDER[eo]);
+    if (!scan.events[EVENT_ORDER[eo]]) {
+      scan.events[EVENT_ORDER[eo]] = { entries: [], matchers: [], moduleCount: 0 };
+    }
   }
   for (var uk = 0; uk < rawEventNames.length; uk++) {
     if (eventNames.indexOf(rawEventNames[uk]) === -1) eventNames.push(rawEventNames[uk]);
@@ -356,6 +359,13 @@ function generateReport(scan, outputPath, hookStats) {
   h.push('.flow-mod{background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:.2rem .6rem;font-size:.7rem;color:#8b949e;white-space:nowrap}');
   h.push('.flow-mod-archived{opacity:.4;text-decoration:line-through}');
   h.push('.flow-mod-project{color:#d2a8ff}');
+  h.push('.flow-mod-link{cursor:pointer;transition:border-color .15s,color .15s}');
+  h.push('.flow-mod-link:hover{border-color:#58a6ff;color:#58a6ff}');
+  h.push('.flow-mod-empty{color:#484f58;font-style:italic;border-style:dashed}');
+  h.push('.flow-claude-event{font-size:.65rem;color:#484f58;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.25rem;white-space:nowrap}');
+  h.push('.flow-subtitle{color:#8b949e;font-size:.8rem;margin-bottom:1rem}');
+  h.push('.module-highlight{animation:highlight-fade 2s ease-out}');
+  h.push('@keyframes highlight-fade{0%{background:#1f6feb33}100%{background:transparent}}');
   h.push('.event-section{margin-bottom:1.5rem}');
   h.push('.event-header{background:#161b22;border:1px solid #30363d;border-radius:8px 8px 0 0;padding:1rem 1.5rem;cursor:pointer;display:flex;align-items:center;gap:1rem;user-select:none}');
   h.push('.event-header:hover{background:#1c2128}');
@@ -436,7 +446,7 @@ function generateReport(scan, outputPath, hookStats) {
     h.push('<div class="arch-note"><h2>Architecture: Runner + Module Pattern</h2>');
     h.push('<p>Each hook event has <strong>one runner script</strong> in <code>settings.json</code>. The runner auto-loads all <code>.js</code> modules from <code>run-modules/{Event}/</code>, sorted alphabetically.</p>');
     h.push('<p>To add behavior: create a new module file. Never add new hook entries to settings.json.</p>');
-    h.push('<p>All hooks are <strong>synchronous</strong> &mdash; <code>fs.readFileSync(0)</code> for stdin. Async hooks race with the 5s timeout.</p>');
+    h.push('<p>Modules can be <strong>sync or async</strong> (Promise). Async modules are awaited with a 4s per-module timeout. Stdin is always read synchronously.</p>');
     h.push('</div>');
   } else {
     h.push('<div class="arch-note"><h2>Current: Standalone Hook Scripts</h2>');
@@ -445,24 +455,40 @@ function generateReport(scan, outputPath, hookStats) {
     h.push('</div>');
   }
 
+  // Claude event labels that appear above hook event names
+  var CLAUDE_EVENTS = {
+    SessionStart: "Session begins",
+    UserPromptSubmit: "User sends prompt",
+    PreToolUse: "Tool about to run",
+    PostToolUse: "Tool finished",
+    Stop: "Session ending"
+  };
+
   // Flow Diagram
   if (usingRunner) {
-    h.push('<div class="flow"><h2>Hook Event Flow</h2><div class="flow-diagram">');
+    h.push('<div class="flow"><h2>Hook Event Flow</h2>');
+    h.push('<div class="flow-subtitle">Click a module to jump to its details below. ');
+    h.push('<a href="https://docs.anthropic.com/en/docs/claude-code/hooks" target="_blank" style="color:#58a6ff;text-decoration:none">Claude Code Hooks docs &rarr;</a></div>');
+    h.push('<div class="flow-diagram">');
     for (var fi = 0; fi < eventNames.length; fi++) {
       var fEvt = eventNames[fi];
       var fMods = eventModules[fEvt] || [];
       if (fi > 0) h.push('<div class="flow-arrow">&rarr;</div>');
-      if (fEvt === "PostToolUse") {
-        h.push('<div class="flow-stage"><div class="flow-event" style="border-color:#3fb950;color:#3fb950">Tool Executes</div></div>');
-        h.push('<div class="flow-arrow">&rarr;</div>');
+      h.push('<div class="flow-stage">');
+      // Claude event label above
+      var claudeLabel = CLAUDE_EVENTS[fEvt] || "";
+      if (claudeLabel) h.push('<div class="flow-claude-event">' + claudeLabel + '</div>');
+      h.push('<div class="flow-event">' + fEvt + '</div><div class="flow-modules">');
+      if (fMods.length === 0) {
+        h.push('<div class="flow-mod flow-mod-empty">(no modules)</div>');
       }
-      h.push('<div class="flow-stage"><div class="flow-event">' + fEvt + '</div><div class="flow-modules">');
       for (var fm = 0; fm < fMods.length; fm++) {
         var fmod = fMods[fm];
-        var fclass = "flow-mod";
+        var fclass = "flow-mod flow-mod-link";
         if (fmod.archived) fclass += " flow-mod-archived";
         else if (fmod.scope !== "global") fclass += " flow-mod-project";
-        h.push('<div class="' + fclass + '">' + escHtml(fmod.name.replace(/\.js$/, "")) + '</div>');
+        var modId = fEvt + "--" + fmod.name.replace(/\.js$/, "").replace(/[^a-zA-Z0-9-]/g, "-");
+        h.push('<div class="' + fclass + '" onclick="scrollToModule(\'' + modId + '\')">' + escHtml(fmod.name.replace(/\.js$/, "")) + '</div>');
       }
       h.push('</div></div>');
     }
@@ -479,7 +505,8 @@ function generateReport(scan, outputPath, hookStats) {
     var metaParts = [];
     var activeModCount = mods2.filter(function(m) { return !m.archived; }).length;
     if (activeModCount > 0) metaParts.push(activeModCount + " module" + (activeModCount !== 1 ? "s" : ""));
-    if (evtData2.matchers.length > 0) metaParts.push(evtData2.matchers.join(", ") + " matchers");
+    else metaParts.push("no modules");
+    if (evtData2.matchers && evtData2.matchers.length > 0) metaParts.push(evtData2.matchers.join(", ") + " matchers");
     else metaParts.push("no matcher");
 
     h.push('<div class="event-section">');
@@ -492,12 +519,18 @@ function generateReport(scan, outputPath, hookStats) {
     h.push('<div class="event-body">');
 
     // Runner info
+    var hasRunner = false;
     for (var hi = 0; hi < evtData2.entries.length; hi++) {
       if (evtData2.entries[hi].isRunner && evtData2.entries[hi].scriptPath) {
         h.push('<div class="runner"><div class="runner-label">Runner Script</div>');
         h.push('<div class="runner-path">' + escHtml(evtData2.entries[hi].scriptPath.replace(HOME, "~")) + '</div></div>');
+        hasRunner = true;
         break;
       }
+    }
+    if (mods2.length === 0 && !hasRunner) {
+      h.push('<div class="runner"><div class="runner-label" style="color:#484f58">No hooks configured for this event</div>');
+      h.push('<div class="runner-path" style="color:#484f58">Add a module to <code>~/.claude/hooks/run-modules/' + evt2 + '/</code></div></div>');
     }
 
     // Matchers
@@ -521,7 +554,8 @@ function generateReport(scan, outputPath, hookStats) {
       var statsKey = evt2 + "/" + m.name.replace(/\.js$/, "");
       var modStats = hookStats[statsKey] || null;
 
-      h.push('<div class="module">');
+      var modId = evt2 + "--" + m.name.replace(/\.js$/, "").replace(/[^a-zA-Z0-9-]/g, "-");
+      h.push('<div class="module" id="' + modId + '">');
       h.push('<div class="module-header" onclick="toggleModule(this)">');
       h.push('<span class="module-chevron">&#9654;</span>');
       h.push('<div class="module-icon ' + iconClass + '"></div>');
@@ -579,10 +613,14 @@ function generateReport(scan, outputPath, hookStats) {
     h.push('</div></div>');
   }
 
-  h.push('<div class="footer">Generated by hook-runner setup.js &mdash; ' + now + '</div>');
+  h.push('<div class="footer">Generated by <a href="https://github.com/grobomo/hook-runner" style="color:#58a6ff;text-decoration:none">hook-runner</a> setup.js &mdash; ' + now + ' &mdash; <a href="https://docs.anthropic.com/en/docs/claude-code/hooks" style="color:#58a6ff;text-decoration:none">Claude Code Hooks docs</a></div>');
   h.push('<script>');
   h.push('function toggleEvent(el){var b=el.nextElementSibling;var c=el.querySelector(".chevron");b.classList.toggle("open");c.classList.toggle("open");el.classList.toggle("collapsed")}');
   h.push('function toggleModule(el){var d=el.nextElementSibling;var c=el.querySelector(".module-chevron");d.classList.toggle("open");c.classList.toggle("open")}');
+  h.push('function scrollToModule(id){var m=document.getElementById(id);if(!m)return;');
+  h.push('var sec=m.closest(".event-section");if(sec){var hdr=sec.querySelector(".event-header");var body=sec.querySelector(".event-body");if(hdr&&body&&!body.classList.contains("open")){body.classList.add("open");hdr.querySelector(".chevron").classList.add("open");hdr.classList.remove("collapsed")}}');
+  h.push('var det=m.querySelector(".module-detail");var chev=m.querySelector(".module-chevron");if(det&&!det.classList.contains("open")){det.classList.add("open");if(chev)chev.classList.add("open")}');
+  h.push('m.scrollIntoView({behavior:"smooth",block:"center"});m.classList.add("module-highlight");setTimeout(function(){m.classList.remove("module-highlight")},2100)}');
   h.push('</script>');
   h.push('</body></html>');
 
