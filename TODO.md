@@ -101,8 +101,11 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 ## Docs & Release
 - [x] T069: Update README, CLAUDE.md, SKILL.md + version bump to 1.3.0 + marketplace push
 
+## Sync & Maintenance
+- [x] T070: Sync live module fixes back to repo catalog (branch-pr-gate, no-adhoc-commands, load-instructions, auto-continue)
+
 ## Status
-- 69 tasks completed, 0 pending
+- 70 tasks completed, 0 pending
 - Version: 1.3.0
 - 88 tests passing across 5 test files (16 runner + 7 wizard + 13 async + 42 module + 10 sync)
 - CI: GitHub Actions runs all tests on push/PR — badge in README
