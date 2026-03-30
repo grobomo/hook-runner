@@ -61,7 +61,8 @@ All tasks complete. Project is mature and stable:
 - 33 tests passing (14 runner + 6 wizard + 13 async)
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
 - Report works for both hook-runner users and standalone hooks users
-- Next session: marketplace promotion, demo recording, or new module development
+- CLI commands: setup, report, dry-run, health, sync, stats, prune, version
+- Next session: README update for --stats, marketplace promotion, or new module development
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
