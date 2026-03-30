@@ -36,6 +36,60 @@ var SCRIPT_DIR = __dirname;
 // When run from the repo directly, they're right here.
 var REPO_DIR = SCRIPT_DIR;
 
+var HOOK_LOG_PATH = path.join(HOOKS_DIR, "hook-log.jsonl");
+
+// ============================================================
+// 0. Hook Log Stats
+// ============================================================
+
+/**
+ * Read hook-log.jsonl and compute per-module stats.
+ * Returns: { "PreToolUse/enforcement-gate": { total: 100, pass: 90, block: 8, error: 2, samples: [...] }, ... }
+ * Each sample: { ts, result, tool, cmd, file, reason, project }
+ */
+function readHookStats(maxSamples) {
+  maxSamples = maxSamples || 5;
+  var stats = {};
+  if (!fs.existsSync(HOOK_LOG_PATH)) return stats;
+
+  var content;
+  try { content = fs.readFileSync(HOOK_LOG_PATH, "utf-8"); } catch(e) { return stats; }
+
+  var lines = content.split("\n");
+  for (var i = 0; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    var entry;
+    try { entry = JSON.parse(lines[i]); } catch(e) { continue; }
+
+    var key = entry.event + "/" + entry.module;
+    if (!stats[key]) {
+      stats[key] = { total: 0, pass: 0, block: 0, error: 0, text: 0, deny: 0, samples: [] };
+    }
+    var s = stats[key];
+    s.total++;
+    var r = entry.result || "pass";
+    if (r === "pass") s.pass++;
+    else if (r === "block" || r === "deny") { s.block++; s[r]++; }
+    else if (r === "error") s.error++;
+    else if (r === "text") s.text++;
+
+    // Keep samples of blocks/errors (most interesting)
+    if (r !== "pass" && r !== "text" && s.samples.length < maxSamples) {
+      s.samples.push({
+        ts: entry.ts || "",
+        result: r,
+        tool: entry.tool || "",
+        cmd: entry.cmd || "",
+        file: entry.file || "",
+        reason: entry.reason || "",
+        project: entry.project || "",
+      });
+    }
+  }
+
+  return stats;
+}
+
 // ============================================================
 // 1. Hook Scanner
 // ============================================================
@@ -231,7 +285,8 @@ function collectModules(modulesDir) {
   return result;
 }
 
-function generateReport(scan, outputPath) {
+function generateReport(scan, outputPath, hookStats) {
+  hookStats = hookStats || {};
   var now = new Date().toISOString().slice(0, 10);
 
   // Detect if already using hook-runner
@@ -336,6 +391,25 @@ function generateReport(scan, outputPath) {
   h.push('.scope-global{background:#23863622;color:#3fb950;border:1px solid #23863644}');
   h.push('.scope-project{background:#8b5cf622;color:#d2a8ff;border:1px solid #7c3aed44}');
   h.push('.scope-archived{background:#30363d;color:#484f58;border:1px solid #484f58}');
+  // Stats badges
+  h.push('.module-stats{display:flex;gap:.4rem;align-items:center;margin-left:auto;margin-right:.5rem}');
+  h.push('.stat-total{font-size:.75rem;color:#8b949e;background:#21262d;padding:.1rem .45rem;border-radius:10px;font-weight:600;font-variant-numeric:tabular-nums}');
+  h.push('.stat-block{font-size:.7rem;color:#f85149;background:#f8514922;padding:.1rem .4rem;border-radius:10px;font-weight:600}');
+  h.push('.stat-error{font-size:.7rem;color:#d29922;background:#d2992222;padding:.1rem .4rem;border-radius:10px;font-weight:600}');
+  // Sample triggers
+  h.push('.samples-section{margin-bottom:1rem;border:1px solid #30363d;border-radius:6px;overflow:hidden}');
+  h.push('.samples-title{font-size:.8rem;color:#8b949e;padding:.5rem .75rem;background:#161b22;border-bottom:1px solid #30363d;font-weight:600}');
+  h.push('.sample{padding:.4rem .75rem;border-bottom:1px solid #21262d;display:flex;flex-wrap:wrap;gap:.4rem;align-items:baseline;font-size:.8rem}');
+  h.push('.sample:last-child{border-bottom:none}');
+  h.push('.sample-time{color:#484f58;font-size:.75rem;font-variant-numeric:tabular-nums}');
+  h.push('.sample-result{padding:.05rem .35rem;border-radius:3px;font-size:.7rem;font-weight:600}');
+  h.push('.sample-block,.sample-deny{color:#f85149;background:#f8514915}');
+  h.push('.sample-error{color:#d29922;background:#d2992215}');
+  h.push('.sample-tool{color:#79c0ff}');
+  h.push('.sample-cmd{color:#8b949e;font-family:monospace;font-size:.75rem;max-width:40ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}');
+  h.push('.sample-file{color:#d2a8ff}');
+  h.push('.sample-project{color:#3fb950;font-size:.7rem;opacity:.7}');
+  h.push('.sample-reason{color:#8b949e;font-size:.75rem;width:100%;margin-top:.2rem;padding-left:1rem;white-space:pre-wrap;max-height:3rem;overflow:hidden}');
   h.push('.module-chevron{color:#484f58;transition:transform .2s;flex-shrink:0}');
   h.push('.module-chevron.open{transform:rotate(90deg)}');
   h.push('.module-detail{display:none;padding:0 1.5rem 1rem 2.5rem}');
@@ -443,15 +517,51 @@ function generateReport(scan, outputPath) {
       var scopeLabel = m.archived ? "ARCHIVED" : (m.scope !== "global" ? m.scope : "GLOBAL");
       var nameStyle = m.archived ? ' style="color:#484f58;text-decoration:line-through"' : '';
 
+      // Look up stats for this module
+      var statsKey = evt + "/" + m.name.replace(/\.js$/, "");
+      var modStats = hookStats[statsKey] || null;
+
       h.push('<div class="module">');
       h.push('<div class="module-header" onclick="toggleModule(this)">');
       h.push('<span class="module-chevron">&#9654;</span>');
       h.push('<div class="module-icon ' + iconClass + '"></div>');
       h.push('<span class="module-name"' + nameStyle + '>' + escHtml(m.name) + '</span>');
       if (m.description) h.push('<span class="module-desc">&mdash; ' + escHtml(m.description) + '</span>');
+
+      // Hit count badges (between description and scope)
+      if (modStats && modStats.total > 0) {
+        h.push('<span class="module-stats">');
+        h.push('<span class="stat-total" title="Total invocations">' + modStats.total + '</span>');
+        if (modStats.block > 0) h.push('<span class="stat-block" title="Blocked">' + modStats.block + ' blocked</span>');
+        if (modStats.error > 0) h.push('<span class="stat-error" title="Errors">' + modStats.error + ' err</span>');
+        h.push('</span>');
+      }
+
       h.push('<span class="module-scope ' + scopeClass + '">' + scopeLabel + '</span>');
       h.push('</div>');
       h.push('<div class="module-detail">');
+
+      // Sample triggers (blocks/errors)
+      if (modStats && modStats.samples.length > 0) {
+        h.push('<div class="samples-section">');
+        h.push('<div class="samples-title">Recent triggers (' + modStats.samples.length + ')</div>');
+        for (var si = 0; si < modStats.samples.length; si++) {
+          var sample = modStats.samples[si];
+          var sTime = "";
+          try { sTime = sample.ts.replace("T", " ").substring(0, 19); } catch(e2) {}
+          h.push('<div class="sample">');
+          h.push('<span class="sample-time">' + escHtml(sTime) + '</span>');
+          h.push('<span class="sample-result sample-' + sample.result + '">' + escHtml(sample.result) + '</span>');
+          if (sample.tool) h.push('<span class="sample-tool">' + escHtml(sample.tool) + '</span>');
+          if (sample.cmd) h.push('<span class="sample-cmd">' + escHtml(sample.cmd) + '</span>');
+          if (sample.file) h.push('<span class="sample-file">' + escHtml(sample.file) + '</span>');
+          if (sample.project) h.push('<span class="sample-project">' + escHtml(sample.project) + '</span>');
+          if (sample.reason) h.push('<div class="sample-reason">' + escHtml(sample.reason) + '</div>');
+          h.push('</div>');
+        }
+        h.push('</div>');
+      }
+
       if (m.source) {
         var lines = m.source.split("\n");
         // Build code block as single string to avoid double line spacing from h.join("\n")
@@ -945,10 +1055,19 @@ function main() {
   var eventNames = Object.keys(scan.events);
   console.log("  Found " + scan.totalHooks + " hook(s) across " + eventNames.length + " event(s)");
 
+  // Read hook stats for report
+  var hookStats = readHookStats(5);
+  var statsEntries = Object.keys(hookStats);
+  if (statsEntries.length > 0) {
+    var totalInvocations = 0;
+    for (var si2 = 0; si2 < statsEntries.length; si2++) totalInvocations += hookStats[statsEntries[si2]].total;
+    console.log("  Hook log: " + totalInvocations + " invocations across " + statsEntries.length + " modules");
+  }
+
   // Step 2: Generate "before" report
   console.log("[2/5] Generating hooks report...");
   var beforeReport = path.join(REPORT_DIR, "hooks-report-before.html");
-  generateReport(scan, beforeReport);
+  generateReport(scan, beforeReport, hookStats);
   console.log("  Report: " + beforeReport);
   openFile(beforeReport);
 
@@ -988,7 +1107,7 @@ function main() {
   console.log("[5/5] Verifying installation...");
   var afterScan = scanHooks();
   var afterReport = path.join(REPORT_DIR, "hooks-report.html");
-  generateReport(afterScan, afterReport);
+  generateReport(afterScan, afterReport, hookStats);
   console.log("  Report: " + afterReport);
   openFile(afterReport);
 
@@ -1011,6 +1130,6 @@ function main() {
   console.log("============================================");
 }
 
-module.exports = { scanHooks: scanHooks, generateReport: generateReport, backupHooks: backupHooks, installRunners: installRunners, parseModulesYaml: parseModulesYaml, syncModules: syncModules };
+module.exports = { scanHooks: scanHooks, generateReport: generateReport, backupHooks: backupHooks, installRunners: installRunners, parseModulesYaml: parseModulesYaml, syncModules: syncModules, readHookStats: readHookStats };
 
 if (require.main === module) main();
