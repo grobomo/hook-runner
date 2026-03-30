@@ -10,16 +10,33 @@ module.exports = function(input) {
   var cmd = (input.tool_input || {}).command || "";
   var normalized = cmd.replace(/\s+/g, " ").trim();
 
-  // Allow running scripts (the whole point)
-  if (/scripts\//.test(normalized)) return null;
-  if (/\.sh\b/.test(normalized) && !/^\s*(aws|ssh|scp|docker)\b/.test(normalized)) return null;
+  // Allow running scripts (the whole point) — command must START with a script path
+  if (/^\s*(bash\s+)?scripts\//.test(normalized)) return null;
+  if (/^\s*(bash\s+)?\.\/scripts\//.test(normalized)) return null;
+  if (/^\s*(bash\s+)?[A-Za-z]:.*scripts\/.*\.sh\b/.test(normalized)) return null;
+  // Allow sourcing fleet config, etc.
+  if (/^\s*source\s+.*scripts\//.test(normalized)) return null;
+  // Allow .sh files that aren't raw infra commands
+  if (/^\s*(bash\s+)?\S+\.sh\b/.test(normalized) && !/^\s*(aws|ssh|scp|docker)\b/.test(normalized)) return null;
 
   // Allow basic dev tools (git, npm, node, python, pip, chmod, mkdir, ls, cat, pwd, which, echo)
   var safeTools = /^\s*(git|npm|npx|node|python|python3|pip|uv|chmod|chown|mkdir|ls|cat|pwd|which|echo|printf|test|true|false|cd|cp|mv|tar|gzip|base64|wc|sort|uniq|diff|head|tail|tee|touch|date|hostname|whoami|id|env|export|set|source|bash\s+scripts\/)\b/;
   if (safeTools.test(normalized)) return null;
 
   // Allow piped reads and simple checks
-  if (/^\s*(cat|head|tail|grep|find|curl.*localhost|ping|nc\s)/.test(normalized)) return null;
+  if (/^\s*(cat|head|tail|grep|find|ping|nc\s)/.test(normalized)) return null;
+  // Allow curl to localhost only — fleet API calls must use scripts/fleet/api-*.sh
+  if (/^\s*curl\b/.test(normalized)) {
+    if (/localhost|127\.0\.0\.1/.test(normalized)) return null;
+    return {
+      decision: "block",
+      reason: "NO AD-HOC CURL to external hosts. Use scripts/fleet/api-*.sh for fleet API calls.\n" +
+        "  api-submit.sh  — submit tasks\n" +
+        "  api-status.sh  — check workers/tasks/health\n" +
+        "  api-cancel.sh  — cancel tasks\n" +
+        "Blocked: " + cmd.substring(0, 150)
+    };
+  }
 
   // Block: aws CLI (any service)
   if (/\baws\s+\w+/.test(normalized)) {

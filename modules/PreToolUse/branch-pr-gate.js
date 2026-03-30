@@ -51,13 +51,50 @@ var READ_ONLY_PATTERNS = [
 // State-changing commands that require a task branch
 var STATE_CHANGE_PATTERNS = [
   /^\s*git\s+(commit|push|merge|rebase|cherry-pick|reset|tag)/,
-  /^\s*git\s+checkout\s+-b/,  // creating branches is fine, but track it
+  /^\s*git\s+checkout\s+-b/,  // creating branches is fine, but validate name
   /^\s*bash\s+.*deploy/,
   /^\s*bash\s+.*build/,
   /^\s*gh\s+pr\s+(create|merge|close|edit)/,
   /^\s*scp\b/,
   /^\s*docker\s+(build|push|tag|run|stop|exec)/,
 ];
+
+// Common verbs for branch naming (verb-noun convention)
+var VALID_VERBS = [
+  "add", "build", "create", "deploy", "enable", "enforce", "extend", "extract",
+  "fix", "implement", "improve", "integrate", "migrate", "move", "rebuild",
+  "refactor", "remove", "replace", "restore", "rewrite", "scale", "setup",
+  "split", "test", "update", "upgrade", "validate", "wire",
+];
+
+function validateBranchName(name) {
+  // Task branches: NNN-TNNN-slug — always valid (slug is freeform)
+  if (/^\d{3}-T\d{3}/.test(name)) return null;
+
+  // Feature branches: NNN-verb-noun
+  var featureMatch = name.match(/^(\d{3})-(.+)$/);
+  if (!featureMatch) {
+    return "Branch name must start with a 3-digit spec number: NNN-verb-noun";
+  }
+
+  var slug = featureMatch[2];
+
+  // No "and" — monolith features must be split
+  if (/\band\b/i.test(slug)) {
+    return "Branch name contains 'and' — split into separate features.\n" +
+      "Example: '007-scale-and-dashboard' → '007-scale-fleet' + '008-build-dashboard'";
+  }
+
+  // Must start with a verb
+  var firstWord = slug.split("-")[0].toLowerCase();
+  if (VALID_VERBS.indexOf(firstWord) === -1) {
+    return "Branch name must use verb-noun convention (e.g. 'scale-fleet', 'build-dashboard').\n" +
+      "'" + firstWord + "' is not a recognized verb. Valid verbs: " +
+      VALID_VERBS.slice(0, 10).join(", ") + ", ...";
+  }
+
+  return null;
+}
 
 function getBranch() {
   try {
@@ -151,6 +188,18 @@ module.exports = function(input) {
     }
     if (!isStateChange) return null; // unknown commands pass through
 
+    // Validate branch names on git checkout -b regardless of current branch
+    if (/git\s+checkout\s+-b/.test(cmd)) {
+      var newBranch = cmd.match(/git\s+checkout\s+-b\s+(\S+)/);
+      if (newBranch) {
+        var nameErr = validateBranchName(newBranch[1]);
+        if (nameErr) {
+          return { decision: "block", reason: "BRANCH NAME GATE: " + nameErr };
+        }
+      }
+      return null; // valid name, allow creation
+    }
+
     var branch = earlyBranch; // reuse from early commit check
     if (!branch) return null;
 
@@ -159,7 +208,7 @@ module.exports = function(input) {
       if (/git\s+reset\s+--(soft|hard)\s+.*origin/.test(cmd)) return null;
       if (/git\s+reset\s+--(soft|hard)\s+HEAD~/.test(cmd)) return null;
       if (/git\s+branch\s+-f\s+main\s+origin/.test(cmd)) return null;
-      if (/git\s+checkout\s+-b/.test(cmd)) return null;  // creating branch to rescue commits
+      if (/git\s+checkout\s+-b/.test(cmd)) return null;  // validated earlier
       if (/git\s+checkout\s+\S/.test(cmd) && !/git\s+checkout\s+(main|master)/.test(cmd)) return null;  // switching away from main
 
       return {
@@ -182,8 +231,7 @@ module.exports = function(input) {
     if (/gh\s+pr\s+(close|view|list|status|checks)/.test(cmd)) return null;
 
     if (!isTaskBranch(branch)) {
-      // Allow git checkout -b (creating task branches) on feature branches
-      if (/git\s+checkout\s+-b/.test(cmd)) return null;
+      if (/git\s+checkout\s+-b/.test(cmd)) return null;  // validated earlier
       // Allow git push -u (setting up tracking) on feature branches
       if (/git\s+push\s+-u/.test(cmd)) return null;
       // Allow git branch -m (renaming branches) — organizational, not new work
