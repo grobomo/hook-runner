@@ -70,7 +70,7 @@ All tasks complete. Project is mature and stable:
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
 - Report works for both hook-runner users and standalone hooks users
 - CLI commands: setup, report, dry-run, health, sync, stats, prune, version
-- Next session: marketplace promotion or new module development
+- Next session: update CLAUDE.md test count (now 67 total: 16 runner + 6 wizard + 13 async + 32 module), marketplace sync for T045-T047, or new UserPromptSubmit module development
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
