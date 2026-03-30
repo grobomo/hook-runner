@@ -89,8 +89,12 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T062: Add no-hardcoded-paths PreToolUse module (blocks Write/Edit with absolute paths)
 - [x] T063: Add --upgrade command (self-updater from GitHub, --dry-run/--force supported)
 
+## Docs & Marketplace
+- [x] T064: Update README + SKILL.md with --upgrade, --open, no-hardcoded-paths, report.js
+- [ ] T065: Marketplace push + version bump to 1.2.0
+
 ## Status
-- 60 tasks completed, 3 pending
+- 63 tasks completed, 2 pending
 - Version: 1.1.0
 - 84 tests passing across 5 test files (16 runner + 7 wizard + 13 async + 38 module + 10 sync)
 - CI: GitHub Actions runs all tests on push/PR — badge in README
