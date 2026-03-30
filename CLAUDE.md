@@ -10,6 +10,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 ## File Layout
 - `setup.js` — CLI entry point (setup wizard, report, health, sync, stats, test, uninstall, prune, version)
+- `report.js` — HTML report generator (extracted from setup.js for maintainability)
 - `run-*.js` — event runners (one per event: pretooluse, posttooluse, stop, sessionstart, userpromptsubmit)
 - `load-modules.js` — shared module loader (global + project-scoped discovery)
 - `hook-log.js` — centralized logger (appends JSONL per invocation)
