@@ -27,9 +27,10 @@ These were made to the live hooks, not committed to this repo (user-specific enf
 - [x] T014: Sync repo example modules with live fixes
 - [x] T015: Sync local skill copy after repo changes
 - [x] T016: Module catalog — move all modules into repo under modules/ directory
-- [ ] T017: Config file — modules.yaml format to pick which modules to install
-- [ ] T018: Sync command — `setup.js --sync` pulls selected modules from GitHub
-- [ ] T019: Update SKILL.md/README with sync workflow, test e2e on fresh install
+- [x] T017: Config file — modules.yaml format to pick which modules to install
+- [x] T018: Sync command — `setup.js --sync` pulls selected modules from GitHub
+- [x] T019: Update SKILL.md/README with sync workflow, test e2e on fresh install
+- [x] T020: Fix enforcement-gate — dirty-tree check only on main (not task branches)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog

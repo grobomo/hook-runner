@@ -15,6 +15,11 @@ module.exports = function(input) {
   // Allow writing TODO.md (bootstrap)
   if (path.basename(targetFile) === "TODO.md") return null;
 
+  // Allow editing ~/.claude/ (user config, not a project)
+  var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
+  var normalTarget = targetFile.replace(/\\/g, "/");
+  if (home && normalTarget.startsWith(home + "/.claude/")) return null;
+
   // Find project dir
   var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
   if (targetFile) projectDir = path.dirname(targetFile);
@@ -36,30 +41,37 @@ module.exports = function(input) {
   // CHECK 1: No git repo
   if (!gitRoot) {
     return {
-      decision: "deny",
+      decision: "block",
       reason: "No git repo at " + projectDir + ". Run: git init && git add -A && git commit -m 'Initial commit'. Every project must be tracked in git."
     };
   }
 
-  // CHECK 2: Dirty working tree
+  // CHECK 2: Dirty working tree — only on main/master.
+  // On task branches, iterative edits before committing are normal workflow.
+  // The branch-pr-gate already ensures you're on the right branch.
   try {
-    var status = child_process.execSync("git status --porcelain", {
+    var branch = child_process.execSync("git rev-parse --abbrev-ref HEAD", {
       cwd: gitRoot, encoding: "utf-8", timeout: 5000
     }).trim();
-    if (status.length > 0) {
-      return {
-        decision: "deny",
-        reason: "Dirty working tree in " + gitRoot + ". Commit before making new changes. Run: git add <files> && git commit -m 'description'"
-      };
+    if (branch === "main" || branch === "master") {
+      var status = child_process.execSync("git status --porcelain", {
+        cwd: gitRoot, encoding: "utf-8", timeout: 5000
+      }).trim();
+      if (status.length > 0) {
+        return {
+          decision: "block",
+          reason: "Dirty working tree on " + branch + " in " + gitRoot + ". Commit or branch before making new changes. Run: git add <files> && git commit -m 'description'"
+        };
+      }
     }
   } catch (e) {
-    // git status failed, skip check
+    // git commands failed, skip check
   }
 
   // CHECK 3: No TODO.md
   if (!fs.existsSync(path.join(gitRoot, "TODO.md"))) {
     return {
-      decision: "deny",
+      decision: "block",
       reason: "No TODO.md in " + gitRoot + ". Write a plan to TODO.md before making code changes. Document what you're doing and why."
     };
   }

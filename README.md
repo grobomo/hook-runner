@@ -89,11 +89,53 @@ run-modules/PreToolUse/
     custom-gate.js            # runs ONLY when CLAUDE_PROJECT_DIR basename = "my-project"
 ```
 
-## Example Modules
+## Module Sync
 
-See `run-modules/` for included examples:
-- `PreToolUse/enforcement-gate.js` — requires git repo + clean tree + TODO.md
-- `PreToolUse/root-cause-gate.js` — blocks workarounds, demands root cause analysis
-- `PostToolUse/rule-hygiene.js` — validates rule files are granular
-- `Stop/auto-continue.js` — keeps Claude working instead of stopping to ask
-- `SessionStart/load-instructions.js` — injects working instructions at session start
+Sync modules from GitHub to a new machine (or keep an existing install updated):
+
+```bash
+# 1. Install the runner system
+/hook-runner setup
+
+# 2. Create ~/.claude/hooks/modules.yaml (pick which modules you want)
+curl -fsSL https://raw.githubusercontent.com/grobomo/hook-runner/main/modules.example.yaml > ~/.claude/hooks/modules.yaml
+# Edit modules.yaml — comment out modules you don't want
+
+# 3. Sync
+/hook-runner sync            # install/update selected modules
+/hook-runner sync-dry-run    # preview first
+```
+
+## Available Modules
+
+Full catalog in `modules/` directory:
+
+### PreToolUse (gates before tool execution)
+| Module | Description |
+|--------|-------------|
+| `enforcement-gate` | Requires git repo + TODO.md. Dirty-tree check on main only. |
+| `branch-pr-gate` | Model C workflow: feature branch → task branch → PR |
+| `remote-tracking-gate` | Blocks edits if branch not pushed to remote |
+| `spec-gate` | Blocks code without specs/tasks.md |
+| `gsd-gate` | Blocks code without e2e test in checkpoint |
+| `continuous-claude-gate` | Blocks code without tracked task workflow |
+| `root-cause-gate` | Blocks retry/cleanup without root cause diagnosis |
+| `archive-not-delete` | Blocks `rm -rf`, forces `mv` to `archive/` |
+| `no-adhoc-commands` | Blocks raw aws/ssh/docker/kubectl, forces scripts/ |
+| `aws-tagging-gate` | Enforces required tags on AWS resource creation (env-configurable) |
+
+### PostToolUse (checks after tool execution)
+| Module | Description |
+|--------|-------------|
+| `rule-hygiene` | Validates rule files are single-topic, under 20 lines |
+
+### Stop (controls session ending)
+| Module | Description |
+|--------|-------------|
+| `auto-continue` | Blocks stopping — always find the next task |
+| `push-unpushed` | Blocks stop if unpushed commits on feature branch |
+
+### SessionStart (injects context)
+| Module | Description |
+|--------|-------------|
+| `load-instructions` | Injects working instructions at session start |

@@ -46,19 +46,26 @@ module.exports = function(input) {
     };
   }
 
-  // CHECK 2: Dirty working tree
+  // CHECK 2: Dirty working tree — only on main/master.
+  // On task branches, iterative edits before committing are normal workflow.
+  // The branch-pr-gate already ensures you're on the right branch.
   try {
-    var status = child_process.execSync("git status --porcelain", {
+    var branch = child_process.execSync("git rev-parse --abbrev-ref HEAD", {
       cwd: gitRoot, encoding: "utf-8", timeout: 5000
     }).trim();
-    if (status.length > 0) {
-      return {
-        decision: "block",
-        reason: "Dirty working tree in " + gitRoot + ". Commit before making new changes. Run: git add <files> && git commit -m 'description'"
-      };
+    if (branch === "main" || branch === "master") {
+      var status = child_process.execSync("git status --porcelain", {
+        cwd: gitRoot, encoding: "utf-8", timeout: 5000
+      }).trim();
+      if (status.length > 0) {
+        return {
+          decision: "block",
+          reason: "Dirty working tree on " + branch + " in " + gitRoot + ". Commit or branch before making new changes. Run: git add <files> && git commit -m 'description'"
+        };
+      }
     }
   } catch (e) {
-    // git status failed, skip check
+    // git commands failed, skip check
   }
 
   // CHECK 3: No TODO.md

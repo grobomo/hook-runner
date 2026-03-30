@@ -55,10 +55,41 @@ Modular hook runner system for Claude Code. Replaces per-hook entries in setting
 Run the setup wizard to migrate from standalone hooks to hook-runner:
 
 ```
-/hook-runner setup       # full wizard: scan → report → backup → install → verify
-/hook-runner report      # just see what hooks you have (HTML report)
-/hook-runner dry-run     # preview changes without modifying anything
+/hook-runner setup         # full wizard: scan → report → backup → install → verify
+/hook-runner report        # just see what hooks you have (HTML report)
+/hook-runner dry-run       # preview changes without modifying anything
 ```
+
+## Module Sync (new PC setup)
+
+Pull modules from GitHub using a config file:
+
+```
+# 1. Install hook-runner (setup wizard installs runners + creates dirs)
+/hook-runner setup
+
+# 2. Create your module config (or copy from another machine)
+#    Edit ~/.claude/hooks/modules.yaml to pick which modules you want
+
+# 3. Sync modules from GitHub
+/hook-runner sync          # install/update modules per config
+/hook-runner sync-dry-run  # preview what would change
+```
+
+Config format (`~/.claude/hooks/modules.yaml`):
+```yaml
+source: grobomo/hook-runner   # GitHub repo with modules/ directory
+branch: main
+modules:
+  PreToolUse:
+    - enforcement-gate        # git repo + clean tree + TODO.md
+    - branch-pr-gate          # Model C branching workflow
+    - root-cause-gate         # blocks cleanup without diagnosis
+  Stop:
+    - auto-continue           # never stop, find next task
+```
+
+See `modules.example.yaml` in the repo for the full list of available modules.
 
 ## Module Contract
 
