@@ -18,6 +18,7 @@ The report shows:
 - **File status** — whether referenced scripts exist (missing files highlighted in red)
 - **Source code** — expandable view of each hook script with line numbers
 - **Block/error stats** — which hooks are actually blocking tool calls (from `hook-log.jsonl`)
+- **Latency chart** — horizontal bar chart of avg/max module execution time
 - **Flow diagram** — visual timeline of hook events from session start to stop
 - **Search + filter** — find hooks by name instantly
 
@@ -100,6 +101,7 @@ Rules:
 - Use `require()` not `import`
 - **Return null to pass**, `{decision: "block", reason: "..."}` to block
 - **Alphabetical order** — prefix with `01-` to control execution order
+- **Dependencies** — add `// requires: mod1, mod2` in first 5 lines; missing deps = module skipped with warning
 - **Never edit settings.json** — runners are already registered, just add module files
 
 ## Event Types
@@ -114,7 +116,7 @@ Rules:
 
 ## Logging
 
-Runners log every module invocation to `~/.claude/hooks/hook-log.jsonl`. Each line records the timestamp, event, module name, result (pass/block/error), and context (tool name, command snippet, project). The log auto-rotates at 10MB. Stats include both current and rotated log files.
+Runners log every module invocation to `~/.claude/hooks/hook-log.jsonl`. Each line records the timestamp, event, module name, result (pass/block/error), execution time (ms), and context (tool name, command snippet, project). The log auto-rotates at 10MB. Stats include both current and rotated log files.
 
 ```bash
 /hook-runner stats             # quick text summary to stdout
@@ -123,7 +125,7 @@ node setup.js --prune 3        # keep only last 3 days
 node setup.js --prune 7 --dry-run  # preview without deleting
 ```
 
-The `--stats` command shows total invocations, block rate, and per-module hit counts — useful for CI or quick terminal checks without opening the HTML report.
+The `--stats` command shows total invocations, block rate, per-module hit counts, and average/max latency per module — useful for CI or quick terminal checks without opening the HTML report.
 
 The setup report (`/hook-runner report`) reads the log and shows hit counts and sample triggers per module.
 
@@ -189,6 +191,7 @@ Full catalog in `modules/` directory:
 | `no-adhoc-commands` | Blocks raw aws/ssh/docker/kubectl, forces scripts/ |
 | `secret-scan-gate` | Blocks git commit if staged diff contains API keys, tokens, or passwords |
 | `no-hardcoded-paths` | Blocks Write/Edit with hardcoded absolute user paths in content |
+| `env-var-check` | Blocks edits if `.env.required` vars are missing (cached per project) |
 | `aws-tagging-gate` | Enforces required tags on AWS resource creation (env-configurable) |
 
 ### UserPromptSubmit (processes user prompts)

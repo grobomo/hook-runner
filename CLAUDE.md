@@ -12,11 +12,11 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - `setup.js` — CLI entry point with extracted command handlers (cmdHelp, cmdUpgrade, cmdUninstall, etc.)
 - `report.js` — HTML report generator (extracted from setup.js for maintainability)
 - `run-*.js` — event runners (one per event: pretooluse, posttooluse, stop, sessionstart, userpromptsubmit)
-- `load-modules.js` — shared module loader (global + project-scoped discovery)
-- `hook-log.js` — centralized logger (appends JSONL per invocation)
-- `run-async.js` — async module executor (Promise detection, 4s timeout)
+- `load-modules.js` — shared module loader (global + project-scoped discovery + dependency validation)
+- `hook-log.js` — centralized logger (appends JSONL per invocation, includes per-module timing)
+- `run-async.js` — async module executor (Promise detection, 4s timeout, timing measurement)
 - `modules/` — distributable module catalog organized by event type
-- `scripts/test/` — test scripts (88 tests across 5 files)
+- `scripts/test/` — test scripts (90 tests across 5 files)
 
 ## Sync Targets (must stay identical)
 1. Repo: this directory
@@ -39,6 +39,7 @@ bash scripts/test/test-module-sync.sh  # 10 sync tests
 - Sync: `module.exports = function(input) { return null; }` — preferred for gates
 - Async: `module.exports = async function(input) { ... }` — 4s timeout per module
 - Return `null` to pass, `{decision: "block", reason: "..."}` to block
+- Dependencies: `// requires: mod1, mod2` in first 5 lines — missing deps = skipped with warning
 - First block wins, remaining modules skipped
 
 ## CLI Commands
