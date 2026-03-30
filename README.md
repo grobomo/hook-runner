@@ -1,78 +1,99 @@
 # hook-runner
 
-Modular hook runner system for Claude Code. One runner per event type, modules in folders. Replaces the old hook-manager skill.
+Modular hook runner system for Claude Code. One runner per event, modules in folders. Drop a `.js` file in a folder to add behavior — no settings.json editing needed.
+
+## Quick Start
+
+```bash
+# Install via grobomo marketplace (if not already added)
+# In Claude Code: /install hook-runner
+
+# Run the setup wizard
+/hook-runner setup        # scan → report → backup → install → verify
+/hook-runner report       # just see current hooks (HTML report)
+/hook-runner dry-run      # preview changes without modifying anything
+```
+
+The setup wizard will:
+1. Scan your current hooks and generate a styled HTML report
+2. Show what hook-runner would look like
+3. Back up all existing hook files to `~/.claude/hooks/archive/`
+4. Install the runner system
+5. Re-generate the report showing the result
 
 ## Architecture
 
 ```
-hooks/
-├── run-stop.js                          # Stop event runner
-├── run-pretooluse.js                    # PreToolUse event runner
-├── run-posttooluse.js                   # PostToolUse event runner
-├── run-modules/
-│   ├── Stop/
-│   │   └── auto-continue.js            # Keep Claude working, don't stop to ask
-│   ├── PreToolUse/
-│   │   └── enforcement-gate.js         # Git repo + clean tree + TODO.md checks
-│   └── PostToolUse/
-│       └── rule-hygiene.js             # Validates rule files are granular
-└── archive/                             # Old versions (never delete)
+~/.claude/hooks/
+  load-modules.js              # shared loader (global + project-scoped)
+  run-pretooluse.js            # PreToolUse runner
+  run-posttooluse.js           # PostToolUse runner
+  run-stop.js                  # Stop runner
+  run-sessionstart.js          # SessionStart runner
+  run-modules/
+    PreToolUse/
+      *.js                     # global modules (run for all projects)
+      my-project/*.js          # project-scoped (only when project name matches)
+    PostToolUse/*.js
+    Stop/*.js
+    SessionStart/*.js
 ```
 
 ## How It Works
 
 Each `run-*.js` runner:
 1. Reads stdin synchronously (`fs.readFileSync(0)`)
-2. Loads all `.js` files from `run-modules/<Event>/`
+2. Uses `load-modules.js` to discover global + project-scoped modules
 3. Calls each module with parsed input
-4. First deny/block wins
+4. First block/deny wins — remaining modules are skipped
 5. If all return `null`, action is allowed
 
 ## Module Contract
 
 ```javascript
+// run-modules/<Event>/my-gate.js
 module.exports = function(input) {
-  // input fields depend on event type (see Event Types below)
-  if (problem) {
-    return { decision: "deny", reason: "Why it's blocked" };
+  // PreToolUse/PostToolUse: input.tool_name, input.tool_input
+  // Stop: input.session_id, input.stop_hook_active
+  // SessionStart: return { text: "injected context" }
+  if (shouldBlock) {
+    return { decision: "block", reason: "Why it's blocked" };
   }
   return null; // pass
 };
 ```
 
-Modules must be synchronous. No async/await, no Promises. Use `require()` not `import`.
+Rules:
+- **Synchronous only** — no async/await, no Promises, use `require()` not `import`
+- **Return null to pass**, `{decision: "block", reason: "..."}` to block
+- **Alphabetical order** — prefix with `01-` to control execution order
+- **Never edit settings.json** — runners are already registered, just add module files
 
 ## Event Types
 
-| Event | Runner | Matcher? | stdin Fields | Block Key |
-|-------|--------|----------|-------------|-----------|
-| Stop | run-stop.js | No | `session_id, stop_hook_active, last_assistant_message` | `"block"` |
-| PreToolUse | run-pretooluse.js | Yes | `session_id, tool_name, tool_input` | `"deny"` |
-| PostToolUse | run-posttooluse.js | Yes | `session_id, tool_name, tool_input, tool_response` | `"block"` |
+| Event | Runner | Matchers | Module Return |
+|-------|--------|----------|---------------|
+| SessionStart | run-sessionstart.js | none | `{text: "..."}` |
+| PreToolUse | run-pretooluse.js | Edit, Write, Bash | `{decision: "block"}` or `null` |
+| PostToolUse | run-posttooluse.js | Edit, Write | `{decision: "block"}` or `null` |
+| Stop | run-stop.js | none | `{decision: "block"}` or `null` |
 
-Runners handle output wrapping (PreToolUse adds `hookSpecificOutput`).
+## Project-Scoped Modules
 
-## Adding a Module
+Modules in a subfolder matching your project name only run for that project:
 
-1. Create `run-modules/<Event>/your-module.js`
-2. Export a sync function matching the contract
-3. Modules run alphabetically — prefix with `01-` for ordering
-4. If the event has no runner yet, copy any `run-*.js` and change the path
-
-## settings.json
-
-```json
-{
-  "hooks": {
-    "Stop": [{"hooks": [{"type": "command", "command": "node \"$HOME/.claude/hooks/run-stop.js\"", "timeout": 5}]}],
-    "PreToolUse": [
-      {"matcher": "Edit", "hooks": [{"type": "command", "command": "node \"$HOME/.claude/hooks/run-pretooluse.js\"", "timeout": 5}]},
-      {"matcher": "Write", "hooks": [{"type": "command", "command": "node \"$HOME/.claude/hooks/run-pretooluse.js\"", "timeout": 5}]}
-    ],
-    "PostToolUse": [
-      {"matcher": "Write", "hooks": [{"type": "command", "command": "node \"$HOME/.claude/hooks/run-posttooluse.js\"", "timeout": 5}]},
-      {"matcher": "Edit", "hooks": [{"type": "command", "command": "node \"$HOME/.claude/hooks/run-posttooluse.js\"", "timeout": 5}]}
-    ]
-  }
-}
 ```
+run-modules/PreToolUse/
+  global-gate.js              # runs for ALL projects
+  my-project/
+    custom-gate.js            # runs ONLY when CLAUDE_PROJECT_DIR basename = "my-project"
+```
+
+## Example Modules
+
+See `run-modules/` for included examples:
+- `PreToolUse/enforcement-gate.js` — requires git repo + clean tree + TODO.md
+- `PreToolUse/root-cause-gate.js` — blocks workarounds, demands root cause analysis
+- `PostToolUse/rule-hygiene.js` — validates rule files are granular
+- `Stop/auto-continue.js` — keeps Claude working instead of stopping to ask
+- `SessionStart/load-instructions.js` — injects working instructions at session start
