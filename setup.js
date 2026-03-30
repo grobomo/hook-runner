@@ -19,6 +19,7 @@
  *   node setup.js --sync --dry-run # preview sync without installing
  *   node setup.js --stats           # quick text summary of hook log
  *   node setup.js --list            # show catalog vs installed modules
+ *   node setup.js --test            # run all test suites
  *   node setup.js --prune 7        # prune log entries older than 7 days
  *   node setup.js --prune 7 --dry-run
  *   node setup.js --version        # show version
@@ -1264,6 +1265,7 @@ function main() {
   var pruneMode = args.indexOf("--prune") !== -1;
   var statsMode = args.indexOf("--stats") !== -1;
   var listMode = args.indexOf("--list") !== -1;
+  var testMode = args.indexOf("--test") !== -1;
 
   // --- Version ---
   if (versionMode) {
@@ -1410,6 +1412,73 @@ function main() {
 
     console.log("");
     console.log("[hook-runner] " + installedCount + " installed, " + catalogCount + " in catalog");
+    return;
+  }
+
+  // --- Test mode: run all test suites ---
+  if (testMode) {
+    console.log("[hook-runner] Test Suite");
+    console.log("========================");
+    var testDir = path.join(REPO_DIR, "scripts", "test");
+    var testFiles;
+    try {
+      testFiles = fs.readdirSync(testDir).filter(function(f) { return f.startsWith("test-") && f.endsWith(".sh"); }).sort();
+    } catch(e) {
+      console.log("  ERROR: test directory not found: " + testDir);
+      process.exit(1);
+    }
+    if (testFiles.length === 0) {
+      console.log("  No test scripts found in " + testDir);
+      process.exit(1);
+    }
+    var totalPass = 0, totalFail = 0, suiteFail = 0;
+    for (var ti = 0; ti < testFiles.length; ti++) {
+      var testPath = path.join(testDir, testFiles[ti]);
+      var suiteName = testFiles[ti].replace("test-", "").replace(".sh", "");
+      console.log("");
+      console.log("  [" + suiteName + "] " + testFiles[ti]);
+      try {
+        var result = cp.execSync("bash " + JSON.stringify(testPath), {
+          cwd: REPO_DIR,
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"],
+          timeout: 60000
+        });
+        // Parse results line: "=== Results: N passed, N failed ==="
+        var match = result.match(/(\d+) passed, (\d+) failed/);
+        if (match) {
+          totalPass += parseInt(match[1], 10);
+          totalFail += parseInt(match[2], 10);
+          if (parseInt(match[2], 10) > 0) suiteFail++;
+        }
+        // Show last few lines (results summary)
+        var lines = result.trim().split("\n");
+        var summaryLines = lines.slice(-3);
+        for (var sl = 0; sl < summaryLines.length; sl++) {
+          console.log("    " + summaryLines[sl]);
+        }
+      } catch(e) {
+        suiteFail++;
+        var errOut = (e.stdout || "") + (e.stderr || "");
+        var errLines = errOut.trim().split("\n").slice(-5);
+        for (var el = 0; el < errLines.length; el++) {
+          console.log("    " + errLines[el]);
+        }
+        // Try to parse partial results
+        var partMatch = errOut.match(/(\d+) passed, (\d+) failed/);
+        if (partMatch) {
+          totalPass += parseInt(partMatch[1], 10);
+          totalFail += parseInt(partMatch[2], 10);
+        }
+      }
+    }
+    console.log("");
+    console.log("========================");
+    console.log("[hook-runner] " + testFiles.length + " suites, " + totalPass + " passed, " + totalFail + " failed");
+    if (suiteFail > 0) {
+      console.log("[hook-runner] " + suiteFail + " suite(s) had failures");
+      process.exit(1);
+    }
     return;
   }
 
