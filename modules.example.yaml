@@ -31,8 +31,8 @@ modules:
     # - aws-tagging-gate     # enforce AWS resource tags (needs AWS_TAG_REQUIRED_VALUE env)
 
   UserPromptSubmit:
-    # Prompt validation (optional)
-    # - prompt-logger        # example: log prompts for audit
+    # Prompt audit (optional)
+    - prompt-logger          # log prompts to ~/.claude/hooks/prompt-log.jsonl
 
   PostToolUse:
     - rule-hygiene           # validates rule files are granular
