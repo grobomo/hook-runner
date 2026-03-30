@@ -201,6 +201,7 @@ Full catalog in `modules/` directory:
 |--------|-------------|
 | `rule-hygiene` | Validates rule files are single-topic, under 20 lines |
 | `commit-msg-check` | Blocks WIP/fixup commits and over-long first lines (>72 chars) |
+| `test-coverage-check` | Warns when source files with corresponding test files are modified |
 
 ### Stop (controls session ending)
 | Module | Description |
@@ -213,3 +214,4 @@ Full catalog in `modules/` directory:
 |--------|-------------|
 | `load-instructions` | Injects working instructions at session start |
 | `backup-check` | Async — warns if claude-backup is stale (>72h) or missing |
+| `project-health` | Runs health check on session start, warns about issues |

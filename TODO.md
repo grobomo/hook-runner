@@ -98,13 +98,16 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T067: Add PostToolUse module: `test-coverage-check` (warns if test files modified without running tests)
 - [x] T068: Extract main() dispatch into command handler functions (main() 553→15 lines)
 
+## Docs & Release
+- [x] T069: Update README, CLAUDE.md, SKILL.md + version bump to 1.3.0 + marketplace push
+
 ## Status
-- 65 tasks completed, 3 pending
-- Version: 1.2.0
-- 84 tests passing across 5 test files (16 runner + 7 wizard + 13 async + 38 module + 10 sync)
+- 69 tasks completed, 0 pending
+- Version: 1.3.0
+- 88 tests passing across 5 test files (16 runner + 7 wizard + 13 async + 42 module + 10 sync)
 - CI: GitHub Actions runs all tests on push/PR — badge in README
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
-- 19 modules in catalog (12 PreToolUse, 2 PostToolUse, 1 UserPromptSubmit, 2 SessionStart, 2 Stop)
+- 21 modules in catalog (12 PreToolUse, 3 PostToolUse, 1 UserPromptSubmit, 3 SessionStart, 2 Stop)
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help
 
 ## Moved
