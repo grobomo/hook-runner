@@ -1,4 +1,5 @@
 "use strict";
+// requires: enforcement-gate
 // Spec gate: blocks code edits unless work maps to an unchecked task in tasks.md.
 // If you're doing undocumented work, add it to the spec first.
 // Allows: config, specs, planning, rules, hooks, TODO.md, SESSION_STATE.md
