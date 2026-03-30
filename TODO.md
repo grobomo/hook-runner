@@ -116,7 +116,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 ## Performance & Features (v1.4.0)
 - [x] T071: Add `env-var-check` PreToolUse module (blocks if required project env vars missing)
 - [x] T072: Add per-module timing to hook-log (measure latency each module adds)
-- [ ] T073: Report v3 — timing data visualization, per-module latency chart
+- [x] T073: Report v3 — timing data visualization, per-module latency chart
 - [ ] T074: Module dependency system — `requires:` field in module header, load-modules validates
 - [ ] T075: Module hot-reload — detect changed modules, clear require cache without restarting Claude Code
 

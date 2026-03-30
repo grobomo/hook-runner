@@ -308,6 +308,16 @@ function generateReport(scan, outputPath, hookStats) {
   h.push('.module-stats{display:flex;gap:.4rem;align-items:center;margin-left:auto;margin-right:.5rem;font-variant-numeric:tabular-nums}');
   h.push('.stat-block{font-size:.75rem;color:#f85149;background:#f8514922;padding:.15rem .5rem;border-radius:10px;font-weight:600;min-width:4rem;text-align:right}');
   h.push('.stat-error{font-size:.75rem;color:#d29922;background:#d2992222;padding:.15rem .5rem;border-radius:10px;font-weight:600;min-width:4rem;text-align:right}');
+  h.push('.stat-timing{font-size:.75rem;color:#58a6ff;background:#1f6feb22;padding:.15rem .5rem;border-radius:10px;min-width:3rem;text-align:right}');
+  // Timing chart
+  h.push('.timing-section{margin-bottom:2rem;background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:1.5rem}');
+  h.push('.timing-section h3{margin:0 0 1rem;color:#c9d1d9;font-size:1rem}');
+  h.push('.timing-bar-row{display:flex;align-items:center;margin-bottom:.4rem;gap:.5rem}');
+  h.push('.timing-label{font-size:.75rem;color:#8b949e;width:22ch;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}');
+  h.push('.timing-bar-container{flex:1;height:1.2rem;background:#161b22;border-radius:3px;position:relative;overflow:hidden}');
+  h.push('.timing-bar-avg{height:100%;background:#1f6feb;border-radius:3px;min-width:2px}');
+  h.push('.timing-bar-max{position:absolute;top:0;height:100%;background:#1f6feb44;border-radius:3px}');
+  h.push('.timing-value{font-size:.75rem;color:#58a6ff;width:10ch;font-variant-numeric:tabular-nums}');
   // Sample triggers
   h.push('.samples-section{margin-bottom:1rem;border:1px solid #30363d;border-radius:6px;overflow:hidden}');
   h.push('.samples-title{font-size:.8rem;color:#8b949e;padding:.5rem .75rem;background:#161b22;border-bottom:1px solid #30363d;font-weight:600}');
@@ -368,6 +378,42 @@ function generateReport(scan, outputPath, hookStats) {
     h.push('<div class="arch-note"><h2>Current: Standalone Hook Scripts</h2>');
     h.push('<p>Each hook entry in <code>settings.json</code> points to an individual script. Adding new hooks requires editing settings.json.</p>');
     h.push('<p><strong>hook-runner</strong> replaces this with a modular system: one runner per event, modules in folders. <code>node setup.js</code> to migrate.</p>');
+    h.push('</div>');
+  }
+
+  // Timing chart — horizontal bar chart of module latency
+  var timedModules = [];
+  var hsKeys = Object.keys(hookStats).sort();
+  for (var ti = 0; ti < hsKeys.length; ti++) {
+    var tms = hookStats[hsKeys[ti]];
+    if (tms.msCount > 0) {
+      timedModules.push({ key: hsKeys[ti], avg: Math.round(tms.msTotal / tms.msCount), max: tms.msMax, count: tms.msCount });
+    }
+  }
+  if (timedModules.length > 0) {
+    timedModules.sort(function(a, b) { return b.avg - a.avg; });
+    var maxAvg = timedModules[0].avg || 1;
+    var maxMax = 0;
+    for (var tj = 0; tj < timedModules.length; tj++) {
+      if (timedModules[tj].max > maxMax) maxMax = timedModules[tj].max;
+    }
+    var chartScale = maxMax || maxAvg || 1;
+
+    h.push('<div class="timing-section">');
+    h.push('<h3>Module Latency (avg / max ms)</h3>');
+    for (var tk = 0; tk < timedModules.length && tk < 20; tk++) {
+      var tm = timedModules[tk];
+      var avgPct = Math.max(1, (tm.avg / chartScale) * 100);
+      var maxPct = Math.max(1, (tm.max / chartScale) * 100);
+      h.push('<div class="timing-bar-row">');
+      h.push('<span class="timing-label" title="' + escHtml(tm.key) + '">' + escHtml(tm.key.split("/").pop()) + '</span>');
+      h.push('<div class="timing-bar-container">');
+      h.push('<div class="timing-bar-max" style="width:' + maxPct.toFixed(1) + '%"></div>');
+      h.push('<div class="timing-bar-avg" style="width:' + avgPct.toFixed(1) + '%"></div>');
+      h.push('</div>');
+      h.push('<span class="timing-value">' + tm.avg + ' / ' + tm.max + 'ms</span>');
+      h.push('</div>');
+    }
     h.push('</div>');
   }
 
@@ -456,9 +502,13 @@ function generateReport(scan, outputPath, hookStats) {
     h2.push('<span class="module-name"' + nameStyle2 + '>' + escHtml(item.name) + '</span>');
     if (item.description) h2.push('<span class="module-desc">&mdash; ' + escHtml(item.description) + '</span>');
 
-    // Block/error badges only (no total — total is noise since every tool call triggers all modules)
-    if (modStats2 && (modStats2.block > 0 || modStats2.error > 0)) {
+    // Block/error/timing badges
+    if (modStats2 && (modStats2.block > 0 || modStats2.error > 0 || modStats2.msCount > 0)) {
       h2.push('<span class="module-stats">');
+      if (modStats2.msCount > 0) {
+        var avgMs = Math.round(modStats2.msTotal / modStats2.msCount);
+        h2.push('<span class="stat-timing" title="Avg latency (' + modStats2.msCount + ' samples, max ' + modStats2.msMax + 'ms)">' + avgMs + 'ms</span>');
+      }
       if (modStats2.block > 0) h2.push('<span class="stat-block" title="Times this hook blocked a tool call">' + modStats2.block + ' blocked</span>');
       if (modStats2.error > 0) h2.push('<span class="stat-error" title="Times this hook errored">' + modStats2.error + ' errors</span>');
       h2.push('</span>');
