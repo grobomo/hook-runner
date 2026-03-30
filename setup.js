@@ -913,6 +913,28 @@ function main() {
   var reportOnly = args.indexOf("--report") !== -1;
   var dryRun = args.indexOf("--dry-run") !== -1;
   var installOnly = args.indexOf("--install") !== -1;
+  var syncMode = args.indexOf("--sync") !== -1;
+
+  // --- Sync mode: fetch modules from GitHub per modules.yaml ---
+  if (syncMode) {
+    console.log("[hook-runner] Module Sync");
+    console.log("========================");
+    console.log("  Config: " + MODULES_YAML_PATH);
+    if (dryRun) console.log("  (dry-run mode)");
+    console.log("");
+    var syncChanges = syncModules(dryRun);
+    var installed = syncChanges.filter(function(c) { return c.action === "installed" || c.action === "updated"; }).length;
+    var upToDate = syncChanges.filter(function(c) { return c.action === "up-to-date"; }).length;
+    var wouldChange = syncChanges.filter(function(c) { return /^would-/.test(c.action); }).length;
+    var errors = syncChanges.filter(function(c) { return c.action === "error"; }).length;
+    console.log("");
+    if (dryRun) {
+      console.log("[hook-runner] Dry-run: " + wouldChange + " would change, " + upToDate + " up to date" + (errors ? ", " + errors + " errors" : ""));
+    } else {
+      console.log("[hook-runner] Sync complete: " + installed + " installed/updated, " + upToDate + " up to date" + (errors ? ", " + errors + " errors" : ""));
+    }
+    return;
+  }
 
   console.log("[hook-runner] Setup Wizard");
   console.log("========================");
