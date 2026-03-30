@@ -46,6 +46,14 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T035: Report v2 — standalone hooks support, search/filter, expand/collapse, block-only stats
 - [x] T036: README — highlight report as standalone tool, add health/sync commands, add backup-check module
 
+## Status
+All tasks complete. Project is mature and stable:
+- 36 tasks completed, 0 pending
+- 33 tests passing (14 runner + 6 wizard + 13 async)
+- 4 sync targets all identical: repo, live hooks, skill, marketplace
+- Report works for both hook-runner users and standalone hooks users
+- Next session: marketplace promotion, demo recording, or new module development
+
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
 
