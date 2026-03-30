@@ -16,6 +16,9 @@ var fs = require("fs");
 var path = require("path");
 
 module.exports = function(input) {
+  // API-dispatched tasks skip this gate (workers implement directly)
+  if (process.env.SKIP_SPEC_GATE === "1" || process.env.CONTINUOUS_CLAUDE === "1") return null;
+
   var tool = input.tool_name;
   if (tool !== "Edit" && tool !== "Write") return null;
 
