@@ -25,3 +25,10 @@
 - [x] T010: Update README.md with setup wizard docs
 
 **Checkpoint**: `bash scripts/test/test-skill-install.sh` — verify skill installs and setup.js runs
+
+---
+
+## Phase 4: Report Improvements
+- [ ] T011: Add flow diagram, expandable modules with source code, consistent terminology, event ordering
+
+**Checkpoint**: `bash scripts/test/test-setup-wizard.sh` — verify report generates correctly

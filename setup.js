@@ -130,212 +130,354 @@ function resolveScriptPath(cmd) {
 // 2. Report Generator
 // ============================================================
 
+// Canonical event order: user experience flow
+var EVENT_ORDER = ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"];
+
+var EVENT_TITLES = {
+  SessionStart: "Session Start Hooks",
+  UserPromptSubmit: "User Prompt Hooks",
+  PreToolUse: "Pre-Tool Use Hooks",
+  PostToolUse: "Post-Tool Use Hooks",
+  Stop: "Stop Hooks"
+};
+
+var EVENT_BADGES = {
+  SessionStart: "badge-session", PreToolUse: "badge-pre", PostToolUse: "badge-post",
+  Stop: "badge-stop", UserPromptSubmit: "badge-prompt"
+};
+
+function escHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/**
+ * Read the first comment line from a module as its description.
+ */
+function getModuleDescription(filePath) {
+  try {
+    var content = fs.readFileSync(filePath, "utf-8");
+    var lines = content.split("\n");
+    for (var i = 0; i < Math.min(lines.length, 10); i++) {
+      var line = lines[i].trim();
+      if (line.startsWith("//")) {
+        var desc = line.replace(/^\/\/\s*/, "");
+        if (desc.length > 10 && !/^#!|^"use strict"|^@module/.test(desc)) return desc;
+      }
+    }
+  } catch (e) { /* skip */ }
+  return "";
+}
+
+/**
+ * Read the full source code of a module for display.
+ */
+function getModuleSource(filePath) {
+  try {
+    return fs.readFileSync(filePath, "utf-8");
+  } catch (e) { return ""; }
+}
+
+/**
+ * Collect all modules for an event, including project-scoped and archived.
+ */
+function collectModules(modulesDir) {
+  var result = [];
+  if (!fs.existsSync(modulesDir)) return result;
+
+  var entries = fs.readdirSync(modulesDir, { withFileTypes: true });
+
+  // Global modules
+  var globalFiles = entries.filter(function(e) { return e.isFile() && e.name.endsWith(".js"); })
+    .map(function(e) { return e.name; }).sort();
+  for (var i = 0; i < globalFiles.length; i++) {
+    var fp = path.join(modulesDir, globalFiles[i]);
+    result.push({
+      name: globalFiles[i], path: fp, scope: "global",
+      description: getModuleDescription(fp), source: getModuleSource(fp), archived: false
+    });
+  }
+
+  // Archive modules
+  var archiveDir = path.join(modulesDir, "archive");
+  if (fs.existsSync(archiveDir)) {
+    try {
+      var archiveFiles = fs.readdirSync(archiveDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+      for (var a = 0; a < archiveFiles.length; a++) {
+        var afp = path.join(archiveDir, archiveFiles[a]);
+        result.push({
+          name: "archive/" + archiveFiles[a], path: afp, scope: "archived",
+          description: getModuleDescription(afp), source: getModuleSource(afp), archived: true
+        });
+      }
+    } catch (e) { /* skip */ }
+  }
+
+  // Project-scoped modules
+  var subdirs = entries.filter(function(e) { return e.isDirectory() && e.name !== "archive"; });
+  for (var s = 0; s < subdirs.length; s++) {
+    var subDir = path.join(modulesDir, subdirs[s].name);
+    var subFiles = fs.readdirSync(subDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+    for (var sf = 0; sf < subFiles.length; sf++) {
+      var sfp = path.join(subDir, subFiles[sf]);
+      result.push({
+        name: subdirs[s].name + "/" + subFiles[sf], path: sfp, scope: subdirs[s].name,
+        description: getModuleDescription(sfp), source: getModuleSource(sfp), archived: false
+      });
+    }
+  }
+
+  return result;
+}
+
 function generateReport(scan, outputPath) {
   var now = new Date().toISOString().slice(0, 10);
 
   // Detect if already using hook-runner
   var usingRunner = false;
-  var eventNames = Object.keys(scan.events);
-  for (var i = 0; i < eventNames.length; i++) {
-    var entries = scan.events[eventNames[i]].entries;
-    for (var j = 0; j < entries.length; j++) {
-      if (entries[j].isRunner) { usingRunner = true; break; }
+  var rawEventNames = Object.keys(scan.events);
+  for (var i = 0; i < rawEventNames.length; i++) {
+    var ents = scan.events[rawEventNames[i]].entries;
+    for (var j = 0; j < ents.length; j++) {
+      if (ents[j].isRunner) { usingRunner = true; break; }
     }
     if (usingRunner) break;
   }
 
-  // Count total modules across all events
-  var totalModules = 0;
-  for (var m = 0; m < eventNames.length; m++) {
-    totalModules += scan.events[eventNames[m]].moduleCount || 0;
+  // Order events by user experience flow
+  var eventNames = [];
+  for (var eo = 0; eo < EVENT_ORDER.length; eo++) {
+    if (scan.events[EVENT_ORDER[eo]]) eventNames.push(EVENT_ORDER[eo]);
+  }
+  for (var uk = 0; uk < rawEventNames.length; uk++) {
+    if (eventNames.indexOf(rawEventNames[uk]) === -1) eventNames.push(rawEventNames[uk]);
   }
 
-  var html = [];
-  html.push('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">');
-  html.push('<meta name="viewport" content="width=device-width, initial-scale=1.0">');
-  html.push('<title>Claude Code Hooks Report</title>');
-  html.push('<style>');
-  html.push('*{margin:0;padding:0;box-sizing:border-box}');
-  html.push('body{background:#0d1117;color:#c9d1d9;font-family:"Segoe UI",-apple-system,sans-serif;line-height:1.6;padding:2rem}');
-  html.push('h1{color:#58a6ff;font-size:1.8rem;margin-bottom:.3rem}');
-  html.push('.subtitle{color:#8b949e;font-size:.95rem;margin-bottom:2rem}');
-  html.push('.stats{display:flex;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap}');
-  html.push('.stat{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1rem 1.5rem;min-width:140px}');
-  html.push('.stat-value{font-size:2rem;font-weight:700;color:#58a6ff}');
-  html.push('.stat-label{font-size:.8rem;color:#8b949e;text-transform:uppercase;letter-spacing:.05em}');
-  html.push('.event-section{margin-bottom:1.5rem}');
-  html.push('.event-header{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1rem 1.5rem;cursor:pointer;display:flex;align-items:center;gap:1rem}');
-  html.push('.event-header:hover{background:#1c2128}');
-  html.push('.event-badge{font-size:.75rem;font-weight:600;padding:.2rem .6rem;border-radius:4px;text-transform:uppercase}');
-  html.push('.badge-session{background:#1f6feb33;color:#58a6ff;border:1px solid #1f6feb}');
-  html.push('.badge-pre{background:#da363333;color:#f85149;border:1px solid #da3633}');
-  html.push('.badge-post{background:#23863633;color:#3fb950;border:1px solid #238636}');
-  html.push('.badge-stop{background:#9e6a0333;color:#d29922;border:1px solid #9e6a03}');
-  html.push('.badge-prompt{background:#8b5cf633;color:#a78bfa;border:1px solid #7c3aed}');
-  html.push('.event-title{font-size:1.1rem;font-weight:600;color:#c9d1d9}');
-  html.push('.event-meta{margin-left:auto;color:#8b949e;font-size:.85rem}');
-  html.push('.chevron{color:#484f58;transition:transform .2s;font-size:1.2rem}');
-  html.push('.chevron.open{transform:rotate(90deg)}');
-  html.push('.event-body{background:#0d1117;border:1px solid #30363d;border-top:none;border-radius:0 0 8px 8px;display:none}');
-  html.push('.event-body.open{display:block}');
-  html.push('.hook-entry{padding:1rem 1.5rem;border-bottom:1px solid #21262d}');
-  html.push('.hook-entry:last-child{border-bottom:none}');
-  html.push('.hook-label{color:#8b949e;font-size:.8rem;text-transform:uppercase;margin-bottom:.3rem}');
-  html.push('.hook-path{color:#79c0ff;font-family:"Cascadia Code","Fira Code",monospace;font-size:.85rem}');
-  html.push('.hook-path.missing{color:#f85149;text-decoration:line-through}');
-  html.push('.matcher{background:#1f2937;border:1px solid #30363d;border-radius:4px;padding:.15rem .5rem;font-size:.8rem;color:#d2a8ff;font-family:monospace;display:inline-block;margin:.2rem}');
-  html.push('.status-badge{display:inline-block;padding:.15rem .5rem;border-radius:4px;font-size:.75rem;font-weight:600}');
-  html.push('.status-runner{background:#23863633;color:#3fb950;border:1px solid #238636}');
-  html.push('.status-standalone{background:#9e6a0333;color:#d29922;border:1px solid #9e6a03}');
-  html.push('.status-missing{background:#da363333;color:#f85149;border:1px solid #da3633}');
-  html.push('.module-list{padding:.5rem 1.5rem 1rem}');
-  html.push('.module-item{display:flex;align-items:center;gap:.5rem;padding:.3rem 0}');
-  html.push('.module-dot{width:8px;height:8px;border-radius:50%;background:#3fb950;flex-shrink:0}');
-  html.push('.module-name{color:#c9d1d9;font-size:.9rem;font-family:monospace}');
-  html.push('.arch-note{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1.5rem;margin-bottom:2rem}');
-  html.push('.arch-note h2{color:#d2a8ff;font-size:1rem;margin-bottom:.8rem}');
-  html.push('.arch-note p{color:#8b949e;font-size:.9rem;margin-bottom:.5rem}');
-  html.push('.arch-note code{background:#0d1117;padding:.1rem .4rem;border-radius:3px;color:#79c0ff;font-size:.85rem}');
-  html.push('.footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid #21262d;color:#484f58;font-size:.8rem;text-align:center}');
-  html.push('</style></head><body>');
+  // Collect all module info per event
+  var eventModules = {};
+  var totalModules = 0;
+  for (var em = 0; em < eventNames.length; em++) {
+    var evt = eventNames[em];
+    var evtData = scan.events[evt];
+    var modulesDir = null;
+    for (var mh = 0; mh < evtData.entries.length; mh++) {
+      if (evtData.entries[mh].isRunner && evtData.entries[mh].scriptPath) {
+        modulesDir = path.join(path.dirname(evtData.entries[mh].scriptPath), "run-modules", evt);
+        break;
+      }
+    }
+    var mods = modulesDir ? collectModules(modulesDir) : [];
+    eventModules[evt] = mods;
+    var activeCount = mods.filter(function(m) { return !m.archived; }).length;
+    totalModules += activeCount;
+    evtData.moduleCount = activeCount;
+  }
 
-  html.push('<h1>Claude Code Hooks Report</h1>');
-  html.push('<p class="subtitle">Hook configuration analysis &mdash; generated ' + now + '</p>');
+  var h = [];
+  h.push('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">');
+  h.push('<meta name="viewport" content="width=device-width, initial-scale=1.0">');
+  h.push('<title>Claude Code Hooks Report</title>');
+  h.push('<style>');
+  h.push('*{margin:0;padding:0;box-sizing:border-box}');
+  h.push('body{background:#0d1117;color:#c9d1d9;font-family:"Segoe UI",-apple-system,sans-serif;line-height:1.6;padding:2rem}');
+  h.push('h1{color:#58a6ff;font-size:1.8rem;margin-bottom:.3rem}');
+  h.push('.subtitle{color:#8b949e;font-size:.95rem;margin-bottom:2rem}');
+  h.push('.stats{display:flex;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap}');
+  h.push('.stat{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1rem 1.5rem;min-width:140px}');
+  h.push('.stat-value{font-size:2rem;font-weight:700;color:#58a6ff}');
+  h.push('.stat-label{font-size:.8rem;color:#8b949e;text-transform:uppercase;letter-spacing:.05em}');
+  h.push('.arch-note{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1.5rem;margin-bottom:2rem}');
+  h.push('.arch-note h2{color:#d2a8ff;font-size:1rem;margin-bottom:.8rem}');
+  h.push('.arch-note p{color:#8b949e;font-size:.9rem;margin-bottom:.5rem}');
+  h.push('.arch-note code{background:#0d1117;padding:.1rem .4rem;border-radius:3px;color:#79c0ff;font-size:.85rem}');
+  h.push('.flow{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1.5rem;margin-bottom:2rem}');
+  h.push('.flow h2{color:#58a6ff;font-size:1.1rem;margin-bottom:1rem}');
+  h.push('.flow-diagram{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding:1rem 0}');
+  h.push('.flow-stage{display:flex;flex-direction:column;align-items:center;min-width:180px}');
+  h.push('.flow-arrow{color:#484f58;font-size:1.5rem;padding-top:.8rem;min-width:40px;text-align:center}');
+  h.push('.flow-event{background:#1f2937;border:2px solid #58a6ff;border-radius:8px;padding:.6rem 1rem;font-weight:600;color:#58a6ff;font-size:.9rem;margin-bottom:.5rem;white-space:nowrap}');
+  h.push('.flow-modules{display:flex;flex-direction:column;gap:.3rem;align-items:center}');
+  h.push('.flow-mod{background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:.2rem .6rem;font-size:.7rem;color:#8b949e;white-space:nowrap}');
+  h.push('.flow-mod-archived{opacity:.4;text-decoration:line-through}');
+  h.push('.flow-mod-project{color:#d2a8ff}');
+  h.push('.event-section{margin-bottom:1.5rem}');
+  h.push('.event-header{background:#161b22;border:1px solid #30363d;border-radius:8px 8px 0 0;padding:1rem 1.5rem;cursor:pointer;display:flex;align-items:center;gap:1rem;user-select:none}');
+  h.push('.event-header:hover{background:#1c2128}');
+  h.push('.event-header.collapsed{border-radius:8px}');
+  h.push('.event-badge{font-size:.75rem;font-weight:600;padding:.2rem .6rem;border-radius:4px;text-transform:uppercase;letter-spacing:.05em}');
+  h.push('.badge-session{background:#1f6feb33;color:#58a6ff;border:1px solid #1f6feb}');
+  h.push('.badge-pre{background:#da363333;color:#f85149;border:1px solid #da3633}');
+  h.push('.badge-post{background:#23863633;color:#3fb950;border:1px solid #238636}');
+  h.push('.badge-stop{background:#9e6a0333;color:#d29922;border:1px solid #9e6a03}');
+  h.push('.badge-prompt{background:#8b5cf633;color:#a78bfa;border:1px solid #7c3aed}');
+  h.push('.event-title{font-size:1.1rem;font-weight:600;color:#c9d1d9}');
+  h.push('.event-meta{margin-left:auto;color:#8b949e;font-size:.85rem}');
+  h.push('.chevron{color:#484f58;transition:transform .2s;font-size:1.2rem}');
+  h.push('.chevron.open{transform:rotate(90deg)}');
+  h.push('.event-body{background:#0d1117;border:1px solid #30363d;border-top:none;border-radius:0 0 8px 8px;display:none}');
+  h.push('.event-body.open{display:block}');
+  h.push('.runner{padding:1rem 1.5rem;border-bottom:1px solid #21262d}');
+  h.push('.runner-label{color:#8b949e;font-size:.8rem;text-transform:uppercase;margin-bottom:.3rem}');
+  h.push('.runner-path{color:#79c0ff;font-family:"Cascadia Code","Fira Code",monospace;font-size:.85rem}');
+  h.push('.matchers{padding:.5rem 1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;border-bottom:1px solid #21262d}');
+  h.push('.matcher{background:#1f2937;border:1px solid #30363d;border-radius:4px;padding:.15rem .5rem;font-size:.8rem;color:#d2a8ff;font-family:monospace}');
+  h.push('.module{border-bottom:1px solid #21262d}');
+  h.push('.module:last-child{border-bottom:none}');
+  h.push('.module-header{padding:1rem 1.5rem;cursor:pointer;display:flex;align-items:center;gap:.8rem}');
+  h.push('.module-header:hover{background:#161b22}');
+  h.push('.module-icon{width:8px;height:8px;border-radius:50%;flex-shrink:0}');
+  h.push('.icon-active{background:#3fb950;box-shadow:0 0 6px #3fb95066}');
+  h.push('.icon-project{background:#d2a8ff;box-shadow:0 0 6px #d2a8ff66}');
+  h.push('.icon-archived{background:#484f58}');
+  h.push('.module-name{font-weight:600;color:#c9d1d9;font-size:.95rem}');
+  h.push('.module-desc{color:#8b949e;font-size:.85rem;margin-left:.5rem}');
+  h.push('.module-scope{margin-left:auto;font-size:.7rem;padding:.15rem .4rem;border-radius:3px;font-weight:600}');
+  h.push('.scope-global{background:#23863622;color:#3fb950;border:1px solid #23863644}');
+  h.push('.scope-project{background:#8b5cf622;color:#d2a8ff;border:1px solid #7c3aed44}');
+  h.push('.scope-archived{background:#30363d;color:#484f58;border:1px solid #484f58}');
+  h.push('.module-chevron{color:#484f58;transition:transform .2s;margin-left:.5rem}');
+  h.push('.module-chevron.open{transform:rotate(90deg)}');
+  h.push('.module-detail{display:none;padding:0 1.5rem 1rem 2.5rem}');
+  h.push('.module-detail.open{display:block}');
+  h.push('.code-block{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:1rem;overflow-x:auto;margin-top:.5rem;max-height:500px;overflow-y:auto}');
+  h.push('.code-block pre{font-family:"Cascadia Code","Fira Code",monospace;font-size:.8rem;color:#c9d1d9;white-space:pre;tab-size:2}');
+  h.push('.code-block .ln{color:#484f58;display:inline-block;width:2.5rem;text-align:right;margin-right:1rem;user-select:none}');
+  h.push('.footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid #21262d;color:#484f58;font-size:.8rem;text-align:center}');
+  h.push('</style></head><body>');
+
+  h.push('<h1>Claude Code Hooks Report</h1>');
+  h.push('<p class="subtitle">Runtime enforcement layer &mdash; hooks intercept every tool call and enforce workflow, safety, and quality gates. Generated ' + now + '.</p>');
 
   // Stats
-  html.push('<div class="stats">');
-  html.push('<div class="stat"><div class="stat-value">' + eventNames.length + '</div><div class="stat-label">Hook Events</div></div>');
-  html.push('<div class="stat"><div class="stat-value">' + scan.totalHooks + '</div><div class="stat-label">Hook Entries</div></div>');
-  html.push('<div class="stat"><div class="stat-value">' + scan.totalMatchers + '</div><div class="stat-label">Matchers</div></div>');
-  if (totalModules > 0) {
-    html.push('<div class="stat"><div class="stat-value">' + totalModules + '</div><div class="stat-label">Modules</div></div>');
-  }
-  html.push('<div class="stat"><div class="stat-value">' + (usingRunner ? 'Yes' : 'No') + '</div><div class="stat-label">Hook Runner</div></div>');
-  html.push('</div>');
+  h.push('<div class="stats">');
+  h.push('<div class="stat"><div class="stat-value">' + eventNames.length + '</div><div class="stat-label">Hook Events</div></div>');
+  if (usingRunner) h.push('<div class="stat"><div class="stat-value">' + eventNames.length + '</div><div class="stat-label">Runner Scripts</div></div>');
+  h.push('<div class="stat"><div class="stat-value">' + totalModules + '</div><div class="stat-label">Active Modules</div></div>');
+  h.push('<div class="stat"><div class="stat-value">' + scan.totalMatchers + '</div><div class="stat-label">Matchers</div></div>');
+  h.push('</div>');
 
   // Architecture note
   if (usingRunner) {
-    html.push('<div class="arch-note"><h2>Architecture: Runner + Module Pattern</h2>');
-    html.push('<p>Each hook event has <strong>one runner script</strong> in <code>settings.json</code>. The runner auto-loads all <code>.js</code> modules from <code>run-modules/{Event}/</code>, sorted alphabetically.</p>');
-    html.push('<p>To add behavior: create a new module file. Never add new hook entries to settings.json.</p>');
-    html.push('</div>');
+    h.push('<div class="arch-note"><h2>Architecture: Runner + Module Pattern</h2>');
+    h.push('<p>Each hook event has <strong>one runner script</strong> in <code>settings.json</code>. The runner auto-loads all <code>.js</code> modules from <code>run-modules/{Event}/</code>, sorted alphabetically.</p>');
+    h.push('<p>To add behavior: create a new module file. Never add new hook entries to settings.json.</p>');
+    h.push('<p>All hooks are <strong>synchronous</strong> &mdash; <code>fs.readFileSync(0)</code> for stdin. Async hooks race with the 5s timeout.</p>');
+    h.push('</div>');
   } else {
-    html.push('<div class="arch-note"><h2>Current: Standalone Hook Scripts</h2>');
-    html.push('<p>Each hook entry in <code>settings.json</code> points to an individual script. Adding new hooks requires editing settings.json.</p>');
-    html.push('<p><strong>hook-runner</strong> replaces this with a modular system: one runner per event, modules in folders. <code>node setup.js</code> to migrate.</p>');
-    html.push('</div>');
+    h.push('<div class="arch-note"><h2>Current: Standalone Hook Scripts</h2>');
+    h.push('<p>Each hook entry in <code>settings.json</code> points to an individual script. Adding new hooks requires editing settings.json.</p>');
+    h.push('<p><strong>hook-runner</strong> replaces this with a modular system: one runner per event, modules in folders. <code>node setup.js</code> to migrate.</p>');
+    h.push('</div>');
   }
 
-  // Event badges
-  var badgeClass = {
-    SessionStart: "badge-session", PreToolUse: "badge-pre", PostToolUse: "badge-post",
-    Stop: "badge-stop", UserPromptSubmit: "badge-prompt"
-  };
+  // Flow Diagram
+  if (usingRunner) {
+    h.push('<div class="flow"><h2>Hook Event Flow</h2><div class="flow-diagram">');
+    for (var fi = 0; fi < eventNames.length; fi++) {
+      var fEvt = eventNames[fi];
+      var fMods = eventModules[fEvt] || [];
+      if (fi > 0) h.push('<div class="flow-arrow">&rarr;</div>');
+      if (fEvt === "PostToolUse") {
+        h.push('<div class="flow-stage"><div class="flow-event" style="border-color:#3fb950;color:#3fb950">Tool Executes</div></div>');
+        h.push('<div class="flow-arrow">&rarr;</div>');
+      }
+      h.push('<div class="flow-stage"><div class="flow-event">' + fEvt + '</div><div class="flow-modules">');
+      for (var fm = 0; fm < fMods.length; fm++) {
+        var fmod = fMods[fm];
+        var fclass = "flow-mod";
+        if (fmod.archived) fclass += " flow-mod-archived";
+        else if (fmod.scope !== "global") fclass += " flow-mod-project";
+        h.push('<div class="' + fclass + '">' + escHtml(fmod.name.replace(/\.js$/, "")) + '</div>');
+      }
+      h.push('</div></div>');
+    }
+    h.push('</div></div>');
+  }
 
-  // Events
+  // Event Sections
   for (var e = 0; e < eventNames.length; e++) {
-    var evt = eventNames[e];
-    var evtData = scan.events[evt];
-    var badge = badgeClass[evt] || "badge-session";
+    var evt2 = eventNames[e];
+    var evtData2 = scan.events[evt2];
+    var mods2 = eventModules[evt2] || [];
+    var badge2 = EVENT_BADGES[evt2] || "badge-session";
+    var title2 = EVENT_TITLES[evt2] || evt2;
     var metaParts = [];
-    metaParts.push(evtData.entries.length + " hook" + (evtData.entries.length !== 1 ? "s" : ""));
-    if (evtData.matchers.length > 0) metaParts.push(evtData.matchers.join(", "));
-    if (evtData.moduleCount > 0) metaParts.push(evtData.moduleCount + " modules");
+    var activeModCount = mods2.filter(function(m) { return !m.archived; }).length;
+    if (activeModCount > 0) metaParts.push(activeModCount + " module" + (activeModCount !== 1 ? "s" : ""));
+    if (evtData2.matchers.length > 0) metaParts.push(evtData2.matchers.join(", ") + " matchers");
+    else metaParts.push("no matcher");
 
-    html.push('<div class="event-section">');
-    html.push('<div class="event-header" onclick="toggleEvent(this)">');
-    html.push('<span class="chevron">&#9654;</span>');
-    html.push('<span class="event-badge ' + badge + '">' + evt + '</span>');
-    html.push('<span class="event-title">' + getEventTitle(evt) + '</span>');
-    html.push('<span class="event-meta">' + metaParts.join(' &bull; ') + '</span>');
-    html.push('</div>');
-    html.push('<div class="event-body">');
+    h.push('<div class="event-section">');
+    h.push('<div class="event-header collapsed" onclick="toggleEvent(this)">');
+    h.push('<span class="chevron">&#9654;</span>');
+    h.push('<span class="event-badge ' + badge2 + '">' + evt2 + '</span>');
+    h.push('<span class="event-title">' + title2 + '</span>');
+    h.push('<span class="event-meta">' + metaParts.join(' &bull; ') + '</span>');
+    h.push('</div>');
+    h.push('<div class="event-body">');
 
-    for (var h = 0; h < evtData.entries.length; h++) {
-      var hook = evtData.entries[h];
-      html.push('<div class="hook-entry">');
-
-      // Status badge
-      var statusClass = hook.isRunner ? "status-runner" : (hook.exists ? "status-standalone" : "status-missing");
-      var statusText = hook.isRunner ? "RUNNER" : (hook.exists ? "STANDALONE" : "MISSING");
-      html.push('<span class="status-badge ' + statusClass + '">' + statusText + '</span>');
-
-      if (hook.matcher) {
-        html.push(' <span class="matcher">' + escHtml(hook.matcher) + '</span>');
-      }
-
-      html.push('<div class="hook-label">Command</div>');
-      html.push('<div class="hook-path' + (hook.exists ? '' : ' missing') + '">' + escHtml(hook.command) + '</div>');
-
-      if (hook.scriptPath) {
-        html.push('<div class="hook-label">Script Path</div>');
-        html.push('<div class="hook-path' + (hook.exists ? '' : ' missing') + '">' + escHtml(hook.scriptPath) + '</div>');
-      }
-
-      html.push('</div>');
-    }
-
-    // Show modules if runner
-    if (evtData.moduleCount > 0) {
-      var modulesDir = null;
-      for (var mh = 0; mh < evtData.entries.length; mh++) {
-        if (evtData.entries[mh].isRunner && evtData.entries[mh].scriptPath) {
-          modulesDir = path.join(path.dirname(evtData.entries[mh].scriptPath), "run-modules", evt);
-          break;
-        }
-      }
-      if (modulesDir && fs.existsSync(modulesDir)) {
-        html.push('<div class="module-list">');
-        html.push('<div class="hook-label">Modules (' + evt + ')</div>');
-        var modFiles = fs.readdirSync(modulesDir).filter(function(f) { return f.endsWith(".js"); }).sort();
-        for (var mf = 0; mf < modFiles.length; mf++) {
-          html.push('<div class="module-item"><div class="module-dot"></div><span class="module-name">' + escHtml(modFiles[mf]) + '</span></div>');
-        }
-        // Check for project-scoped subdirs
-        var subdirs = fs.readdirSync(modulesDir).filter(function(f) {
-          return fs.statSync(path.join(modulesDir, f)).isDirectory() && f !== "archive";
-        });
-        for (var sd = 0; sd < subdirs.length; sd++) {
-          var subMods = fs.readdirSync(path.join(modulesDir, subdirs[sd])).filter(function(f) { return f.endsWith(".js"); }).sort();
-          for (var sm = 0; sm < subMods.length; sm++) {
-            html.push('<div class="module-item"><div class="module-dot" style="background:#d2a8ff"></div><span class="module-name">' + escHtml(subdirs[sd] + '/' + subMods[sm]) + '</span></div>');
-          }
-        }
-        html.push('</div>');
+    // Runner info
+    for (var hi = 0; hi < evtData2.entries.length; hi++) {
+      if (evtData2.entries[hi].isRunner && evtData2.entries[hi].scriptPath) {
+        h.push('<div class="runner"><div class="runner-label">Runner Script</div>');
+        h.push('<div class="runner-path">' + escHtml(evtData2.entries[hi].scriptPath.replace(HOME, "~")) + '</div></div>');
+        break;
       }
     }
 
-    html.push('</div></div>');
+    // Matchers
+    if (evtData2.matchers.length > 0) {
+      h.push('<div class="matchers">');
+      for (var mi = 0; mi < evtData2.matchers.length; mi++) {
+        h.push('<span class="matcher">' + escHtml(evtData2.matchers[mi]) + '</span>');
+      }
+      h.push('</div>');
+    }
+
+    // Modules (expandable with source)
+    for (var mod_i = 0; mod_i < mods2.length; mod_i++) {
+      var m = mods2[mod_i];
+      var iconClass = m.archived ? "icon-archived" : (m.scope !== "global" ? "icon-project" : "icon-active");
+      var scopeClass = m.archived ? "scope-archived" : (m.scope !== "global" ? "scope-project" : "scope-global");
+      var scopeLabel = m.archived ? "ARCHIVED" : (m.scope !== "global" ? m.scope : "GLOBAL");
+      var nameStyle = m.archived ? ' style="color:#484f58;text-decoration:line-through"' : '';
+
+      h.push('<div class="module">');
+      h.push('<div class="module-header" onclick="toggleModule(this)">');
+      h.push('<div class="module-icon ' + iconClass + '"></div>');
+      h.push('<span class="module-name"' + nameStyle + '>' + escHtml(m.name) + '</span>');
+      if (m.description) h.push('<span class="module-desc">&mdash; ' + escHtml(m.description) + '</span>');
+      h.push('<span class="module-scope ' + scopeClass + '">' + scopeLabel + '</span>');
+      h.push('<span class="module-chevron">&#9654;</span>');
+      h.push('</div>');
+      h.push('<div class="module-detail">');
+      if (m.source) {
+        var lines = m.source.split("\n");
+        h.push('<div class="code-block"><pre>');
+        for (var li = 0; li < lines.length; li++) {
+          var lnStr = String(li + 1);
+          while (lnStr.length < 3) lnStr = " " + lnStr;
+          h.push('<span class="ln">' + lnStr + '</span>' + escHtml(lines[li]));
+          if (li < lines.length - 1) h.push("\n");
+        }
+        h.push('</pre></div>');
+      }
+      h.push('</div></div>');
+    }
+
+    h.push('</div></div>');
   }
 
-  // Footer
-  html.push('<div class="footer">Generated by hook-runner setup.js &mdash; ' + now + '</div>');
+  h.push('<div class="footer">Generated by hook-runner setup.js &mdash; ' + now + '</div>');
+  h.push('<script>');
+  h.push('function toggleEvent(el){var b=el.nextElementSibling;var c=el.querySelector(".chevron");b.classList.toggle("open");c.classList.toggle("open");el.classList.toggle("collapsed")}');
+  h.push('function toggleModule(el){var d=el.nextElementSibling;var c=el.querySelector(".module-chevron");d.classList.toggle("open");c.classList.toggle("open")}');
+  h.push('</script>');
+  h.push('</body></html>');
 
-  // JavaScript
-  html.push('<script>');
-  html.push('function toggleEvent(el){var b=el.nextElementSibling;var c=el.querySelector(".chevron");b.classList.toggle("open");c.classList.toggle("open")}');
-  html.push('</script>');
-  html.push('</body></html>');
-
-  var content = html.join("\n");
+  var content = h.join("\n");
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, content, "utf-8");
   return outputPath;
-}
-
-function getEventTitle(event) {
-  var titles = {
-    SessionStart: "Session Initialization",
-    PreToolUse: "Pre-Execution Gates",
-    PostToolUse: "Post-Execution Checks",
-    Stop: "Stop Response Control",
-    UserPromptSubmit: "Prompt Processing"
-  };
-  return titles[event] || event;
-}
-
-function escHtml(s) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 // ============================================================
