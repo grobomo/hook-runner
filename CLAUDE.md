@@ -15,7 +15,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - `hook-log.js` — centralized logger (appends JSONL per invocation)
 - `run-async.js` — async module executor (Promise detection, 4s timeout)
 - `modules/` — distributable module catalog organized by event type
-- `scripts/test/` — test scripts (35 tests across 4 files)
+- `scripts/test/` — test scripts (77 tests across 5 files)
 
 ## Sync Targets (must stay identical)
 1. Repo: this directory
@@ -30,7 +30,8 @@ After any code change, copy to all 4 locations. The sync command in setup.js han
 bash scripts/test/test-runners.sh      # 16 runner tests
 bash scripts/test/test-setup-wizard.sh # 6 wizard tests
 bash scripts/test/test-async.sh        # 13 async tests
-bash scripts/test/test-module-sync.sh  # module sync tests
+bash scripts/test/test-modules.sh      # 32 module validation tests
+bash scripts/test/test-module-sync.sh  # 10 sync tests
 ```
 
 ## Module Contract
