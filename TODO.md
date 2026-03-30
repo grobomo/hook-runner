@@ -124,6 +124,10 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 ## Sync & Code Review
 - [x] T077: Sync live module fixes back to repo (continuous-claude-gate SKIP_SPEC_GATE fix)
 
+## Performance & Polish
+- [x] T078: Add --perf command (analyze timing data, identify slow modules, estimate total hook overhead)
+- [ ] T079: Add --export command (export module config as shareable YAML bundle)
+
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
 
