@@ -80,15 +80,15 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T055: Add --test CLI command (run all test suites from setup.js)
 - [x] T056: Add --uninstall CLI command (clean removal of hook-runner from settings.json + runners)
 - [x] T057: Add PostToolUse commit-message-check module (enforces conventional commit messages)
-- [ ] T058: Marketplace push for T055-T057
+- [x] T058: Marketplace push for T055-T057 + SKILL.md update with test/uninstall commands
 
 ## Status
-- 54 tasks completed, 4 pending
+- 58 tasks completed, 0 pending
 - 82 tests passing across 5 test files (16 runner + 7 wizard + 13 async + 36 module + 10 sync)
 - CI: GitHub Actions runs all tests on push/PR — badge in README
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
 - 18 modules in catalog (11 PreToolUse, 2 PostToolUse, 1 UserPromptSubmit, 2 SessionStart, 2 Stop)
-- CLI commands: setup, report, dry-run, health, sync, stats, list, prune, version
+- CLI commands: setup, report, dry-run, health, sync, stats, list, test, uninstall, prune, version
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
