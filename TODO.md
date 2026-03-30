@@ -121,6 +121,9 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T075: N/A — hot-reload is unnecessary (each hook invocation is a new Node process, require cache is always fresh)
 - [x] T076: Update docs (README, CLAUDE.md, SKILL.md) + version bump to 1.4.0 + marketplace push
 
+## Sync & Code Review
+- [x] T077: Sync live module fixes back to repo (continuous-claude-gate SKIP_SPEC_GATE fix)
+
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
 
