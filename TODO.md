@@ -82,9 +82,10 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T057: Add PostToolUse commit-message-check module (enforces conventional commit messages)
 - [x] T058: Marketplace push for T055-T057 + SKILL.md update with test/uninstall commands
 - [x] T059: Update README with test/uninstall commands and commit-msg-check module
+- [x] T060: Add --help command and bump version to 1.1.0
 
 ## Status
-- 59 tasks completed, 0 pending
+- 60 tasks completed, 0 pending
 - 82 tests passing across 5 test files (16 runner + 7 wizard + 13 async + 36 module + 10 sync)
 - CI: GitHub Actions runs all tests on push/PR — badge in README
 - 4 sync targets all identical: repo, live hooks, skill, marketplace

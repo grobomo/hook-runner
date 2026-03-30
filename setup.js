@@ -46,7 +46,7 @@ var SCRIPT_DIR = __dirname;
 var REPO_DIR = SCRIPT_DIR;
 
 var HOOK_LOG_PATH = path.join(HOOKS_DIR, "hook-log.jsonl");
-var VERSION = "1.0.0";
+var VERSION = "1.1.0";
 
 // ============================================================
 // 0. Hook Log Stats
@@ -1270,6 +1270,39 @@ function main() {
   var listMode = args.indexOf("--list") !== -1;
   var testMode = args.indexOf("--test") !== -1;
   var uninstallMode = args.indexOf("--uninstall") !== -1;
+  var helpMode = args.indexOf("--help") !== -1 || args.indexOf("-h") !== -1;
+
+  // --- Help ---
+  if (helpMode) {
+    console.log("hook-runner v" + VERSION + " — modular hook runner for Claude Code");
+    console.log("");
+    console.log("Usage: node setup.js [command] [options]");
+    console.log("");
+    console.log("Commands:");
+    console.log("  (none)          Full setup wizard (scan → report → backup → install)");
+    console.log("  --report        Generate HTML hooks report (works without installing)");
+    console.log("  --health        Verify runners, modules, and settings are correct");
+    console.log("  --sync          Sync modules from GitHub per ~/.claude/hooks/modules.yaml");
+    console.log("  --list          Show catalog vs installed modules with status");
+    console.log("  --stats         Quick text summary of hook log activity");
+    console.log("  --test          Run all test suites");
+    console.log("  --uninstall     Remove hook-runner from settings.json and hooks dir");
+    console.log("  --prune [N]     Prune log entries older than N days (default 7)");
+    console.log("  --version, -v   Show version");
+    console.log("  --help, -h      Show this help");
+    console.log("");
+    console.log("Options:");
+    console.log("  --dry-run       Preview changes without modifying anything");
+    console.log("  --install       Skip report, just install runners");
+    console.log("  --force         With --uninstall: also remove non-empty module dirs");
+    console.log("");
+    console.log("Examples:");
+    console.log("  node setup.js                    # first-time setup");
+    console.log("  node setup.js --report           # see your hooks without installing");
+    console.log("  node setup.js --sync --dry-run   # preview module sync");
+    console.log("  node setup.js --uninstall --dry-run  # preview removal");
+    return;
+  }
 
   // --- Version ---
   if (versionMode) {
