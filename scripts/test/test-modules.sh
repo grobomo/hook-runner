@@ -33,7 +33,7 @@ get_mock_input() {
 # Find all module .js files in modules/
 for event_dir in "$REPO_DIR"/modules/*/; do
   event=$(basename "$event_dir")
-  [ "$event" = "UserPromptSubmit" ] && continue  # no modules yet
+  # All event directories with .js modules are tested
 
   shopt -s nullglob
   for mod_file in "$event_dir"*.js; do

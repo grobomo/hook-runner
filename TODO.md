@@ -66,12 +66,15 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 ## Test Count Fix
 - [x] T048: Fix CLAUDE.md test counts (77 total: 16 runner + 6 wizard + 13 async + 32 module + 10 sync)
 
+## UserPromptSubmit Modules
+- [x] T049: Add prompt-logger UserPromptSubmit module (logs prompts to JSONL for audit)
+
 ## Status
 All tasks complete. Project is mature and stable:
-- 48 tasks completed, 0 pending
-- 77 tests passing across 5 test files
+- 49 tasks completed, 0 pending
+- 79 tests passing across 5 test files (16 runner + 6 wizard + 13 async + 34 module + 10 sync)
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
-- Report works for both hook-runner users and standalone hooks users
+- 17 modules in catalog (11 PreToolUse, 1 PostToolUse, 1 UserPromptSubmit, 2 SessionStart, 2 Stop)
 - CLI commands: setup, report, dry-run, health, sync, stats, prune, version
 
 ## Moved
