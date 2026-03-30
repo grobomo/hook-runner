@@ -330,11 +330,11 @@ function generateReport(scan, outputPath) {
   h.push('.icon-archived{background:#484f58}');
   h.push('.module-name{font-weight:600;color:#c9d1d9;font-size:.95rem}');
   h.push('.module-desc{color:#8b949e;font-size:.85rem;margin-left:.5rem}');
-  h.push('.module-scope{margin-left:auto;font-size:.7rem;padding:.15rem .4rem;border-radius:3px;font-weight:600}');
+  h.push('.module-scope{margin-left:auto;font-size:.7rem;padding:.15rem .4rem;border-radius:3px;font-weight:600;flex-shrink:0}');
   h.push('.scope-global{background:#23863622;color:#3fb950;border:1px solid #23863644}');
   h.push('.scope-project{background:#8b5cf622;color:#d2a8ff;border:1px solid #7c3aed44}');
   h.push('.scope-archived{background:#30363d;color:#484f58;border:1px solid #484f58}');
-  h.push('.module-chevron{color:#484f58;transition:transform .2s;margin-left:.5rem}');
+  h.push('.module-chevron{color:#484f58;transition:transform .2s;flex-shrink:0}');
   h.push('.module-chevron.open{transform:rotate(90deg)}');
   h.push('.module-detail{display:none;padding:0 1.5rem 1rem 2.5rem}');
   h.push('.module-detail.open{display:block}');
@@ -443,23 +443,23 @@ function generateReport(scan, outputPath) {
 
       h.push('<div class="module">');
       h.push('<div class="module-header" onclick="toggleModule(this)">');
+      h.push('<span class="module-chevron">&#9654;</span>');
       h.push('<div class="module-icon ' + iconClass + '"></div>');
       h.push('<span class="module-name"' + nameStyle + '>' + escHtml(m.name) + '</span>');
       if (m.description) h.push('<span class="module-desc">&mdash; ' + escHtml(m.description) + '</span>');
       h.push('<span class="module-scope ' + scopeClass + '">' + scopeLabel + '</span>');
-      h.push('<span class="module-chevron">&#9654;</span>');
       h.push('</div>');
       h.push('<div class="module-detail">');
       if (m.source) {
         var lines = m.source.split("\n");
-        h.push('<div class="code-block"><pre>');
+        // Build code block as single string to avoid double line spacing from h.join("\n")
+        var codeLines = [];
         for (var li = 0; li < lines.length; li++) {
           var lnStr = String(li + 1);
           while (lnStr.length < 3) lnStr = " " + lnStr;
-          h.push('<span class="ln">' + lnStr + '</span>' + escHtml(lines[li]));
-          if (li < lines.length - 1) h.push("\n");
+          codeLines.push('<span class="ln">' + lnStr + '</span>' + escHtml(lines[li]));
         }
-        h.push('</pre></div>');
+        h.push('<div class="code-block"><pre>' + codeLines.join("\n") + '</pre></div>');
       }
       h.push('</div></div>');
     }
