@@ -47,7 +47,9 @@ fi
 
 # Test 4: dry-run mode runs without error
 echo "[4] --dry-run runs without modifying settings"
-# Capture settings.json before
+# Ensure ~/.claude exists (CI may not have it)
+mkdir -p ~/.claude/hooks
+[ -f ~/.claude/settings.json ] || echo '{}' > ~/.claude/settings.json
 BEFORE=$(md5sum ~/.claude/settings.json 2>/dev/null | cut -d' ' -f1)
 node "$REPO_DIR/setup.js" --dry-run 2>/dev/null | tail -1
 AFTER=$(md5sum ~/.claude/settings.json 2>/dev/null | cut -d' ' -f1)
