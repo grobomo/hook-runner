@@ -86,16 +86,16 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 ## Refactor & New Features
 - [x] T061: Extract generateReport + helpers into report.js (setup.js 1846→1261 lines, report.js 620 lines)
-- [ ] T062: Add no-hardcoded-paths PreToolUse module (blocks Write/Edit with absolute paths)
+- [x] T062: Add no-hardcoded-paths PreToolUse module (blocks Write/Edit with absolute paths)
 - [ ] T063: Add --upgrade command (self-updater from GitHub)
 
 ## Status
 - 60 tasks completed, 3 pending
 - Version: 1.1.0
-- 82 tests passing across 5 test files (16 runner + 7 wizard + 13 async + 36 module + 10 sync)
+- 84 tests passing across 5 test files (16 runner + 7 wizard + 13 async + 38 module + 10 sync)
 - CI: GitHub Actions runs all tests on push/PR — badge in README
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
-- 18 modules in catalog (11 PreToolUse, 2 PostToolUse, 1 UserPromptSubmit, 2 SessionStart, 2 Stop)
+- 19 modules in catalog (12 PreToolUse, 2 PostToolUse, 1 UserPromptSubmit, 2 SessionStart, 2 Stop)
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, uninstall, prune, version, help
 
 ## Session Handoff (2026-03-30)
