@@ -42,6 +42,9 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T033: Update global rule hooks-must-be-sync.md → hooks-module-contract (async now supported)
 - [x] T034: Create example async SessionStart module for claude-backup integration
 
+## Completed (report v2)
+- [x] T035: Report v2 — standalone hooks support, search/filter, expand/collapse, block-only stats
+
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
 
