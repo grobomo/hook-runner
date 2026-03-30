@@ -29,6 +29,13 @@
 ---
 
 ## Phase 4: Report Improvements
-- [ ] T011: Add flow diagram, expandable modules with source code, consistent terminology, event ordering
+- [x] T011: Add flow diagram, expandable modules with source code, consistent terminology, event ordering
 
 **Checkpoint**: `bash scripts/test/test-setup-wizard.sh` — verify report generates correctly
+
+---
+
+## Phase 5: Cleanup & Documentation
+- [ ] T013: Clean TODO.md, delete stale branches, archive SESSION_STATE.md, document gate fixes
+
+**Checkpoint**: `bash scripts/test/test-runners.sh && bash scripts/test/test-setup-wizard.sh`
