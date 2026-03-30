@@ -78,6 +78,12 @@ Rules:
 | PostToolUse | run-posttooluse.js | Edit, Write | `{decision: "block"}` or `null` |
 | Stop | run-stop.js | none | `{decision: "block"}` or `null` |
 
+## Logging
+
+Runners log every module invocation to `~/.claude/hooks/hook-log.jsonl`. Each line records the timestamp, event, module name, result (pass/block/error), and context (tool name, command snippet, project). The log auto-rotates at 10MB.
+
+The setup report (`/hook-runner report`) reads the log and shows hit counts and sample triggers per module.
+
 ## Project-Scoped Modules
 
 Modules in a subfolder matching your project name only run for that project:

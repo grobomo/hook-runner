@@ -4,6 +4,9 @@
 # source: GitHub repo to pull modules from
 # modules: which modules to install per event type
 # Each module name maps to modules/<Event>/<name>.js in the source repo
+#
+# Logging: runners write to ~/.claude/hooks/hook-log.jsonl (auto-rotates at 10MB)
+# Add hook-log.jsonl to .gitignore if you symlink or copy logs into a project
 
 source: grobomo/hook-runner
 branch: main
