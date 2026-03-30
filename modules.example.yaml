@@ -30,6 +30,10 @@ modules:
     # Optional / niche
     # - aws-tagging-gate     # enforce AWS resource tags (needs AWS_TAG_REQUIRED_VALUE env)
 
+  UserPromptSubmit:
+    # Prompt validation (optional)
+    # - prompt-logger        # example: log prompts for audit
+
   PostToolUse:
     - rule-hygiene           # validates rule files are granular
 
