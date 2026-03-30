@@ -38,6 +38,7 @@ modules:
   PostToolUse:
     - rule-hygiene           # validates rule files are granular
     - commit-msg-check       # blocks WIP/fixup commits and over-long first lines
+    - test-coverage-check    # warns when source files with tests are modified
 
   Stop:
     - auto-continue          # never stop, always find next task
