@@ -28,8 +28,8 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T027: Add hook-log.jsonl to .gitignore in modules.example.yaml docs
 - [x] T028: Marketplace push for claude-code-skills (hook-runner runners updated with logging)
 
-## Pending
-- [ ] T026: Modularize chat-export — extract jsonl_parser.py into shared lib, sync repo with skill copy
+## Moved
+- T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
