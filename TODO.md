@@ -113,25 +113,12 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - 21 modules in catalog (12 PreToolUse, 3 PostToolUse, 1 UserPromptSubmit, 3 SessionStart, 2 Stop)
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help
 
-## Session Handoff (2026-03-30 session 3)
-Completed T066-T070 this session. Project is v1.3.0 (70 tasks, 88 tests, 21 modules).
-
-### What was done
-- T066: `project-health` SessionStart module (health check on session start)
-- T067: `test-coverage-check` PostToolUse module (warns when source files with tests are modified)
-- T068: Extracted main() from 553→15 lines into 10 named cmd* functions
-- T069: Docs + version bump to 1.3.0 + marketplace push
-- T070: Synced 4 live module fixes back to repo catalog (branch-pr-gate, no-adhoc-commands, load-instructions, auto-continue)
-
-### Nothing broken
-All 88 tests pass. All sync targets identical. Marketplace pushed.
-
-### Next session ideas (prioritized by impact)
-1. **Module dependency system** — some modules logically depend on others (spec-gate needs enforcement-gate). Could add `requires:` field.
-2. **Integration with hook-flow-bundle** — export/import module configs as portable bundles for team sharing
-3. **PreToolUse module: `env-var-check`** — blocks if required env vars for the project are missing
-4. **Report v3** — add per-module timing data (how much latency each module adds), configurable via hook-log
-5. **Module hot-reload** — detect changed modules without restarting Claude Code (clear require cache)
+## Performance & Features (v1.4.0)
+- [x] T071: Add `env-var-check` PreToolUse module (blocks if required project env vars missing)
+- [ ] T072: Add per-module timing to hook-log (measure latency each module adds)
+- [ ] T073: Report v3 — timing data visualization, per-module latency chart
+- [ ] T074: Module dependency system — `requires:` field in module header, load-modules validates
+- [ ] T075: Module hot-reload — detect changed modules, clear require cache without restarting Claude Code
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)

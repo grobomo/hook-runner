@@ -28,6 +28,9 @@ modules:
     - secret-scan-gate       # blocks git commit if staged diff contains secrets
     - no-hardcoded-paths     # blocks Write/Edit with absolute user paths in content
 
+    # Environment
+    - env-var-check          # blocks edits if .env.required vars are missing
+
     # Optional / niche
     # - aws-tagging-gate     # enforce AWS resource tags (needs AWS_TAG_REQUIRED_VALUE env)
 
