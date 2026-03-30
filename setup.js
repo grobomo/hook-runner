@@ -1024,6 +1024,29 @@ function main() {
   var dryRun = args.indexOf("--dry-run") !== -1;
   var installOnly = args.indexOf("--install") !== -1;
   var syncMode = args.indexOf("--sync") !== -1;
+  var healthMode = args.indexOf("--health") !== -1;
+
+  // --- Health check mode ---
+  if (healthMode) {
+    console.log("[hook-runner] Health Check");
+    console.log("========================");
+    var results = healthCheck();
+    var ok = 0, warn = 0, fail = 0;
+    for (var hi = 0; hi < results.length; hi++) {
+      var r = results[hi];
+      var icon = r.status === "ok" ? "  OK" : r.status === "warning" ? "WARN" : "FAIL";
+      if (r.status === "ok") ok++;
+      else if (r.status === "warning") warn++;
+      else fail++;
+      var line = "  [" + icon + "] " + r.check + ": " + r.file;
+      if (r.detail) line += " — " + r.detail;
+      console.log(line);
+    }
+    console.log("");
+    console.log("[hook-runner] " + ok + " ok, " + warn + " warnings, " + fail + " failures");
+    if (fail > 0) process.exit(1);
+    return;
+  }
 
   // --- Sync mode: fetch modules from GitHub per modules.yaml ---
   if (syncMode) {
@@ -1130,6 +1153,102 @@ function main() {
   console.log("============================================");
 }
 
-module.exports = { scanHooks: scanHooks, generateReport: generateReport, backupHooks: backupHooks, installRunners: installRunners, parseModulesYaml: parseModulesYaml, syncModules: syncModules, readHookStats: readHookStats };
+// ============================================================
+// Health Check
+// ============================================================
+
+function healthCheck() {
+  var results = [];
+  var events = ["PreToolUse", "PostToolUse", "Stop", "SessionStart"];
+
+  // 1. Check runners exist
+  var runners = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "load-modules.js", "hook-log.js"];
+  for (var ri = 0; ri < runners.length; ri++) {
+    var rPath = path.join(HOOKS_DIR, runners[ri]);
+    if (fs.existsSync(rPath)) {
+      results.push({ check: "runner", file: runners[ri], status: "ok" });
+    } else {
+      results.push({ check: "runner", file: runners[ri], status: "missing" });
+    }
+  }
+
+  // 2. Check each module loads without error
+  for (var ei = 0; ei < events.length; ei++) {
+    var evt = events[ei];
+    var modDir = path.join(HOOKS_DIR, "run-modules", evt);
+    if (!fs.existsSync(modDir)) {
+      results.push({ check: "dir", file: "run-modules/" + evt, status: "missing" });
+      continue;
+    }
+    var files;
+    try { files = fs.readdirSync(modDir); } catch(e) { continue; }
+    for (var fi = 0; fi < files.length; fi++) {
+      var f = files[fi];
+      var fPath = path.join(modDir, f);
+      var stat;
+      try { stat = fs.statSync(fPath); } catch(e) { continue; }
+      if (stat.isDirectory()) {
+        // project-scoped: check each file inside
+        var subFiles;
+        try { subFiles = fs.readdirSync(fPath); } catch(e) { continue; }
+        for (var si = 0; si < subFiles.length; si++) {
+          if (!subFiles[si].endsWith(".js")) continue;
+          var subPath = path.join(fPath, subFiles[si]);
+          try {
+            var mod = require(subPath);
+            if (typeof mod !== "function") {
+              results.push({ check: "module", file: evt + "/" + f + "/" + subFiles[si], status: "bad-export", detail: "exports " + typeof mod + ", expected function" });
+            } else {
+              results.push({ check: "module", file: evt + "/" + f + "/" + subFiles[si], status: "ok" });
+            }
+          } catch(e) {
+            results.push({ check: "module", file: evt + "/" + f + "/" + subFiles[si], status: "error", detail: e.message });
+          }
+        }
+      } else if (f.endsWith(".js")) {
+        try {
+          var mod2 = require(fPath);
+          if (typeof mod2 !== "function") {
+            results.push({ check: "module", file: evt + "/" + f, status: "bad-export", detail: "exports " + typeof mod2 + ", expected function" });
+          } else {
+            results.push({ check: "module", file: evt + "/" + f, status: "ok" });
+          }
+        } catch(e) {
+          results.push({ check: "module", file: evt + "/" + f, status: "error", detail: e.message });
+        }
+      }
+    }
+  }
+
+  // 3. Check settings.json has hook entries
+  if (fs.existsSync(SETTINGS_PATH)) {
+    try {
+      var settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf-8"));
+      var hooks = settings.hooks || {};
+      var hookEvents = Object.keys(hooks);
+      if (hookEvents.length === 0) {
+        results.push({ check: "settings", file: "settings.json", status: "warning", detail: "no hooks configured" });
+      } else {
+        results.push({ check: "settings", file: "settings.json", status: "ok", detail: hookEvents.length + " event(s) configured" });
+      }
+    } catch(e) {
+      results.push({ check: "settings", file: "settings.json", status: "error", detail: "parse error: " + e.message });
+    }
+  } else {
+    results.push({ check: "settings", file: "settings.json", status: "missing" });
+  }
+
+  // 4. Check hook log writability
+  try {
+    fs.accessSync(path.dirname(HOOK_LOG_PATH), fs.constants.W_OK);
+    results.push({ check: "log", file: "hook-log.jsonl", status: "ok", detail: fs.existsSync(HOOK_LOG_PATH) ? "exists" : "will be created on first trigger" });
+  } catch(e) {
+    results.push({ check: "log", file: "hook-log.jsonl", status: "error", detail: "hooks dir not writable" });
+  }
+
+  return results;
+}
+
+module.exports = { scanHooks: scanHooks, generateReport: generateReport, backupHooks: backupHooks, installRunners: installRunners, parseModulesYaml: parseModulesYaml, syncModules: syncModules, readHookStats: readHookStats, healthCheck: healthCheck };
 
 if (require.main === module) main();
