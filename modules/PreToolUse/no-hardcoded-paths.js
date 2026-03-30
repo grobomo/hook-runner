@@ -1,5 +1,5 @@
-// Block Write/Edit with hardcoded absolute paths in file content.
-// Catches C:\Users\..., /home/..., /Users/... in new_string/content.
+// Block Write/Edit with hardcoded absolute user paths in file content.
+// Catches Windows, Linux, and macOS home directory paths in new_string/content.
 // Absolute paths break portability — use variables or relative paths.
 
 module.exports = function(input) {
@@ -16,12 +16,9 @@ module.exports = function(input) {
   if (!text) return null;
 
   // Patterns for hardcoded absolute paths in content
-  // Windows: C:\Users\username\... or C:/Users/username/...
-  var winPath = /[A-Z]:[\\\/]Users[\\\/]\w+[\\\/]/i;
-  // Linux: /home/username/...
-  var linuxPath = /\/home\/\w+\//;
-  // macOS: /Users/username/...
-  var macPath = /\/Users\/\w+\//;
+  var winPath = /[A-Z]:[\\\/]Users[\\\/]\w+[\\\/]/i;  // Windows home dirs
+  var linuxPath = /\/home\/\w+\//;                      // Linux home dirs
+  var macPath = /\/Users\/\w+\//;                       // macOS home dirs
 
   // Allow common false positives:
   // - Comments (lines starting with // or #)
