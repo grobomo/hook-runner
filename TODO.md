@@ -6,9 +6,13 @@ This repo tracks development, publishes to grobomo GitHub, and provides a market
 
 ## Tasks
 
-- [ ] T001: Create specs and project structure
-- [ ] T002: Copy existing hook-runner source into repo
-- [ ] T003: Build setup.js skill wizard (report → preview → convert → backup → verify)
-- [ ] T004: Create marketplace plugin entry
-- [ ] T005: Push to grobomo/hook-runner
-- [ ] T006: Test setup.js end-to-end
+- [x] T001: Create specs and project structure
+- [x] T002: Sync repo runners with live system (load-modules.js)
+- [x] T003: Build setup.js wizard (scan → report → backup → install → verify)
+- [x] T004: Create marketplace plugin entry in grobomo/claude-code-skills
+- [x] T005: Update README.md and push all to grobomo/hook-runner
+- [x] T006: Install skill locally and test end-to-end
+
+## Also Done (gate improvements)
+- [x] Fixed continuous-claude-gate.js → renamed to "Tracked Workflow Gate", removed CONTINUOUS_CLAUDE=1 bypass, added bootstrap detection
+- [x] Fixed spec-gate.js, branch-pr-gate.js — replaced hackathon-specific language with generic dev-team language, kept WHY reasoning
