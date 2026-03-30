@@ -26,6 +26,7 @@ modules:
     - archive-not-delete     # blocks rm -rf, forces archive/ instead
     - no-adhoc-commands      # blocks raw aws/ssh/docker/kubectl, forces scripts/
     - secret-scan-gate       # blocks git commit if staged diff contains secrets
+    - no-hardcoded-paths     # blocks Write/Edit with absolute user paths in content
 
     # Optional / niche
     # - aws-tagging-gate     # enforce AWS resource tags (needs AWS_TAG_REQUIRED_VALUE env)

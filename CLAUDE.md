@@ -16,7 +16,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - `hook-log.js` — centralized logger (appends JSONL per invocation)
 - `run-async.js` — async module executor (Promise detection, 4s timeout)
 - `modules/` — distributable module catalog organized by event type
-- `scripts/test/` — test scripts (82 tests across 5 files)
+- `scripts/test/` — test scripts (84 tests across 5 files)
 
 ## Sync Targets (must stay identical)
 1. Repo: this directory
