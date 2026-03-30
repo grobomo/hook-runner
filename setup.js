@@ -69,7 +69,8 @@ function readHookStats(maxSamples) {
     s.total++;
     var r = entry.result || "pass";
     if (r === "pass") s.pass++;
-    else if (r === "block" || r === "deny") { s.block++; s[r]++; }
+    else if (r === "block") s.block++;
+    else if (r === "deny") { s.block++; s.deny++; }
     else if (r === "error") s.error++;
     else if (r === "text") s.text++;
 
@@ -865,7 +866,7 @@ function installRunners(dryRun) {
   if (!dryRun) fs.mkdirSync(HOOKS_DIR, { recursive: true });
 
   // Copy runner scripts + load-modules.js
-  var runnerFiles = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "load-modules.js"];
+  var runnerFiles = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "load-modules.js", "hook-log.js", "run-async.js"];
   for (var i = 0; i < runnerFiles.length; i++) {
     var src = path.join(REPO_DIR, runnerFiles[i]);
     var dest = path.join(HOOKS_DIR, runnerFiles[i]);
