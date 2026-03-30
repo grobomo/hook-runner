@@ -1266,7 +1266,28 @@ function healthCheck() {
     }
   }
 
-  // 3. Check settings.json has hook entries
+  // 3. Check module dependencies
+  var loadModules = require("./load-modules");
+  for (var di = 0; di < events.length; di++) {
+    var depEvt = events[di];
+    var depDir = path.join(HOOKS_DIR, "run-modules", depEvt);
+    if (!fs.existsSync(depDir)) continue;
+    var depFiles;
+    try { depFiles = fs.readdirSync(depDir).filter(function(f) { return f.endsWith(".js"); }); } catch(e) { continue; }
+    var depAvailable = {};
+    for (var dj = 0; dj < depFiles.length; dj++) depAvailable[depFiles[dj].replace(/\.js$/, "")] = true;
+    for (var dk = 0; dk < depFiles.length; dk++) {
+      var depPath = path.join(depDir, depFiles[dk]);
+      var deps = loadModules.parseRequires(depPath);
+      for (var dl = 0; dl < deps.length; dl++) {
+        if (!depAvailable[deps[dl]]) {
+          results.push({ check: "dependency", file: depEvt + "/" + depFiles[dk], status: "warning", detail: "requires " + deps[dl] + " (not installed)" });
+        }
+      }
+    }
+  }
+
+  // 4. Check settings.json has hook entries
   if (fs.existsSync(SETTINGS_PATH)) {
     try {
       var settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf-8"));

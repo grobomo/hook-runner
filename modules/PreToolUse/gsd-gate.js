@@ -1,4 +1,5 @@
 "use strict";
+// requires: enforcement-gate, spec-gate
 // GSD gate: blocks implementation unless the current spec task has a real e2e test
 // as completion criteria. Every task phase must reference a scripts/test/ script.
 // The test is the GSD completion criteria — no manual verification allowed.

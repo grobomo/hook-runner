@@ -14,7 +14,57 @@ var fs = require("fs");
 var path = require("path");
 
 /**
+ * Parse "// requires: mod1, mod2" from the first 5 lines of a module file.
+ * Only matches module-name patterns (lowercase with hyphens, no spaces in names).
+ * Returns array of required module base names (without .js).
+ */
+function parseRequires(filePath) {
+  try {
+    var content = fs.readFileSync(filePath, "utf-8");
+    var lines = content.split("\n").slice(0, 5);
+    for (var i = 0; i < lines.length; i++) {
+      var match = lines[i].match(/^\/\/\s*requires:\s*(.+)/i);
+      if (match) {
+        var deps = match[1].split(",").map(function(s) { return s.trim(); }).filter(Boolean);
+        // Only accept valid module names (lowercase, hyphens, digits — no spaces/descriptions)
+        var valid = deps.filter(function(d) { return /^[a-z0-9][-a-z0-9]*$/.test(d); });
+        if (valid.length > 0) return valid;
+      }
+    }
+  } catch (e) { /* can't read, no deps */ }
+  return [];
+}
+
+/**
+ * Filter out modules whose dependencies are not present.
+ * Warns to stderr about missing deps. Returns filtered list.
+ */
+function validateDeps(modulePaths) {
+  var available = {};
+  for (var i = 0; i < modulePaths.length; i++) {
+    available[path.basename(modulePaths[i], ".js")] = true;
+  }
+
+  var result = [];
+  for (var j = 0; j < modulePaths.length; j++) {
+    var deps = parseRequires(modulePaths[j]);
+    var missing = [];
+    for (var k = 0; k < deps.length; k++) {
+      if (!available[deps[k]]) missing.push(deps[k]);
+    }
+    if (missing.length > 0) {
+      var modName = path.basename(modulePaths[j], ".js");
+      process.stderr.write("hook-runner: skipping " + modName + " — missing deps: " + missing.join(", ") + "\n");
+    } else {
+      result.push(modulePaths[j]);
+    }
+  }
+  return result;
+}
+
+/**
  * Return sorted list of module paths to load for the given event dir.
+ * Validates module dependencies — modules with missing deps are skipped.
  * @param {string} eventDir  e.g. ~/.claude/hooks/run-modules/PreToolUse
  * @returns {string[]} absolute paths to .js module files
  */
@@ -31,25 +81,28 @@ module.exports = function loadModules(eventDir) {
 
   // 2. Project-scoped modules: subfolder matching project name
   var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
-  if (!projectDir) return globalFiles;
+  var allFiles = globalFiles;
 
-  var projectName = path.basename(projectDir);
-  if (projectName === "archive") return globalFiles;
-  var projectModDir = path.join(eventDir, projectName);
-  if (!fs.existsSync(projectModDir) || !fs.statSync(projectModDir).isDirectory()) {
-    return globalFiles;
+  if (projectDir) {
+    var projectName = path.basename(projectDir);
+    if (projectName !== "archive") {
+      var projectModDir = path.join(eventDir, projectName);
+      if (fs.existsSync(projectModDir) && fs.statSync(projectModDir).isDirectory()) {
+        try {
+          var projectFiles = fs.readdirSync(projectModDir)
+            .filter(function(f) { return f.endsWith(".js"); })
+            .sort()
+            .map(function(f) { return path.join(projectModDir, f); });
+          allFiles = globalFiles.concat(projectFiles);
+        } catch (e) { /* skip */ }
+      }
+    }
   }
 
-  var projectFiles;
-  try {
-    projectFiles = fs.readdirSync(projectModDir)
-      .filter(function(f) { return f.endsWith(".js"); })
-      .sort()
-      .map(function(f) { return path.join(projectModDir, f); });
-  } catch (e) {
-    projectFiles = [];
-  }
-
-  // Global first, then project-scoped (so project modules can override/extend)
-  return globalFiles.concat(projectFiles);
+  // 3. Validate dependencies — skip modules with missing deps
+  return validateDeps(allFiles);
 };
+
+// Exported for testing
+module.exports.parseRequires = parseRequires;
+module.exports.validateDeps = validateDeps;
