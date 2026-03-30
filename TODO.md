@@ -63,14 +63,16 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T046: Update CLAUDE.md with accurate test counts and runner list
 - [x] T047: Add module validation test (loads + calls every module with mock input)
 
+## Test Count Fix
+- [x] T048: Fix CLAUDE.md test counts (77 total: 16 runner + 6 wizard + 13 async + 32 module + 10 sync)
+
 ## Status
 All tasks complete. Project is mature and stable:
-- 47 tasks completed, 0 pending
-- 33 tests passing (14 runner + 6 wizard + 13 async)
+- 48 tasks completed, 0 pending
+- 77 tests passing across 5 test files
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
 - Report works for both hook-runner users and standalone hooks users
 - CLI commands: setup, report, dry-run, health, sync, stats, prune, version
-- Next session: update CLAUDE.md test count (now 67 total: 16 runner + 6 wizard + 13 async + 32 module), marketplace sync for T045-T047, or new UserPromptSubmit module development
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
