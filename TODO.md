@@ -55,14 +55,17 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T040: README — document prune and version commands
 - [x] T041: Add --stats command for quick text summary of hook log
 
+## Docs
+- [x] T042: Document --stats command in README
+
 ## Status
 All tasks complete. Project is mature and stable:
-- 41 tasks completed, 0 pending
+- 42 tasks completed, 0 pending
 - 33 tests passing (14 runner + 6 wizard + 13 async)
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
 - Report works for both hook-runner users and standalone hooks users
 - CLI commands: setup, report, dry-run, health, sync, stats, prune, version
-- Next session: README update for --stats, marketplace promotion, or new module development
+- Next session: marketplace promotion or new module development
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
