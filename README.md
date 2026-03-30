@@ -9,7 +9,8 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 Even if you don't use hook-runner, you can generate a report of your existing hooks:
 
 ```bash
-node setup.js --report    # generates an HTML report and opens it
+node setup.js --report          # generates an HTML report
+node setup.js --report --open   # generates and opens in browser
 ```
 
 The report shows:
@@ -37,6 +38,7 @@ No installation required — just clone and run `node setup.js --report`.
 /hook-runner stats        # quick text summary of hook log activity
 /hook-runner list         # show catalog vs installed modules
 /hook-runner test         # run all test suites
+/hook-runner upgrade      # fetch latest from GitHub and update local copies
 /hook-runner uninstall    # preview clean removal (dry-run by default)
 /hook-runner prune        # prune log entries older than 7 days
 /hook-runner version      # show hook-runner version
@@ -53,6 +55,7 @@ The setup wizard will:
 
 ```
 ~/.claude/hooks/
+  report.js                     # HTML report generator
   load-modules.js              # shared loader (global + project-scoped)
   run-pretooluse.js            # PreToolUse runner
   run-posttooluse.js           # PostToolUse runner
@@ -185,6 +188,7 @@ Full catalog in `modules/` directory:
 | `archive-not-delete` | Blocks `rm -rf`, forces `mv` to `archive/` |
 | `no-adhoc-commands` | Blocks raw aws/ssh/docker/kubectl, forces scripts/ |
 | `secret-scan-gate` | Blocks git commit if staged diff contains API keys, tokens, or passwords |
+| `no-hardcoded-paths` | Blocks Write/Edit with hardcoded absolute user paths in content |
 | `aws-tagging-gate` | Enforces required tags on AWS resource creation (env-configurable) |
 
 ### UserPromptSubmit (processes user prompts)

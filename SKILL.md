@@ -47,6 +47,9 @@ custom_commands:
   - name: prune
     command: "node $SKILL_DIR/setup.js --prune 7"
     description: "Prune hook log entries older than 7 days"
+  - name: upgrade
+    command: "node $SKILL_DIR/setup.js --upgrade"
+    description: "Fetch latest runners from GitHub and update local copies"
   - name: version
     command: "node $SKILL_DIR/setup.js --version"
     description: "Show hook-runner version"
@@ -60,6 +63,7 @@ Modular hook runner system for Claude Code. Replaces per-hook entries in setting
 
 ```
 ~/.claude/hooks/
+  report.js                     # HTML report generator
   load-modules.js              # shared loader (global + project-scoped)
   run-pretooluse.js            # PreToolUse runner
   run-posttooluse.js           # PostToolUse runner
