@@ -93,35 +93,19 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T064: Update README + SKILL.md with --upgrade, --open, no-hardcoded-paths, report.js
 - [x] T065: Marketplace push + version bump to 1.2.0
 
+## New Modules & Refactor
+- [x] T066: Add SessionStart module: `project-health` (runs --health on session start, warns about issues)
+- [ ] T067: Add PostToolUse module: `test-coverage-check` (warns if test files modified without running tests)
+- [ ] T068: Extract main() dispatch into command handler functions (main() is 491 lines)
+
 ## Status
-- 65 tasks completed, 0 pending
+- 65 tasks completed, 3 pending
 - Version: 1.2.0
 - 84 tests passing across 5 test files (16 runner + 7 wizard + 13 async + 38 module + 10 sync)
 - CI: GitHub Actions runs all tests on push/PR — badge in README
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
 - 19 modules in catalog (12 PreToolUse, 2 PostToolUse, 1 UserPromptSubmit, 2 SessionStart, 2 Stop)
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help
-
-## Session Handoff (2026-03-30 session 2)
-Completed T061-T065 this session. Project is v1.2.0 (65 tasks, 84 tests, 19 modules, 15 CLI commands).
-
-### What was done
-- T061: Extracted report.js (setup.js 1846→1261 lines, 32% reduction)
-- T062: `no-hardcoded-paths` PreToolUse module (blocks absolute user paths in Write/Edit)
-- T063: `--upgrade` command (self-updater from GitHub, --dry-run/--force)
-- T063 also: `--open` flag — reports no longer auto-open browser tabs (user requested)
-- T064: README + SKILL.md updated with all new commands/modules
-- T065: Version bump to 1.2.0 + marketplace push
-
-### Nothing broken
-All 84 tests pass locally and in CI. All 4 sync targets identical. Marketplace pushed.
-
-### Next session ideas (prioritized by impact)
-1. **Extract main() dispatch** — main() is still 491 lines. Could split into command handler functions.
-2. **Integration with hook-flow-bundle** — export/import module configs as portable bundles
-3. **Module dependency system** — some modules logically depend on others (spec-gate needs enforcement-gate)
-4. **PostToolUse module: `test-coverage-check`** — warns if test files were modified without running tests
-5. **SessionStart module: `project-health`** — runs --health on session start, warns about issues
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)

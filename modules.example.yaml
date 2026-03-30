@@ -45,6 +45,7 @@ modules:
 
   SessionStart:
     - load-instructions      # inject working instructions at session start
+    - project-health         # run health check on session start, warn about issues
     # - backup-check         # async: warn if claude-backup is stale (>72h)
 
 # Project-scoped modules (optional)
