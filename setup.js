@@ -925,25 +925,14 @@ function updateSettings(dryRun) {
     ]
   };
 
-  // Preserve existing matchers the user has that we don't define
+  // Preserve custom events that hook-runner doesn't define
   var existingEvents = Object.keys(settings.hooks);
   for (var i = 0; i < existingEvents.length; i++) {
     var evt = existingEvents[i];
     if (!runnerConfig[evt]) {
-      // Unknown event — check if it's already a runner, preserve if so
-      var entries = settings.hooks[evt];
-      if (Array.isArray(entries)) {
-        var hasRunner = false;
-        for (var j = 0; j < entries.length; j++) {
-          var h = (entries[j].hooks || [])[0] || {};
-          if (h.command && /run-\w+\.js/.test(h.command)) hasRunner = true;
-        }
-        if (!hasRunner) {
-          // Create a runner entry for this unknown event
-          var runnerName = "run-" + evt.toLowerCase() + ".js";
-          changes.push({ action: "note", file: evt, reason: "custom event — preserving existing config" });
-        }
-      }
+      // Custom event — preserve its existing config
+      runnerConfig[evt] = settings.hooks[evt];
+      changes.push({ action: "preserved", file: evt, reason: "custom event — kept existing config" });
     }
   }
 
