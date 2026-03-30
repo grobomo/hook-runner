@@ -3,7 +3,7 @@
 # Validates: exports function, doesn't crash on mock input, returns null or object.
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "$0")/../.." && pwd -W)"
+REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"
 PASS=0
 FAIL=0
 

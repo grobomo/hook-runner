@@ -2,7 +2,7 @@
 # Test that hook runners load modules correctly via load-modules.js
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "$0")/../.." && pwd -W)"  # -W gives Windows path
+REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"
 PASS=0
 FAIL=0
 
