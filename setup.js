@@ -518,7 +518,7 @@ function generateReport(scan, outputPath, hookStats) {
       var nameStyle = m.archived ? ' style="color:#484f58;text-decoration:line-through"' : '';
 
       // Look up stats for this module
-      var statsKey = evt + "/" + m.name.replace(/\.js$/, "");
+      var statsKey = evt2 + "/" + m.name.replace(/\.js$/, "");
       var modStats = hookStats[statsKey] || null;
 
       h.push('<div class="module">');
