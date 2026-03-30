@@ -28,6 +28,9 @@ custom_commands:
   - name: sync-dry-run
     command: "node $SKILL_DIR/setup.js --sync --dry-run"
     description: "Preview module sync without installing"
+  - name: health
+    command: "node $SKILL_DIR/setup.js --health"
+    description: "Verify all runners and modules load correctly"
 ---
 
 # hook-runner

@@ -28,6 +28,9 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T027: Add hook-log.jsonl to .gitignore in modules.example.yaml docs
 - [x] T028: Marketplace push for claude-code-skills (hook-runner runners updated with logging)
 
+## Completed (health check)
+- [x] T029: Health check command — verifies runners, modules, settings, log writability
+
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
 
