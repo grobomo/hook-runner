@@ -105,12 +105,12 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T070: Sync live module fixes back to repo catalog (branch-pr-gate, no-adhoc-commands, load-instructions, auto-continue)
 
 ## Status
-- 70 tasks completed, 0 pending
-- Version: 1.3.0
-- 88 tests passing across 5 test files (16 runner + 7 wizard + 13 async + 42 module + 10 sync)
+- 76 tasks completed, 0 pending
+- Version: 1.4.0
+- 90 tests passing across 5 test files (16 runner + 7 wizard + 13 async + 44 module + 10 sync)
 - CI: GitHub Actions runs all tests on push/PR — badge in README
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
-- 21 modules in catalog (12 PreToolUse, 3 PostToolUse, 1 UserPromptSubmit, 3 SessionStart, 2 Stop)
+- 22 modules in catalog (13 PreToolUse, 3 PostToolUse, 1 UserPromptSubmit, 3 SessionStart, 2 Stop)
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help
 
 ## Performance & Features (v1.4.0)
@@ -118,7 +118,8 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T072: Add per-module timing to hook-log (measure latency each module adds)
 - [x] T073: Report v3 — timing data visualization, per-module latency chart
 - [x] T074: Module dependency system — `requires:` field in module header, load-modules validates
-- [ ] T075: Module hot-reload — detect changed modules, clear require cache without restarting Claude Code
+- [x] T075: N/A — hot-reload is unnecessary (each hook invocation is a new Node process, require cache is always fresh)
+- [x] T076: Update docs (README, CLAUDE.md, SKILL.md) + version bump to 1.4.0 + marketplace push
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
