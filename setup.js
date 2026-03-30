@@ -17,6 +17,7 @@
  *   node setup.js --install        # skip report, just install
  *   node setup.js --sync           # sync modules from GitHub per modules.yaml
  *   node setup.js --sync --dry-run # preview sync without installing
+ *   node setup.js --stats           # quick text summary of hook log
  *   node setup.js --prune 7        # prune log entries older than 7 days
  *   node setup.js --prune 7 --dry-run
  *   node setup.js --version        # show version
@@ -1257,6 +1258,7 @@ function main() {
   var healthMode = args.indexOf("--health") !== -1;
   var versionMode = args.indexOf("--version") !== -1 || args.indexOf("-v") !== -1;
   var pruneMode = args.indexOf("--prune") !== -1;
+  var statsMode = args.indexOf("--stats") !== -1;
 
   // --- Version ---
   if (versionMode) {
@@ -1278,6 +1280,43 @@ function main() {
     if (pruneResult.rotatedRemoved) console.log("  Rotated log (.1): " + (dryRun ? "would remove" : "removed"));
     console.log("");
     console.log("[hook-runner] " + (dryRun ? "Dry-run complete." : "Prune complete."));
+    return;
+  }
+
+  // --- Stats mode: quick text summary of hook log ---
+  if (statsMode) {
+    console.log("[hook-runner] Log Stats");
+    console.log("========================");
+    var hs = readHookStats(3);
+    var hsKeys = Object.keys(hs).sort();
+    if (hsKeys.length === 0) {
+      console.log("  No hook log data found.");
+      return;
+    }
+    var totalInv = 0, totalBlk = 0, totalErr = 0;
+    for (var si = 0; si < hsKeys.length; si++) {
+      totalInv += hs[hsKeys[si]].total;
+      totalBlk += hs[hsKeys[si]].block;
+      totalErr += hs[hsKeys[si]].error;
+    }
+    console.log("  Total invocations: " + totalInv);
+    console.log("  Total blocks: " + totalBlk + " (" + (totalInv > 0 ? ((totalBlk / totalInv) * 100).toFixed(1) : "0") + "%)");
+    if (totalErr > 0) console.log("  Total errors: " + totalErr);
+    console.log("");
+    // Show modules with blocks or errors
+    var hasActivity = false;
+    for (var sj = 0; sj < hsKeys.length; sj++) {
+      var ms = hs[hsKeys[sj]];
+      if (ms.block > 0 || ms.error > 0) {
+        if (!hasActivity) { console.log("  Active hooks:"); hasActivity = true; }
+        var parts = "    " + hsKeys[sj];
+        if (ms.block > 0) parts += "  " + ms.block + " blocked";
+        if (ms.error > 0) parts += "  " + ms.error + " errors";
+        console.log(parts);
+      }
+    }
+    if (!hasActivity) console.log("  No blocks or errors recorded.");
+    console.log("");
     return;
   }
 
