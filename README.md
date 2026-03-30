@@ -177,6 +177,7 @@ Full catalog in `modules/` directory:
 | `root-cause-gate` | Blocks retry/cleanup without root cause diagnosis |
 | `archive-not-delete` | Blocks `rm -rf`, forces `mv` to `archive/` |
 | `no-adhoc-commands` | Blocks raw aws/ssh/docker/kubectl, forces scripts/ |
+| `secret-scan-gate` | Blocks git commit if staged diff contains API keys, tokens, or passwords |
 | `aws-tagging-gate` | Enforces required tags on AWS resource creation (env-configurable) |
 
 ### PostToolUse (checks after tool execution)
