@@ -50,9 +50,12 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T037: Fix double-count bug in readHookStats (block result incremented twice) + add hook-log.js and run-async.js to installer
 - [x] T038: Fix updateSettings losing custom events (detected but not preserved due to overwrite)
 
+## Enhancements
+- [x] T039: Log rotation in stats, --prune command, --version flag
+
 ## Status
 All tasks complete. Project is mature and stable:
-- 38 tasks completed, 0 pending
+- 39 tasks completed, 0 pending
 - 33 tests passing (14 runner + 6 wizard + 13 async)
 - 4 sync targets all identical: repo, live hooks, skill, marketplace
 - Report works for both hook-runner users and standalone hooks users

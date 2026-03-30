@@ -17,6 +17,9 @@
  *   node setup.js --install        # skip report, just install
  *   node setup.js --sync           # sync modules from GitHub per modules.yaml
  *   node setup.js --sync --dry-run # preview sync without installing
+ *   node setup.js --prune 7        # prune log entries older than 7 days
+ *   node setup.js --prune 7 --dry-run
+ *   node setup.js --version        # show version
  */
 var fs = require("fs");
 var path = require("path");
@@ -37,25 +40,16 @@ var SCRIPT_DIR = __dirname;
 var REPO_DIR = SCRIPT_DIR;
 
 var HOOK_LOG_PATH = path.join(HOOKS_DIR, "hook-log.jsonl");
+var VERSION = "1.0.0";
 
 // ============================================================
 // 0. Hook Log Stats
 // ============================================================
 
 /**
- * Read hook-log.jsonl and compute per-module stats.
- * Returns: { "PreToolUse/enforcement-gate": { total: 100, pass: 90, block: 8, error: 2, samples: [...] }, ... }
- * Each sample: { ts, result, tool, cmd, file, reason, project }
+ * Parse log lines into stats object.
  */
-function readHookStats(maxSamples) {
-  maxSamples = maxSamples || 5;
-  var stats = {};
-  if (!fs.existsSync(HOOK_LOG_PATH)) return stats;
-
-  var content;
-  try { content = fs.readFileSync(HOOK_LOG_PATH, "utf-8"); } catch(e) { return stats; }
-
-  var lines = content.split("\n");
+function parseLogLines(lines, stats, maxSamples) {
   for (var i = 0; i < lines.length; i++) {
     if (!lines[i].trim()) continue;
     var entry;
@@ -74,21 +68,83 @@ function readHookStats(maxSamples) {
     else if (r === "error") s.error++;
     else if (r === "text") s.text++;
 
-    // Keep samples of blocks/errors (most interesting)
     if (r !== "pass" && r !== "text" && s.samples.length < maxSamples) {
       s.samples.push({
-        ts: entry.ts || "",
-        result: r,
-        tool: entry.tool || "",
-        cmd: entry.cmd || "",
-        file: entry.file || "",
-        reason: entry.reason || "",
-        project: entry.project || "",
+        ts: entry.ts || "", result: r, tool: entry.tool || "",
+        cmd: entry.cmd || "", file: entry.file || "",
+        reason: entry.reason || "", project: entry.project || "",
       });
     }
   }
+}
+
+/**
+ * Read hook-log.jsonl (and rotated .1 file) and compute per-module stats.
+ * Returns: { "PreToolUse/enforcement-gate": { total: 100, pass: 90, block: 8, error: 2, samples: [...] }, ... }
+ */
+function readHookStats(maxSamples) {
+  maxSamples = maxSamples || 5;
+  var stats = {};
+
+  // Read rotated log first (older entries) so samples are chronological
+  var rotatedPath = HOOK_LOG_PATH + ".1";
+  if (fs.existsSync(rotatedPath)) {
+    try {
+      var rotated = fs.readFileSync(rotatedPath, "utf-8").split("\n");
+      parseLogLines(rotated, stats, maxSamples);
+    } catch(e) { /* skip */ }
+  }
+
+  if (!fs.existsSync(HOOK_LOG_PATH)) return stats;
+  try {
+    var current = fs.readFileSync(HOOK_LOG_PATH, "utf-8").split("\n");
+    parseLogLines(current, stats, maxSamples);
+  } catch(e) { /* skip */ }
 
   return stats;
+}
+
+/**
+ * Prune hook log — keep only entries from the last N days.
+ * @param {number} days - keep entries newer than this many days
+ * @param {boolean} dryRun - if true, just report what would be pruned
+ * @returns {{ kept: number, pruned: number, rotatedRemoved: boolean }}
+ */
+function pruneLog(days, dryRun) {
+  var cutoff = new Date(Date.now() - days * 86400000).toISOString();
+  var result = { kept: 0, pruned: 0, rotatedRemoved: false };
+
+  // Remove rotated log entirely (it's always older)
+  var rotatedPath = HOOK_LOG_PATH + ".1";
+  if (fs.existsSync(rotatedPath)) {
+    try {
+      var rotLines = fs.readFileSync(rotatedPath, "utf-8").split("\n");
+      result.pruned += rotLines.filter(function(l) { return l.trim(); }).length;
+      result.rotatedRemoved = true;
+      if (!dryRun) fs.unlinkSync(rotatedPath);
+    } catch(e) { /* skip */ }
+  }
+
+  if (!fs.existsSync(HOOK_LOG_PATH)) return result;
+  try {
+    var lines = fs.readFileSync(HOOK_LOG_PATH, "utf-8").split("\n");
+    var kept = [];
+    for (var i = 0; i < lines.length; i++) {
+      if (!lines[i].trim()) continue;
+      try {
+        var entry = JSON.parse(lines[i]);
+        if (entry.ts && entry.ts >= cutoff) {
+          kept.push(lines[i]);
+          result.kept++;
+        } else {
+          result.pruned++;
+        }
+      } catch(e) { result.pruned++; }
+    }
+    if (!dryRun) fs.writeFileSync(HOOK_LOG_PATH, kept.join("\n") + (kept.length ? "\n" : ""));
+  } catch(e) { /* skip */ }
+
+  return result;
 }
 
 // ============================================================
@@ -1199,6 +1255,31 @@ function main() {
   var installOnly = args.indexOf("--install") !== -1;
   var syncMode = args.indexOf("--sync") !== -1;
   var healthMode = args.indexOf("--health") !== -1;
+  var versionMode = args.indexOf("--version") !== -1 || args.indexOf("-v") !== -1;
+  var pruneMode = args.indexOf("--prune") !== -1;
+
+  // --- Version ---
+  if (versionMode) {
+    console.log("hook-runner v" + VERSION);
+    return;
+  }
+
+  // --- Prune mode: trim old log entries ---
+  if (pruneMode) {
+    var pruneIdx = args.indexOf("--prune");
+    var pruneDays = parseInt(args[pruneIdx + 1], 10) || 7;
+    console.log("[hook-runner] Log Prune");
+    console.log("========================");
+    console.log("  Keeping entries from last " + pruneDays + " day(s)");
+    if (dryRun) console.log("  (dry-run mode)");
+    var pruneResult = pruneLog(pruneDays, dryRun);
+    console.log("  Kept: " + pruneResult.kept + " entries");
+    console.log("  Pruned: " + pruneResult.pruned + " entries");
+    if (pruneResult.rotatedRemoved) console.log("  Rotated log (.1): " + (dryRun ? "would remove" : "removed"));
+    console.log("");
+    console.log("[hook-runner] " + (dryRun ? "Dry-run complete." : "Prune complete."));
+    return;
+  }
 
   // --- Health check mode ---
   if (healthMode) {
@@ -1423,6 +1504,6 @@ function healthCheck() {
   return results;
 }
 
-module.exports = { scanHooks: scanHooks, generateReport: generateReport, backupHooks: backupHooks, installRunners: installRunners, parseModulesYaml: parseModulesYaml, syncModules: syncModules, readHookStats: readHookStats, healthCheck: healthCheck };
+module.exports = { scanHooks: scanHooks, generateReport: generateReport, backupHooks: backupHooks, installRunners: installRunners, parseModulesYaml: parseModulesYaml, syncModules: syncModules, readHookStats: readHookStats, healthCheck: healthCheck, pruneLog: pruneLog, VERSION: VERSION };
 
 if (require.main === module) main();
