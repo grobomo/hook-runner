@@ -2,7 +2,7 @@
 # Test setup.js wizard in dry-run mode
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "$0")/../.." && pwd -W)"  # Windows path for node
+REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"
 PASS=0
 FAIL=0
 
