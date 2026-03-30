@@ -24,11 +24,16 @@ These were made to the live hooks, not committed to this repo (user-specific enf
 - **remote-tracking-gate.js**: Fixed tool_input parsing to handle object (not just JSON string).
 
 ## Active
-- [x] T014: Sync repo example modules with live fixes — root-cause-gate (remove rebase/merge --abort from blocked patterns, tighten checkout regex), auto-continue (remove hardcoded user path)
+- [x] T014: Sync repo example modules with live fixes
 - [x] T015: Sync local skill copy after repo changes
+- [x] T016: Module catalog — move all modules into repo under modules/ directory
+- [ ] T017: Config file — modules.yaml format to pick which modules to install
+- [ ] T018: Sync command — `setup.js --sync` pulls selected modules from GitHub
+- [ ] T019: Update SKILL.md/README with sync workflow, test e2e on fresh install
 
 ## Architecture Notes
-- Repo contains the generic/distributable runner system + example modules
-- Live system at ~/.claude/hooks/ has additional user-specific enforcement modules
-- Gate modules (enforcement-gate, spec-gate, branch-pr-gate, etc.) are user-specific — not in the repo
-- setup.js copies runners from its own directory (skill dir) to ~/.claude/hooks/
+- Repo contains the generic/distributable runner system + module catalog
+- `modules/` has all available modules organized by event type
+- `~/.claude/hooks/modules.yaml` controls which modules are installed locally
+- `setup.js --sync` fetches modules from GitHub and installs them
+- Project-scoped modules go in `modules/PreToolUse/<project-name>/` in the repo

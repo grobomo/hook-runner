@@ -36,6 +36,18 @@
 ---
 
 ## Phase 5: Cleanup & Documentation
-- [ ] T013: Clean TODO.md, delete stale branches, archive SESSION_STATE.md, document gate fixes
+- [x] T013: Clean TODO.md, delete stale branches, archive SESSION_STATE.md, document gate fixes
+- [x] T014: Sync repo example modules with live fixes
+- [x] T015: Sync local skill copy after repo changes
 
 **Checkpoint**: `bash scripts/test/test-runners.sh && bash scripts/test/test-setup-wizard.sh`
+
+---
+
+## Phase 6: Module Catalog & Sync
+- [ ] T016: Move all modules into repo under modules/ directory (organized by event, with metadata)
+- [ ] T017: Config file — modules.yaml format to select which modules to install
+- [ ] T018: Sync command — `setup.js --sync` fetches selected modules from GitHub raw content
+- [ ] T019: Update SKILL.md/README, add sync custom command, test e2e fresh install
+
+**Checkpoint**: `bash scripts/test/test-module-sync.sh` — verify sync installs selected modules from config
