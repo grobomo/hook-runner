@@ -1,0 +1,620 @@
+#!/usr/bin/env node
+"use strict";
+/**
+ * hook-runner report generator
+ *
+ * Extracted from setup.js for maintainability.
+ * Generates an HTML report of Claude Code hooks configuration.
+ */
+var fs = require("fs");
+var path = require("path");
+var os = require("os");
+
+var HOME = os.homedir();
+var SETTINGS_PATH = path.join(HOME, ".claude", "settings.json");
+
+// ============================================================
+// Report Generator
+// ============================================================
+
+// Canonical event order: user experience flow
+var EVENT_ORDER = ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"];
+
+var EVENT_TITLES = {
+  SessionStart: "Session Start Hooks",
+  UserPromptSubmit: "User Prompt Hooks",
+  PreToolUse: "Pre-Tool Use Hooks",
+  PostToolUse: "Post-Tool Use Hooks",
+  Stop: "Stop Hooks"
+};
+
+var EVENT_BADGES = {
+  SessionStart: "badge-session", PreToolUse: "badge-pre", PostToolUse: "badge-post",
+  Stop: "badge-stop", UserPromptSubmit: "badge-prompt"
+};
+
+function escHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/**
+ * Read the first comment line from a module as its description.
+ */
+function getModuleDescription(filePath) {
+  try {
+    var content = fs.readFileSync(filePath, "utf-8");
+    var lines = content.split("\n");
+    for (var i = 0; i < Math.min(lines.length, 10); i++) {
+      var line = lines[i].trim();
+      if (line.startsWith("//")) {
+        var desc = line.replace(/^\/\/\s*/, "");
+        if (desc.length > 10 && !/^#!|^"use strict"|^@module/.test(desc)) return desc;
+      }
+    }
+  } catch (e) { /* skip */ }
+  return "";
+}
+
+/**
+ * Read the full source code of a module for display.
+ */
+function getModuleSource(filePath) {
+  try {
+    return fs.readFileSync(filePath, "utf-8");
+  } catch (e) { return ""; }
+}
+
+/**
+ * Collect all modules for an event, including project-scoped and archived.
+ */
+function collectModules(modulesDir) {
+  var result = [];
+  if (!fs.existsSync(modulesDir)) return result;
+
+  var entries = fs.readdirSync(modulesDir, { withFileTypes: true });
+
+  // Global modules
+  var globalFiles = entries.filter(function(e) { return e.isFile() && e.name.endsWith(".js"); })
+    .map(function(e) { return e.name; }).sort();
+  for (var i = 0; i < globalFiles.length; i++) {
+    var fp = path.join(modulesDir, globalFiles[i]);
+    result.push({
+      name: globalFiles[i], path: fp, scope: "global",
+      description: getModuleDescription(fp), source: getModuleSource(fp), archived: false
+    });
+  }
+
+  // Archive modules
+  var archiveDir = path.join(modulesDir, "archive");
+  if (fs.existsSync(archiveDir)) {
+    try {
+      var archiveFiles = fs.readdirSync(archiveDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+      for (var a = 0; a < archiveFiles.length; a++) {
+        var afp = path.join(archiveDir, archiveFiles[a]);
+        result.push({
+          name: "archive/" + archiveFiles[a], path: afp, scope: "archived",
+          description: getModuleDescription(afp), source: getModuleSource(afp), archived: true
+        });
+      }
+    } catch (e) { /* skip */ }
+  }
+
+  // Project-scoped modules
+  var subdirs = entries.filter(function(e) { return e.isDirectory() && e.name !== "archive"; });
+  for (var s = 0; s < subdirs.length; s++) {
+    var subDir = path.join(modulesDir, subdirs[s].name);
+    var subFiles = fs.readdirSync(subDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+    for (var sf = 0; sf < subFiles.length; sf++) {
+      var sfp = path.join(subDir, subFiles[sf]);
+      result.push({
+        name: subdirs[s].name + "/" + subFiles[sf], path: sfp, scope: subdirs[s].name,
+        description: getModuleDescription(sfp), source: getModuleSource(sfp), archived: false
+      });
+    }
+  }
+
+  return result;
+}
+
+function generateReport(scan, outputPath, hookStats) {
+  hookStats = hookStats || {};
+  var now = new Date().toISOString().slice(0, 10);
+
+  // Detect if already using hook-runner
+  var usingRunner = false;
+  var rawEventNames = Object.keys(scan.events);
+  for (var i = 0; i < rawEventNames.length; i++) {
+    var ents = scan.events[rawEventNames[i]].entries;
+    for (var j = 0; j < ents.length; j++) {
+      if (ents[j].isRunner) { usingRunner = true; break; }
+    }
+    if (usingRunner) break;
+  }
+
+  // Order events by user experience flow — include ALL canonical events even if empty
+  var eventNames = [];
+  for (var eo = 0; eo < EVENT_ORDER.length; eo++) {
+    eventNames.push(EVENT_ORDER[eo]);
+    if (!scan.events[EVENT_ORDER[eo]]) {
+      scan.events[EVENT_ORDER[eo]] = { entries: [], matchers: [], moduleCount: 0 };
+    }
+  }
+  for (var uk = 0; uk < rawEventNames.length; uk++) {
+    if (eventNames.indexOf(rawEventNames[uk]) === -1) eventNames.push(rawEventNames[uk]);
+  }
+
+  // Collect all module info per event
+  var eventModules = {};
+  var totalModules = 0;
+  for (var em = 0; em < eventNames.length; em++) {
+    var evt = eventNames[em];
+    var evtData = scan.events[evt];
+    var modulesDir = null;
+    for (var mh = 0; mh < evtData.entries.length; mh++) {
+      if (evtData.entries[mh].isRunner && evtData.entries[mh].scriptPath) {
+        modulesDir = path.join(path.dirname(evtData.entries[mh].scriptPath), "run-modules", evt);
+        break;
+      }
+    }
+    var mods = modulesDir ? collectModules(modulesDir) : [];
+    eventModules[evt] = mods;
+    var activeCount = mods.filter(function(m) { return !m.archived; }).length;
+    totalModules += activeCount;
+    evtData.moduleCount = activeCount;
+  }
+
+  // Compute log-level stats for summary
+  var logTotalInvocations = 0, logTotalBlocks = 0, logTotalErrors = 0;
+  var hookStatsKeys = Object.keys(hookStats);
+  var mostBlockedMod = "", mostBlockedCount = 0;
+  for (var hsk = 0; hsk < hookStatsKeys.length; hsk++) {
+    var hs = hookStats[hookStatsKeys[hsk]];
+    logTotalInvocations += hs.total;
+    logTotalBlocks += hs.block;
+    logTotalErrors += hs.error;
+    if (hs.block > mostBlockedCount) { mostBlockedCount = hs.block; mostBlockedMod = hookStatsKeys[hsk]; }
+  }
+  var blockRate = logTotalInvocations > 0 ? ((logTotalBlocks / logTotalInvocations) * 100).toFixed(1) : "0";
+
+  // Count missing scripts (broken references)
+  var missingScripts = [];
+  for (var ms = 0; ms < rawEventNames.length; ms++) {
+    var msEntries = scan.events[rawEventNames[ms]].entries;
+    for (var mse = 0; mse < msEntries.length; mse++) {
+      if (msEntries[mse].scriptPath && !msEntries[mse].exists) {
+        missingScripts.push({ event: rawEventNames[ms], path: msEntries[mse].scriptPath });
+      }
+    }
+  }
+
+  // Collect standalone hook info (for non-runner entries)
+  var standaloneHooks = {};
+  for (var sh = 0; sh < eventNames.length; sh++) {
+    var shEvt = eventNames[sh];
+    var shData = scan.events[shEvt];
+    standaloneHooks[shEvt] = [];
+    for (var she = 0; she < shData.entries.length; she++) {
+      var shEntry = shData.entries[she];
+      if (!shEntry.isRunner && shEntry.scriptPath) {
+        standaloneHooks[shEvt].push({
+          name: path.basename(shEntry.scriptPath),
+          path: shEntry.scriptPath,
+          command: shEntry.command,
+          exists: shEntry.exists,
+          matcher: shEntry.matcher,
+          timeout: shEntry.timeout,
+          description: shEntry.exists ? getModuleDescription(shEntry.scriptPath) : "",
+          source: shEntry.exists ? getModuleSource(shEntry.scriptPath) : ""
+        });
+      }
+    }
+  }
+
+  var h = [];
+  h.push('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">');
+  h.push('<meta name="viewport" content="width=device-width, initial-scale=1.0">');
+  h.push('<title>Claude Code Hooks Report</title>');
+  h.push('<style>');
+  h.push('*{margin:0;padding:0;box-sizing:border-box}');
+  h.push('body{background:#0d1117;color:#c9d1d9;font-family:"Segoe UI",-apple-system,sans-serif;line-height:1.6;padding:2rem;max-width:1400px;margin:0 auto}');
+  h.push('h1{color:#58a6ff;font-size:1.8rem;margin-bottom:.3rem}');
+  h.push('.subtitle{color:#8b949e;font-size:.95rem;margin-bottom:2rem}');
+  h.push('.subtitle code{background:#161b22;padding:.1rem .4rem;border-radius:3px;color:#79c0ff;font-size:.85rem}');
+  h.push('.stats{display:flex;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap}');
+  h.push('.stat{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1rem 1.5rem;min-width:140px}');
+  h.push('.stat-value{font-size:2rem;font-weight:700;color:#58a6ff}');
+  h.push('.stat-label{font-size:.8rem;color:#8b949e;text-transform:uppercase;letter-spacing:.05em}');
+  h.push('.stat-warn .stat-value{color:#d29922}');
+  h.push('.stat-danger .stat-value{color:#f85149}');
+  h.push('.arch-note{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1.5rem;margin-bottom:2rem}');
+  h.push('.arch-note h2{color:#d2a8ff;font-size:1rem;margin-bottom:.8rem}');
+  h.push('.arch-note p{color:#8b949e;font-size:.9rem;margin-bottom:.5rem}');
+  h.push('.arch-note code{background:#0d1117;padding:.1rem .4rem;border-radius:3px;color:#79c0ff;font-size:.85rem}');
+  // Health warnings
+  h.push('.warnings{background:#f8514915;border:1px solid #f8514944;border-radius:8px;padding:1rem 1.5rem;margin-bottom:2rem}');
+  h.push('.warnings h3{color:#f85149;font-size:.9rem;margin-bottom:.5rem}');
+  h.push('.warnings li{color:#c9d1d9;font-size:.85rem;margin-left:1.5rem;margin-bottom:.3rem}');
+  h.push('.warnings code{background:#0d1117;padding:.1rem .3rem;border-radius:3px;color:#f85149;font-size:.8rem}');
+  // Search + toolbar
+  h.push('.toolbar{display:flex;gap:1rem;margin-bottom:1.5rem;align-items:center;flex-wrap:wrap}');
+  h.push('.search-box{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:.5rem 1rem;color:#c9d1d9;font-size:.9rem;width:300px;outline:none}');
+  h.push('.search-box:focus{border-color:#58a6ff}');
+  h.push('.search-box::placeholder{color:#484f58}');
+  h.push('.toolbar-btn{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:.4rem .8rem;color:#8b949e;font-size:.8rem;cursor:pointer;transition:all .15s}');
+  h.push('.toolbar-btn:hover{background:#30363d;color:#c9d1d9}');
+  // Flow
+  h.push('.flow{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1.5rem;margin-bottom:2rem}');
+  h.push('.flow h2{color:#58a6ff;font-size:1.1rem;margin-bottom:1rem}');
+  h.push('.flow-diagram{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding:1rem 0}');
+  h.push('.flow-stage{display:flex;flex-direction:column;align-items:center;min-width:180px}');
+  h.push('.flow-arrow{color:#484f58;font-size:1.5rem;padding-top:.8rem;min-width:40px;text-align:center}');
+  h.push('.flow-event{background:#1f2937;border:2px solid #58a6ff;border-radius:8px;padding:.6rem 1rem;font-weight:600;color:#58a6ff;font-size:.9rem;margin-bottom:.5rem;white-space:nowrap}');
+  h.push('.flow-modules{display:flex;flex-direction:column;gap:.3rem;align-items:center}');
+  h.push('.flow-mod{background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:.2rem .6rem;font-size:.7rem;color:#8b949e;white-space:nowrap}');
+  h.push('.flow-mod-archived{opacity:.4;text-decoration:line-through}');
+  h.push('.flow-mod-project{color:#d2a8ff}');
+  h.push('.flow-mod-link{cursor:pointer;transition:border-color .15s,color .15s}');
+  h.push('.flow-mod-link:hover{border-color:#58a6ff;color:#58a6ff}');
+  h.push('.flow-mod-empty{color:#484f58;font-style:italic;border-style:dashed}');
+  h.push('.flow-mod-missing{color:#f85149;border-color:#f8514944}');
+  h.push('.flow-claude-event{font-size:.65rem;color:#484f58;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.25rem;white-space:nowrap}');
+  h.push('.flow-subtitle{color:#8b949e;font-size:.8rem;margin-bottom:1rem}');
+  h.push('.module-highlight{animation:highlight-fade 2s ease-out}');
+  h.push('@keyframes highlight-fade{0%{background:#1f6feb33}100%{background:transparent}}');
+  h.push('.event-section{margin-bottom:1.5rem}');
+  h.push('.event-header{background:#161b22;border:1px solid #30363d;border-radius:8px 8px 0 0;padding:1rem 1.5rem;cursor:pointer;display:flex;align-items:center;gap:1rem;user-select:none}');
+  h.push('.event-header:hover{background:#1c2128}');
+  h.push('.event-header.collapsed{border-radius:8px}');
+  h.push('.event-badge{font-size:.75rem;font-weight:600;padding:.2rem .6rem;border-radius:4px;text-transform:uppercase;letter-spacing:.05em}');
+  h.push('.badge-session{background:#1f6feb33;color:#58a6ff;border:1px solid #1f6feb}');
+  h.push('.badge-pre{background:#da363333;color:#f85149;border:1px solid #da3633}');
+  h.push('.badge-post{background:#23863633;color:#3fb950;border:1px solid #238636}');
+  h.push('.badge-stop{background:#9e6a0333;color:#d29922;border:1px solid #9e6a03}');
+  h.push('.badge-prompt{background:#8b5cf633;color:#a78bfa;border:1px solid #7c3aed}');
+  h.push('.event-title{font-size:1.1rem;font-weight:600;color:#c9d1d9}');
+  h.push('.event-meta{margin-left:auto;color:#8b949e;font-size:.85rem}');
+  h.push('.chevron{color:#484f58;transition:transform .2s;font-size:1.2rem}');
+  h.push('.chevron.open{transform:rotate(90deg)}');
+  h.push('.event-body{background:#0d1117;border:1px solid #30363d;border-top:none;border-radius:0 0 8px 8px;display:none}');
+  h.push('.event-body.open{display:block}');
+  h.push('.runner{padding:1rem 1.5rem;border-bottom:1px solid #21262d}');
+  h.push('.runner-label{color:#8b949e;font-size:.8rem;text-transform:uppercase;margin-bottom:.3rem}');
+  h.push('.runner-path{color:#79c0ff;font-family:"Cascadia Code","Fira Code",monospace;font-size:.85rem}');
+  h.push('.matchers{padding:.5rem 1.5rem;display:flex;gap:.5rem;flex-wrap:wrap;border-bottom:1px solid #21262d}');
+  h.push('.matcher{background:#1f2937;border:1px solid #30363d;border-radius:4px;padding:.15rem .5rem;font-size:.8rem;color:#d2a8ff;font-family:monospace}');
+  h.push('.module{border-bottom:1px solid #21262d}');
+  h.push('.module:last-child{border-bottom:none}');
+  h.push('.module-header{padding:1rem 1.5rem;cursor:pointer;display:flex;align-items:center;gap:.8rem}');
+  h.push('.module-header:hover{background:#161b22}');
+  h.push('.module-icon{width:8px;height:8px;border-radius:50%;flex-shrink:0}');
+  h.push('.icon-active{background:#3fb950;box-shadow:0 0 6px #3fb95066}');
+  h.push('.icon-project{background:#d2a8ff;box-shadow:0 0 6px #d2a8ff66}');
+  h.push('.icon-archived{background:#484f58}');
+  h.push('.icon-missing{background:#f85149;box-shadow:0 0 6px #f8514966}');
+  h.push('.icon-standalone{background:#58a6ff;box-shadow:0 0 6px #58a6ff66}');
+  h.push('.module-name{font-weight:600;color:#c9d1d9;font-size:.95rem}');
+  h.push('.module-desc{color:#8b949e;font-size:.85rem;margin-left:.5rem}');
+  h.push('.module-scope{margin-left:auto;font-size:.7rem;padding:.15rem .4rem;border-radius:3px;font-weight:600;flex-shrink:0}');
+  h.push('.scope-global{background:#23863622;color:#3fb950;border:1px solid #23863644}');
+  h.push('.scope-project{background:#8b5cf622;color:#d2a8ff;border:1px solid #7c3aed44}');
+  h.push('.scope-archived{background:#30363d;color:#484f58;border:1px solid #484f58}');
+  h.push('.scope-standalone{background:#1f6feb22;color:#58a6ff;border:1px solid #1f6feb44}');
+  h.push('.scope-missing{background:#f8514922;color:#f85149;border:1px solid #f8514944}');
+  // Hook meta info (command, matcher, timeout)
+  h.push('.hook-meta{padding:.5rem 1.5rem .5rem 3rem;display:flex;gap:1rem;flex-wrap:wrap;font-size:.8rem;color:#8b949e;border-bottom:1px solid #21262d}');
+  h.push('.hook-meta code{background:#0d1117;padding:.1rem .3rem;border-radius:3px;color:#79c0ff;font-size:.75rem}');
+  h.push('.hook-meta-label{color:#484f58;font-size:.7rem;text-transform:uppercase}');
+  // Stats badges — right-aligned, tabular nums, only show blocks/errors (pass count is noise)
+  h.push('.module-stats{display:flex;gap:.4rem;align-items:center;margin-left:auto;margin-right:.5rem;font-variant-numeric:tabular-nums}');
+  h.push('.stat-block{font-size:.75rem;color:#f85149;background:#f8514922;padding:.15rem .5rem;border-radius:10px;font-weight:600;min-width:4rem;text-align:right}');
+  h.push('.stat-error{font-size:.75rem;color:#d29922;background:#d2992222;padding:.15rem .5rem;border-radius:10px;font-weight:600;min-width:4rem;text-align:right}');
+  // Sample triggers
+  h.push('.samples-section{margin-bottom:1rem;border:1px solid #30363d;border-radius:6px;overflow:hidden}');
+  h.push('.samples-title{font-size:.8rem;color:#8b949e;padding:.5rem .75rem;background:#161b22;border-bottom:1px solid #30363d;font-weight:600}');
+  h.push('.sample{padding:.4rem .75rem;border-bottom:1px solid #21262d;display:flex;flex-wrap:wrap;gap:.4rem;align-items:baseline;font-size:.8rem}');
+  h.push('.sample:last-child{border-bottom:none}');
+  h.push('.sample-time{color:#484f58;font-size:.75rem;font-variant-numeric:tabular-nums}');
+  h.push('.sample-result{padding:.05rem .35rem;border-radius:3px;font-size:.7rem;font-weight:600}');
+  h.push('.sample-block,.sample-deny{color:#f85149;background:#f8514915}');
+  h.push('.sample-error{color:#d29922;background:#d2992215}');
+  h.push('.sample-tool{color:#79c0ff}');
+  h.push('.sample-cmd{color:#8b949e;font-family:monospace;font-size:.75rem;max-width:40ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}');
+  h.push('.sample-file{color:#d2a8ff}');
+  h.push('.sample-project{color:#3fb950;font-size:.7rem;opacity:.7}');
+  h.push('.sample-reason{color:#8b949e;font-size:.75rem;width:100%;margin-top:.2rem;padding-left:1rem;white-space:pre-wrap;max-height:3rem;overflow:hidden}');
+  h.push('.module-chevron{color:#484f58;transition:transform .2s;flex-shrink:0}');
+  h.push('.module-chevron.open{transform:rotate(90deg)}');
+  h.push('.module-detail{display:none;padding:0 1.5rem 1rem 2.5rem}');
+  h.push('.module-detail.open{display:block}');
+  h.push('.code-block{background:#161b22;border:1px solid #30363d;border-radius:6px;padding:1rem;overflow-x:auto;margin-top:.5rem;max-height:500px;overflow-y:auto}');
+  h.push('.code-block pre{font-family:"Cascadia Code","Fira Code",monospace;font-size:.8rem;color:#c9d1d9;white-space:pre;tab-size:2}');
+  h.push('.code-block .ln{color:#484f58;display:inline-block;width:2.5rem;text-align:right;margin-right:1rem;user-select:none}');
+  h.push('.footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid #21262d;color:#484f58;font-size:.8rem;text-align:center}');
+  h.push('</style></head><body>');
+
+  h.push('<h1>Claude Code Hooks Report</h1>');
+  h.push('<p class="subtitle">Your hooks at a glance &mdash; what runs, when it fires, and what it blocks. Source: <code>' + escHtml(SETTINGS_PATH.replace(HOME, "~")) + '</code> &mdash; Generated ' + now + '</p>');
+
+  // Stats
+  var totalScriptsOrModules = usingRunner ? totalModules : scan.scripts.length;
+  var scriptsLabel = usingRunner ? "Active Modules" : "Hook Scripts";
+  h.push('<div class="stats">');
+  h.push('<div class="stat"><div class="stat-value">' + eventNames.length + '</div><div class="stat-label">Hook Events</div></div>');
+  h.push('<div class="stat"><div class="stat-value">' + totalScriptsOrModules + '</div><div class="stat-label">' + scriptsLabel + '</div></div>');
+  if (scan.totalMatchers > 0) h.push('<div class="stat"><div class="stat-value">' + scan.totalMatchers + '</div><div class="stat-label">Matchers</div></div>');
+  if (logTotalBlocks > 0) h.push('<div class="stat stat-warn"><div class="stat-value">' + logTotalBlocks + '</div><div class="stat-label">Total Blocks</div></div>');
+  if (logTotalErrors > 0) h.push('<div class="stat stat-danger"><div class="stat-value">' + logTotalErrors + '</div><div class="stat-label">Errors</div></div>');
+  if (logTotalInvocations > 0) h.push('<div class="stat"><div class="stat-value">' + blockRate + '%</div><div class="stat-label">Block Rate</div></div>');
+  if (missingScripts.length > 0) h.push('<div class="stat stat-danger"><div class="stat-value">' + missingScripts.length + '</div><div class="stat-label">Missing Files</div></div>');
+  h.push('</div>');
+
+  // Health warnings (missing scripts)
+  if (missingScripts.length > 0) {
+    h.push('<div class="warnings"><h3>Missing Hook Scripts</h3><ul>');
+    for (var msi = 0; msi < missingScripts.length; msi++) {
+      h.push('<li><code>' + escHtml(missingScripts[msi].path.replace(HOME, "~")) + '</code> (referenced in ' + escHtml(missingScripts[msi].event) + ')</li>');
+    }
+    h.push('</ul></div>');
+  }
+
+  // Architecture note
+  if (usingRunner) {
+    h.push('<div class="arch-note"><h2>Architecture: Runner + Module Pattern</h2>');
+    h.push('<p>Each hook event has <strong>one runner script</strong> in <code>settings.json</code>. The runner auto-loads all <code>.js</code> modules from <code>run-modules/{Event}/</code>, sorted alphabetically.</p>');
+    h.push('<p>To add behavior: create a new module file. Never add new hook entries to settings.json.</p>');
+    h.push('<p>Modules can be <strong>sync or async</strong> (Promise). Async modules are awaited with a 4s per-module timeout. Stdin is always read synchronously.</p>');
+    h.push('</div>');
+  } else {
+    h.push('<div class="arch-note"><h2>Current: Standalone Hook Scripts</h2>');
+    h.push('<p>Each hook entry in <code>settings.json</code> points to an individual script. Adding new hooks requires editing settings.json.</p>');
+    h.push('<p><strong>hook-runner</strong> replaces this with a modular system: one runner per event, modules in folders. <code>node setup.js</code> to migrate.</p>');
+    h.push('</div>');
+  }
+
+  // Claude event labels that appear above hook event names
+  var CLAUDE_EVENTS = {
+    SessionStart: "Session begins",
+    UserPromptSubmit: "User sends prompt",
+    PreToolUse: "Tool about to run",
+    PostToolUse: "Tool finished",
+    Stop: "Session ending"
+  };
+
+  // Flow Diagram — works for both runner and standalone modes
+  h.push('<div class="flow"><h2>Hook Event Flow</h2>');
+  h.push('<div class="flow-subtitle">Click a hook to jump to its details below. ');
+  h.push('<a href="https://docs.anthropic.com/en/docs/claude-code/hooks" target="_blank" style="color:#58a6ff;text-decoration:none">Claude Code Hooks docs &rarr;</a></div>');
+  h.push('<div class="flow-diagram">');
+  for (var fi = 0; fi < eventNames.length; fi++) {
+    var fEvt = eventNames[fi];
+    var fMods = eventModules[fEvt] || [];
+    var fStandalone = standaloneHooks[fEvt] || [];
+    if (fi > 0) h.push('<div class="flow-arrow">&rarr;</div>');
+    h.push('<div class="flow-stage">');
+    var claudeLabel = CLAUDE_EVENTS[fEvt] || "";
+    if (claudeLabel) h.push('<div class="flow-claude-event">' + claudeLabel + '</div>');
+    h.push('<div class="flow-event">' + fEvt + '</div><div class="flow-modules">');
+    var hasItems = false;
+    // Runner modules
+    for (var fm = 0; fm < fMods.length; fm++) {
+      var fmod = fMods[fm];
+      var fclass = "flow-mod flow-mod-link";
+      if (fmod.archived) fclass += " flow-mod-archived";
+      else if (fmod.scope !== "global") fclass += " flow-mod-project";
+      var modId = fEvt + "--" + fmod.name.replace(/\.js$/, "").replace(/[^a-zA-Z0-9-]/g, "-");
+      h.push('<div class="' + fclass + '" onclick="scrollToModule(\'' + modId + '\')">' + escHtml(fmod.name.replace(/\.js$/, "")) + '</div>');
+      hasItems = true;
+    }
+    // Standalone hooks
+    for (var fs2 = 0; fs2 < fStandalone.length; fs2++) {
+      var fsh = fStandalone[fs2];
+      var shClass = "flow-mod flow-mod-link";
+      if (!fsh.exists) shClass += " flow-mod-missing";
+      var shId = fEvt + "--" + fsh.name.replace(/\.js$/, "").replace(/[^a-zA-Z0-9-]/g, "-");
+      h.push('<div class="' + shClass + '" onclick="scrollToModule(\'' + shId + '\')">' + escHtml(fsh.name.replace(/\.js$/, "")) + '</div>');
+      hasItems = true;
+    }
+    if (!hasItems) {
+      h.push('<div class="flow-mod flow-mod-empty">(no hooks)</div>');
+    }
+    h.push('</div></div>');
+  }
+  h.push('</div></div>');
+
+  // Toolbar: search + expand/collapse
+  h.push('<div class="toolbar">');
+  h.push('<input class="search-box" type="text" placeholder="Filter hooks by name..." oninput="filterHooks(this.value)">');
+  h.push('<button class="toolbar-btn" onclick="expandAll()">Expand All</button>');
+  h.push('<button class="toolbar-btn" onclick="collapseAll()">Collapse All</button>');
+  h.push('</div>');
+
+  // Helper to render a module/hook card with source code
+  function renderHookCard(h2, evt3, item, hookStats2) {
+    var isStandalone = !!item.command; // standalone hooks have a command property
+    var isMissing = isStandalone && !item.exists;
+    var iconClass2, scopeClass2, scopeLabel2;
+    if (isMissing) {
+      iconClass2 = "icon-missing"; scopeClass2 = "scope-missing"; scopeLabel2 = "MISSING";
+    } else if (isStandalone) {
+      iconClass2 = "icon-standalone"; scopeClass2 = "scope-standalone"; scopeLabel2 = "STANDALONE";
+    } else if (item.archived) {
+      iconClass2 = "icon-archived"; scopeClass2 = "scope-archived"; scopeLabel2 = "ARCHIVED";
+    } else if (item.scope !== "global") {
+      iconClass2 = "icon-project"; scopeClass2 = "scope-project"; scopeLabel2 = item.scope;
+    } else {
+      iconClass2 = "icon-active"; scopeClass2 = "scope-global"; scopeLabel2 = "GLOBAL";
+    }
+    var nameStyle2 = (item.archived || isMissing) ? ' style="color:#484f58;' + (item.archived ? 'text-decoration:line-through' : '') + '"' : '';
+    var statsKey2 = evt3 + "/" + item.name.replace(/\.js$/, "");
+    var modStats2 = hookStats2[statsKey2] || null;
+    var modId2 = evt3 + "--" + item.name.replace(/\.js$/, "").replace(/[^a-zA-Z0-9-]/g, "-");
+
+    h2.push('<div class="module" id="' + modId2 + '" data-name="' + escHtml(item.name.toLowerCase()) + '">');
+    h2.push('<div class="module-header" onclick="toggleModule(this)">');
+    h2.push('<span class="module-chevron">&#9654;</span>');
+    h2.push('<div class="module-icon ' + iconClass2 + '"></div>');
+    h2.push('<span class="module-name"' + nameStyle2 + '>' + escHtml(item.name) + '</span>');
+    if (item.description) h2.push('<span class="module-desc">&mdash; ' + escHtml(item.description) + '</span>');
+
+    // Block/error badges only (no total — total is noise since every tool call triggers all modules)
+    if (modStats2 && (modStats2.block > 0 || modStats2.error > 0)) {
+      h2.push('<span class="module-stats">');
+      if (modStats2.block > 0) h2.push('<span class="stat-block" title="Times this hook blocked a tool call">' + modStats2.block + ' blocked</span>');
+      if (modStats2.error > 0) h2.push('<span class="stat-error" title="Times this hook errored">' + modStats2.error + ' errors</span>');
+      h2.push('</span>');
+    }
+
+    h2.push('<span class="module-scope ' + scopeClass2 + '">' + scopeLabel2 + '</span>');
+    h2.push('</div>');
+
+    // Detail section
+    h2.push('<div class="module-detail">');
+
+    // For standalone hooks: show command, matcher, timeout, file path
+    if (isStandalone) {
+      h2.push('<div class="hook-meta">');
+      h2.push('<span><span class="hook-meta-label">Command</span> <code>' + escHtml(item.command) + '</code></span>');
+      if (item.matcher) h2.push('<span><span class="hook-meta-label">Matcher</span> <code>' + escHtml(item.matcher) + '</code></span>');
+      h2.push('<span><span class="hook-meta-label">Timeout</span> <code>' + item.timeout + 's</code></span>');
+      if (item.path) h2.push('<span><span class="hook-meta-label">File</span> <code>' + escHtml(item.path.replace(HOME, "~")) + '</code>' + (isMissing ? ' <span style="color:#f85149">FILE NOT FOUND</span>' : '') + '</span>');
+      h2.push('</div>');
+    }
+
+    // Sample triggers
+    if (modStats2 && modStats2.samples.length > 0) {
+      h2.push('<div class="samples-section">');
+      h2.push('<div class="samples-title">Recent blocks/errors (' + modStats2.samples.length + ')</div>');
+      for (var si2 = 0; si2 < modStats2.samples.length; si2++) {
+        var sample2 = modStats2.samples[si2];
+        var sTime2 = "";
+        try { sTime2 = sample2.ts.replace("T", " ").substring(0, 19); } catch(e3) {}
+        h2.push('<div class="sample">');
+        h2.push('<span class="sample-time">' + escHtml(sTime2) + '</span>');
+        h2.push('<span class="sample-result sample-' + sample2.result + '">' + escHtml(sample2.result) + '</span>');
+        if (sample2.tool) h2.push('<span class="sample-tool">' + escHtml(sample2.tool) + '</span>');
+        if (sample2.cmd) h2.push('<span class="sample-cmd">' + escHtml(sample2.cmd) + '</span>');
+        if (sample2.file) h2.push('<span class="sample-file">' + escHtml(sample2.file) + '</span>');
+        if (sample2.project) h2.push('<span class="sample-project">' + escHtml(sample2.project) + '</span>');
+        if (sample2.reason) h2.push('<div class="sample-reason">' + escHtml(sample2.reason) + '</div>');
+        h2.push('</div>');
+      }
+      h2.push('</div>');
+    }
+
+    // Source code
+    if (item.source) {
+      var sLines = item.source.split("\n");
+      var sCodeLines = [];
+      for (var sli = 0; sli < sLines.length; sli++) {
+        var slnStr = String(sli + 1);
+        while (slnStr.length < 3) slnStr = " " + slnStr;
+        sCodeLines.push('<span class="ln">' + slnStr + '</span>' + escHtml(sLines[sli]));
+      }
+      h2.push('<div class="code-block"><pre>' + sCodeLines.join("\n") + '</pre></div>');
+    }
+    h2.push('</div></div>');
+  }
+
+  // Event Sections
+  for (var e = 0; e < eventNames.length; e++) {
+    var evt2 = eventNames[e];
+    var evtData2 = scan.events[evt2];
+    var mods2 = eventModules[evt2] || [];
+    var standalone2 = standaloneHooks[evt2] || [];
+    var badge2 = EVENT_BADGES[evt2] || "badge-session";
+    var title2 = EVENT_TITLES[evt2] || evt2;
+    var metaParts = [];
+    var activeModCount = mods2.filter(function(m) { return !m.archived; }).length;
+    var totalItems = activeModCount + standalone2.length;
+    if (totalItems > 0) metaParts.push(totalItems + " hook" + (totalItems !== 1 ? "s" : ""));
+    else metaParts.push("no hooks");
+    if (evtData2.matchers && evtData2.matchers.length > 0) metaParts.push(evtData2.matchers.join(", "));
+
+    // Count blocks for this event
+    var evtBlocks = 0;
+    for (var ebi = 0; ebi < hookStatsKeys.length; ebi++) {
+      if (hookStatsKeys[ebi].indexOf(evt2 + "/") === 0) evtBlocks += hookStats[hookStatsKeys[ebi]].block;
+    }
+    if (evtBlocks > 0) metaParts.push(evtBlocks + " block" + (evtBlocks !== 1 ? "s" : ""));
+
+    h.push('<div class="event-section">');
+    h.push('<div class="event-header collapsed" onclick="toggleEvent(this)">');
+    h.push('<span class="chevron">&#9654;</span>');
+    h.push('<span class="event-badge ' + badge2 + '">' + evt2 + '</span>');
+    h.push('<span class="event-title">' + title2 + '</span>');
+    h.push('<span class="event-meta">' + metaParts.join(' &bull; ') + '</span>');
+    h.push('</div>');
+    h.push('<div class="event-body">');
+
+    // Runner info (if using hook-runner)
+    var hasRunner = false;
+    for (var hi = 0; hi < evtData2.entries.length; hi++) {
+      if (evtData2.entries[hi].isRunner && evtData2.entries[hi].scriptPath) {
+        h.push('<div class="runner"><div class="runner-label">Runner Script</div>');
+        h.push('<div class="runner-path">' + escHtml(evtData2.entries[hi].scriptPath.replace(HOME, "~")) + '</div></div>');
+        hasRunner = true;
+        break;
+      }
+    }
+
+    // Matchers
+    if (evtData2.matchers.length > 0) {
+      h.push('<div class="matchers">');
+      for (var mi = 0; mi < evtData2.matchers.length; mi++) {
+        h.push('<span class="matcher">' + escHtml(evtData2.matchers[mi]) + '</span>');
+      }
+      h.push('</div>');
+    }
+
+    // Empty state
+    if (mods2.length === 0 && standalone2.length === 0 && !hasRunner) {
+      h.push('<div class="runner"><div class="runner-label" style="color:#484f58">No hooks configured for this event</div>');
+      h.push('<div class="runner-path" style="color:#484f58">Add a hook in <code>~/.claude/settings.json</code> under <code>hooks.' + evt2 + '</code></div></div>');
+    }
+
+    // Runner modules
+    for (var mod_i = 0; mod_i < mods2.length; mod_i++) {
+      renderHookCard(h, evt2, mods2[mod_i], hookStats);
+    }
+
+    // Standalone hooks
+    for (var sh_i = 0; sh_i < standalone2.length; sh_i++) {
+      renderHookCard(h, evt2, standalone2[sh_i], hookStats);
+    }
+
+    h.push('</div></div>');
+  }
+
+  h.push('<div class="footer">Generated by <a href="https://github.com/grobomo/hook-runner" style="color:#58a6ff;text-decoration:none">hook-runner</a> &mdash; ' + now + ' &mdash; <a href="https://docs.anthropic.com/en/docs/claude-code/hooks" style="color:#58a6ff;text-decoration:none">Claude Code Hooks docs</a></div>');
+  h.push('<script>');
+  h.push('function toggleEvent(el){var b=el.nextElementSibling;var c=el.querySelector(".chevron");b.classList.toggle("open");c.classList.toggle("open");el.classList.toggle("collapsed")}');
+  h.push('function toggleModule(el){var d=el.nextElementSibling;var c=el.querySelector(".module-chevron");d.classList.toggle("open");c.classList.toggle("open")}');
+  h.push('function scrollToModule(id){var m=document.getElementById(id);if(!m)return;');
+  h.push('var sec=m.closest(".event-section");if(sec){var hdr=sec.querySelector(".event-header");var body=sec.querySelector(".event-body");if(hdr&&body&&!body.classList.contains("open")){body.classList.add("open");hdr.querySelector(".chevron").classList.add("open");hdr.classList.remove("collapsed")}}');
+  h.push('var det=m.querySelector(".module-detail");var chev=m.querySelector(".module-chevron");if(det&&!det.classList.contains("open")){det.classList.add("open");if(chev)chev.classList.add("open")}');
+  h.push('m.scrollIntoView({behavior:"smooth",block:"center"});m.classList.add("module-highlight");setTimeout(function(){m.classList.remove("module-highlight")},2100)}');
+  // Search filter
+  h.push('function filterHooks(q){q=q.toLowerCase();document.querySelectorAll(".module").forEach(function(m){var n=m.getAttribute("data-name")||"";m.style.display=(!q||n.indexOf(q)!==-1)?"":"none"})}');
+  // Expand all / collapse all
+  h.push('function expandAll(){document.querySelectorAll(".event-section").forEach(function(sec){var hdr=sec.querySelector(".event-header");var body=sec.querySelector(".event-body");if(body&&!body.classList.contains("open")){body.classList.add("open");hdr.querySelector(".chevron").classList.add("open");hdr.classList.remove("collapsed")}})}');
+  h.push('function collapseAll(){document.querySelectorAll(".event-section").forEach(function(sec){var hdr=sec.querySelector(".event-header");var body=sec.querySelector(".event-body");if(body&&body.classList.contains("open")){body.classList.remove("open");hdr.querySelector(".chevron").classList.remove("open");hdr.classList.add("collapsed")}})}');
+  h.push('</script>');
+  h.push('</body></html>');
+
+  var content = h.join("\n");
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, content, "utf-8");
+  return outputPath;
+}
+
+// Exports for use by setup.js
+module.exports = {
+  generateReport: generateReport,
+  collectModules: collectModules,
+  getModuleDescription: getModuleDescription,
+  getModuleSource: getModuleSource,
+  escHtml: escHtml,
+  EVENT_ORDER: EVENT_ORDER,
+  EVENT_TITLES: EVENT_TITLES,
+  EVENT_BADGES: EVENT_BADGES
+};
