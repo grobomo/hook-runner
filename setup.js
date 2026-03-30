@@ -63,7 +63,7 @@ function parseLogLines(lines, stats, maxSamples) {
 
     var key = entry.event + "/" + entry.module;
     if (!stats[key]) {
-      stats[key] = { total: 0, pass: 0, block: 0, error: 0, text: 0, deny: 0, samples: [] };
+      stats[key] = { total: 0, pass: 0, block: 0, error: 0, text: 0, deny: 0, msTotal: 0, msCount: 0, msMax: 0, samples: [] };
     }
     var s = stats[key];
     s.total++;
@@ -73,6 +73,12 @@ function parseLogLines(lines, stats, maxSamples) {
     else if (r === "deny") { s.block++; s.deny++; }
     else if (r === "error") s.error++;
     else if (r === "text") s.text++;
+
+    if (typeof entry.ms === "number") {
+      s.msTotal += entry.ms;
+      s.msCount++;
+      if (entry.ms > s.msMax) s.msMax = entry.ms;
+    }
 
     if (r !== "pass" && r !== "text" && s.samples.length < maxSamples) {
       s.samples.push({
@@ -880,17 +886,34 @@ function cmdStats() {
   console.log("");
   var hasActivity = false;
   for (var sj = 0; sj < hsKeys.length; sj++) {
-    var ms = hs[hsKeys[sj]];
-    if (ms.block > 0 || ms.error > 0) {
+    var st = hs[hsKeys[sj]];
+    if (st.block > 0 || st.error > 0) {
       if (!hasActivity) { console.log("  Active hooks:"); hasActivity = true; }
       var parts = "    " + hsKeys[sj];
-      if (ms.block > 0) parts += "  " + ms.block + " blocked";
-      if (ms.error > 0) parts += "  " + ms.error + " errors";
+      if (st.block > 0) parts += "  " + st.block + " blocked";
+      if (st.error > 0) parts += "  " + st.error + " errors";
       console.log(parts);
     }
   }
   if (!hasActivity) console.log("  No blocks or errors recorded.");
   console.log("");
+
+  // Timing summary — show modules with timing data, sorted by avg latency
+  var timed = [];
+  for (var sk = 0; sk < hsKeys.length; sk++) {
+    var tm = hs[hsKeys[sk]];
+    if (tm.msCount > 0) {
+      timed.push({ key: hsKeys[sk], avg: Math.round(tm.msTotal / tm.msCount), max: tm.msMax, count: tm.msCount });
+    }
+  }
+  if (timed.length > 0) {
+    timed.sort(function(a, b) { return b.avg - a.avg; });
+    console.log("  Module timing (avg / max ms):");
+    for (var sl = 0; sl < timed.length && sl < 15; sl++) {
+      console.log("    " + timed[sl].key + "  avg:" + timed[sl].avg + "ms  max:" + timed[sl].max + "ms  (" + timed[sl].count + " samples)");
+    }
+    console.log("");
+  }
 }
 
 function cmdList() {

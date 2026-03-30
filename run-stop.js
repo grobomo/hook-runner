@@ -20,18 +20,18 @@ var ctx = hookLog.extractContext("Stop", input);
 var modules = loadModules(path.join(__dirname, "run-modules", "Stop"));
 
 runAsync.runModules(modules, input,
-  function handleResult(modName, result, err) {
+  function handleResult(modName, result, err, ms) {
     if (err) {
-      hookLog.logHook("Stop", modName, "error", Object.assign({}, ctx, { reason: err.message }));
+      hookLog.logHook("Stop", modName, "error", Object.assign({}, ctx, { reason: err.message, ms: ms }));
       process.stderr.write("hook-runner Stop " + modName + " error: " + err.message + "\n");
       return false;
     }
     if (result && result.decision === "block") {
-      hookLog.logHook("Stop", modName, "block", Object.assign({}, ctx, { reason: result.reason }));
+      hookLog.logHook("Stop", modName, "block", Object.assign({}, ctx, { reason: result.reason, ms: ms }));
       process.stdout.write(JSON.stringify(result));
       process.exit(0);
     }
-    hookLog.logHook("Stop", modName, "pass", ctx);
+    hookLog.logHook("Stop", modName, "pass", Object.assign({}, ctx, { ms: ms }));
     return false;
   },
   function handleDone() {
