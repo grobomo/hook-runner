@@ -4,11 +4,11 @@
 var fs = require("fs");
 var path = require("path");
 
+// NOTE: rebase --abort and merge --abort are NOT cleanup — they're recovery.
+// Blocking them traps you in a broken state. They were removed from this list.
 var CLEANUP_PATTERNS = [
   /git reset --hard/,
-  /git checkout -- \./,
-  /git rebase --abort/,
-  /git merge --abort/,
+  /git checkout -- \.$/,
   /rm -rf.*requests\//,
   /mv.*requests\/failed/,
   /mv.*requests\/dispatched.*archived/,

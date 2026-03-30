@@ -23,6 +23,10 @@ These were made to the live hooks, not committed to this repo (user-specific enf
 - **root-cause-gate.js**: Removed rebase/merge --abort from cleanup patterns — they're recovery, not symptoms.
 - **remote-tracking-gate.js**: Fixed tool_input parsing to handle object (not just JSON string).
 
+## Active
+- [x] T014: Sync repo example modules with live fixes — root-cause-gate (remove rebase/merge --abort from blocked patterns, tighten checkout regex), auto-continue (remove hardcoded user path)
+- [ ] T015: Sync local skill copy after repo changes
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + example modules
 - Live system at ~/.claude/hooks/ has additional user-specific enforcement modules
