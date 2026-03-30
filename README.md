@@ -36,6 +36,8 @@ No installation required — just clone and run `node setup.js --report`.
 /hook-runner sync         # sync modules from GitHub per modules.yaml
 /hook-runner stats        # quick text summary of hook log activity
 /hook-runner list         # show catalog vs installed modules
+/hook-runner test         # run all test suites
+/hook-runner uninstall    # preview clean removal (dry-run by default)
 /hook-runner prune        # prune log entries older than 7 days
 /hook-runner version      # show hook-runner version
 ```
@@ -194,6 +196,7 @@ Full catalog in `modules/` directory:
 | Module | Description |
 |--------|-------------|
 | `rule-hygiene` | Validates rule files are single-topic, under 20 lines |
+| `commit-msg-check` | Blocks WIP/fixup commits and over-long first lines (>72 chars) |
 
 ### Stop (controls session ending)
 | Module | Description |
