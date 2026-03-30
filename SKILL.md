@@ -22,6 +22,12 @@ custom_commands:
   - name: dry-run
     command: "node $SKILL_DIR/setup.js --dry-run"
     description: "Preview what hook-runner would change without modifying anything"
+  - name: sync
+    command: "node $SKILL_DIR/setup.js --sync"
+    description: "Sync modules from GitHub per ~/.claude/hooks/modules.yaml"
+  - name: sync-dry-run
+    command: "node $SKILL_DIR/setup.js --sync --dry-run"
+    description: "Preview module sync without installing"
 ---
 
 # hook-runner
