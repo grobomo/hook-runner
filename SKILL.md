@@ -38,6 +38,12 @@ custom_commands:
   - name: list
     command: "node $SKILL_DIR/setup.js --list"
     description: "Show catalog vs installed modules with status indicators"
+  - name: test
+    command: "node $SKILL_DIR/setup.js --test"
+    description: "Run all test suites and show pass/fail summary"
+  - name: uninstall
+    command: "node $SKILL_DIR/setup.js --uninstall --dry-run"
+    description: "Preview hook-runner removal (dry-run). Use --force for module dirs."
   - name: prune
     command: "node $SKILL_DIR/setup.js --prune 7"
     description: "Prune hook log entries older than 7 days"
