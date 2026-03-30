@@ -36,6 +36,7 @@ modules:
 
   PostToolUse:
     - rule-hygiene           # validates rule files are granular
+    - commit-msg-check       # blocks WIP/fixup commits and over-long first lines
 
   Stop:
     - auto-continue          # never stop, always find next task
