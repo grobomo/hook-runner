@@ -332,23 +332,86 @@ function generateReport(scan, outputPath, hookStats) {
     evtData.moduleCount = activeCount;
   }
 
+  // Compute log-level stats for summary
+  var logTotalInvocations = 0, logTotalBlocks = 0, logTotalErrors = 0;
+  var hookStatsKeys = Object.keys(hookStats);
+  var mostBlockedMod = "", mostBlockedCount = 0;
+  for (var hsk = 0; hsk < hookStatsKeys.length; hsk++) {
+    var hs = hookStats[hookStatsKeys[hsk]];
+    logTotalInvocations += hs.total;
+    logTotalBlocks += hs.block;
+    logTotalErrors += hs.error;
+    if (hs.block > mostBlockedCount) { mostBlockedCount = hs.block; mostBlockedMod = hookStatsKeys[hsk]; }
+  }
+  var blockRate = logTotalInvocations > 0 ? ((logTotalBlocks / logTotalInvocations) * 100).toFixed(1) : "0";
+
+  // Count missing scripts (broken references)
+  var missingScripts = [];
+  for (var ms = 0; ms < rawEventNames.length; ms++) {
+    var msEntries = scan.events[rawEventNames[ms]].entries;
+    for (var mse = 0; mse < msEntries.length; mse++) {
+      if (msEntries[mse].scriptPath && !msEntries[mse].exists) {
+        missingScripts.push({ event: rawEventNames[ms], path: msEntries[mse].scriptPath });
+      }
+    }
+  }
+
+  // Collect standalone hook info (for non-runner entries)
+  var standaloneHooks = {};
+  for (var sh = 0; sh < eventNames.length; sh++) {
+    var shEvt = eventNames[sh];
+    var shData = scan.events[shEvt];
+    standaloneHooks[shEvt] = [];
+    for (var she = 0; she < shData.entries.length; she++) {
+      var shEntry = shData.entries[she];
+      if (!shEntry.isRunner && shEntry.scriptPath) {
+        standaloneHooks[shEvt].push({
+          name: path.basename(shEntry.scriptPath),
+          path: shEntry.scriptPath,
+          command: shEntry.command,
+          exists: shEntry.exists,
+          matcher: shEntry.matcher,
+          timeout: shEntry.timeout,
+          description: shEntry.exists ? getModuleDescription(shEntry.scriptPath) : "",
+          source: shEntry.exists ? getModuleSource(shEntry.scriptPath) : ""
+        });
+      }
+    }
+  }
+
   var h = [];
   h.push('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">');
   h.push('<meta name="viewport" content="width=device-width, initial-scale=1.0">');
   h.push('<title>Claude Code Hooks Report</title>');
   h.push('<style>');
   h.push('*{margin:0;padding:0;box-sizing:border-box}');
-  h.push('body{background:#0d1117;color:#c9d1d9;font-family:"Segoe UI",-apple-system,sans-serif;line-height:1.6;padding:2rem}');
+  h.push('body{background:#0d1117;color:#c9d1d9;font-family:"Segoe UI",-apple-system,sans-serif;line-height:1.6;padding:2rem;max-width:1400px;margin:0 auto}');
   h.push('h1{color:#58a6ff;font-size:1.8rem;margin-bottom:.3rem}');
   h.push('.subtitle{color:#8b949e;font-size:.95rem;margin-bottom:2rem}');
+  h.push('.subtitle code{background:#161b22;padding:.1rem .4rem;border-radius:3px;color:#79c0ff;font-size:.85rem}');
   h.push('.stats{display:flex;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap}');
   h.push('.stat{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1rem 1.5rem;min-width:140px}');
   h.push('.stat-value{font-size:2rem;font-weight:700;color:#58a6ff}');
   h.push('.stat-label{font-size:.8rem;color:#8b949e;text-transform:uppercase;letter-spacing:.05em}');
+  h.push('.stat-warn .stat-value{color:#d29922}');
+  h.push('.stat-danger .stat-value{color:#f85149}');
   h.push('.arch-note{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1.5rem;margin-bottom:2rem}');
   h.push('.arch-note h2{color:#d2a8ff;font-size:1rem;margin-bottom:.8rem}');
   h.push('.arch-note p{color:#8b949e;font-size:.9rem;margin-bottom:.5rem}');
   h.push('.arch-note code{background:#0d1117;padding:.1rem .4rem;border-radius:3px;color:#79c0ff;font-size:.85rem}');
+  // Health warnings
+  h.push('.warnings{background:#f8514915;border:1px solid #f8514944;border-radius:8px;padding:1rem 1.5rem;margin-bottom:2rem}');
+  h.push('.warnings h3{color:#f85149;font-size:.9rem;margin-bottom:.5rem}');
+  h.push('.warnings li{color:#c9d1d9;font-size:.85rem;margin-left:1.5rem;margin-bottom:.3rem}');
+  h.push('.warnings code{background:#0d1117;padding:.1rem .3rem;border-radius:3px;color:#f85149;font-size:.8rem}');
+  // Search + toolbar
+  h.push('.toolbar{display:flex;gap:1rem;margin-bottom:1.5rem;align-items:center;flex-wrap:wrap}');
+  h.push('.search-box{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:.5rem 1rem;color:#c9d1d9;font-size:.9rem;width:300px;outline:none}');
+  h.push('.search-box:focus{border-color:#58a6ff}');
+  h.push('.search-box::placeholder{color:#484f58}');
+  h.push('.toolbar-btn{background:#21262d;border:1px solid #30363d;border-radius:6px;padding:.4rem .8rem;color:#8b949e;font-size:.8rem;cursor:pointer;transition:all .15s}');
+  h.push('.toolbar-btn:hover{background:#30363d;color:#c9d1d9}');
+  // Flow
   h.push('.flow{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1.5rem;margin-bottom:2rem}');
   h.push('.flow h2{color:#58a6ff;font-size:1.1rem;margin-bottom:1rem}');
   h.push('.flow-diagram{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding:1rem 0}');
@@ -362,6 +425,7 @@ function generateReport(scan, outputPath, hookStats) {
   h.push('.flow-mod-link{cursor:pointer;transition:border-color .15s,color .15s}');
   h.push('.flow-mod-link:hover{border-color:#58a6ff;color:#58a6ff}');
   h.push('.flow-mod-empty{color:#484f58;font-style:italic;border-style:dashed}');
+  h.push('.flow-mod-missing{color:#f85149;border-color:#f8514944}');
   h.push('.flow-claude-event{font-size:.65rem;color:#484f58;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.25rem;white-space:nowrap}');
   h.push('.flow-subtitle{color:#8b949e;font-size:.8rem;margin-bottom:1rem}');
   h.push('.module-highlight{animation:highlight-fade 2s ease-out}');
@@ -395,17 +459,24 @@ function generateReport(scan, outputPath, hookStats) {
   h.push('.icon-active{background:#3fb950;box-shadow:0 0 6px #3fb95066}');
   h.push('.icon-project{background:#d2a8ff;box-shadow:0 0 6px #d2a8ff66}');
   h.push('.icon-archived{background:#484f58}');
+  h.push('.icon-missing{background:#f85149;box-shadow:0 0 6px #f8514966}');
+  h.push('.icon-standalone{background:#58a6ff;box-shadow:0 0 6px #58a6ff66}');
   h.push('.module-name{font-weight:600;color:#c9d1d9;font-size:.95rem}');
   h.push('.module-desc{color:#8b949e;font-size:.85rem;margin-left:.5rem}');
   h.push('.module-scope{margin-left:auto;font-size:.7rem;padding:.15rem .4rem;border-radius:3px;font-weight:600;flex-shrink:0}');
   h.push('.scope-global{background:#23863622;color:#3fb950;border:1px solid #23863644}');
   h.push('.scope-project{background:#8b5cf622;color:#d2a8ff;border:1px solid #7c3aed44}');
   h.push('.scope-archived{background:#30363d;color:#484f58;border:1px solid #484f58}');
-  // Stats badges
-  h.push('.module-stats{display:flex;gap:.4rem;align-items:center;margin-left:auto;margin-right:.5rem}');
-  h.push('.stat-total{font-size:.75rem;color:#8b949e;background:#21262d;padding:.1rem .45rem;border-radius:10px;font-weight:600;font-variant-numeric:tabular-nums}');
-  h.push('.stat-block{font-size:.7rem;color:#f85149;background:#f8514922;padding:.1rem .4rem;border-radius:10px;font-weight:600}');
-  h.push('.stat-error{font-size:.7rem;color:#d29922;background:#d2992222;padding:.1rem .4rem;border-radius:10px;font-weight:600}');
+  h.push('.scope-standalone{background:#1f6feb22;color:#58a6ff;border:1px solid #1f6feb44}');
+  h.push('.scope-missing{background:#f8514922;color:#f85149;border:1px solid #f8514944}');
+  // Hook meta info (command, matcher, timeout)
+  h.push('.hook-meta{padding:.5rem 1.5rem .5rem 3rem;display:flex;gap:1rem;flex-wrap:wrap;font-size:.8rem;color:#8b949e;border-bottom:1px solid #21262d}');
+  h.push('.hook-meta code{background:#0d1117;padding:.1rem .3rem;border-radius:3px;color:#79c0ff;font-size:.75rem}');
+  h.push('.hook-meta-label{color:#484f58;font-size:.7rem;text-transform:uppercase}');
+  // Stats badges — right-aligned, tabular nums, only show blocks/errors (pass count is noise)
+  h.push('.module-stats{display:flex;gap:.4rem;align-items:center;margin-left:auto;margin-right:.5rem;font-variant-numeric:tabular-nums}');
+  h.push('.stat-block{font-size:.75rem;color:#f85149;background:#f8514922;padding:.15rem .5rem;border-radius:10px;font-weight:600;min-width:4rem;text-align:right}');
+  h.push('.stat-error{font-size:.75rem;color:#d29922;background:#d2992222;padding:.15rem .5rem;border-radius:10px;font-weight:600;min-width:4rem;text-align:right}');
   // Sample triggers
   h.push('.samples-section{margin-bottom:1rem;border:1px solid #30363d;border-radius:6px;overflow:hidden}');
   h.push('.samples-title{font-size:.8rem;color:#8b949e;padding:.5rem .75rem;background:#161b22;border-bottom:1px solid #30363d;font-weight:600}');
@@ -431,15 +502,29 @@ function generateReport(scan, outputPath, hookStats) {
   h.push('</style></head><body>');
 
   h.push('<h1>Claude Code Hooks Report</h1>');
-  h.push('<p class="subtitle">Runtime enforcement layer &mdash; hooks intercept every tool call and enforce workflow, safety, and quality gates. Generated ' + now + '.</p>');
+  h.push('<p class="subtitle">Your hooks at a glance &mdash; what runs, when it fires, and what it blocks. Source: <code>' + escHtml(SETTINGS_PATH.replace(HOME, "~")) + '</code> &mdash; Generated ' + now + '</p>');
 
   // Stats
+  var totalScriptsOrModules = usingRunner ? totalModules : scan.scripts.length;
+  var scriptsLabel = usingRunner ? "Active Modules" : "Hook Scripts";
   h.push('<div class="stats">');
   h.push('<div class="stat"><div class="stat-value">' + eventNames.length + '</div><div class="stat-label">Hook Events</div></div>');
-  if (usingRunner) h.push('<div class="stat"><div class="stat-value">' + eventNames.length + '</div><div class="stat-label">Runner Scripts</div></div>');
-  h.push('<div class="stat"><div class="stat-value">' + totalModules + '</div><div class="stat-label">Active Modules</div></div>');
-  h.push('<div class="stat"><div class="stat-value">' + scan.totalMatchers + '</div><div class="stat-label">Matchers</div></div>');
+  h.push('<div class="stat"><div class="stat-value">' + totalScriptsOrModules + '</div><div class="stat-label">' + scriptsLabel + '</div></div>');
+  if (scan.totalMatchers > 0) h.push('<div class="stat"><div class="stat-value">' + scan.totalMatchers + '</div><div class="stat-label">Matchers</div></div>');
+  if (logTotalBlocks > 0) h.push('<div class="stat stat-warn"><div class="stat-value">' + logTotalBlocks + '</div><div class="stat-label">Total Blocks</div></div>');
+  if (logTotalErrors > 0) h.push('<div class="stat stat-danger"><div class="stat-value">' + logTotalErrors + '</div><div class="stat-label">Errors</div></div>');
+  if (logTotalInvocations > 0) h.push('<div class="stat"><div class="stat-value">' + blockRate + '%</div><div class="stat-label">Block Rate</div></div>');
+  if (missingScripts.length > 0) h.push('<div class="stat stat-danger"><div class="stat-value">' + missingScripts.length + '</div><div class="stat-label">Missing Files</div></div>');
   h.push('</div>');
+
+  // Health warnings (missing scripts)
+  if (missingScripts.length > 0) {
+    h.push('<div class="warnings"><h3>Missing Hook Scripts</h3><ul>');
+    for (var msi = 0; msi < missingScripts.length; msi++) {
+      h.push('<li><code>' + escHtml(missingScripts[msi].path.replace(HOME, "~")) + '</code> (referenced in ' + escHtml(missingScripts[msi].event) + ')</li>');
+    }
+    h.push('</ul></div>');
+  }
 
   // Architecture note
   if (usingRunner) {
@@ -464,35 +549,139 @@ function generateReport(scan, outputPath, hookStats) {
     Stop: "Session ending"
   };
 
-  // Flow Diagram
-  if (usingRunner) {
-    h.push('<div class="flow"><h2>Hook Event Flow</h2>');
-    h.push('<div class="flow-subtitle">Click a module to jump to its details below. ');
-    h.push('<a href="https://docs.anthropic.com/en/docs/claude-code/hooks" target="_blank" style="color:#58a6ff;text-decoration:none">Claude Code Hooks docs &rarr;</a></div>');
-    h.push('<div class="flow-diagram">');
-    for (var fi = 0; fi < eventNames.length; fi++) {
-      var fEvt = eventNames[fi];
-      var fMods = eventModules[fEvt] || [];
-      if (fi > 0) h.push('<div class="flow-arrow">&rarr;</div>');
-      h.push('<div class="flow-stage">');
-      // Claude event label above
-      var claudeLabel = CLAUDE_EVENTS[fEvt] || "";
-      if (claudeLabel) h.push('<div class="flow-claude-event">' + claudeLabel + '</div>');
-      h.push('<div class="flow-event">' + fEvt + '</div><div class="flow-modules">');
-      if (fMods.length === 0) {
-        h.push('<div class="flow-mod flow-mod-empty">(no modules)</div>');
-      }
-      for (var fm = 0; fm < fMods.length; fm++) {
-        var fmod = fMods[fm];
-        var fclass = "flow-mod flow-mod-link";
-        if (fmod.archived) fclass += " flow-mod-archived";
-        else if (fmod.scope !== "global") fclass += " flow-mod-project";
-        var modId = fEvt + "--" + fmod.name.replace(/\.js$/, "").replace(/[^a-zA-Z0-9-]/g, "-");
-        h.push('<div class="' + fclass + '" onclick="scrollToModule(\'' + modId + '\')">' + escHtml(fmod.name.replace(/\.js$/, "")) + '</div>');
-      }
-      h.push('</div></div>');
+  // Flow Diagram — works for both runner and standalone modes
+  h.push('<div class="flow"><h2>Hook Event Flow</h2>');
+  h.push('<div class="flow-subtitle">Click a hook to jump to its details below. ');
+  h.push('<a href="https://docs.anthropic.com/en/docs/claude-code/hooks" target="_blank" style="color:#58a6ff;text-decoration:none">Claude Code Hooks docs &rarr;</a></div>');
+  h.push('<div class="flow-diagram">');
+  for (var fi = 0; fi < eventNames.length; fi++) {
+    var fEvt = eventNames[fi];
+    var fMods = eventModules[fEvt] || [];
+    var fStandalone = standaloneHooks[fEvt] || [];
+    if (fi > 0) h.push('<div class="flow-arrow">&rarr;</div>');
+    h.push('<div class="flow-stage">');
+    var claudeLabel = CLAUDE_EVENTS[fEvt] || "";
+    if (claudeLabel) h.push('<div class="flow-claude-event">' + claudeLabel + '</div>');
+    h.push('<div class="flow-event">' + fEvt + '</div><div class="flow-modules">');
+    var hasItems = false;
+    // Runner modules
+    for (var fm = 0; fm < fMods.length; fm++) {
+      var fmod = fMods[fm];
+      var fclass = "flow-mod flow-mod-link";
+      if (fmod.archived) fclass += " flow-mod-archived";
+      else if (fmod.scope !== "global") fclass += " flow-mod-project";
+      var modId = fEvt + "--" + fmod.name.replace(/\.js$/, "").replace(/[^a-zA-Z0-9-]/g, "-");
+      h.push('<div class="' + fclass + '" onclick="scrollToModule(\'' + modId + '\')">' + escHtml(fmod.name.replace(/\.js$/, "")) + '</div>');
+      hasItems = true;
+    }
+    // Standalone hooks
+    for (var fs2 = 0; fs2 < fStandalone.length; fs2++) {
+      var fsh = fStandalone[fs2];
+      var shClass = "flow-mod flow-mod-link";
+      if (!fsh.exists) shClass += " flow-mod-missing";
+      var shId = fEvt + "--" + fsh.name.replace(/\.js$/, "").replace(/[^a-zA-Z0-9-]/g, "-");
+      h.push('<div class="' + shClass + '" onclick="scrollToModule(\'' + shId + '\')">' + escHtml(fsh.name.replace(/\.js$/, "")) + '</div>');
+      hasItems = true;
+    }
+    if (!hasItems) {
+      h.push('<div class="flow-mod flow-mod-empty">(no hooks)</div>');
     }
     h.push('</div></div>');
+  }
+  h.push('</div></div>');
+
+  // Toolbar: search + expand/collapse
+  h.push('<div class="toolbar">');
+  h.push('<input class="search-box" type="text" placeholder="Filter hooks by name..." oninput="filterHooks(this.value)">');
+  h.push('<button class="toolbar-btn" onclick="expandAll()">Expand All</button>');
+  h.push('<button class="toolbar-btn" onclick="collapseAll()">Collapse All</button>');
+  h.push('</div>');
+
+  // Helper to render a module/hook card with source code
+  function renderHookCard(h2, evt3, item, hookStats2) {
+    var isStandalone = !!item.command; // standalone hooks have a command property
+    var isMissing = isStandalone && !item.exists;
+    var iconClass2, scopeClass2, scopeLabel2;
+    if (isMissing) {
+      iconClass2 = "icon-missing"; scopeClass2 = "scope-missing"; scopeLabel2 = "MISSING";
+    } else if (isStandalone) {
+      iconClass2 = "icon-standalone"; scopeClass2 = "scope-standalone"; scopeLabel2 = "STANDALONE";
+    } else if (item.archived) {
+      iconClass2 = "icon-archived"; scopeClass2 = "scope-archived"; scopeLabel2 = "ARCHIVED";
+    } else if (item.scope !== "global") {
+      iconClass2 = "icon-project"; scopeClass2 = "scope-project"; scopeLabel2 = item.scope;
+    } else {
+      iconClass2 = "icon-active"; scopeClass2 = "scope-global"; scopeLabel2 = "GLOBAL";
+    }
+    var nameStyle2 = (item.archived || isMissing) ? ' style="color:#484f58;' + (item.archived ? 'text-decoration:line-through' : '') + '"' : '';
+    var statsKey2 = evt3 + "/" + item.name.replace(/\.js$/, "");
+    var modStats2 = hookStats2[statsKey2] || null;
+    var modId2 = evt3 + "--" + item.name.replace(/\.js$/, "").replace(/[^a-zA-Z0-9-]/g, "-");
+
+    h2.push('<div class="module" id="' + modId2 + '" data-name="' + escHtml(item.name.toLowerCase()) + '">');
+    h2.push('<div class="module-header" onclick="toggleModule(this)">');
+    h2.push('<span class="module-chevron">&#9654;</span>');
+    h2.push('<div class="module-icon ' + iconClass2 + '"></div>');
+    h2.push('<span class="module-name"' + nameStyle2 + '>' + escHtml(item.name) + '</span>');
+    if (item.description) h2.push('<span class="module-desc">&mdash; ' + escHtml(item.description) + '</span>');
+
+    // Block/error badges only (no total — total is noise since every tool call triggers all modules)
+    if (modStats2 && (modStats2.block > 0 || modStats2.error > 0)) {
+      h2.push('<span class="module-stats">');
+      if (modStats2.block > 0) h2.push('<span class="stat-block" title="Times this hook blocked a tool call">' + modStats2.block + ' blocked</span>');
+      if (modStats2.error > 0) h2.push('<span class="stat-error" title="Times this hook errored">' + modStats2.error + ' errors</span>');
+      h2.push('</span>');
+    }
+
+    h2.push('<span class="module-scope ' + scopeClass2 + '">' + scopeLabel2 + '</span>');
+    h2.push('</div>');
+
+    // Detail section
+    h2.push('<div class="module-detail">');
+
+    // For standalone hooks: show command, matcher, timeout, file path
+    if (isStandalone) {
+      h2.push('<div class="hook-meta">');
+      h2.push('<span><span class="hook-meta-label">Command</span> <code>' + escHtml(item.command) + '</code></span>');
+      if (item.matcher) h2.push('<span><span class="hook-meta-label">Matcher</span> <code>' + escHtml(item.matcher) + '</code></span>');
+      h2.push('<span><span class="hook-meta-label">Timeout</span> <code>' + item.timeout + 's</code></span>');
+      if (item.path) h2.push('<span><span class="hook-meta-label">File</span> <code>' + escHtml(item.path.replace(HOME, "~")) + '</code>' + (isMissing ? ' <span style="color:#f85149">FILE NOT FOUND</span>' : '') + '</span>');
+      h2.push('</div>');
+    }
+
+    // Sample triggers
+    if (modStats2 && modStats2.samples.length > 0) {
+      h2.push('<div class="samples-section">');
+      h2.push('<div class="samples-title">Recent blocks/errors (' + modStats2.samples.length + ')</div>');
+      for (var si2 = 0; si2 < modStats2.samples.length; si2++) {
+        var sample2 = modStats2.samples[si2];
+        var sTime2 = "";
+        try { sTime2 = sample2.ts.replace("T", " ").substring(0, 19); } catch(e3) {}
+        h2.push('<div class="sample">');
+        h2.push('<span class="sample-time">' + escHtml(sTime2) + '</span>');
+        h2.push('<span class="sample-result sample-' + sample2.result + '">' + escHtml(sample2.result) + '</span>');
+        if (sample2.tool) h2.push('<span class="sample-tool">' + escHtml(sample2.tool) + '</span>');
+        if (sample2.cmd) h2.push('<span class="sample-cmd">' + escHtml(sample2.cmd) + '</span>');
+        if (sample2.file) h2.push('<span class="sample-file">' + escHtml(sample2.file) + '</span>');
+        if (sample2.project) h2.push('<span class="sample-project">' + escHtml(sample2.project) + '</span>');
+        if (sample2.reason) h2.push('<div class="sample-reason">' + escHtml(sample2.reason) + '</div>');
+        h2.push('</div>');
+      }
+      h2.push('</div>');
+    }
+
+    // Source code
+    if (item.source) {
+      var sLines = item.source.split("\n");
+      var sCodeLines = [];
+      for (var sli = 0; sli < sLines.length; sli++) {
+        var slnStr = String(sli + 1);
+        while (slnStr.length < 3) slnStr = " " + slnStr;
+        sCodeLines.push('<span class="ln">' + slnStr + '</span>' + escHtml(sLines[sli]));
+      }
+      h2.push('<div class="code-block"><pre>' + sCodeLines.join("\n") + '</pre></div>');
+    }
+    h2.push('</div></div>');
   }
 
   // Event Sections
@@ -500,14 +689,22 @@ function generateReport(scan, outputPath, hookStats) {
     var evt2 = eventNames[e];
     var evtData2 = scan.events[evt2];
     var mods2 = eventModules[evt2] || [];
+    var standalone2 = standaloneHooks[evt2] || [];
     var badge2 = EVENT_BADGES[evt2] || "badge-session";
     var title2 = EVENT_TITLES[evt2] || evt2;
     var metaParts = [];
     var activeModCount = mods2.filter(function(m) { return !m.archived; }).length;
-    if (activeModCount > 0) metaParts.push(activeModCount + " module" + (activeModCount !== 1 ? "s" : ""));
-    else metaParts.push("no modules");
-    if (evtData2.matchers && evtData2.matchers.length > 0) metaParts.push(evtData2.matchers.join(", ") + " matchers");
-    else metaParts.push("no matcher");
+    var totalItems = activeModCount + standalone2.length;
+    if (totalItems > 0) metaParts.push(totalItems + " hook" + (totalItems !== 1 ? "s" : ""));
+    else metaParts.push("no hooks");
+    if (evtData2.matchers && evtData2.matchers.length > 0) metaParts.push(evtData2.matchers.join(", "));
+
+    // Count blocks for this event
+    var evtBlocks = 0;
+    for (var ebi = 0; ebi < hookStatsKeys.length; ebi++) {
+      if (hookStatsKeys[ebi].indexOf(evt2 + "/") === 0) evtBlocks += hookStats[hookStatsKeys[ebi]].block;
+    }
+    if (evtBlocks > 0) metaParts.push(evtBlocks + " block" + (evtBlocks !== 1 ? "s" : ""));
 
     h.push('<div class="event-section">');
     h.push('<div class="event-header collapsed" onclick="toggleEvent(this)">');
@@ -518,7 +715,7 @@ function generateReport(scan, outputPath, hookStats) {
     h.push('</div>');
     h.push('<div class="event-body">');
 
-    // Runner info
+    // Runner info (if using hook-runner)
     var hasRunner = false;
     for (var hi = 0; hi < evtData2.entries.length; hi++) {
       if (evtData2.entries[hi].isRunner && evtData2.entries[hi].scriptPath) {
@@ -527,10 +724,6 @@ function generateReport(scan, outputPath, hookStats) {
         hasRunner = true;
         break;
       }
-    }
-    if (mods2.length === 0 && !hasRunner) {
-      h.push('<div class="runner"><div class="runner-label" style="color:#484f58">No hooks configured for this event</div>');
-      h.push('<div class="runner-path" style="color:#484f58">Add a module to <code>~/.claude/hooks/run-modules/' + evt2 + '/</code></div></div>');
     }
 
     // Matchers
@@ -542,78 +735,26 @@ function generateReport(scan, outputPath, hookStats) {
       h.push('</div>');
     }
 
-    // Modules (expandable with source)
+    // Empty state
+    if (mods2.length === 0 && standalone2.length === 0 && !hasRunner) {
+      h.push('<div class="runner"><div class="runner-label" style="color:#484f58">No hooks configured for this event</div>');
+      h.push('<div class="runner-path" style="color:#484f58">Add a hook in <code>~/.claude/settings.json</code> under <code>hooks.' + evt2 + '</code></div></div>');
+    }
+
+    // Runner modules
     for (var mod_i = 0; mod_i < mods2.length; mod_i++) {
-      var m = mods2[mod_i];
-      var iconClass = m.archived ? "icon-archived" : (m.scope !== "global" ? "icon-project" : "icon-active");
-      var scopeClass = m.archived ? "scope-archived" : (m.scope !== "global" ? "scope-project" : "scope-global");
-      var scopeLabel = m.archived ? "ARCHIVED" : (m.scope !== "global" ? m.scope : "GLOBAL");
-      var nameStyle = m.archived ? ' style="color:#484f58;text-decoration:line-through"' : '';
+      renderHookCard(h, evt2, mods2[mod_i], hookStats);
+    }
 
-      // Look up stats for this module
-      var statsKey = evt2 + "/" + m.name.replace(/\.js$/, "");
-      var modStats = hookStats[statsKey] || null;
-
-      var modId = evt2 + "--" + m.name.replace(/\.js$/, "").replace(/[^a-zA-Z0-9-]/g, "-");
-      h.push('<div class="module" id="' + modId + '">');
-      h.push('<div class="module-header" onclick="toggleModule(this)">');
-      h.push('<span class="module-chevron">&#9654;</span>');
-      h.push('<div class="module-icon ' + iconClass + '"></div>');
-      h.push('<span class="module-name"' + nameStyle + '>' + escHtml(m.name) + '</span>');
-      if (m.description) h.push('<span class="module-desc">&mdash; ' + escHtml(m.description) + '</span>');
-
-      // Hit count badges (between description and scope)
-      if (modStats && modStats.total > 0) {
-        h.push('<span class="module-stats">');
-        h.push('<span class="stat-total" title="Total invocations">' + modStats.total + '</span>');
-        if (modStats.block > 0) h.push('<span class="stat-block" title="Blocked">' + modStats.block + ' blocked</span>');
-        if (modStats.error > 0) h.push('<span class="stat-error" title="Errors">' + modStats.error + ' err</span>');
-        h.push('</span>');
-      }
-
-      h.push('<span class="module-scope ' + scopeClass + '">' + scopeLabel + '</span>');
-      h.push('</div>');
-      h.push('<div class="module-detail">');
-
-      // Sample triggers (blocks/errors)
-      if (modStats && modStats.samples.length > 0) {
-        h.push('<div class="samples-section">');
-        h.push('<div class="samples-title">Recent triggers (' + modStats.samples.length + ')</div>');
-        for (var si = 0; si < modStats.samples.length; si++) {
-          var sample = modStats.samples[si];
-          var sTime = "";
-          try { sTime = sample.ts.replace("T", " ").substring(0, 19); } catch(e2) {}
-          h.push('<div class="sample">');
-          h.push('<span class="sample-time">' + escHtml(sTime) + '</span>');
-          h.push('<span class="sample-result sample-' + sample.result + '">' + escHtml(sample.result) + '</span>');
-          if (sample.tool) h.push('<span class="sample-tool">' + escHtml(sample.tool) + '</span>');
-          if (sample.cmd) h.push('<span class="sample-cmd">' + escHtml(sample.cmd) + '</span>');
-          if (sample.file) h.push('<span class="sample-file">' + escHtml(sample.file) + '</span>');
-          if (sample.project) h.push('<span class="sample-project">' + escHtml(sample.project) + '</span>');
-          if (sample.reason) h.push('<div class="sample-reason">' + escHtml(sample.reason) + '</div>');
-          h.push('</div>');
-        }
-        h.push('</div>');
-      }
-
-      if (m.source) {
-        var lines = m.source.split("\n");
-        // Build code block as single string to avoid double line spacing from h.join("\n")
-        var codeLines = [];
-        for (var li = 0; li < lines.length; li++) {
-          var lnStr = String(li + 1);
-          while (lnStr.length < 3) lnStr = " " + lnStr;
-          codeLines.push('<span class="ln">' + lnStr + '</span>' + escHtml(lines[li]));
-        }
-        h.push('<div class="code-block"><pre>' + codeLines.join("\n") + '</pre></div>');
-      }
-      h.push('</div></div>');
+    // Standalone hooks
+    for (var sh_i = 0; sh_i < standalone2.length; sh_i++) {
+      renderHookCard(h, evt2, standalone2[sh_i], hookStats);
     }
 
     h.push('</div></div>');
   }
 
-  h.push('<div class="footer">Generated by <a href="https://github.com/grobomo/hook-runner" style="color:#58a6ff;text-decoration:none">hook-runner</a> setup.js &mdash; ' + now + ' &mdash; <a href="https://docs.anthropic.com/en/docs/claude-code/hooks" style="color:#58a6ff;text-decoration:none">Claude Code Hooks docs</a></div>');
+  h.push('<div class="footer">Generated by <a href="https://github.com/grobomo/hook-runner" style="color:#58a6ff;text-decoration:none">hook-runner</a> &mdash; ' + now + ' &mdash; <a href="https://docs.anthropic.com/en/docs/claude-code/hooks" style="color:#58a6ff;text-decoration:none">Claude Code Hooks docs</a></div>');
   h.push('<script>');
   h.push('function toggleEvent(el){var b=el.nextElementSibling;var c=el.querySelector(".chevron");b.classList.toggle("open");c.classList.toggle("open");el.classList.toggle("collapsed")}');
   h.push('function toggleModule(el){var d=el.nextElementSibling;var c=el.querySelector(".module-chevron");d.classList.toggle("open");c.classList.toggle("open")}');
@@ -621,6 +762,11 @@ function generateReport(scan, outputPath, hookStats) {
   h.push('var sec=m.closest(".event-section");if(sec){var hdr=sec.querySelector(".event-header");var body=sec.querySelector(".event-body");if(hdr&&body&&!body.classList.contains("open")){body.classList.add("open");hdr.querySelector(".chevron").classList.add("open");hdr.classList.remove("collapsed")}}');
   h.push('var det=m.querySelector(".module-detail");var chev=m.querySelector(".module-chevron");if(det&&!det.classList.contains("open")){det.classList.add("open");if(chev)chev.classList.add("open")}');
   h.push('m.scrollIntoView({behavior:"smooth",block:"center"});m.classList.add("module-highlight");setTimeout(function(){m.classList.remove("module-highlight")},2100)}');
+  // Search filter
+  h.push('function filterHooks(q){q=q.toLowerCase();document.querySelectorAll(".module").forEach(function(m){var n=m.getAttribute("data-name")||"";m.style.display=(!q||n.indexOf(q)!==-1)?"":"none"})}');
+  // Expand all / collapse all
+  h.push('function expandAll(){document.querySelectorAll(".event-section").forEach(function(sec){var hdr=sec.querySelector(".event-header");var body=sec.querySelector(".event-body");if(body&&!body.classList.contains("open")){body.classList.add("open");hdr.querySelector(".chevron").classList.add("open");hdr.classList.remove("collapsed")}})}');
+  h.push('function collapseAll(){document.querySelectorAll(".event-section").forEach(function(sec){var hdr=sec.querySelector(".event-header");var body=sec.querySelector(".event-body");if(body&&body.classList.contains("open")){body.classList.remove("open");hdr.querySelector(".chevron").classList.remove("open");hdr.classList.add("collapsed")}})}');
   h.push('</script>');
   h.push('</body></html>');
 
