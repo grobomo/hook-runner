@@ -25,7 +25,7 @@ These were made to the live hooks, not committed to this repo (user-specific enf
 
 ## Active
 - [x] T014: Sync repo example modules with live fixes — root-cause-gate (remove rebase/merge --abort from blocked patterns, tighten checkout regex), auto-continue (remove hardcoded user path)
-- [ ] T015: Sync local skill copy after repo changes
+- [x] T015: Sync local skill copy after repo changes
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + example modules
