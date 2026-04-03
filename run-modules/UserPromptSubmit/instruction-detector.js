@@ -1,3 +1,4 @@
+// WHY: User directives were treated as one-time context instead of persistent rules.
 // UserPromptSubmit: detect instruction-like directives in user messages.
 // When user says "always", "never", "make sure", "from now on", "whenever",
 // write a flag file so PreToolUse can enforce creating a hook/rule.

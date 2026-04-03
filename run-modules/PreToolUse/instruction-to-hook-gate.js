@@ -1,3 +1,4 @@
+// WHY: User instructions ("always X") were forgotten next session. Must become hooks/rules.
 "use strict";
 // PreToolUse: enforce that user instructions ("always X", "never Y") become hooks/rules.
 // Works with UserPromptSubmit/instruction-detector.js which sets a flag file.

@@ -1,3 +1,4 @@
+// WHY: Important operational context was missing at session start.
 // SessionStart: inject working instructions at start of every session
 module.exports = function(input) {
   // SessionStart hooks output text to Claude as context (not block/allow)

@@ -1,3 +1,4 @@
+// WHY: AWS resources created without tags were impossible to attribute or clean up.
 // Enforce hackathon26 tags on AWS resource creation commands.
 // Checks: aws cloudformation, aws ec2 run-instances, aws s3api create-bucket,
 // aws lambda create-function, and similar resource-creating commands.

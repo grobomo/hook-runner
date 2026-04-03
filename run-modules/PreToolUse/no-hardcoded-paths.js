@@ -1,4 +1,5 @@
-// Block Write/Edit with hardcoded absolute user paths in file content.
+// WHY: Hardcoded C:SERS PATHS IN SCRIPTS BROKE PORTABILITY ACROSS MACHINES.
+// BLOCK WRITE/Edit with hardcoded absolute user paths in file content.
 // Catches Windows, Linux, and macOS home directory paths in new_string/content.
 // Absolute paths break portability — use variables or relative paths.
 

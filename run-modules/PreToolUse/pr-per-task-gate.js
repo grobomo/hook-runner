@@ -1,3 +1,4 @@
+// WHY: Batched PRs with multiple tasks made mobile monitoring and rollbacks impossible.
 "use strict";
 // PR-per-task gate: blocks `gh pr create` if PR title doesn't include a task ID.
 // Enforces: every PR maps to a speckit task (T001, T002, etc.).

@@ -1,3 +1,4 @@
+// WHY: Rules grew into multi-topic dump files that were hard to maintain.
 // Rule hygiene: validates rule files are granular and path-scoped
 var fs = require("fs");
 var path = require("path");
