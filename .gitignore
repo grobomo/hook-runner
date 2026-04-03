@@ -1,6 +1,9 @@
 node_modules/
 archive/
 *.log
+*.jsonl
+*.jsonl.*
+*.bak
 .DS_Store
 .test-results/
 SESSION_STATE.md

@@ -11,6 +11,7 @@ module.exports = function(input) {
 3) Organize, modularize, optimize, secure the project. Code review, DRY, clean up, harden.
 4) Zoom out: why does this project exist, how does it integrate, what real-world value comes next? How can we share it with the team — publish, document, demo, package? Write new tasks to TODO.md then EXECUTE. No breaks. No asking. Plan then do.
 
-If context is getting long, save state to $CLAUDE_PROJECT_DIR/TODO.md (always the launch directory, not cwd), then run: python ${home}/Documents/ProjectsCL1/context-reset/context_reset.py --project-dir $CLAUDE_PROJECT_DIR`
+If context is getting long, save state to $CLAUDE_PROJECT_DIR/TODO.md (always the launch directory, not cwd), then run: python ${home}/Documents/ProjectsCL1/context-reset/context_reset.py --project-dir $CLAUDE_PROJECT_DIR
+To keep the old tab open for review: touch ~/.claude/.preserve-tab before running context_reset.py (one-shot, auto-deleted)`
   };
 };
