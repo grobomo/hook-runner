@@ -1,17 +1,74 @@
 // WHY: Claude stops and lists options instead of doing the work.
-// Auto-continue: never stop, always find the next thing
+// If Claude ignores the block message, the dead man's switch launches a
+// new session via context_reset.py so work continues regardless.
+"use strict";
+var fs = require("fs");
+var path = require("path");
+var cp = require("child_process");
+
 var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
+var projectDir = (process.env.CLAUDE_PROJECT_DIR || "").replace(/\\/g, "/");
+
+function hasPendingTasks() {
+  if (!projectDir) return false;
+  var todoPath = path.join(projectDir, "TODO.md");
+  try {
+    var content = fs.readFileSync(todoPath, "utf-8");
+    return /- \[ \] /.test(content);
+  } catch (e) {
+    return false;
+  }
+}
+
+function launchDeadManSwitch() {
+  // Wait 30s, then check if this Claude is still the newest session.
+  // If no new session appeared, launch context_reset.py as a fallback.
+  var script = home + "/Documents/ProjectsCL1/context-reset/context_reset.py";
+  try {
+    fs.statSync(script.replace(/\//g, path.sep));
+  } catch (e) {
+    return; // script missing, can't auto-restart
+  }
+
+  // Spawn a detached process that waits then launches
+  var pythonCmd = "python \"" + script + "\" --project-dir \"" + projectDir + "\"";
+  var wrapper = [
+    "import time, subprocess, os",
+    "time.sleep(30)",
+    "subprocess.Popen(" + JSON.stringify(pythonCmd) + ", shell=True)",
+  ].join("; ");
+
+  try {
+    var opts = { stdio: "ignore", detached: true };
+    if (process.platform === "win32") {
+      opts.windowsHide = true;
+    }
+    var child = cp.spawn("python", ["-c", wrapper], opts);
+    child.unref();
+  } catch (e) {
+    // Silent fail
+  }
+}
+
 module.exports = function(input) {
+  var pending = hasPendingTasks();
+
+  // Launch dead man's switch if tasks remain — if Claude ignores the block
+  // and actually stops, this spawns a new session after 30s
+  if (pending) {
+    launchDeadManSwitch();
+  }
+
   return {
     decision: "block",
-    reason: `DO NOT STOP. DO NOT SUMMARIZE. DO NOT LIST OPTIONS. Follow this order:
-
-1) Check TODO.md in $CLAUDE_PROJECT_DIR — if tasks remain, do the next one NOW.
-2) Read the jsonl logs in ~/.claude/projects/ (folder matching current project path, most recent .jsonl). Scan for incomplete tangents, abandoned fixes, things discussed but never done — do them.
-3) Organize, modularize, optimize, secure the project. Code review, DRY, clean up, harden.
-4) Zoom out: why does this project exist, how does it integrate, what real-world value comes next? How can we share it with the team — publish, document, demo, package? Write new tasks to TODO.md then EXECUTE. No breaks. No asking. Plan then do.
-
-If context is getting long, save state to $CLAUDE_PROJECT_DIR/TODO.md (always the launch directory, not cwd), then run: python ${home}/Documents/ProjectsCL1/context-reset/context_reset.py --project-dir $CLAUDE_PROJECT_DIR
-To keep the old tab open for review: touch ~/.claude/.preserve-tab before running context_reset.py (one-shot, auto-deleted)`
+    reason: "DO NOT STOP. Follow this order:\n" +
+      "1) Check TODO.md — if tasks remain, do the next one NOW.\n" +
+      "2) Scan jsonl logs in ~/.claude/projects/ for incomplete tangents — do them.\n" +
+      "3) Optimize, secure, clean up the project.\n" +
+      "4) Zoom out: what real-world value comes next? Write tasks then EXECUTE.\n\n" +
+      (pending ? "TASKS REMAIN in TODO.md. Dead man's switch armed — if you stop, a new session launches in 30s.\n\n" : "") +
+      "If context is long, save state to TODO.md then run:\n" +
+      "python " + home + "/Documents/ProjectsCL1/context-reset/context_reset.py --project-dir $CLAUDE_PROJECT_DIR\n" +
+      "To preserve this tab: touch ~/.claude/.preserve-tab first"
   };
 };
