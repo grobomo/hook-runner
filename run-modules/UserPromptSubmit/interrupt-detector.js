@@ -60,6 +60,17 @@ function spawnAnalysis(userPrompt) {
   // Write cooldown marker
   try { fs.writeFileSync(COOLDOWN_FILE, Date.now().toString()); } catch(e) {}
 
+  // Log the interrupt
+  var logPath = path.join(home, ".claude/self-analysis.log");
+  var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
+  try {
+    var entry = "[" + new Date().toISOString() + "] INTERRUPT detected" +
+      " | project=" + projectDir +
+      " | user=" + userPrompt.substring(0, 300) + "\n";
+    fs.appendFileSync(logPath.replace(/\//g, path.sep), entry);
+  } catch (e) {}
+
+  // Spawn background self-analysis via VBS wrapper (no visible window on Windows)
   var scriptPath = home + "/.claude/scripts/self-analyze-loop.js";
   try {
     fs.statSync(scriptPath.replace(/\//g, path.sep));
@@ -67,16 +78,23 @@ function spawnAnalysis(userPrompt) {
     return; // script not installed
   }
 
-  var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
   try {
-    var opts = { stdio: "ignore", detached: true };
-    if (process.platform === "win32") opts.windowsHide = true;
-    var child = cp.spawn("node", [
-      scriptPath,
-      projectDir,
-      userPrompt.substring(0, 500)  // pass the corrective message for context
-    ], opts);
-    child.unref();
+    if (process.platform === "win32") {
+      // Use wscript.exe with a VBS wrapper to hide the window completely.
+      // node.exe + detached + windowsHide still flashes a console.
+      var vbs = path.join(os.tmpdir(), "claude-analyze.vbs");
+      var cmd = 'node "' + scriptPath.replace(/\//g, "\\") + '" "' +
+        projectDir.replace(/\//g, "\\") + '" "' +
+        userPrompt.substring(0, 300).replace(/"/g, '""') + '"';
+      fs.writeFileSync(vbs,
+        'Set ws = CreateObject("WScript.Shell")\n' +
+        'ws.Run "cmd /c ' + cmd.replace(/"/g, '""') + '", 0, False\n');
+      cp.spawn("wscript.exe", [vbs], { detached: true, stdio: "ignore" }).unref();
+    } else {
+      cp.spawn("node", [
+        scriptPath, projectDir, userPrompt.substring(0, 500)
+      ], { detached: true, stdio: "ignore" }).unref();
+    }
   } catch (e) {
     // silent fail
   }
