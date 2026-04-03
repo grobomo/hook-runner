@@ -9,8 +9,10 @@ module.exports = function(input) {
 
   // Detect background process spawning patterns that will steal focus on Windows
   // Only check commands that spawn detached/background processes
+  // Note: & (background) vs && (chaining) — only match trailing & not &&
+  var hasBackground = /[^&]&\s*$/.test(cmd) || /^&\s*$/.test(cmd);
   if (cmd.indexOf("run_in_background") === -1 &&
-      cmd.indexOf("&") === -1 &&
+      !hasBackground &&
       cmd.indexOf("nohup") === -1 &&
       cmd.indexOf("start ") === -1) return null;
 

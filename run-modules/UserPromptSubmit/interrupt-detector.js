@@ -79,20 +79,29 @@ function spawnAnalysis(userPrompt) {
   }
 
   try {
+    // Write args to a temp JSON file — avoids quote escaping nightmares in VBS/cmd.
+    // The self-analyze-loop.js reads this file instead of process.argv.
+    var argsFile = path.join(os.tmpdir(), "claude-analyze-args-" + Date.now() + ".json");
+    fs.writeFileSync(argsFile, JSON.stringify({
+      projectDir: projectDir,
+      userCorrection: userPrompt.substring(0, 500)
+    }));
+
     if (process.platform === "win32") {
       // Use wscript.exe with a VBS wrapper to hide the window completely.
       // node.exe + detached + windowsHide still flashes a console.
       var vbs = path.join(os.tmpdir(), "claude-analyze.vbs");
-      var cmd = 'node "' + scriptPath.replace(/\//g, "\\") + '" "' +
-        projectDir.replace(/\//g, "\\") + '" "' +
-        userPrompt.substring(0, 300).replace(/"/g, '""') + '"';
+      var nodePath = scriptPath.replace(/\//g, "\\");
+      var argsPath = argsFile.replace(/\//g, "\\");
+      // Redirect stderr to log so VBS errors don't pop up silently
+      var errLog = path.join(home, ".claude/self-analysis-errors.log").replace(/\//g, "\\");
       fs.writeFileSync(vbs,
         'Set ws = CreateObject("WScript.Shell")\n' +
-        'ws.Run "cmd /c ' + cmd.replace(/"/g, '""') + '", 0, False\n');
+        'ws.Run "cmd /c node ""' + nodePath + '"" ""' + argsPath + '"" 2>>""' + errLog + '""", 0, False\n');
       cp.spawn("wscript.exe", [vbs], { detached: true, stdio: "ignore" }).unref();
     } else {
       cp.spawn("node", [
-        scriptPath, projectDir, userPrompt.substring(0, 500)
+        scriptPath, argsFile
       ], { detached: true, stdio: "ignore" }).unref();
     }
   } catch (e) {

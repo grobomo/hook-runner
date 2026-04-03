@@ -120,17 +120,29 @@ module.exports = function(input) {
     if (!targetFile) return null;
     var norm = targetFile.replace(/\\/g, "/");
 
-    // Allow bootstrap/config/spec/planning/test files on any branch
-    var allowPatterns = [
-      /TODO\.md$/, /SESSION_STATE\.md$/, /CLAUDE\.md$/, /README\.md$/,
-      /\.claude\//, /\/specs\//, /\.planning\//, /\.specify\//,
-      /\.github\//, /\/hooks\//, /\/rules\//,
-      /\.gitignore$/, /scripts\/test\//, /\.json$/,
-    ];
+    // Allow bootstrap/config/spec/planning/test files on any branch.
+    // EXCEPTION: when ~/.claude IS the project, JS/SH code files are NOT exempt —
+    // they must go through branches+PRs like any other project's code.
     var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
-    if (home && norm.startsWith(home + "/.claude/")) return null;
-    for (var i = 0; i < allowPatterns.length; i++) {
-      if (allowPatterns[i].test(norm)) return null;
+    var projectDir = (process.env.CLAUDE_PROJECT_DIR || "").replace(/\\/g, "/");
+    var isClaudeProject = projectDir && (
+      projectDir === home + "/.claude" ||
+      projectDir.replace(/\/+$/, "") === home + "/.claude"
+    );
+
+    // When ~/.claude is the project, JS/SH files are code, not config
+    if (isClaudeProject && /\.(js|sh|ts|py)$/.test(norm)) {
+      // Fall through to branch check — these are code files
+    } else {
+      var allowPatterns = [
+        /TODO\.md$/, /SESSION_STATE\.md$/, /CLAUDE\.md$/, /README\.md$/,
+        /\.claude\//, /\/specs\//, /\.planning\//, /\.specify\//,
+        /\.github\//, /\/hooks\//, /\/rules\//,
+        /\.gitignore$/, /scripts\/test\//, /\.json$/,
+      ];
+      for (var i = 0; i < allowPatterns.length; i++) {
+        if (allowPatterns[i].test(norm)) return null;
+      }
     }
 
     var branch = getBranch();
