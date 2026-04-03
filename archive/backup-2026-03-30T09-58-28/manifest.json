@@ -1,0 +1,124 @@
+{
+  "timestamp": "2026-03-30T09-58-28",
+  "platform": "win32",
+  "backupDir": "C:\\Users\\joelg\\.claude\\hooks\\archive\\backup-2026-03-30T09-58-28",
+  "files": [
+    {
+      "original": "C:\\Users\\joelg\\.claude\\settings.json",
+      "backed": "settings.json"
+    },
+    {
+      "original": "C:\\Users\\joelg/.claude/hooks/run-sessionstart.js",
+      "backed": "run-sessionstart.js"
+    },
+    {
+      "original": "C:\\Users\\joelg/.claude/hooks/run-stop.js",
+      "backed": "run-stop.js"
+    },
+    {
+      "original": "C:\\Users\\joelg/.claude/hooks/run-posttooluse.js",
+      "backed": "run-posttooluse.js"
+    },
+    {
+      "original": "C:\\Users\\joelg/.claude/hooks/run-pretooluse.js",
+      "backed": "run-pretooluse.js"
+    },
+    {
+      "original": "C:\\Users\\joelg/.claude/hooks/run-userpromptsubmit.js",
+      "backed": "run-userpromptsubmit.js"
+    },
+    {
+      "original": "C:\\Users\\joelg\\.claude\\hooks\\run-modules",
+      "backed": "run-modules/"
+    }
+  ],
+  "settingsHooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/hooks/run-sessionstart.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/hooks/run-stop.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/hooks/run-posttooluse.js\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/hooks/run-posttooluse.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/hooks/run-pretooluse.js\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/hooks/run-pretooluse.js\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/hooks/run-pretooluse.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/hooks/run-userpromptsubmit.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

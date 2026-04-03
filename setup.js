@@ -692,6 +692,7 @@ function cmdHelp() {
   console.log("  --sync          Sync modules from GitHub per ~/.claude/hooks/modules.yaml");
   console.log("  --list          Show catalog vs installed modules with status");
   console.log("  --stats         Quick text summary of hook log activity");
+  console.log("  --perf          Analyze module timing data and identify bottlenecks");
   console.log("  --test          Run all test suites");
   console.log("  --upgrade       Fetch latest runners from GitHub and update local copies");
   console.log("  --uninstall     Remove hook-runner from settings.json and hooks dir");
@@ -1178,6 +1179,75 @@ function cmdWizard(reportOnly, dryRun, openMode) {
   console.log("============================================");
 }
 
+function cmdPerf() {
+  console.log("[hook-runner] Performance Analysis");
+  console.log("========================");
+  var hs = readHookStats(0);
+  var hsKeys = Object.keys(hs).sort();
+
+  // Group by event
+  var events = {};
+  var timed = [];
+  for (var i = 0; i < hsKeys.length; i++) {
+    var key = hsKeys[i];
+    var st = hs[key];
+    var parts = key.split("/");
+    var evt = parts[0];
+    if (!events[evt]) events[evt] = { modules: [], totalAvg: 0, count: 0 };
+    if (st.msCount > 0) {
+      var avg = Math.round(st.msTotal / st.msCount);
+      var entry = { key: key, name: parts.slice(1).join("/"), avg: avg, max: st.msMax, count: st.msCount, total: st.total };
+      events[evt].modules.push(entry);
+      events[evt].totalAvg += avg;
+      events[evt].count++;
+      timed.push(entry);
+    }
+  }
+
+  if (timed.length === 0) {
+    console.log("  No timing data yet. Timing is recorded after v1.4.0 runners are installed.");
+    console.log("  Run some tool calls, then check again.");
+    return;
+  }
+
+  // Per-event overhead
+  var evtNames = Object.keys(events).sort();
+  console.log("\n  Estimated overhead per event (sum of avg module times):");
+  for (var j = 0; j < evtNames.length; j++) {
+    var ev = events[evtNames[j]];
+    if (ev.count === 0) continue;
+    console.log("    " + evtNames[j] + ": ~" + ev.totalAvg + "ms (" + ev.count + " modules)");
+  }
+
+  // Slow modules (>5ms avg)
+  timed.sort(function(a, b) { return b.avg - a.avg; });
+  var slow = timed.filter(function(t) { return t.avg > 5; });
+  if (slow.length > 0) {
+    console.log("\n  Slow modules (>5ms avg):");
+    for (var k = 0; k < slow.length; k++) {
+      var s = slow[k];
+      var note = "";
+      if (s.max > 100) note = "  *** spikes to " + s.max + "ms";
+      console.log("    " + s.key + "  avg:" + s.avg + "ms  max:" + s.max + "ms  (" + s.count + " calls)" + note);
+    }
+  } else {
+    console.log("\n  All modules under 5ms avg — no bottlenecks detected.");
+  }
+
+  // Total tool call overhead estimate (PreToolUse is on every tool call)
+  if (events.PreToolUse && events.PreToolUse.totalAvg > 0) {
+    console.log("\n  PreToolUse total overhead: ~" + events.PreToolUse.totalAvg + "ms per tool call");
+    if (events.PreToolUse.totalAvg > 50) {
+      console.log("  WARNING: >50ms overhead. Consider disabling unused modules.");
+    } else if (events.PreToolUse.totalAvg > 20) {
+      console.log("  NOTE: 20-50ms range. Acceptable but monitor for growth.");
+    } else {
+      console.log("  OK: <20ms. Minimal impact on tool call latency.");
+    }
+  }
+  console.log("");
+}
+
 function main() {
   var args = process.argv.slice(2);
   var dryRun = args.indexOf("--dry-run") !== -1;
@@ -1189,6 +1259,7 @@ function main() {
   if (args.indexOf("--uninstall") !== -1) return cmdUninstall(args, dryRun);
   if (args.indexOf("--prune") !== -1) return cmdPrune(args, dryRun);
   if (args.indexOf("--stats") !== -1) return cmdStats();
+  if (args.indexOf("--perf") !== -1) return cmdPerf();
   if (args.indexOf("--list") !== -1) return cmdList();
   if (args.indexOf("--test") !== -1) return cmdTest();
   if (args.indexOf("--health") !== -1) return cmdHealth();

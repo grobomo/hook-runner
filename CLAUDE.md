@@ -1,66 +1,48 @@
-# hook-runner
+# Hook Runner
 
-Modular hook runner system for Claude Code. One runner per event, modules in folders.
+Modular hook system for Claude Code. One runner per event, modules auto-loaded.
 
-## Repo
-- **Account**: grobomo (public)
-- **Marketplace**: grobomo/claude-code-skills → plugins/hook-runner
-- **Local skill**: ~/.claude/skills/hook-runner/
-- **Live hooks**: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
+## Architecture
 
-## File Layout
-- `setup.js` — CLI entry point with extracted command handlers (cmdHelp, cmdUpgrade, cmdUninstall, etc.)
-- `report.js` — HTML report generator (extracted from setup.js for maintainability)
-- `run-*.js` — event runners (one per event: pretooluse, posttooluse, stop, sessionstart, userpromptsubmit)
-- `load-modules.js` — shared module loader (global + project-scoped discovery + dependency validation)
-- `hook-log.js` — centralized logger (appends JSONL per invocation, includes per-module timing)
-- `run-async.js` — async module executor (Promise detection, 4s timeout, timing measurement)
-- `modules/` — distributable module catalog organized by event type
-- `scripts/test/` — test scripts (90 tests across 5 files)
-
-## Sync Targets (must stay identical)
-1. Repo: this directory
-2. Live: ~/.claude/hooks/
-3. Skill: ~/.claude/skills/hook-runner/
-4. Marketplace: ../claude-code-skills/plugins/hook-runner/
-
-After any code change, copy to all 4 locations. The sync command in setup.js handles modules; runners must be copied manually.
-
-## Testing
-```bash
-bash scripts/test/test-runners.sh      # 16 runner tests
-bash scripts/test/test-setup-wizard.sh # 6 wizard tests
-bash scripts/test/test-async.sh        # 13 async tests
-bash scripts/test/test-modules.sh      # 32 module validation tests
-bash scripts/test/test-module-sync.sh  # 10 sync tests
+```
+~/.claude/hooks/
+  load-modules.js          # shared loader (global + project-scoped)
+  run-pretooluse.js        # PreToolUse runner
+  run-posttooluse.js       # PostToolUse runner
+  run-stop.js              # Stop runner
+  run-sessionstart.js      # SessionStart runner
+  run-modules/
+    PreToolUse/
+      *.js                 # global modules (all projects)
+      hackathon26/*.js     # only for hackathon26 project
+    PostToolUse/
+      *.js
+    Stop/
+      *.js
+    SessionStart/
+      *.js
 ```
 
-## Module Contract
-- Sync: `module.exports = function(input) { return null; }` — preferred for gates
-- Async: `module.exports = async function(input) { ... }` — 4s timeout per module
-- Return `null` to pass, `{decision: "block", reason: "..."}` to block
-- Dependencies: `// requires: mod1, mod2` in first 5 lines — missing deps = skipped with warning
-- First block wins, remaining modules skipped
+## Design Decisions
 
-## CLI Commands
-```
-node setup.js               # full setup wizard
-node setup.js --report      # HTML report
-node setup.js --dry-run     # preview changes
-node setup.js --health      # verify runners + modules
-node setup.js --sync        # sync modules from GitHub
-node setup.js --stats       # text summary of hook log
-node setup.js --list        # show catalog vs installed modules
-node setup.js --test        # run all test suites
-node setup.js --uninstall   # remove hook-runner from system
-node setup.js --prune [N]   # prune log entries older than N days (default 7)
-node setup.js --upgrade     # fetch latest from GitHub
-node setup.js --version     # show version
-```
+### Shared `load-modules.js`
+All four runners delegate module discovery to `load-modules.js`. This avoids duplicating the global+project logic in each runner. Runners only differ in how they interpret module results (block/allow vs text output).
 
-## Push Workflow
-This is a grobomo repo. Before pushing:
-1. `gh auth switch --user grobomo`
-2. Push
-3. Sync to marketplace: `cp setup.js SKILL.md ../claude-code-skills/plugins/hook-runner/`
-4. `gh auth switch --user joel-ginsberg_tmemu`
+### Project Scoping by Basename
+Project-scoped modules live in subfolders named after `path.basename(CLAUDE_PROJECT_DIR)`. Basename was chosen over full path because:
+- Folder names are short and readable (`hackathon26`, not `C-Users-joelg-Documents-...`)
+- Projects don't move between machines with different base paths
+- Collisions are unlikely — project names are already unique within ProjectsCL1
+
+### Load Order: Global First, Then Project
+Global modules run first (sorted alphabetically), then project-scoped modules (also sorted). This means project modules can add extra gates but can't override a global block — once any module returns a decision, the runner stops. If a project needs to *skip* a global gate, move that gate out of global into the projects that need it.
+
+### Modules Are Synchronous
+All modules export a synchronous function. They read stdin via `fs.readFileSync(0)` in the runner, which passes the parsed input object. Async hooks race with the timeout and silently fail.
+
+## Adding a Module
+
+1. **Global** (all projects): create `run-modules/{Event}/my-gate.js`
+2. **Project-scoped**: create `run-modules/{Event}/<project-name>/my-gate.js`
+3. Module signature: `module.exports = function(input) { return null; }` (null = allow, `{decision: "block", reason: "..."}` = block)
+4. Never add entries to `settings.json` — runners are already registered there.

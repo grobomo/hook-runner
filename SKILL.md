@@ -9,7 +9,6 @@ keywords:
   - posttooluse
   - stop
   - sessionstart
-  - userpromptsubmit
   - enforcement
   - gate
   - module
@@ -32,27 +31,6 @@ custom_commands:
   - name: health
     command: "node $SKILL_DIR/setup.js --health"
     description: "Verify all runners and modules load correctly"
-  - name: stats
-    command: "node $SKILL_DIR/setup.js --stats"
-    description: "Quick text summary of hook log — blocks, errors, active hooks"
-  - name: list
-    command: "node $SKILL_DIR/setup.js --list"
-    description: "Show catalog vs installed modules with status indicators"
-  - name: test
-    command: "node $SKILL_DIR/setup.js --test"
-    description: "Run all test suites and show pass/fail summary"
-  - name: uninstall
-    command: "node $SKILL_DIR/setup.js --uninstall --dry-run"
-    description: "Preview hook-runner removal (dry-run). Use --force for module dirs."
-  - name: prune
-    command: "node $SKILL_DIR/setup.js --prune 7"
-    description: "Prune hook log entries older than 7 days"
-  - name: upgrade
-    command: "node $SKILL_DIR/setup.js --upgrade"
-    description: "Fetch latest runners from GitHub and update local copies"
-  - name: version
-    command: "node $SKILL_DIR/setup.js --version"
-    description: "Show hook-runner version"
 ---
 
 # hook-runner
@@ -63,17 +41,14 @@ Modular hook runner system for Claude Code. Replaces per-hook entries in setting
 
 ```
 ~/.claude/hooks/
-  report.js                     # HTML report generator
   load-modules.js              # shared loader (global + project-scoped)
   run-pretooluse.js            # PreToolUse runner
   run-posttooluse.js           # PostToolUse runner
   run-stop.js                  # Stop runner
   run-sessionstart.js          # SessionStart runner
-  run-userpromptsubmit.js      # UserPromptSubmit runner
   run-modules/
     PreToolUse/*.js            # gate modules — block or allow tool calls
     PostToolUse/*.js           # observation modules — check tool results
-    UserPromptSubmit/*.js      # prompt modules — validate or log user prompts
     Stop/*.js                  # stop-control modules — block/allow stopping
     SessionStart/*.js          # context modules — inject text at session start
 ```
