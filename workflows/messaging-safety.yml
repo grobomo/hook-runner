@@ -1,0 +1,13 @@
+name: messaging-safety
+description: Block outbound messaging (email, Teams, meetings) unless target is explicitly authorized
+version: 1
+steps:
+  - id: active
+    name: Workflow is active — all outbound messaging requires authorized targets
+    gate:
+      require_files: []
+    completion:
+      require_files: []
+
+# Modules tagged with // WORKFLOW: messaging-safety:
+# PreToolUse: messaging-safety-gate (blocks email, Teams send, calendar invites)
