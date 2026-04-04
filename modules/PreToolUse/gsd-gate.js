@@ -1,3 +1,4 @@
+// WHY: PRs merged from mobile had no tests, breaking production.
 "use strict";
 // requires: enforcement-gate, spec-gate
 // GSD gate: blocks implementation unless the current spec task has a real e2e test
@@ -90,8 +91,11 @@ module.exports = function(input) {
       decision: "block",
       reason: "GSD GATE: Spec tasks missing completion test scripts:\n" +
         tasksWithoutTests.map(function(t) { return "  - " + t; }).join("\n") + "\n\n" +
-        "WHY: PRs without automated tests can't be trusted. The team merges PRs from mobile —\n" +
-        "they need confidence that merged work actually works. Tests are the proof.\n" +
+        "All code changes must go through the speckit → task → PR workflow.\n" +
+        "If you're fixing a bug in another project, follow that project's workflow:\n" +
+        "  1. Create a spec + tasks.md with test scripts in THAT project\n" +
+        "  2. Work on a feature branch, not main\n" +
+        "  3. One PR per task\n\n" +
         "FIX: Add `**Checkpoint**: ... `bash scripts/test/<test>.sh` exits 0` to each phase.\n" +
         "Blocked: " + path.basename(targetFile)
     };

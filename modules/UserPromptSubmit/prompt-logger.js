@@ -1,3 +1,4 @@
+// WHY: No record of what was asked across sessions, making handoffs lossy.
 // UserPromptSubmit: log user prompts to JSONL for audit and review
 // Logs prompt text, timestamp, and project context to ~/.claude/hooks/prompt-log.jsonl
 // Never blocks — always returns null (allow)

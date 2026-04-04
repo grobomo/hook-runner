@@ -1,4 +1,5 @@
-// Block Write/Edit with hardcoded absolute user paths in file content.
+// WHY: Hardcoded C:SERS PATHS IN SCRIPTS BROKE PORTABILITY ACROSS MACHINES.
+// BLOCK WRITE/Edit with hardcoded absolute user paths in file content.
 // Catches Windows, Linux, and macOS home directory paths in new_string/content.
 // Absolute paths break portability — use variables or relative paths.
 
@@ -27,6 +28,9 @@ module.exports = function(input) {
   var filePath = ti.file_path || "";
   var ext = filePath.split(".").pop().toLowerCase();
   if (ext === "md" || ext === "txt" || ext === "html") return null;
+  // CloudFormation/Docker templates legitimately reference /home/ubuntu on EC2
+  if (/cloudformation[\\\/]/i.test(filePath) && (ext === "yaml" || ext === "yml")) return null;
+  if (/Dockerfile/i.test(filePath.split(/[\\\/]/).pop())) return null;
 
   // Check each line — skip comment lines
   var lines = text.split("\n");

@@ -1,22 +1,16 @@
-// Enforce required tags on AWS resource creation commands.
-// Configure via environment variables:
-//   AWS_TAG_REQUIRED_KEY   - tag key to require (default: "Project")
-//   AWS_TAG_REQUIRED_VALUE - tag value to require (no default — module is inactive without it)
-//   AWS_TAG_PROFILE_MATCH  - only enforce for this --profile (optional, enforces for all if unset)
+// WHY: AWS resources created without tags were impossible to attribute or clean up.
+// Enforce hackathon26 tags on AWS resource creation commands.
+// Checks: aws cloudformation, aws ec2 run-instances, aws s3api create-bucket,
+// aws lambda create-function, and similar resource-creating commands.
 // Returns null to pass, {decision:"block", reason:"..."} to block.
 module.exports = function(input) {
   if (input.tool_name !== "Bash") return null;
 
-  var tagKey = process.env.AWS_TAG_REQUIRED_KEY || "Project";
-  var tagValue = process.env.AWS_TAG_REQUIRED_VALUE;
-  if (!tagValue) return null; // not configured, skip
-
   var cmd = (input.tool_input || {}).command || "";
   var normalized = cmd.replace(/\s+/g, " ").trim();
 
-  // Optionally filter by AWS profile
-  var profileMatch = process.env.AWS_TAG_PROFILE_MATCH;
-  if (profileMatch && !new RegExp("--profile\\s+" + profileMatch).test(normalized)) return null;
+  // Only check commands using hackathon profile or in hackathon project context
+  if (!/--profile\s+hackathon/.test(normalized)) return null;
 
   // AWS commands that create resources and support tags
   var createPatterns = [
@@ -37,16 +31,21 @@ module.exports = function(input) {
       break;
     }
   }
+
   if (!isCreateCmd) return null;
 
-  // Check for required tag
-  var tagPattern = new RegExp(tagKey + "[=,:]" + tagValue + "|Key=" + tagKey + ",Value=" + tagValue + "|Key=" + tagKey + ".*Value=" + tagValue + '|"' + tagKey + '"\\s*:\\s*"' + tagValue + '"');
-  if (tagPattern.test(normalized)) return null;
+  // Check for Project=hackathon26 tag
+  var hasProjectTag = /Project[=,:]hackathon26/.test(normalized) ||
+    /Key=Project,Value=hackathon26/.test(normalized) ||
+    /Key=Project.*Value=hackathon26/.test(normalized) ||
+    /"Project"\s*:\s*"hackathon26"/.test(normalized);
 
-  return {
-    decision: "block",
-    reason: "AWS resource creation must include " + tagKey + "=" + tagValue + " tag.\n" +
-      "Add: --tags Key=" + tagKey + ",Value=" + tagValue + " (or include in CF template Tags).\n" +
-      "Command: " + cmd.substring(0, 200)
-  };
+  if (!hasProjectTag) {
+    return {
+      decision: "block",
+      reason: "BLOCKED: AWS resource creation with --profile hackathon must include Project=hackathon26 tag. Add: --tags Key=Project,Value=hackathon26 (or include in CF template Tags). Command was: " + cmd.substring(0, 200)
+    };
+  }
+
+  return null;
 };

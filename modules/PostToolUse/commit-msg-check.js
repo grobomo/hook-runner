@@ -1,3 +1,4 @@
+// WHY: Sloppy commit messages made PR history unreadable.
 // Commit message check: warns if git commit messages don't follow conventions
 // PostToolUse module — runs after Bash tool completes
 // Checks: starts with type prefix OR task ID, reasonable length, no WIP/fixup in final commits

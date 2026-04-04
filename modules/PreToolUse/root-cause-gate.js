@@ -1,3 +1,4 @@
+// WHY: Claude masked bugs with cleanup instead of fixing root causes.
 // Root cause gate: block retry/cleanup patterns without diagnosis
 // Detects when Claude is about to re-run a command that just failed,
 // or clean up a mess without fixing why it happened.

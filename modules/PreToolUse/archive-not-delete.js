@@ -1,3 +1,4 @@
+// WHY: Claude deleted files that turned out to be needed later.
 // Block destructive delete commands. Always archive, never delete.
 // Returns null to pass, {decision:"block", reason:"..."} to block.
 module.exports = function(input) {
@@ -5,8 +6,16 @@ module.exports = function(input) {
 
   var cmd = (input.tool_input || {}).command || "";
 
+  // Strip quoted strings to avoid false positives on commit messages, echo, etc.
+  // Removes single-quoted, double-quoted, and heredoc content
+  var stripped = cmd
+    .replace(/\$\(cat <<'EOF'[\s\S]*?EOF\s*\)/g, "MSG")  // heredoc
+    .replace(/\$\(cat <<EOF[\s\S]*?EOF\s*\)/g, "MSG")     // heredoc unquoted
+    .replace(/"(?:[^"\\]|\\.)*"/g, "STR")                  // double-quoted
+    .replace(/'(?:[^'\\]|\\.)*'/g, "STR");                 // single-quoted
+
   // Normalize: collapse whitespace, trim
-  var normalized = cmd.replace(/\s+/g, " ").trim();
+  var normalized = stripped.replace(/\s+/g, " ").trim();
 
   // Patterns that destroy files/directories
   var destructive = [
@@ -32,6 +41,8 @@ module.exports = function(input) {
     /\btmp\b.*\brm\b/,
     /dist\//,
     /build\//,
+    /\bgit\s+rm\s+(-r\s+)?--cached\b/,  // index-only removal, doesn't delete from disk
+    /\bgit\s+rm\s+--cached\b/,          // same without -r
   ];
 
   for (var i = 0; i < destructive.length; i++) {

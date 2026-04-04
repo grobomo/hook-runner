@@ -1,3 +1,4 @@
+// WHY: Code edits in repos without TODO.md or with dirty trees caused lost work.
 // Enforcement gate: git repo, clean tree, TODO.md required before Edit/Write
 var fs = require("fs");
 var path = require("path");

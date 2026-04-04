@@ -1,6 +1,13 @@
+// WHY: Commits on untracked branches were invisible on mobile.
 "use strict";
 // PreToolUse: block code edits if the feature branch doesn't track a remote.
 // Ensures all commits auto-push to GitHub for mobile monitoring.
+//
+// NOTE: This gate intentionally blocks ALL file edits (including ~/.claude/ hooks,
+// skills, rules) when on an untracked branch. User wants system config files
+// tracked in remotes too (grobomo private repo). If blocked, fix with:
+//   git push -u origin <branch-name>
+// Do NOT exempt ~/.claude/ paths — that was tried and reverted (2026-04-02).
 var cp = require("child_process");
 
 module.exports = function(input) {
