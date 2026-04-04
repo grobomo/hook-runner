@@ -1,3 +1,4 @@
+// WHY: Source files were modified but existing tests never ran, hiding regressions.
 // PostToolUse: warn when source files are modified but tests exist that should be run
 // Triggers after Edit or Write tool completions.
 // If the modified file has a corresponding test file, reminds to run it.

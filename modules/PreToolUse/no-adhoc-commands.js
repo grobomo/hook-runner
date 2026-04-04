@@ -1,3 +1,4 @@
+// WHY: Ad-hoc AWS/SSH commands died with the session. Scripts survive.
 // Block ad-hoc Bash commands for AWS, SSH, Docker, and infrastructure.
 // ALL operations must go through reusable scripts in scripts/.
 // If a script doesn't exist, you must CREATE IT first, then use it.

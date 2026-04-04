@@ -1,3 +1,4 @@
+// WHY: API keys were committed to git history and had to be rotated.
 "use strict";
 // PreToolUse: block Bash git-commit if staged diff contains obvious secrets.
 // Catches API keys, tokens, passwords, and connection strings before they reach git history.
@@ -47,12 +48,27 @@ module.exports = function(input) {
   });
   var addedText = addedLines.join("\n");
 
+  // Filter out lines that are clearly env var references, not actual secrets
+  var filteredLines = addedLines.filter(function(line) {
+    // Skip lines referencing env vars / Secrets Manager / credential stores
+    if (/os\.environ|process\.env|getenv|secretsmanager|get-secret-value|credential/i.test(line)) return false;
+    // Skip lines that are just variable declarations with empty/placeholder values
+    if (/[:=]\s*["']?\s*["']?\s*$/.test(line)) return false;
+    // Skip shell variable expansions like ${DISPATCH_API_TOKEN:-}
+    if (/\$\{?\w*TOKEN\w*[:\-}]/.test(line)) return false;
+    if (/\$\{?\w*SECRET\w*[:\-}]/.test(line)) return false;
+    return true;
+  });
+  var filteredText = filteredLines.join("\n");
+
   var findings = [];
   for (var i = 0; i < SECRET_PATTERNS.length; i++) {
     var pat = SECRET_PATTERNS[i];
-    if (pat.re.test(addedText)) {
+    // Test each line individually to avoid cross-line false positives
+    var matchFound = filteredLines.some(function(line) { return pat.re.test(line); });
+    if (matchFound) {
       // If pattern has a context requirement, check it
-      if (pat.context && !pat.context.test(addedText)) continue;
+      if (pat.context && !pat.context.test(filteredText)) continue;
       findings.push(pat.name);
     }
   }

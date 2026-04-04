@@ -1,3 +1,5 @@
+// WHY: Claude implemented features that nobody asked for, wasting hours.
+// This gate ensures all code maps to a speckit task.
 "use strict";
 // requires: enforcement-gate
 // Spec gate: blocks code edits unless work maps to an unchecked task in tasks.md.
