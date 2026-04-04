@@ -1601,8 +1601,43 @@ function cmdWorkflow(args) {
     return;
   }
 
+  if (sub === "query") {
+    var queryTool = args[args.indexOf("query") + 1];
+    if (!queryTool) { console.error("Usage: --workflow query <tool-name> (e.g. Edit, Write, Bash)"); process.exit(1); }
+    var lmq;
+    try { lmq = require(path.join(__dirname, "load-modules.js")); } catch(e) {
+      console.error("[query] load-modules.js not found."); process.exit(1);
+    }
+    // Scan all PreToolUse modules for references to the queried tool
+    var modulesDir = path.join(__dirname, "modules", "PreToolUse");
+    var matches = [];
+    if (fs.existsSync(modulesDir)) {
+      var files = fs.readdirSync(modulesDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+      for (var qi = 0; qi < files.length; qi++) {
+        try {
+          var src = fs.readFileSync(path.join(modulesDir, files[qi]), "utf-8");
+          // Check if module source references the tool name (case-sensitive match for tool names)
+          var toolPattern = new RegExp('["\'\\s]' + queryTool + '["\'\\s,;)\\]]', 'g');
+          if (toolPattern.test(src)) {
+            var tag = lmq.parseWorkflowTag(path.join(modulesDir, files[qi]));
+            matches.push({ name: files[qi].replace(/\.js$/, ""), workflow: tag || "(untagged)" });
+          }
+        } catch(e) {}
+      }
+    }
+    console.log("Modules affecting " + queryTool + ":");
+    if (matches.length === 0) {
+      console.log("  No modules found matching tool: " + queryTool);
+    } else {
+      for (var mi3 = 0; mi3 < matches.length; mi3++) {
+        console.log("  " + matches[mi3].name + " — workflow: " + matches[mi3].workflow);
+      }
+    }
+    return;
+  }
+
   console.error("Unknown workflow subcommand: " + sub);
-  console.error("Usage: --workflow [list|audit|enable <name>|disable <name>|start <name>|status|complete <step>|reset]");
+  console.error("Usage: --workflow [list|audit|query <tool>|enable <name>|disable <name>|start <name>|status|complete <step>|reset]");
   process.exit(1);
 }
 
