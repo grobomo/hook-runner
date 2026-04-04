@@ -236,44 +236,77 @@ Full catalog in `modules/` directory:
 ### PreToolUse (gates before tool execution)
 | Module | Description |
 |--------|-------------|
-| `enforcement-gate` | Requires git repo + TODO.md. Dirty-tree check on main only. |
-| `branch-pr-gate` | Model C workflow: feature branch → task branch → PR |
-| `remote-tracking-gate` | Blocks edits if branch not pushed to remote |
-| `spec-gate` | Blocks code without specs/tasks.md |
-| `gsd-gate` | Blocks code without e2e test in checkpoint |
-| `continuous-claude-gate` | Blocks code without tracked task workflow |
-| `root-cause-gate` | Blocks retry/cleanup without root cause diagnosis |
-| `archive-not-delete` | Blocks `rm -rf`, forces `mv` to `archive/` |
-| `no-adhoc-commands` | Blocks raw aws/ssh/docker/kubectl, forces scripts/ |
-| `secret-scan-gate` | Blocks git commit if staged diff contains API keys, tokens, or passwords |
-| `no-hardcoded-paths` | Blocks Write/Edit with hardcoded absolute user paths in content |
-| `env-var-check` | Blocks edits if `.env.required` vars are missing (cached per project) |
 | `aws-tagging-gate` | Enforces required tags on AWS resource creation (env-configurable) |
 | `block-local-docker` | Blocks docker/docker-compose (allows ps/logs/inspect). Tagged: `no-local-docker` workflow |
+| `branch-pr-gate` | Model C workflow: feature branch → task branch → PR |
+| `claude-p-pattern` | Enforces correct `claude -p` invocation (stdin redirect, not pipe/args) |
+| `continuous-claude-gate` | Blocks code without tracked task workflow |
+| `crlf-ssh-key-check` | Blocks scp/cp of SSH keys without `tr -d '\r'` (Windows CRLF corruption) |
+| `enforcement-gate` | Requires git repo + TODO.md. Dirty-tree check on main only. |
+| `env-var-check` | Blocks edits if `.env.required` vars are missing (cached per project) |
+| `git-rebase-safety` | Warns about reversed --ours/--theirs during rebase |
+| `gsd-gate` | Blocks code without e2e test in checkpoint |
+| `instruction-to-hook-gate` | Enforces converting user directives ("always X") into hook modules |
 | `messaging-safety-gate` | Blocks outbound messaging unless target authorized. Tagged: `messaging-safety` workflow |
+| `no-adhoc-commands` | Blocks raw aws/ssh/docker/kubectl, forces scripts/ |
+| `no-focus-steal` | Blocks background process launches that steal window focus |
+| `no-fragile-heuristics` | Blocks pixel-ratio/color-counting heuristics; use AI judgment instead |
+| `no-hardcoded-paths` | Blocks Write/Edit with hardcoded absolute user paths in content |
+| `no-passive-rules` | Blocks creating .md rules when a hook module would be more effective |
+| `pr-per-task-gate` | Blocks `gh pr create` if PR title doesn't include a task ID (T001, etc.) |
+| `preserve-iterated-content` | Warns on full-file rewrites of files with significant git history |
+| `remote-tracking-gate` | Blocks edits if branch not pushed to remote |
+| `root-cause-gate` | Blocks retry/cleanup without root cause diagnosis |
+| `secret-scan-gate` | Blocks git commit if staged diff contains API keys, tokens, or passwords |
+| `settings-change-gate` | Injects reminder to state rationale when modifying ~/.claude/ config |
+| `spec-gate` | Blocks code without specs/tasks.md |
 | `workflow-gate` | Enforces step order in active workflows |
+
+#### Project-Scoped PreToolUse
+| Module | Project | Description |
+|--------|---------|-------------|
+| `share-is-generic` | ddei-email-security | Domain-specific gate for email security project |
+| `use-workers` | hackathon26 | Forces delegation to fleet workers instead of local execution |
 
 ### UserPromptSubmit (processes user prompts)
 | Module | Description |
 |--------|-------------|
+| `instruction-detector` | Detects "always/never/from now on" directives, flags for downstream enforcement |
+| `interrupt-detector` | Detects user interrupts (missing turn marker) and triggers self-analysis |
 | `prompt-logger` | Logs prompts to `~/.claude/hooks/prompt-log.jsonl` for audit (never blocks) |
 
 ### PostToolUse (checks after tool execution)
 | Module | Description |
 |--------|-------------|
-| `rule-hygiene` | Validates rule files are single-topic, under 20 lines |
 | `commit-msg-check` | Blocks WIP/fixup commits and over-long first lines (>72 chars) |
+| `hook-autocommit` | Auto-commits hook module edits to the run-modules git repo |
+| `rule-hygiene` | Validates rule files are single-topic, under 20 lines |
+| `settings-audit-log` | Records all ~/.claude/ config modifications to audit log (JSONL) |
 | `test-coverage-check` | Warns when source files with corresponding test files are modified |
+| `troubleshoot-detector` | Detects fail-fail-succeed patterns and prompts creating a hook to prevent recurrence |
+| `update-stale-docs` | Detects stale docs/comments after code edits and prompts updates |
 
 ### Stop (controls session ending)
 | Module | Description |
 |--------|-------------|
 | `auto-continue` | Blocks stopping — always find the next task |
+| `drift-review` | Checks if recent work matches the active spec task before continuing |
+| `log-gotchas` | Ensures debugging lessons are captured as rule files before stopping |
+| `mark-turn-complete` | Writes turn marker so interrupt-detector can detect incomplete turns |
+| `never-give-up` | Blocks "impossible" declarations — forces research before giving up |
 | `push-unpushed` | Blocks stop if unpushed commits on feature branch |
+| `test-before-done` | Reminds to run e2e tests before declaring features complete |
+
+#### Project-Scoped Stop
+| Module | Project | Description |
+|--------|---------|-------------|
+| `delegate-and-monitor` | hackathon26 | Delegates tasks to fleet workers and monitors completion |
 
 ### SessionStart (injects context)
 | Module | Description |
 |--------|-------------|
-| `load-instructions` | Injects working instructions at session start |
 | `backup-check` | Async — warns if claude-backup is stale (>72h) or missing |
+| `config-sync` | Auto-syncs ~/.claude config to git remote for backup/bootstrap |
+| `load-instructions` | Injects working instructions at session start |
+| `load-lessons` | Reads self-analysis lessons (JSONL) and injects recent ones as context |
 | `project-health` | Runs health check on session start, warns about issues |
