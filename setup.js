@@ -1482,6 +1482,8 @@ function healthCheck() {
       var stat;
       try { stat = fs.statSync(fPath); } catch(e) { continue; }
       if (stat.isDirectory()) {
+        // skip archive directories — contain superseded modules with stale deps
+        if (f === "archive") continue;
         // project-scoped: check each file inside
         var subFiles;
         try { subFiles = fs.readdirSync(fPath); } catch(e) { continue; }

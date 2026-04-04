@@ -108,12 +108,15 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T094: Complete Available Modules table in README (25+ modules undocumented)
 - [x] T095: Fix minor code issues — duplicate comment numbering in healthCheck, var redeclaration in cmdWorkflow
 
+## Health Check Fix
+- [x] T096: Fix healthCheck() scanning archive/ dirs (same bug as T089 but in setup.js code path)
+
 ## Status
-- 95 tasks completed, 0 pending
+- 96 tasks completed, 0 pending
 - All sync targets up to date (live, skill, marketplace)
 - Next: consider usage examples, blog post, or new module ideas
 - Version: 1.5.1
-- 180 tests passing across 12 test files
+- 183 tests passing across 13 test files
 - CI: GitHub Actions runs all tests on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 5 built-in templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow, perf, export
