@@ -173,6 +173,58 @@ curl -fsSL https://raw.githubusercontent.com/grobomo/hook-runner/main/modules.ex
 /hook-runner sync-dry-run    # preview first
 ```
 
+## Workflows
+
+Workflows group related modules into enforceable pipelines with step ordering. Modules tagged with `// WORKFLOW: name` only run when that workflow is active.
+
+```bash
+/hook-runner workflow list                    # show all available workflows
+/hook-runner workflow start shtd              # activate the SHTD pipeline
+/hook-runner workflow status                  # show current step + progress
+/hook-runner workflow complete spec           # mark a step as done
+/hook-runner workflow reset                   # clear active workflow
+```
+
+### Built-in Workflows
+
+| Workflow | Description |
+|----------|-------------|
+| `shtd` | Spec → tasks → branch → test → implement → verify → PR |
+| `enforce-shtd` | Extended SHTD with workflow YAML definition step |
+| `cross-project-reset` | Safe project switching with state preservation |
+| `no-local-docker` | Block local Docker, force remote infrastructure |
+| `messaging-safety` | Block outbound messaging unless target authorized |
+
+### Custom Workflows
+
+Create `workflows/*.yml` in your project or `~/.claude/hooks/workflows/`:
+
+```yaml
+name: my-workflow
+description: What this workflow enforces
+version: 1
+steps:
+  - id: setup
+    name: Set up environment
+    gate:
+      require_files: []
+  - id: build
+    name: Build the thing
+    gate:
+      require_step: setup
+```
+
+Tag modules with `// WORKFLOW: my-workflow` in the first 5 lines to restrict them to this workflow.
+
+### Export Config
+
+```bash
+/hook-runner export                 # export installed modules as modules-export.yaml
+/hook-runner export my-config.yaml  # custom output path
+```
+
+Share the exported YAML — others import with `cp my-config.yaml ~/.claude/hooks/modules.yaml && /hook-runner sync`.
+
 ## Available Modules
 
 Full catalog in `modules/` directory:
@@ -193,6 +245,9 @@ Full catalog in `modules/` directory:
 | `no-hardcoded-paths` | Blocks Write/Edit with hardcoded absolute user paths in content |
 | `env-var-check` | Blocks edits if `.env.required` vars are missing (cached per project) |
 | `aws-tagging-gate` | Enforces required tags on AWS resource creation (env-configurable) |
+| `block-local-docker` | Blocks docker/docker-compose (allows ps/logs/inspect). Tagged: `no-local-docker` workflow |
+| `messaging-safety-gate` | Blocks outbound messaging unless target authorized. Tagged: `messaging-safety` workflow |
+| `workflow-gate` | Enforces step order in active workflows |
 
 ### UserPromptSubmit (processes user prompts)
 | Module | Description |
