@@ -105,7 +105,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T070: Sync live module fixes back to repo catalog (branch-pr-gate, no-adhoc-commands, load-instructions, auto-continue)
 
 ## Status
-- 92 tasks completed, 0 pending
+- 93 tasks completed, 0 pending
 - Stale remote branches cleaned (9 deleted)
 - Next: consider installer improvements, npm packaging
 - Version: 1.5.1
@@ -156,6 +156,9 @@ WHY: Currently ~30 run-modules exist with no way to see the big picture — whic
 
 ## Release
 - [x] T092: Version bump to 1.5.1, sync to marketplace + live
+
+## Docs Update
+- [x] T093: Update CLAUDE.md (test counts, package.json, help command), clean marketplace nested dup
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
