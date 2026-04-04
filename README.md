@@ -27,8 +27,12 @@ No installation required — just clone and run `node setup.js --report`.
 ## Quick Start (full system)
 
 ```bash
-# Install via grobomo marketplace (if not already added)
-# In Claude Code: /install hook-runner
+# One-liner install from GitHub
+npx grobomo/hook-runner
+
+# Or clone first
+git clone https://github.com/grobomo/hook-runner.git
+cd hook-runner && node setup.js
 
 # Commands
 /hook-runner setup        # scan → report → backup → install → verify
