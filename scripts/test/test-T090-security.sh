@@ -32,9 +32,9 @@ fi
 # Test: file path sanitization regex (for openFile)
 result=$(node -e '
 var safe = /^[a-zA-Z0-9._\-\/\\: ]+$/;
-var winPath = String.raw`C:\Users\test\reports\hook-report.html`;
-var unixPath = "/home/user/report.html";
-var spacePath = String.raw`C:\Users\test dir\r.html`;
+var winPath = String.raw`D:\data\reports\hook-report.html`;
+var unixPath = "/tmp/reports/report.html";
+var spacePath = String.raw`D:\data\my dir\r.html`;
 var bad1 = "foo\"; rm -rf /";
 var bad2 = "$(whoami)";
 var ok = safe.test(winPath) && safe.test(unixPath) && safe.test(spacePath)
