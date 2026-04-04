@@ -1350,16 +1350,63 @@ function cmdWorkflow(args) {
   }
   var projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
 
+  var globalDir = path.join(HOME, ".claude", "hooks");
+
   if (!sub || sub === "list") {
     var workflows = wf.findWorkflows(projectDir);
     if (workflows.length === 0) { console.log("No workflows found."); return; }
+    var globalEnabled = wf.enabledWorkflows(globalDir);
+    var projectEnabled = wf.enabledWorkflows(projectDir);
+    var globalConfig = wf.readConfig(globalDir);
+    var projectConfig = wf.readConfig(projectDir);
     for (var wi = 0; wi < workflows.length; wi++) {
       var w = workflows[wi];
-      console.log(w.name + " (" + w.steps.length + " steps) — " + (w.description || ""));
-      for (var si = 0; si < w.steps.length; si++) {
-        console.log("  " + w.steps[si].id + ": " + w.steps[si].name);
+      var modCount = (w.modules || []).length;
+      // Determine effective enabled state (project overrides global)
+      var state = "off";
+      if (globalConfig[w.name] === true) state = "global";
+      if (projectConfig[w.name] === true) state = "project";
+      if (projectConfig[w.name] === false) state = "off (project override)";
+      if (globalConfig[w.name] === false && !projectConfig.hasOwnProperty(w.name)) state = "off";
+      var stateLabel = state === "off" || state.startsWith("off") ? "  " : "ON";
+      console.log("[" + stateLabel + "] " + w.name + " — " + modCount + " modules — " + (w.description || ""));
+      if (modCount > 0) {
+        console.log("     modules: " + (w.modules || []).join(", "));
+      }
+      if (w.steps.length > 1 || (w.steps.length === 1 && w.steps[0].id !== "active")) {
+        console.log("     steps: " + w.steps.map(function(s) { return s.id; }).join(" → "));
       }
     }
+    return;
+  }
+
+  if (sub === "enable") {
+    var enName = args[args.indexOf("enable") + 1];
+    if (!enName) { console.error("Usage: --workflow enable <name> [--global]"); process.exit(1); }
+    var isGlobal = args.indexOf("--global") !== -1;
+    var targetDir = isGlobal ? globalDir : projectDir;
+    var workflows = wf.findWorkflows(projectDir);
+    var found = false;
+    for (var ei = 0; ei < workflows.length; ei++) {
+      if (workflows[ei].name === enName) { found = true; break; }
+    }
+    if (!found) { console.error("Workflow not found: " + enName); process.exit(1); }
+    wf.enableWorkflow(enName, targetDir);
+    var scope = isGlobal ? "globally" : "for this project";
+    console.log('Enabled workflow "' + enName + '" ' + scope + ".");
+    var mods = workflows.filter(function(w) { return w.name === enName; })[0].modules || [];
+    if (mods.length > 0) console.log("  " + mods.length + " module(s) now active: " + mods.join(", "));
+    return;
+  }
+
+  if (sub === "disable") {
+    var disName = args[args.indexOf("disable") + 1];
+    if (!disName) { console.error("Usage: --workflow disable <name> [--global]"); process.exit(1); }
+    var isGlobalDis = args.indexOf("--global") !== -1;
+    var targetDirDis = isGlobalDis ? globalDir : projectDir;
+    wf.disableWorkflow(disName, targetDirDis);
+    var scopeDis = isGlobalDis ? "globally" : "for this project";
+    console.log('Disabled workflow "' + disName + '" ' + scopeDis + ".");
     return;
   }
 
@@ -1419,7 +1466,7 @@ function cmdWorkflow(args) {
   }
 
   console.error("Unknown workflow subcommand: " + sub);
-  console.error("Usage: --workflow [list|start <name>|status|complete <step>|reset]");
+  console.error("Usage: --workflow [list|enable <name>|disable <name>|start <name>|status|complete <step>|reset]");
   process.exit(1);
 }
 

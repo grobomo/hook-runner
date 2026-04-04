@@ -7,3 +7,4 @@ archive/
 .DS_Store
 .test-results/
 SESSION_STATE.md
+.test-tmp-*

@@ -3,9 +3,9 @@
 set -euo pipefail
 REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"
 PASS=0; FAIL=0
-TMPDIR="$REPO_DIR/.test-tmp-T098"
-rm -rf "$TMPDIR"; mkdir -p "$TMPDIR"
-trap "rm -rf $TMPDIR" EXIT
+TMPDIR="$REPO_DIR/.test-tmp-T098-$$"
+mkdir -p "$TMPDIR"
+trap 'mv "$TMPDIR" "${TMPDIR}-done" 2>/dev/null || true' EXIT
 
 check() {
   if eval "$2"; then PASS=$((PASS+1)); echo "  PASS: $1"
