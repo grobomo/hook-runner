@@ -105,12 +105,12 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T070: Sync live module fixes back to repo catalog (branch-pr-gate, no-adhoc-commands, load-instructions, auto-continue)
 
 ## Status
-- 79 tasks completed, 8 pending (T080-T087)
-- Version: 1.4.0
-- 92 tests passing across 5 test files
+- 87 tasks completed, 0 pending
+- Version: 1.5.0
+- 112 tests passing across 6 test files
 - CI: GitHub Actions runs all tests on push/PR — badge in README
-- Workflow engine: workflow.js + workflow-gate.js + 2 built-in templates
-- CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow, perf
+- Workflow engine: workflow.js + workflow-gate.js + 5 built-in templates
+- CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow, perf, export
 
 ## Performance & Features (v1.4.0)
 - [x] T071: Add `env-var-check` PreToolUse module (blocks if required project env vars missing)
@@ -137,8 +137,8 @@ WHY: Currently ~30 run-modules exist with no way to see the big picture — whic
 - [x] T083: Create `no-local-docker.yml` workflow + block-local-docker module
 - [x] T084: Create `messaging-safety.yml` workflow + existing messaging guard modules
 - [x] T085: Sync workflow.js, workflow-gate.js, workflows/ to live hooks + skill + marketplace
-- [ ] T086: Tests for workflow engine (YAML parsing, state management, gate checking)
-- [ ] T087: Update README, CLAUDE.md, SKILL.md with workflow docs + version bump
+- [x] T086: Tests for workflow engine (YAML parsing, state management, gate checking) — done in T081
+- [x] T087: Update README, CLAUDE.md, SKILL.md with workflow docs + version bump
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
