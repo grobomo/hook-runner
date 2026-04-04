@@ -36,6 +36,56 @@ function parseRequires(filePath) {
 }
 
 /**
+ * Parse "// WORKFLOW: workflow-name" from the first 5 lines of a module file.
+ * Returns the workflow name or null if no tag found.
+ */
+function parseWorkflowTag(filePath) {
+  try {
+    var content = fs.readFileSync(filePath, "utf-8");
+    var lines = content.split("\n").slice(0, 5);
+    for (var i = 0; i < lines.length; i++) {
+      var match = lines[i].match(/^\/\/\s*WORKFLOW:\s*(\S+)/i);
+      if (match) return match[1];
+    }
+  } catch (e) { /* can't read */ }
+  return null;
+}
+
+/**
+ * Filter out modules tagged with a WORKFLOW that isn't currently active.
+ * Modules without a WORKFLOW tag always pass.
+ */
+function filterByWorkflow(modulePaths) {
+  var projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+  var wf = null;
+  try {
+    var candidates = [
+      path.join(__dirname, "workflow.js"),
+      path.join(path.dirname(__dirname), "workflow.js"),
+    ];
+    for (var c = 0; c < candidates.length; c++) {
+      if (fs.existsSync(candidates[c])) { wf = require(candidates[c]); break; }
+    }
+  } catch (e) { /* no workflow engine */ }
+
+  if (!wf) return modulePaths;
+
+  var state = wf.readState(projectDir);
+  var activeWorkflow = state ? state.workflow : null;
+
+  var result = [];
+  for (var i = 0; i < modulePaths.length; i++) {
+    var tag = parseWorkflowTag(modulePaths[i]);
+    if (!tag) {
+      result.push(modulePaths[i]);
+    } else if (tag === activeWorkflow) {
+      result.push(modulePaths[i]);
+    }
+  }
+  return result;
+}
+
+/**
  * Filter out modules whose dependencies are not present.
  * Warns to stderr about missing deps. Returns filtered list.
  */
@@ -99,10 +149,15 @@ module.exports = function loadModules(eventDir) {
     }
   }
 
-  // 3. Validate dependencies — skip modules with missing deps
-  return validateDeps(allFiles);
+  // 3. Filter by active workflow — skip modules tagged for inactive workflows
+  var afterWorkflow = filterByWorkflow(allFiles);
+
+  // 4. Validate dependencies — skip modules with missing deps
+  return validateDeps(afterWorkflow);
 };
 
 // Exported for testing
 module.exports.parseRequires = parseRequires;
 module.exports.validateDeps = validateDeps;
+module.exports.parseWorkflowTag = parseWorkflowTag;
+module.exports.filterByWorkflow = filterByWorkflow;
