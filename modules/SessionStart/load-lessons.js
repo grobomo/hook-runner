@@ -69,5 +69,5 @@ module.exports = function(input) {
     }
   } catch(e) {}
 
-  return parts.length > 0 ? parts.join("\n\n") : null;
+  return parts.length > 0 ? { text: parts.join("\n\n") } : null;
 };

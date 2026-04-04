@@ -111,5 +111,5 @@ module.exports = function(input) {
     status += "\n  STOP and address warnings before continuing.";
   }
 
-  return status;
+  return { text: status };
 };

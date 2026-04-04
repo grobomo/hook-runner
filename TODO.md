@@ -105,9 +105,9 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T070: Sync live module fixes back to repo catalog (branch-pr-gate, no-adhoc-commands, load-instructions, auto-continue)
 
 ## Status
-- 87 tasks completed, 0 pending
+- 88 tasks completed, 0 pending
 - Version: 1.5.0
-- 112 tests passing across 6 test files
+- 159 tests passing across 7 test files
 - CI: GitHub Actions runs all tests on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 5 built-in templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow, perf, export
@@ -139,6 +139,9 @@ WHY: Currently ~30 run-modules exist with no way to see the big picture — whic
 - [x] T085: Sync workflow.js, workflow-gate.js, workflows/ to live hooks + skill + marketplace
 - [x] T086: Tests for workflow engine (YAML parsing, state management, gate checking) — done in T081
 - [x] T087: Update README, CLAUDE.md, SKILL.md with workflow docs + version bump
+
+## Catalog Sync
+- [x] T088: Sync 26 live modules to repo catalog, fix 2 return-type bugs (load-lessons, drift-review)
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
