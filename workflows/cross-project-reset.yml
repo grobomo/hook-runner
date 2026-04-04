@@ -26,3 +26,5 @@ steps:
       require_step: new-project-todo
     completion:
       require_files: []
+
+modules: []

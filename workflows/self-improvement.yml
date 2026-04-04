@@ -1,0 +1,18 @@
+name: self-improvement
+description: Learning loop — detect instructions, interrupts, and troubleshooting patterns; enforce durable rules
+version: 1
+steps:
+  - id: active
+    name: Workflow is active — self-improvement modules enforced
+    gate:
+      require_files: []
+    completion:
+      require_files: []
+
+modules:
+  - instruction-to-hook-gate
+  - instruction-detector
+  - interrupt-detector
+  - troubleshoot-detector
+  - no-passive-rules
+  - prompt-logger

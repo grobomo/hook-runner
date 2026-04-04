@@ -8,3 +8,6 @@ steps:
       require_files: []
     completion:
       require_files: []
+
+modules:
+  - block-local-docker
