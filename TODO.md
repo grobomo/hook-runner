@@ -105,13 +105,12 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T070: Sync live module fixes back to repo catalog (branch-pr-gate, no-adhoc-commands, load-instructions, auto-continue)
 
 ## Status
-- 76 tasks completed, 0 pending
+- 79 tasks completed, 8 pending (T080-T087)
 - Version: 1.4.0
-- 90 tests passing across 5 test files (16 runner + 7 wizard + 13 async + 44 module + 10 sync)
+- 92 tests passing across 5 test files
 - CI: GitHub Actions runs all tests on push/PR — badge in README
-- 4 sync targets all identical: repo, live hooks, skill, marketplace
-- 22 modules in catalog (13 PreToolUse, 3 PostToolUse, 1 UserPromptSubmit, 3 SessionStart, 2 Stop)
-- CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help
+- Workflow engine: workflow.js + workflow-gate.js + 2 built-in templates
+- CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow, perf
 
 ## Performance & Features (v1.4.0)
 - [x] T071: Add `env-var-check` PreToolUse module (blocks if required project env vars missing)
@@ -126,7 +125,20 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 ## Performance & Polish
 - [x] T078: Add --perf command (analyze timing data, identify slow modules, estimate total hook overhead)
-- [ ] T079: Add --export command (export module config as shareable YAML bundle)
+- [x] T079: Add workflow engine as first-class feature (workflow.js, workflow-gate.js, --workflow CLI, built-in templates)
+
+## Workflow System (T080+)
+
+WHY: Currently ~30 run-modules exist with no way to see the big picture — which relate to each other, which are obsolete, what rules they replaced. Workflows are groupings of modules that can be toggled on/off.
+
+- [x] T080: Add --export command (export module config as shareable YAML bundle)
+- [ ] T081: Hook runner checks workflow enabled state before running a module (module header: `// WORKFLOW: workflow-name`)
+- [ ] T082: Create `shtd.yml` workflow manifest — groups spec-gate, gsd-gate, branch-pr-gate, remote-tracking-gate
+- [ ] T083: Create `no-local-docker.yml` workflow + block-local-docker module
+- [ ] T084: Create `messaging-safety.yml` workflow + existing messaging guard modules
+- [ ] T085: Sync workflow.js, workflow-gate.js, workflows/ to live hooks
+- [ ] T086: Tests for workflow engine (YAML parsing, state management, gate checking)
+- [ ] T087: Update README, CLAUDE.md, SKILL.md with workflow docs + version bump
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)

@@ -693,6 +693,7 @@ function cmdHelp() {
   console.log("  --list          Show catalog vs installed modules with status");
   console.log("  --stats         Quick text summary of hook log activity");
   console.log("  --workflow      Manage enforceable step pipelines (list|start|status|complete|reset)");
+  console.log("  --export [file] Export installed modules as shareable YAML (default: modules-export.yaml)");
   console.log("  --perf          Analyze module timing data and identify bottlenecks");
   console.log("  --test          Run all test suites");
   console.log("  --upgrade       Fetch latest runners from GitHub and update local copies");
@@ -1249,6 +1250,86 @@ function cmdPerf() {
   console.log("");
 }
 
+function cmdExport(args) {
+  var outFile = null;
+  for (var i = 0; i < args.length; i++) {
+    if (args[i] === "--export" && args[i + 1] && !args[i + 1].startsWith("--")) {
+      outFile = args[i + 1]; break;
+    }
+  }
+  if (!outFile) outFile = "modules-export.yaml";
+
+  var EVENTS = ["PreToolUse", "PostToolUse", "UserPromptSubmit", "Stop", "SessionStart"];
+  var modulesDir = path.join(HOOKS_DIR, "run-modules");
+  var lines = [];
+  lines.push("# hook-runner module configuration (exported " + new Date().toISOString().slice(0, 10) + ")");
+  lines.push("# Import: copy to ~/.claude/hooks/modules.yaml then run: node setup.js --sync");
+  lines.push("");
+  lines.push("source: grobomo/hook-runner");
+  lines.push("branch: main");
+  lines.push("");
+  lines.push("modules:");
+
+  var projectModules = {};
+
+  for (var e = 0; e < EVENTS.length; e++) {
+    var evt = EVENTS[e];
+    var evtDir = path.join(modulesDir, evt);
+    if (!fs.existsSync(evtDir)) continue;
+
+    var globalMods = [];
+    var entries = fs.readdirSync(evtDir);
+    entries.sort();
+    for (var f = 0; f < entries.length; f++) {
+      var entry = entries[f];
+      var full = path.join(evtDir, entry);
+      if (entry.endsWith(".js") && fs.statSync(full).isFile()) {
+        globalMods.push(entry.replace(/\.js$/, ""));
+      } else if (fs.statSync(full).isDirectory() && entry !== "archive") {
+        // Project-scoped modules
+        var projName = entry;
+        if (!projectModules[projName]) projectModules[projName] = {};
+        if (!projectModules[projName][evt]) projectModules[projName][evt] = [];
+        var projFiles = fs.readdirSync(full).filter(function(pf) { return pf.endsWith(".js"); }).sort();
+        for (var pf = 0; pf < projFiles.length; pf++) {
+          projectModules[projName][evt].push(projFiles[pf].replace(/\.js$/, ""));
+        }
+      }
+    }
+
+    if (globalMods.length > 0) {
+      lines.push("  " + evt + ":");
+      for (var g = 0; g < globalMods.length; g++) {
+        lines.push("    - " + globalMods[g]);
+      }
+    }
+  }
+
+  // Project-scoped modules
+  var projNames = Object.keys(projectModules).sort();
+  if (projNames.length > 0) {
+    lines.push("");
+    lines.push("project_modules:");
+    for (var p = 0; p < projNames.length; p++) {
+      lines.push("  " + projNames[p] + ":");
+      var projEvts = Object.keys(projectModules[projNames[p]]).sort();
+      for (var pe = 0; pe < projEvts.length; pe++) {
+        lines.push("    " + projEvts[pe] + ":");
+        var mods = projectModules[projNames[p]][projEvts[pe]];
+        for (var m = 0; m < mods.length; m++) {
+          lines.push("      - " + mods[m]);
+        }
+      }
+    }
+  }
+
+  lines.push("");
+  var content = lines.join("\n");
+  fs.writeFileSync(outFile, content);
+  console.log("[hook-runner] Exported module config to " + outFile);
+  console.log("  Share this file — others can import with: cp " + outFile + " ~/.claude/hooks/modules.yaml && node setup.js --sync");
+}
+
 function cmdWorkflow(args) {
   var wf;
   try { wf = require(path.join(__dirname, "workflow.js")); } catch(e) {
@@ -1346,6 +1427,7 @@ function main() {
   if (args.indexOf("--uninstall") !== -1) return cmdUninstall(args, dryRun);
   if (args.indexOf("--prune") !== -1) return cmdPrune(args, dryRun);
   if (args.indexOf("--stats") !== -1) return cmdStats();
+  if (args.indexOf("--export") !== -1) return cmdExport(args);
   if (args.indexOf("--perf") !== -1) return cmdPerf();
   if (args.indexOf("--list") !== -1) return cmdList();
   if (args.indexOf("--test") !== -1) return cmdTest();
