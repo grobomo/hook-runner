@@ -1,0 +1,19 @@
+name: infra-safety
+description: Cloud and infrastructure safety — no ad-hoc commands, required tags, env var checks, config audit
+version: 1
+steps:
+  - id: active
+    name: Workflow is active — infrastructure safety modules enforced
+    gate:
+      require_files: []
+    completion:
+      require_files: []
+
+modules:
+  - no-adhoc-commands
+  - aws-tagging-gate
+  - crlf-ssh-key-check
+  - env-var-check
+  - no-focus-steal
+  - settings-change-gate
+  - settings-audit-log

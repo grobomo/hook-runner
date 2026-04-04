@@ -1,0 +1,21 @@
+name: session-management
+description: Session lifecycle — auto-continue, context injection, health checks, backups
+version: 1
+steps:
+  - id: active
+    name: Workflow is active — session management modules enforced
+    gate:
+      require_files: []
+    completion:
+      require_files: []
+
+modules:
+  - auto-continue
+  - never-give-up
+  - log-gotchas
+  - mark-turn-complete
+  - load-instructions
+  - load-lessons
+  - project-health
+  - backup-check
+  - config-sync

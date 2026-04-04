@@ -124,6 +124,12 @@ function parseScalar(val) {
 function loadWorkflow(yamlPath) {
   const text = fs.readFileSync(yamlPath, 'utf-8');
   const parsed = parseYaml(text);
+  // Parse modules list (array of module base names)
+  var modules = [];
+  if (Array.isArray(parsed.modules)) {
+    modules = parsed.modules.filter(m => typeof m === 'string');
+  }
+
   return {
     name: parsed.name || path.basename(yamlPath, '.yml'),
     description: parsed.description || '',
@@ -134,6 +140,7 @@ function loadWorkflow(yamlPath) {
       gate: s.gate || {},
       completion: s.completion || {},
     })),
+    modules: modules,
     _path: yamlPath,
   };
 }

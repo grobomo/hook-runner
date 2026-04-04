@@ -111,8 +111,24 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 ## Health Check Fix
 - [x] T096: Fix healthCheck() scanning archive/ dirs (same bug as T089 but in setup.js code path)
 
+## Workflows as Primary Abstraction (T097+)
+
+WHY: Modules are implementation details — workflows are the human-readable interface.
+"Enable SHTD" is how a human thinks. The 9 modules behind it are how it's enforced.
+On context reset, Claude reads workflow state and immediately knows all active constraints.
+
+- [ ] T097: Add `modules:` field to workflow YAML definitions listing which modules belong
+- [ ] T098: Add workflow-config.json (enabled/disabled state per workflow, global + per-project)
+- [ ] T099: Update load-modules.js filterByWorkflow to use enable/disable config (not just step-state)
+- [ ] T100: Tag every module with `// WORKFLOW: <name>` — no orphans
+- [ ] T101: Add `--workflow enable/disable <name>` CLI commands
+- [ ] T102: Add `--workflow audit` — list orphan modules, workflow coverage report
+- [ ] T103: Add `--workflow query <tool>` — show which workflows affect Bash/Edit/Write
+- [ ] T104: Update SessionStart module to inject active workflow summary on context reset
+- [ ] T105: Update docs (README, CLAUDE.md, SKILL.md) + marketplace sync
+
 ## Status
-- 96 tasks completed, 0 pending
+- 96 tasks completed, 9 pending
 - All sync targets up to date (live, skill, marketplace)
 - Next: consider usage examples, blog post, or new module ideas
 - Version: 1.5.1

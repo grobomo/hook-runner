@@ -1,0 +1,19 @@
+name: code-quality
+description: Code hygiene — prevents hardcoded paths, fragile heuristics, missed test coverage, and stale docs
+version: 1
+steps:
+  - id: active
+    name: Workflow is active — code quality checks enforced
+    gate:
+      require_files: []
+    completion:
+      require_files: []
+
+modules:
+  - no-hardcoded-paths
+  - no-fragile-heuristics
+  - preserve-iterated-content
+  - root-cause-gate
+  - test-coverage-check
+  - update-stale-docs
+  - rule-hygiene

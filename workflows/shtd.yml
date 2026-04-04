@@ -45,6 +45,16 @@ steps:
     completion:
       require_files: []
 
-# Modules that belong to this workflow (tag with: // WORKFLOW: shtd)
-# PreToolUse: spec-gate, gsd-gate, branch-pr-gate, remote-tracking-gate
-# These modules enforce the step order when this workflow is active.
+modules:
+  - spec-gate
+  - gsd-gate
+  - branch-pr-gate
+  - remote-tracking-gate
+  - pr-per-task-gate
+  - continuous-claude-gate
+  - enforcement-gate
+  - secret-scan-gate
+  - commit-msg-check
+  - push-unpushed
+  - test-before-done
+  - drift-review

@@ -9,5 +9,5 @@ steps:
     completion:
       require_files: []
 
-# Modules tagged with // WORKFLOW: messaging-safety:
-# PreToolUse: messaging-safety-gate (blocks email, Teams send, calendar invites)
+modules:
+  - messaging-safety-gate
