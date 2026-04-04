@@ -105,10 +105,10 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T070: Sync live module fixes back to repo catalog (branch-pr-gate, no-adhoc-commands, load-instructions, auto-continue)
 
 ## Status
-- 91 tasks completed, 0 pending
+- 92 tasks completed, 0 pending
 - Stale remote branches cleaned (9 deleted)
 - Next: consider installer improvements, npm packaging
-- Version: 1.5.0
+- Version: 1.5.1
 - 172 tests passing across 10 test files
 - CI: GitHub Actions runs all tests on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 5 built-in templates
@@ -153,6 +153,9 @@ WHY: Currently ~30 run-modules exist with no way to see the big picture — whic
 
 ## Packaging
 - [x] T091: Add package.json for npx install (`npx grobomo/hook-runner`)
+
+## Release
+- [x] T092: Version bump to 1.5.1, sync to marketplace + live
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
