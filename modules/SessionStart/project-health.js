@@ -36,6 +36,8 @@ module.exports = function(input) {
       var stat;
       try { stat = fs.statSync(fPath); } catch(e) { continue; }
       if (stat.isDirectory()) {
+        // skip archive directories — contain superseded modules with stale deps
+        if (files[fi] === "archive") continue;
         // project-scoped modules
         var subFiles;
         try { subFiles = fs.readdirSync(fPath); } catch(e) { continue; }
