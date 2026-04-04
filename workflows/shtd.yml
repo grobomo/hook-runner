@@ -1,0 +1,50 @@
+name: shtd
+description: Spec-Hook-Test-Driven workflow — enforces spec → tasks → branch → test → implement → PR pipeline
+version: 1
+steps:
+  - id: spec
+    name: Write spec describing the feature or rule
+    gate:
+      require_files: []
+    completion:
+      require_files: ["specs/*/spec.md"]
+  - id: tasks
+    name: Break spec into tasks with e2e test checkpoints
+    gate:
+      require_step: spec
+    completion:
+      require_files: ["specs/*/tasks.md"]
+  - id: branch
+    name: Create feature branch from main
+    gate:
+      require_step: tasks
+    completion:
+      require_files: []
+  - id: test
+    name: Write test script before implementation
+    gate:
+      require_step: branch
+    completion:
+      require_files: []
+  - id: implement
+    name: Implement the feature
+    gate:
+      require_step: test
+    completion:
+      require_files: []
+  - id: verify
+    name: Run tests and verify all pass
+    gate:
+      require_step: implement
+    completion:
+      require_files: []
+  - id: pr
+    name: Create PR with task ID in title
+    gate:
+      require_step: verify
+    completion:
+      require_files: []
+
+# Modules that belong to this workflow (tag with: // WORKFLOW: shtd)
+# PreToolUse: spec-gate, gsd-gate, branch-pr-gate, remote-tracking-gate
+# These modules enforce the step order when this workflow is active.
