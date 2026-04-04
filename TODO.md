@@ -132,7 +132,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 WHY: Currently ~30 run-modules exist with no way to see the big picture — which relate to each other, which are obsolete, what rules they replaced. Workflows are groupings of modules that can be toggled on/off.
 
 - [x] T080: Add --export command (export module config as shareable YAML bundle)
-- [ ] T081: Hook runner checks workflow enabled state before running a module (module header: `// WORKFLOW: workflow-name`)
+- [x] T081: Hook runner checks workflow enabled state before running a module (module header: `// WORKFLOW: workflow-name`)
 - [ ] T082: Create `shtd.yml` workflow manifest — groups spec-gate, gsd-gate, branch-pr-gate, remote-tracking-gate
 - [ ] T083: Create `no-local-docker.yml` workflow + block-local-docker module
 - [ ] T084: Create `messaging-safety.yml` workflow + existing messaging guard modules
