@@ -1,6 +1,6 @@
 {
   "name": "hook-runner",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Modular hook runner system for Claude Code. One runner per event, modules in folders.",
   "bin": {
     "hook-runner": "setup.js"
