@@ -133,7 +133,7 @@ WHY: Currently ~30 run-modules exist with no way to see the big picture — whic
 
 - [x] T080: Add --export command (export module config as shareable YAML bundle)
 - [x] T081: Hook runner checks workflow enabled state before running a module (module header: `// WORKFLOW: workflow-name`)
-- [ ] T082: Create `shtd.yml` workflow manifest — groups spec-gate, gsd-gate, branch-pr-gate, remote-tracking-gate
+- [x] T082: Create `shtd.yml` workflow manifest — groups spec-gate, gsd-gate, branch-pr-gate, remote-tracking-gate
 - [ ] T083: Create `no-local-docker.yml` workflow + block-local-docker module
 - [ ] T084: Create `messaging-safety.yml` workflow + existing messaging guard modules
 - [ ] T085: Sync workflow.js, workflow-gate.js, workflows/ to live hooks
