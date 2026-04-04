@@ -105,10 +105,11 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T070: Sync live module fixes back to repo catalog (branch-pr-gate, no-adhoc-commands, load-instructions, auto-continue)
 
 ## Status
-- 89 tasks completed, 0 pending
-- Next: clean stale remote branches, consider installer improvements
+- 90 tasks completed, 0 pending
+- Stale remote branches cleaned (9 deleted)
+- Next: consider installer improvements, npm packaging
 - Version: 1.5.0
-- 166 tests passing across 8 test files
+- 168 tests passing across 9 test files
 - CI: GitHub Actions runs all tests on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 5 built-in templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow, perf, export
@@ -146,6 +147,9 @@ WHY: Currently ~30 run-modules exist with no way to see the big picture — whic
 
 ## Health & Test Fixes
 - [x] T089: Fix health check scanning archive/ dirs (skip superseded modules), fix T088 test timeout (85s→5s)
+
+## Security Hardening
+- [x] T090: Sanitize inputs in fetchFromGitHub and openFile to prevent command injection
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
