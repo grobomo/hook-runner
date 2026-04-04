@@ -52,8 +52,12 @@ function parseWorkflowTag(filePath) {
 }
 
 /**
- * Filter out modules tagged with a WORKFLOW that isn't currently active.
+ * Filter out modules tagged with a WORKFLOW that isn't currently enabled.
  * Modules without a WORKFLOW tag always pass.
+ *
+ * Checks two sources (either enables the module):
+ *   1. workflow-config.json: explicit enable/disable per workflow name
+ *   2. .workflow-state.json: legacy step-based active workflow
  */
 function filterByWorkflow(modulePaths) {
   var projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -70,16 +74,38 @@ function filterByWorkflow(modulePaths) {
 
   if (!wf) return modulePaths;
 
+  // Build set of enabled workflow names from both sources
+  var home = process.env.HOME || process.env.USERPROFILE || "";
+  var globalDir = path.join(home, ".claude", "hooks");
+
+  // 1. workflow-config.json (project-level overrides global)
+  var enabledSet = {};
+  var disabledSet = {};
+  var globalConfig = wf.readConfig(globalDir);
+  var projectConfig = wf.readConfig(projectDir);
+  // Merge: global first, project overrides
+  var merged = {};
+  var gk = Object.keys(globalConfig);
+  for (var gi = 0; gi < gk.length; gi++) merged[gk[gi]] = globalConfig[gk[gi]];
+  var pk = Object.keys(projectConfig);
+  for (var pi = 0; pi < pk.length; pi++) merged[pk[pi]] = projectConfig[pk[pi]];
+  var mk = Object.keys(merged);
+  for (var mi = 0; mi < mk.length; mi++) {
+    if (merged[mk[mi]] === true) enabledSet[mk[mi]] = true;
+    else if (merged[mk[mi]] === false) disabledSet[mk[mi]] = true;
+  }
+
+  // 2. Legacy: .workflow-state.json active workflow
   var state = wf.readState(projectDir);
-  var activeWorkflow = state ? state.workflow : null;
+  if (state && state.workflow) enabledSet[state.workflow] = true;
 
   var result = [];
   for (var i = 0; i < modulePaths.length; i++) {
     var tag = parseWorkflowTag(modulePaths[i]);
     if (!tag) {
-      result.push(modulePaths[i]);
-    } else if (tag === activeWorkflow) {
-      result.push(modulePaths[i]);
+      result.push(modulePaths[i]); // untagged always passes
+    } else if (enabledSet[tag] && !disabledSet[tag]) {
+      result.push(modulePaths[i]); // workflow enabled
     }
   }
   return result;
