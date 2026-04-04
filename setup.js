@@ -1410,9 +1410,9 @@ function cmdWorkflow(args) {
   }
 
   if (sub === "reset") {
-    var state = wf.readState(projectDir);
-    if (!state) { console.log("No active workflow to reset."); return; }
-    var name = state.workflow;
+    var resetState = wf.readState(projectDir);
+    if (!resetState) { console.log("No active workflow to reset."); return; }
+    var name = resetState.workflow;
     wf.resetState(projectDir);
     console.log('Workflow "' + name + '" cleared.');
     return;
@@ -1553,7 +1553,7 @@ function healthCheck() {
     results.push({ check: "settings", file: "settings.json", status: "missing" });
   }
 
-  // 4. Check hook log writability
+  // 5. Check hook log writability
   try {
     fs.accessSync(path.dirname(HOOK_LOG_PATH), fs.constants.W_OK);
     results.push({ check: "log", file: "hook-log.jsonl", status: "ok", detail: fs.existsSync(HOOK_LOG_PATH) ? "exists" : "will be created on first trigger" });
