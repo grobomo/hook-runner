@@ -10,10 +10,11 @@ steps:
       require_files: []
 
 modules:
-  - no-adhoc-commands
   - aws-tagging-gate
   - crlf-ssh-key-check
   - env-var-check
+  - hook-autocommit
+  - no-adhoc-commands
   - no-focus-steal
-  - settings-change-gate
   - settings-audit-log
+  - settings-change-gate

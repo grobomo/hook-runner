@@ -1,3 +1,4 @@
+// WORKFLOW: session-management
 // WHY: Config changes (rules, hooks, skills) made during sessions were lost
 // because ~/.claude wasn't committed/pushed. This auto-syncs to grobomo/claude-config
 // so the cloud copy stays current and new PCs can bootstrap from it.

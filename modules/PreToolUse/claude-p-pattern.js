@@ -1,3 +1,4 @@
+// WORKFLOW: code-quality
 // WHY: Claude tried 3 wrong ways to call claude -p (--no-input, pipe via
 // echo, timeout with arg) and then tried to use ANTHROPIC_API_KEY / SDK
 // instead of just using claude -p correctly. The correct pattern is simple:

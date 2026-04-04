@@ -1,3 +1,4 @@
+// WORKFLOW: infra-safety
 // WHY: Ad-hoc AWS/SSH commands died with the session. Scripts survive.
 // Block ad-hoc Bash commands for AWS, SSH, Docker, and infrastructure.
 // ALL operations must go through reusable scripts in scripts/.

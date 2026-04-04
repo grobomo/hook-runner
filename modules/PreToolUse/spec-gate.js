@@ -1,3 +1,4 @@
+// WORKFLOW: shtd
 // WHY: Claude implemented features that nobody asked for, wasting hours.
 // This gate ensures all code maps to a speckit task.
 "use strict";

@@ -1,3 +1,4 @@
+// WORKFLOW: shtd
 // WHY: Sloppy commit messages made PR history unreadable.
 // Commit message check: warns if git commit messages don't follow conventions
 // PostToolUse module — runs after Bash tool completes

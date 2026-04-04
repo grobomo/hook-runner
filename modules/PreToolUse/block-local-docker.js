@@ -1,6 +1,6 @@
+// WORKFLOW: no-local-docker
 // WHY: Local docker builds consumed disk/CPU and caused "no space left on device" failures.
 // All container workloads should run on remote infrastructure (EC2, ECS, cloud-claude).
-// WORKFLOW: no-local-docker
 "use strict";
 
 module.exports = function(input) {

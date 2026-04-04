@@ -1,3 +1,4 @@
+// WORKFLOW: code-quality
 // WHY: Claude wrote pixel-ratio thresholds and color-counting heuristics to
 // detect blank screenshots and login pages. These broke on F5 (dark login page)
 // and would false-positive on white dashboards. The user corrected: "don't make

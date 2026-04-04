@@ -1,3 +1,4 @@
+// WORKFLOW: shtd
 // WHY: Commits on untracked branches were invisible on mobile.
 "use strict";
 // PreToolUse: block code edits if the feature branch doesn't track a remote.

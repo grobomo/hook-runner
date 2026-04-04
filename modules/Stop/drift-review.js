@@ -1,3 +1,4 @@
+// WORKFLOW: shtd
 // WHY: Claude drifted off-spec, doing unrelated work while tasks remained.
 "use strict";
 // Stop hook: drift review. Before auto-continue, check if recent work
