@@ -692,6 +692,7 @@ function cmdHelp() {
   console.log("  --sync          Sync modules from GitHub per ~/.claude/hooks/modules.yaml");
   console.log("  --list          Show catalog vs installed modules with status");
   console.log("  --stats         Quick text summary of hook log activity");
+  console.log("  --workflow      Manage enforceable step pipelines (list|start|status|complete|reset)");
   console.log("  --perf          Analyze module timing data and identify bottlenecks");
   console.log("  --test          Run all test suites");
   console.log("  --upgrade       Fetch latest runners from GitHub and update local copies");
@@ -1248,6 +1249,91 @@ function cmdPerf() {
   console.log("");
 }
 
+function cmdWorkflow(args) {
+  var wf;
+  try { wf = require(path.join(__dirname, "workflow.js")); } catch(e) {
+    console.error("[workflow] workflow.js not found in hook-runner directory.");
+    process.exit(1);
+  }
+  var sub = null;
+  for (var i = 0; i < args.length; i++) {
+    if (args[i] === "--workflow") { sub = args[i + 1] || null; break; }
+  }
+  var projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+
+  if (!sub || sub === "list") {
+    var workflows = wf.findWorkflows(projectDir);
+    if (workflows.length === 0) { console.log("No workflows found."); return; }
+    for (var wi = 0; wi < workflows.length; wi++) {
+      var w = workflows[wi];
+      console.log(w.name + " (" + w.steps.length + " steps) — " + (w.description || ""));
+      for (var si = 0; si < w.steps.length; si++) {
+        console.log("  " + w.steps[si].id + ": " + w.steps[si].name);
+      }
+    }
+    return;
+  }
+
+  if (sub === "start") {
+    var wfName = args[args.indexOf("start") + 1];
+    if (!wfName) { console.error("Usage: --workflow start <name>"); process.exit(1); }
+    var existing = wf.readState(projectDir);
+    if (existing) { console.error('Workflow "' + existing.workflow + '" already active. Reset first.'); process.exit(1); }
+    var workflows = wf.findWorkflows(projectDir);
+    var target = null;
+    for (var fi = 0; fi < workflows.length; fi++) {
+      if (workflows[fi].name === wfName) { target = workflows[fi]; break; }
+    }
+    if (!target) { console.error("Workflow not found: " + wfName); process.exit(1); }
+    wf.initState(wfName, target._path, projectDir);
+    var current = wf.currentStep(projectDir);
+    console.log('Started workflow "' + wfName + '". Current step: ' + current);
+    return;
+  }
+
+  if (sub === "status") {
+    var state = wf.readState(projectDir);
+    if (!state) { console.log("No active workflow."); return; }
+    console.log("Workflow: " + state.workflow);
+    console.log("Started:  " + state.started_at);
+    console.log("");
+    var def = wf.loadWorkflow(state.workflow_path);
+    var current = wf.currentStep(projectDir);
+    for (var di = 0; di < def.steps.length; di++) {
+      var step = def.steps[di];
+      var s = state.steps[step.id] || {};
+      var marker = "  ";
+      if (s.status === "completed") marker = "OK";
+      else if (step.id === current) marker = ">>";
+      var status = s.status || "pending";
+      console.log(marker + " " + step.id.padEnd(20) + status.padEnd(14) + step.name);
+    }
+    return;
+  }
+
+  if (sub === "complete") {
+    var stepId = args[args.indexOf("complete") + 1];
+    if (!stepId) { console.error("Usage: --workflow complete <step-id>"); process.exit(1); }
+    wf.completeStep(stepId, projectDir);
+    var next = wf.currentStep(projectDir);
+    console.log('Completed step "' + stepId + '".' + (next ? " Next: " + next : " Workflow complete!"));
+    return;
+  }
+
+  if (sub === "reset") {
+    var state = wf.readState(projectDir);
+    if (!state) { console.log("No active workflow to reset."); return; }
+    var name = state.workflow;
+    wf.resetState(projectDir);
+    console.log('Workflow "' + name + '" cleared.');
+    return;
+  }
+
+  console.error("Unknown workflow subcommand: " + sub);
+  console.error("Usage: --workflow [list|start <name>|status|complete <step>|reset]");
+  process.exit(1);
+}
+
 function main() {
   var args = process.argv.slice(2);
   var dryRun = args.indexOf("--dry-run") !== -1;
@@ -1255,6 +1341,7 @@ function main() {
 
   if (args.indexOf("--help") !== -1 || args.indexOf("-h") !== -1) return cmdHelp();
   if (args.indexOf("--version") !== -1 || args.indexOf("-v") !== -1) { console.log("hook-runner v" + VERSION); return; }
+  if (args.indexOf("--workflow") !== -1) return cmdWorkflow(args);
   if (args.indexOf("--upgrade") !== -1) return cmdUpgrade(args, dryRun);
   if (args.indexOf("--uninstall") !== -1) return cmdUninstall(args, dryRun);
   if (args.indexOf("--prune") !== -1) return cmdPrune(args, dryRun);

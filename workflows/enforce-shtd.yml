@@ -1,0 +1,52 @@
+name: enforce-shtd
+description: Enforce Spec-Hook-Test-Driven pipeline for any behavioral rule or feature
+version: 1
+steps:
+  - id: spec
+    name: Write spec describing the rule or feature
+    gate:
+      require_files: []
+    completion:
+      require_files: ["specs/*/spec.md"]
+  - id: tasks
+    name: Break spec into tasks with test checkpoints
+    gate:
+      require_step: spec
+    completion:
+      require_files: ["specs/*/tasks.md"]
+  - id: workflow
+    name: Define enforcement workflow YAML
+    gate:
+      require_step: tasks
+    completion:
+      require_files: ["workflows/*.yml"]
+  - id: branch
+    name: Create feature branch
+    gate:
+      require_step: workflow
+    completion:
+      require_files: []
+  - id: test
+    name: Write test script before implementation
+    gate:
+      require_step: branch
+    completion:
+      require_files: []
+  - id: implement
+    name: Implement the rule/feature
+    gate:
+      require_step: test
+    completion:
+      require_files: []
+  - id: verify
+    name: Run tests and verify
+    gate:
+      require_step: implement
+    completion:
+      require_files: []
+  - id: pr
+    name: Create PR with task ID in title
+    gate:
+      require_step: verify
+    completion:
+      require_files: []
