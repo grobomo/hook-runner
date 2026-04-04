@@ -1,0 +1,28 @@
+name: cross-project-reset
+description: Safely switch context between projects with state preservation
+version: 1
+steps:
+  - id: save-state
+    name: Save current project state to TODO.md
+    gate:
+      require_files: []
+    completion:
+      require_files: ["TODO.md"]
+  - id: commit
+    name: Commit and push current project
+    gate:
+      require_step: save-state
+    completion:
+      require_files: []
+  - id: new-project-todo
+    name: Create or verify TODO.md in target project
+    gate:
+      require_step: commit
+    completion:
+      require_files: []
+  - id: context-reset
+    name: Run context reset into target project directory
+    gate:
+      require_step: new-project-todo
+    completion:
+      require_files: []
