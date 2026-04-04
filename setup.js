@@ -1465,8 +1465,144 @@ function cmdWorkflow(args) {
     return;
   }
 
+  if (sub === "audit") {
+    var lm;
+    try { lm = require(path.join(__dirname, "load-modules.js")); } catch(e) {
+      console.error("[audit] load-modules.js not found."); process.exit(1);
+    }
+    // Load workflows from the repo catalog (not projectDir which may have stale copies)
+    var wfDir = path.join(__dirname, "workflows");
+    var workflows = [];
+    if (fs.existsSync(wfDir)) {
+      var wfFiles = fs.readdirSync(wfDir).filter(function(f) { return f.endsWith(".yml") || f.endsWith(".yaml"); }).sort();
+      for (var wfi = 0; wfi < wfFiles.length; wfi++) {
+        try { workflows.push(wf.loadWorkflow(path.join(wfDir, wfFiles[wfi]))); } catch(e) {}
+      }
+    }
+
+    // Build workflow name → modules from YAML definitions
+    var yamlModules = {}; // workflow name → [module names]
+    for (var ai = 0; ai < workflows.length; ai++) {
+      yamlModules[workflows[ai].name] = workflows[ai].modules || [];
+    }
+
+    // Scan all modules across all events
+    var modulesDir = path.join(__dirname, "modules");
+    var events = ["PreToolUse", "PostToolUse", "SessionStart", "Stop", "UserPromptSubmit"];
+    var allModules = []; // {name, event, path, tag}
+    for (var ei = 0; ei < events.length; ei++) {
+      var evDir = path.join(modulesDir, events[ei]);
+      if (!fs.existsSync(evDir)) continue;
+      var files = fs.readdirSync(evDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+      for (var fi = 0; fi < files.length; fi++) {
+        var modPath = path.join(evDir, files[fi]);
+        var tag = lm.parseWorkflowTag(modPath);
+        allModules.push({ name: files[fi].replace(/\.js$/, ""), event: events[ei], path: modPath, tag: tag });
+      }
+    }
+
+    var tagged = allModules.filter(function(m) { return m.tag; });
+    var untagged = allModules.filter(function(m) { return !m.tag; });
+
+    // Per-workflow counts from actual tags
+    var tagCounts = {};
+    for (var ti = 0; ti < tagged.length; ti++) {
+      tagCounts[tagged[ti].tag] = (tagCounts[tagged[ti].tag] || 0) + 1;
+    }
+
+    // Coverage summary
+    console.log("=== Workflow Audit ===");
+    console.log("");
+    console.log("Coverage: " + allModules.length + " modules total, " + tagged.length + " tagged, " + untagged.length + " untagged");
+    console.log("");
+
+    // Per-workflow breakdown
+    console.log("Per-workflow module counts:");
+    var wfNames = Object.keys(yamlModules).sort();
+    for (var wi = 0; wi < wfNames.length; wi++) {
+      var wn = wfNames[wi];
+      var yamlCount = yamlModules[wn].length;
+      var actualCount = tagCounts[wn] || 0;
+      var status = yamlCount === actualCount ? "OK" : (actualCount + " actual vs " + yamlCount + " in YAML");
+      console.log("  " + wn + ": " + actualCount + " modules — " + (yamlCount === actualCount ? "OK (matches YAML)" : status));
+    }
+
+    // Orphan tags: modules tagged with a workflow that has no YAML
+    var orphanTags = {};
+    for (var oi = 0; oi < tagged.length; oi++) {
+      if (!yamlModules[tagged[oi].tag]) {
+        if (!orphanTags[tagged[oi].tag]) orphanTags[tagged[oi].tag] = [];
+        orphanTags[tagged[oi].tag].push(tagged[oi].event + "/" + tagged[oi].name);
+      }
+    }
+    var orphanKeys = Object.keys(orphanTags);
+    if (orphanKeys.length > 0) {
+      console.log("");
+      console.log("Orphan tags (no matching workflow YAML):");
+      for (var ok = 0; ok < orphanKeys.length; ok++) {
+        console.log("  " + orphanKeys[ok] + ": " + orphanTags[orphanKeys[ok]].join(", "));
+      }
+    }
+
+    // Missing modules: listed in YAML but no matching tagged module file
+    var missing = [];
+    for (var mi2 = 0; mi2 < wfNames.length; mi2++) {
+      var wn2 = wfNames[mi2];
+      var yamlMods = yamlModules[wn2];
+      for (var ym = 0; ym < yamlMods.length; ym++) {
+        var found = false;
+        for (var am = 0; am < allModules.length; am++) {
+          if (allModules[am].name === yamlMods[ym]) { found = true; break; }
+        }
+        if (!found) missing.push(wn2 + "/" + yamlMods[ym]);
+      }
+    }
+    if (missing.length > 0) {
+      console.log("");
+      console.log("Missing modules (in YAML but no file):");
+      for (var mm = 0; mm < missing.length; mm++) {
+        console.log("  " + missing[mm]);
+      }
+    }
+
+    // Untagged modules
+    if (untagged.length > 0) {
+      console.log("");
+      console.log("Untagged modules (no workflow tag):");
+      for (var ui = 0; ui < untagged.length; ui++) {
+        console.log("  " + untagged[ui].event + "/" + untagged[ui].name);
+      }
+    }
+
+    // Tag-YAML mismatches: module tagged X but listed in workflow Y's YAML
+    var mismatches = [];
+    for (var tmi = 0; tmi < tagged.length; tmi++) {
+      var mod = tagged[tmi];
+      // Check if this module is listed in a different workflow's YAML
+      for (var twi = 0; twi < wfNames.length; twi++) {
+        if (wfNames[twi] === mod.tag) continue;
+        if (yamlModules[wfNames[twi]].indexOf(mod.name) !== -1) {
+          mismatches.push(mod.event + "/" + mod.name + " tagged=" + mod.tag + " but listed in " + wfNames[twi] + " YAML");
+        }
+      }
+    }
+    if (mismatches.length > 0) {
+      console.log("");
+      console.log("Tag/YAML mismatches:");
+      for (var mmi = 0; mmi < mismatches.length; mmi++) {
+        console.log("  " + mismatches[mmi]);
+      }
+    }
+
+    if (orphanKeys.length === 0 && missing.length === 0 && mismatches.length === 0) {
+      console.log("");
+      console.log("No issues found.");
+    }
+    return;
+  }
+
   console.error("Unknown workflow subcommand: " + sub);
-  console.error("Usage: --workflow [list|enable <name>|disable <name>|start <name>|status|complete <step>|reset]");
+  console.error("Usage: --workflow [list|audit|enable <name>|disable <name>|start <name>|status|complete <step>|reset]");
   process.exit(1);
 }
 
