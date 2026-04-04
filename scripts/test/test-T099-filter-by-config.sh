@@ -4,6 +4,9 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"
 PASS=0; FAIL=0
 TMPDIR="$REPO_DIR/.test-tmp-T099"
+# Clean previous run artifacts (archive-not-delete gate doesn't apply to test temp dirs)
+[ -d "$TMPDIR" ] && mv "$TMPDIR" "$REPO_DIR/.test-tmp-T099-old" 2>/dev/null || true
+[ -d "$REPO_DIR/.test-tmp-T099-done" ] && mv "$REPO_DIR/.test-tmp-T099-done" "$REPO_DIR/.test-tmp-T099-old2" 2>/dev/null || true
 mkdir -p "$TMPDIR/run-modules/PreToolUse"
 
 check() {

@@ -1,3 +1,4 @@
+// WORKFLOW: session-management
 // WHY: Claude stops and lists options instead of doing the work.
 // The message text in stop-message.txt was iterated over 15+ versions by the user.
 // DO NOT rewrite, condense, or rephrase it. It is a user-authored artifact.

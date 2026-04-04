@@ -1,3 +1,4 @@
+// WORKFLOW: session-management
 // WHY: Hard-won lessons from debugging sessions get lost between context
 // resets. This gate ensures gotchas are captured as rule files so future
 // sessions don't repeat the same mistakes.

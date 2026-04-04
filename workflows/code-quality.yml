@@ -10,10 +10,13 @@ steps:
       require_files: []
 
 modules:
-  - no-hardcoded-paths
+  - archive-not-delete
+  - claude-p-pattern
+  - git-rebase-safety
   - no-fragile-heuristics
+  - no-hardcoded-paths
   - preserve-iterated-content
   - root-cause-gate
+  - rule-hygiene
   - test-coverage-check
   - update-stale-docs
-  - rule-hygiene

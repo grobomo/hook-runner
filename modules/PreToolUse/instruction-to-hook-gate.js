@@ -1,3 +1,4 @@
+// WORKFLOW: self-improvement
 // WHY: User instructions ("always X") were forgotten next session. Must become hooks or SHTD workflows.
 "use strict";
 // PreToolUse: enforce that user instructions ("always X", "never Y") become hooks/rules.

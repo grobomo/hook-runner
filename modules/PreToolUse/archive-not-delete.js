@@ -1,3 +1,4 @@
+// WORKFLOW: code-quality
 // WHY: Claude deleted files that turned out to be needed later.
 // Block destructive delete commands. Always archive, never delete.
 // Returns null to pass, {decision:"block", reason:"..."} to block.

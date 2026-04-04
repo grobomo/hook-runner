@@ -1,3 +1,4 @@
+// WORKFLOW: self-improvement
 // WHY: Claude kept creating .md rule files in .claude/rules/ instead of active
 // hook modules. Rule files are passive — Claude has to read and choose to follow
 // them. Hook modules are active — they execute and block. Persistent lessons and

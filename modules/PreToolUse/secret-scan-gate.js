@@ -1,3 +1,4 @@
+// WORKFLOW: shtd
 // WHY: API keys were committed to git history and had to be rotated.
 "use strict";
 // PreToolUse: block Bash git-commit if staged diff contains obvious secrets.
