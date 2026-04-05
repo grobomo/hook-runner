@@ -327,13 +327,16 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Docs
 - [x] T284: Add --test-module to CLI Reference section in README (#161)
 
+## Module Catalog
+- [x] T285: Add terminal-title SessionStart module to catalog (#162)
+- [x] T286: Version bump to 2.5.6 + CHANGELOG (#163)
+
 ## Status
-- 207 tasks completed, 0 pending
-- Version: 2.5.5 (released, tagged, marketplace synced, live hooks synced)
-- Clones: 2055 total, 616 unique, 0 stars/forks/issues — stable utility, no community demand
-- 532 tests passing across 40 test suites
-- Health: 76 OK, 0 warnings, 0 failures
-- Performance: PreToolUse ~228ms/call (25 modules), SessionStart ~4s (7 modules, config-sync dominates)
+- 209 tasks completed, 0 pending
+- Version: 2.5.6 (released, tagged, marketplace synced, live hooks synced)
+- 58 modules across 9 workflows, 536 tests passing across 40 test suites
+- Health: 77 OK, 0 warnings, 0 failures
+- Performance: PreToolUse ~228ms/call (25 modules), SessionStart ~4s (8 modules, config-sync dominates)
 - CI: GitHub Actions runs tests + secret-scan on push/PR (Linux + Windows) — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
 - CLI: setup, report, health, sync, stats, list, test, test-module, upgrade, uninstall, prune, version, help, perf, export, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live)
