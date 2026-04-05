@@ -202,9 +202,10 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T220: Fix 34 workflow tag mismatches + audit shared-module logic (PR #101)
 - [x] T221: Update README workflow table with all 10 workflows + module counts (PR #102)
 - [x] T222: Add split workflows to watchdog required list (PR #103)
+- [x] T223: Add duplicate module detection to health check (PR #104)
 
 ## Status
-- 144 tasks completed, 1 pending (T215 delegated to claude-code-skills)
+- 145 tasks completed, 1 pending (T215 delegated to claude-code-skills)
 - Version: 2.1.0
 - 369 tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
