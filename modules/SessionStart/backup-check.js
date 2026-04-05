@@ -1,4 +1,4 @@
-// WORKFLOW: session-management
+// WORKFLOW: shtd
 // WHY: Backups went stale for weeks without anyone noticing.
 // SessionStart: async example — check backup freshness at session start
 // Demonstrates async module support (hook-runner T030)

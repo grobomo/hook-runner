@@ -11,24 +11,24 @@ check() {
 }
 echo "=== hook-runner: workflow add-module ==="
 
-# Test add-module to existing workflow (code-quality)
+# Test add-module to existing workflow (infra-safety)
 # Use a temp module name that won't conflict
 TMPMOD="test-tmp-mod-$$"
 
-ADD_OUT=$(cd "$REPO_DIR" && node setup.js --workflow add-module code-quality "$TMPMOD" 2>&1) || true
+ADD_OUT=$(cd "$REPO_DIR" && node setup.js --workflow add-module infra-safety "$TMPMOD" 2>&1) || true
 check "add-module succeeds" 'echo "$ADD_OUT" | grep -qi "created"'
 
 # Module file exists
 check "module file created" '[ -f "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" ]'
 
 # Module has WORKFLOW tag
-check "module has WORKFLOW tag" 'head -1 "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" | grep -q "WORKFLOW: code-quality"'
+check "module has WORKFLOW tag" 'head -1 "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" | grep -q "WORKFLOW: infra-safety"'
 
 # Module has WHY stub
 check "module has WHY stub" 'grep -q "WHY: TODO" "$REPO_DIR/modules/PreToolUse/$TMPMOD.js"'
 
 # Module added to YAML
-check "module in YAML" 'grep -q "$TMPMOD" "$REPO_DIR/workflows/code-quality.yml"'
+check "module in YAML" 'grep -q "$TMPMOD" "$REPO_DIR/workflows/infra-safety.yml"'
 
 # No arg shows usage
 NOARG_OUT=$(cd "$REPO_DIR" && node setup.js --workflow add-module 2>&1) || true
@@ -45,7 +45,7 @@ check "live copy exists" '[ -f "$HOME/.claude/hooks/run-modules/PreToolUse/$TMPM
 rm -f "$REPO_DIR/modules/PreToolUse/$TMPMOD.js"
 rm -f "$HOME/.claude/hooks/run-modules/PreToolUse/$TMPMOD.js"
 # Remove from YAML
-cd "$REPO_DIR" && git checkout -- workflows/code-quality.yml 2>/dev/null || true
+cd "$REPO_DIR" && git checkout -- workflows/infra-safety.yml 2>/dev/null || true
 
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="

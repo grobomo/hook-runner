@@ -14,7 +14,10 @@ echo "=== hook-runner: workflow summary ==="
 check "module exports function" 'node -e "var m = require(\"$REPO_DIR_WIN/modules/SessionStart/workflow-summary.js\"); console.log(typeof m);" 2>&1 | grep -q "function"'
 
 # 2. Returns null when no workflows enabled
-OUT_NONE=$(node -e "
+# WHY: Override HOME to isolate from global workflow-config.json
+FAKE_HOME="$REPO_DIR/.test-tmp-T104-fakehome-$$"
+mkdir -p "$FAKE_HOME/.claude/hooks"
+OUT_NONE=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" node -e "
   delete require.cache[require.resolve('$REPO_DIR_WIN/workflow.js')];
   var old = process.env.CLAUDE_PROJECT_DIR;
   process.env.CLAUDE_PROJECT_DIR = '$REPO_DIR_WIN/.test-tmp-T104-$$';
@@ -23,6 +26,7 @@ OUT_NONE=$(node -e "
   console.log(r === null ? 'null' : JSON.stringify(r));
   process.env.CLAUDE_PROJECT_DIR = old || '';
 " 2>&1) || true
+rm -rf "$FAKE_HOME"
 check "returns null with no workflows" 'echo "$OUT_NONE" | grep -q "null"'
 
 # 3. Returns text when workflows are enabled (use temp dir with config)
@@ -44,7 +48,7 @@ check "returns text with shtd enabled" 'echo "$OUT_ENABLED" | grep -q "ACTIVE WO
 check "mentions shtd in output" 'echo "$OUT_ENABLED" | grep -q "shtd"'
 
 # 4. Has WORKFLOW tag
-check "has WORKFLOW tag" 'head -1 "$REPO_DIR/modules/SessionStart/workflow-summary.js" | grep -q "WORKFLOW: session-management"'
+check "has WORKFLOW tag" 'head -1 "$REPO_DIR/modules/SessionStart/workflow-summary.js" | grep -q "WORKFLOW: shtd"'
 
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="

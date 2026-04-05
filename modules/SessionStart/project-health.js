@@ -1,4 +1,4 @@
-// WORKFLOW: session-management
+// WORKFLOW: shtd
 // WHY: Broken hook runners silently failed, leaving gates unenforced.
 // SessionStart: run hook-runner health check on session start
 // Warns if any runners are missing, modules fail to load, or settings are misconfigured.
