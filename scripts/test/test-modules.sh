@@ -30,25 +30,41 @@ get_mock_input() {
   esac
 }
 
-# Find all module .js files in modules/
-for event_dir in "$REPO_DIR"/modules/*/; do
-  event=$(basename "$event_dir")
-  # All event directories with .js modules are tested
-
+# Collect all module .js files (top-level + project-scoped subdirs)
+collect_modules() {
+  local event_dir="$1"
+  local event="$2"
   shopt -s nullglob
   for mod_file in "$event_dir"*.js; do
-    [ -f "$mod_file" ] || continue
-    mod_name=$(basename "$mod_file")
-    mod_win_path="${REPO_DIR}/modules/${event}/${mod_name}"
-    mock_input=$(get_mock_input "$event")
+    echo "$event|$(basename "$mod_file")|$mod_file"
+  done
+  for sub_dir in "$event_dir"*/; do
+    [ -d "$sub_dir" ] || continue
+    local sub_name=$(basename "$sub_dir")
+    [ "$sub_name" = "archive" ] && continue
+    for mod_file in "$sub_dir"*.js; do
+      echo "$event|${sub_name}/$(basename "$mod_file")|$mod_file"
+    done
+  done
+}
 
-    echo "[$event/$mod_name] load and call"
+for event_dir in "$REPO_DIR"/modules/*/; do
+  event=$(basename "$event_dir")
+
+  while IFS='|' read -r evt mod_label mod_file; do
+    [ -z "$mod_file" ] && continue
+    mod_name=$(basename "$mod_file")
+    # Use forward-slash path for node require on Windows
+    mod_win_path=$(cd "$(dirname "$mod_file")" && (pwd -W 2>/dev/null || pwd))/"$mod_name"
+    mock_input=$(get_mock_input "$evt")
+
+    echo "[$evt/$mod_label] load, call, headers"
 
     # Test 1: exports a function
     if node -e "var m = require('$mod_win_path'); if (typeof m !== 'function') { process.exit(1); }" 2>/dev/null; then
-      pass "$event/$mod_name exports function"
+      pass "$evt/$mod_label exports function"
     else
-      fail "$event/$mod_name does not export function"
+      fail "$evt/$mod_label does not export function"
       continue
     fi
 
@@ -77,25 +93,40 @@ for event_dir in "$REPO_DIR"/modules/*/; do
 
     case "$RESULT" in
       null|object|undefined)
-        pass "$event/$mod_name returns $RESULT (valid)"
+        pass "$evt/$mod_label returns $RESULT (valid)"
         ;;
       timeout)
-        pass "$event/$mod_name returns async (timed out, ok for validation)"
+        pass "$evt/$mod_label returns async (timed out, ok for validation)"
         ;;
       promise-error)
-        pass "$event/$mod_name returns async with error (ok for validation)"
+        pass "$evt/$mod_label returns async with error (ok for validation)"
         ;;
       crash)
-        fail "$event/$mod_name crashed on mock input"
+        fail "$evt/$mod_label crashed on mock input"
         ;;
       error:*)
-        fail "$event/$mod_name threw: $RESULT"
+        fail "$evt/$mod_label threw: $RESULT"
         ;;
       *)
-        fail "$event/$mod_name returned unexpected: $RESULT"
+        fail "$evt/$mod_label returned unexpected: $RESULT"
         ;;
     esac
-  done
+
+    # Test 3: WORKFLOW tag in first 5 lines
+    if head -5 "$mod_file" | grep -q "WORKFLOW:"; then
+      pass "$evt/$mod_label has WORKFLOW tag"
+    else
+      fail "$evt/$mod_label missing WORKFLOW tag"
+    fi
+
+    # Test 4: WHY comment in first 5 lines
+    if head -5 "$mod_file" | grep -q "WHY:"; then
+      pass "$evt/$mod_label has WHY comment"
+    else
+      fail "$evt/$mod_label missing WHY comment"
+    fi
+
+  done < <(collect_modules "$event_dir" "$event")
 done
 
 echo ""
