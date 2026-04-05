@@ -7,7 +7,7 @@
 //   3. No API key needed — same auth as running Claude Code session
 //   4. For images/PDFs: include absolute file paths in prompt, tell Claude
 //      to use its Read tool to view them. NEVER base64-inline images.
-//   5. Reference: ~/Documents/ProjectsCL1/recording-analyzer/tools/analyze-next.sh
+//   5. See analyze-next.sh in recording-analyzer for a working example.
 "use strict";
 
 var CORRECT_PATTERN =
@@ -19,7 +19,7 @@ var CORRECT_PATTERN =
   "For images/PDFs: put absolute file paths in the prompt and tell Claude\n" +
   "to use the Read tool to view them. NEVER base64-encode images inline.\n" +
   "No API key needed. No SDK needed. Same auth as Claude Code session.\n" +
-  "Reference: ~/Documents/ProjectsCL1/recording-analyzer/tools/analyze-next.sh";
+  "See analyze-next.sh in recording-analyzer for a working example.";
 
 module.exports = function(input) {
   // === Gate 1: Bash — block bad claude -p invocations ===

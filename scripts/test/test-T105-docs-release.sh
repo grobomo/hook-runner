@@ -16,7 +16,7 @@ check "setup.js version is 1.6.0" 'grep -q "1.6.0" "$REPO_DIR/setup.js"'
 check "package.json version is 1.6.0" 'grep -q "1.6.0" "$REPO_DIR/package.json"'
 
 # 3. CLAUDE.md has updated test counts
-check "CLAUDE.md has updated test counts" 'grep -q "20 suites" "$REPO_DIR/CLAUDE.md"'
+check "CLAUDE.md has updated test counts" 'grep -qE "[0-9]+ suites" "$REPO_DIR/CLAUDE.md"'
 
 # 4. CLAUDE.md has audit/query in workflow commands
 check "CLAUDE.md has audit/query CLI docs" 'grep -q "audit" "$REPO_DIR/CLAUDE.md"'

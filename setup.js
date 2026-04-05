@@ -715,6 +715,7 @@ function cmdHelp() {
   console.log("  --install       Skip report, just install runners");
   console.log("  --open          Open report in browser (default: don't open)");
   console.log("  --force         With --uninstall: also remove non-empty module dirs");
+  console.log("  --yes           Non-interactive: auto-confirm install + enable default workflows");
   console.log("");
   console.log("Examples:");
   console.log("  node setup.js                    # first-time setup");
@@ -854,10 +855,31 @@ function cmdUninstall(args, dryRun) {
       uninstallChanges.push({ what: path.basename(lfp), status: dryRun ? "would remove" : "removed" });
     }
   }
+  // WHY: Restoring the original settings.json from backup gives a true "undo".
+  // Without this, uninstall leaves a modified settings.json that may confuse users.
+  var confirmMode = args.indexOf("--confirm") !== -1;
+  var archiveDir = path.join(HOOKS_DIR, "archive");
+  if (confirmMode && fs.existsSync(archiveDir)) {
+    // Find most recent backup with settings.json
+    var backups = fs.readdirSync(archiveDir).filter(function(d) {
+      return d.startsWith("backup-") && fs.existsSync(path.join(archiveDir, d, "settings.json"));
+    }).sort().reverse();
+    if (backups.length > 0) {
+      var latestBackup = path.join(archiveDir, backups[0], "settings.json");
+      if (!dryRun) {
+        fs.copyFileSync(latestBackup, SETTINGS_PATH);
+      }
+      uninstallChanges.push({ what: "settings.json", status: (dryRun ? "would restore from " : "restored from ") + backups[0] });
+    }
+  }
+
   for (var uc = 0; uc < uninstallChanges.length; uc++) {
     console.log("  " + uninstallChanges[uc].what + ": " + uninstallChanges[uc].status);
   }
   console.log("");
+  if (!confirmMode && !dryRun) {
+    console.log("  Tip: use --uninstall --confirm to also restore original settings.json from backup.");
+  }
   console.log("[hook-runner] " + (dryRun ? "Dry-run complete. No changes made." : "Uninstall complete."));
 }
 
@@ -1104,7 +1126,7 @@ function cmdSync(dryRun) {
   }
 }
 
-function cmdWizard(reportOnly, dryRun, openMode) {
+function cmdWizard(reportOnly, dryRun, openMode, autoYes) {
   console.log("[hook-runner] Setup Wizard");
   console.log("========================");
 
@@ -1144,6 +1166,9 @@ function cmdWizard(reportOnly, dryRun, openMode) {
     for (var d = 0; d < dryChanges.length; d++) {
       console.log("  " + dryChanges[d].action + ": " + dryChanges[d].file);
     }
+    if (autoYes) {
+      console.log("  [--yes] Would enable default workflows: shtd, messaging-safety");
+    }
     console.log("\n[hook-runner] Dry-run complete. No changes made.");
     return;
   }
@@ -1170,6 +1195,35 @@ function cmdWizard(reportOnly, dryRun, openMode) {
   console.log("  Report: " + afterReport);
   if (openMode) openFile(afterReport);
 
+  // Step 7: Enable default workflows (if --yes or interactive)
+  // WHY: New users don't know which workflows to enable. Defaults provide
+  // immediate value (spec-first, test-first, no accidental messaging).
+  var enableWorkflows = autoYes;
+  if (enableWorkflows) {
+    console.log("[6/6] Enabling default workflows...");
+    var wf = require("./workflow");
+    var globalDir = path.join(os.homedir(), ".claude", "hooks");
+    var defaultWorkflows = ["shtd", "messaging-safety"];
+    for (var wi = 0; wi < defaultWorkflows.length; wi++) {
+      var wfName = defaultWorkflows[wi];
+      try {
+        var workflows = wf.findWorkflows(process.cwd());
+        var found = false;
+        for (var wj = 0; wj < workflows.length; wj++) {
+          if (workflows[wj].name === wfName) { found = true; break; }
+        }
+        if (found) {
+          wf.enableWorkflow(wfName, globalDir);
+          console.log("  Enabled workflow: " + wfName);
+        } else {
+          console.log("  Workflow not found (skip): " + wfName);
+        }
+      } catch (e) {
+        console.log("  Could not enable " + wfName + ": " + (e.message || "").slice(0, 80));
+      }
+    }
+  }
+
   // Summary
   console.log("");
   console.log("============================================");
@@ -1179,13 +1233,20 @@ function cmdWizard(reportOnly, dryRun, openMode) {
   console.log("  Module dirs: ~/.claude/hooks/run-modules/{Event}/");
   console.log("  Backup: " + backup.backupDir);
   console.log("  Report: " + afterReport);
+  if (enableWorkflows) {
+    console.log("  Default workflows enabled: shtd, messaging-safety");
+  }
   console.log("");
   console.log("  To add a hook module:");
   console.log("    Create ~/.claude/hooks/run-modules/<Event>/my-module.js");
   console.log("    Export: module.exports = function(input) { return null; }");
   console.log("");
+  console.log("  To manage workflows:");
+  console.log("    node setup.js --workflow list      # see available workflows");
+  console.log("    node setup.js --workflow enable X   # enable a workflow");
+  console.log("");
   console.log("  To restore original hooks:");
-  console.log("    cp " + backup.backupDir + "/settings.json ~/.claude/settings.json");
+  console.log("    node setup.js --uninstall --confirm");
   console.log("============================================");
 }
 
@@ -1801,7 +1862,8 @@ function main() {
 
   // Default: setup wizard (with --report and --install as sub-modes)
   var reportOnly = args.indexOf("--report") !== -1;
-  cmdWizard(reportOnly, dryRun, openMode);
+  var autoYes = args.indexOf("--yes") !== -1 || args.indexOf("-y") !== -1;
+  cmdWizard(reportOnly, dryRun, openMode, autoYes);
 }
 
 // ============================================================

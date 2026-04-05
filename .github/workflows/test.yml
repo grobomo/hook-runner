@@ -16,17 +16,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Run runner tests
-        run: bash scripts/test/test-runners.sh
-
-      - name: Run setup wizard tests
-        run: bash scripts/test/test-setup-wizard.sh
-
-      - name: Run async tests
-        run: bash scripts/test/test-async.sh
-
-      - name: Run module validation tests
-        run: bash scripts/test/test-modules.sh
-
-      - name: Run module sync tests
-        run: bash scripts/test/test-module-sync.sh
+      # WHY: Running individual scripts missed 20+ test suites added after
+      # the CI was first set up. --test discovers all scripts/test/test-*.sh
+      # automatically so new tests are always included.
+      - name: Run all test suites
+        run: node setup.js --test

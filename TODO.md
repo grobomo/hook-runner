@@ -134,9 +134,9 @@ WHY: Creating/editing workflows requires touching 3+ files (YAML, module, live c
 Manual file management is error-prone and breaks the principle that workflows are the
 primary abstraction. Automate CRUD so workflows are first-class CLI citizens.
 
-- [ ] T113: Add `--workflow create <name>` — generates YAML + optional module stubs + copies to live
-- [ ] T114: Add `--workflow add-module <workflow> <module>` — creates module file with WORKFLOW tag + WHY stub, adds to YAML, copies to live
-- [ ] T115: Add `--workflow sync` — copies all workflow YAMLs + tagged modules to live hooks dir
+- [x] T113: Add `--workflow create <name>` — generates YAML + optional module stubs + copies to live
+- [x] T114: Add `--workflow add-module <workflow> <module>` — creates module file with WORKFLOW tag + WHY stub, adds to YAML, copies to live
+- [x] T115: Add `--workflow sync` — copies all workflow YAMLs + tagged modules to live hooks dir
 
 ## Reduced-Friction SHTD + Dispatcher/Worker Model (T106+)
 
@@ -154,14 +154,38 @@ so the workflow scales naturally from one Claude to a CCC fleet.
 - [ ] T110: Enable SHTD globally with relaxed gates, verify single-instance workflow end-to-end
 - [ ] T111: Document dispatcher/worker model in README + CLAUDE.md
 
+## Cross-Project Drift Detector & Runner Fixes (from chat-export session 2026-04-04)
+
+- [x] T116: Commit cwd-drift-detector.js — new PreToolUse module that blocks cross-project file access and instructs Claude to spawn a new tab via context-reset. Allows TODO.md/SESSION_STATE.md writes and context-reset commands through.
+- [x] T117: Commit PostToolUse runner cleanup — path normalization + exit(1) for blocks + stderr output
+- [ ] T118: Create hook-editing enforcement gate — PreToolUse module that fires on Edit/Write targeting run-modules/ or run-*.js, enforces: (1) exit(1) not exit(0) for blocks, (2) stderr output for TUI visibility, (3) WORKFLOW tag present, (4) WHY comment present
+- [ ] T119: Document hook design rule: PreToolUse for behavioral enforcement (blocking), PostToolUse for monitoring/reporting (non-blocking). Add to CLAUDE.md and hook-editing gate.
+- [ ] T120: Audit hooks repo dirty state — 37 modified + 25 untracked files on branch 002-T007-validate-self-analysis. Inventory changes, create proper specs/branches/PRs.
+- [ ] T121: PR branch 002-T007-validate-self-analysis — contains: shtd workflow refactor, exit(1) runner fix, secret-scan gate fix, cwd-drift-detector
+
+## Publish-Ready v2.0.0 (T201-T216)
+
+WHY: hook-runner has 35+ modules and a workflow engine but isn't shareable —
+hardcoded paths, outdated docs, friction on install/uninstall. Fix everything
+so anyone can `npx grobomo/hook-runner` and get a working system.
+
+See `specs/publish-ready/tasks.md` for full task list with checkpoints.
+
+- [x] T201-T204: Clean — remove hardcoded paths from all modules
+- [x] T205-T206, T208: Harden — onboarding --yes, uninstall --confirm, CI all suites
+- [ ] T207: Health check portable-paths validation
+- [ ] T209: CI install test (npx fresh install)
+- [x] T210-T213: Document — README rewrite, troubleshooting, CLAUDE.md/SKILL.md
+- [ ] T214-T216: Ship — v2.0.0 bump, marketplace sync, e2e fresh install test
+
 ## Status
-- 106 tasks completed, 9 pending
-- Next: T113-T115 (workflow CRUD), then T106-T111 (dispatcher/worker model)
+- 109 tasks completed, 28 pending
+- Active: T201+ (publish-ready), T116-T121 (drift detector + runner fixes), T106-T111 (dispatcher/worker)
 - Version: 1.6.0
-- 240+ tests passing across 21 test suites
-- CI: GitHub Actions runs all tests on push/PR — badge in README
+- 264 tests passing across 24 test suites
+- CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
-- CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset), perf, export
+- CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live), perf, export
 
 ## Performance & Features (v1.4.0)
 - [x] T071: Add `env-var-check` PreToolUse module (blocks if required project env vars missing)
