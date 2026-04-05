@@ -295,7 +295,7 @@ See `specs/watchdog/tasks.md` for full task list.
 
 ## Status
 - 185 tasks completed, 0 pending
-- Version: 2.4.2
+- Version: 2.4.2 (released, tagged, marketplace synced, live hooks synced)
 - 402 tests passing across 40 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
