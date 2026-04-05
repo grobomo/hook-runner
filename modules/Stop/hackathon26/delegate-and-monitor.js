@@ -1,3 +1,5 @@
+// WORKFLOW: dispatcher-worker
+// WHY: Stop hook kept stopping instead of monitoring fleet workers.
 // hackathon26 stop hook: delegate and monitor, never implement locally.
 // Complements global auto-continue (which says "never stop").
 // This adds: for hackathon26, "keep working" means monitor fleet, not code.

@@ -1,3 +1,5 @@
+// WORKFLOW: dispatcher-worker
+// WHY: Example showing how project-scoped modules delegate work to remote workers.
 // Example project-scoped module: delegate implementation to remote workers.
 // Only runs when CLAUDE_PROJECT_DIR basename matches the folder name.
 // Blocks Edit/Write to implementation files — only specs/plans/infra allowed locally.
