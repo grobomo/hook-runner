@@ -314,10 +314,13 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T274: DRY — extract RUNNER_FILES to constants.js shared by setup.js and workflow-cli.js (#151)
 - [x] T275: Fix uninstall leaving report.js behind + add constants.js to package.json (#152)
 - [x] T276: Version bump to 2.5.3 + CHANGELOG
+- [x] T277: Add missing files to watchdog required_runners (#154)
+- [x] T278: Use RUNNER_FILES constant in health checks — 72→76 checks (#155)
+- [x] T279: Version bump to 2.5.4 + CHANGELOG
 
 ## Status
-- 199 tasks completed, 0 pending
-- Version: 2.5.3 (released, tagged, marketplace synced, live hooks synced)
+- 202 tasks completed, 0 pending
+- Version: 2.5.4 (released, tagged, marketplace synced, live hooks synced)
 - Clones: 2055 total, 0 stars/forks/issues — stable utility, no community demand for features
 - 544 tests passing across 40 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
