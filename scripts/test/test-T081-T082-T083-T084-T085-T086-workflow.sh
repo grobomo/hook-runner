@@ -56,13 +56,13 @@ RESULT=$(node -e "
 
 # --- Workflow Loading ---
 
-echo "[5] loadWorkflow: built-in enforce-shtd.yml"
+echo "[5] loadWorkflow: built-in cross-project-reset.yml"
 RESULT=$(node -e "
   var wf = require('$REPO_DIR/workflow.js');
-  var w = wf.loadWorkflow('$REPO_DIR/workflows/enforce-shtd.yml');
+  var w = wf.loadWorkflow('$REPO_DIR/workflows/cross-project-reset.yml');
   console.log(w.name, w.steps.length);
 " 2>/dev/null)
-[ "$RESULT" = "enforce-shtd 8" ] && pass "enforce-shtd loaded" || fail "got: $RESULT"
+[ "$RESULT" = "cross-project-reset 4" ] && pass "cross-project-reset loaded" || fail "got: $RESULT"
 
 echo "[6] findWorkflows: discovers built-in workflows"
 RESULT=$(node -e "
@@ -77,11 +77,11 @@ RESULT=$(node -e "
 echo "[7] initState + readState"
 RESULT=$(node -e "
   var wf = require('$REPO_DIR/workflow.js');
-  wf.initState('enforce-shtd', '$REPO_DIR/workflows/enforce-shtd.yml', '$WFTMP_WIN');
+  wf.initState('cross-project-reset', '$REPO_DIR/workflows/cross-project-reset.yml', '$WFTMP_WIN');
   var state = wf.readState('$WFTMP_WIN');
   console.log(state.workflow, Object.keys(state.steps).length);
 " 2>/dev/null)
-[ "$RESULT" = "enforce-shtd 8" ] && pass "state initialized" || fail "got: $RESULT"
+[ "$RESULT" = "cross-project-reset 4" ] && pass "state initialized" || fail "got: $RESULT"
 
 echo "[8] currentStep returns first step"
 RESULT=$(node -e "
@@ -89,16 +89,16 @@ RESULT=$(node -e "
   var cur = wf.currentStep('$WFTMP_WIN');
   console.log(cur);
 " 2>/dev/null)
-[ "$RESULT" = "spec" ] && pass "current step = spec" || fail "got: $RESULT"
+[ "$RESULT" = "save-state" ] && pass "current step = save-state" || fail "got: $RESULT"
 
 echo "[9] completeStep advances to next"
 RESULT=$(node -e "
   var wf = require('$REPO_DIR/workflow.js');
-  wf.completeStep('spec', '$WFTMP_WIN');
+  wf.completeStep('save-state', '$WFTMP_WIN');
   var cur = wf.currentStep('$WFTMP_WIN');
   console.log(cur);
 " 2>/dev/null)
-[ "$RESULT" = "tasks" ] && pass "advanced to tasks" || fail "got: $RESULT"
+[ "$RESULT" = "commit" ] && pass "advanced to commit" || fail "got: $RESULT"
 
 echo "[10] resetState clears state"
 RESULT=$(node -e "
@@ -114,8 +114,8 @@ RESULT=$(node -e "
 echo "[11] checkGate blocks on missing prerequisite step"
 RESULT=$(node -e "
   var wf = require('$REPO_DIR/workflow.js');
-  wf.initState('enforce-shtd', '$REPO_DIR/workflows/enforce-shtd.yml', '$WFTMP_WIN');
-  var check = wf.checkGate('tasks', '$WFTMP_WIN');
+  wf.initState('cross-project-reset', '$REPO_DIR/workflows/cross-project-reset.yml', '$WFTMP_WIN');
+  var check = wf.checkGate('commit', '$WFTMP_WIN');
   console.log(check.allowed ? 'allowed' : 'blocked');
 " 2>/dev/null)
 [ "$RESULT" = "blocked" ] && pass "gate blocks missing prereq" || fail "got: $RESULT"
@@ -123,8 +123,8 @@ RESULT=$(node -e "
 echo "[12] checkGate allows after prereq completed"
 RESULT=$(node -e "
   var wf = require('$REPO_DIR/workflow.js');
-  wf.completeStep('spec', '$WFTMP_WIN');
-  var check = wf.checkGate('tasks', '$WFTMP_WIN');
+  wf.completeStep('save-state', '$WFTMP_WIN');
+  var check = wf.checkGate('commit', '$WFTMP_WIN');
   console.log(check.allowed ? 'allowed' : 'blocked');
 " 2>/dev/null)
 [ "$RESULT" = "allowed" ] && pass "gate allows after prereq" || fail "got: $RESULT"
@@ -134,7 +134,7 @@ RESULT=$(node -e "
 echo "[13] parseWorkflowTag: extracts tag"
 cat > "$WFTMP/tagged-mod.js" << 'MODEOF'
 // WHY: test module
-// WORKFLOW: enforce-shtd
+// WORKFLOW: cross-project-reset
 module.exports = function(input) { return null; };
 MODEOF
 
@@ -142,7 +142,7 @@ RESULT=$(node -e "
   var lm = require('$REPO_DIR/load-modules.js');
   console.log(lm.parseWorkflowTag('$WFTMP_WIN/tagged-mod.js'));
 " 2>/dev/null)
-[ "$RESULT" = "enforce-shtd" ] && pass "workflow tag parsed" || fail "got: $RESULT"
+[ "$RESULT" = "cross-project-reset" ] && pass "workflow tag parsed" || fail "got: $RESULT"
 
 echo "[14] parseWorkflowTag: returns null for untagged"
 cat > "$WFTMP/plain-mod.js" << 'MODEOF'
@@ -162,7 +162,7 @@ cat > "$WFTMP/test-event/always.js" << 'MODEOF'
 module.exports = function(input) { return null; };
 MODEOF
 cat > "$WFTMP/test-event/wf-only.js" << 'MODEOF'
-// WORKFLOW: enforce-shtd
+// WORKFLOW: cross-project-reset
 module.exports = function(input) { return null; };
 MODEOF
 
@@ -183,7 +183,7 @@ echo "[16] filterByWorkflow: keeps tagged module when workflow active"
 RESULT=$(node -e "
   process.env.CLAUDE_PROJECT_DIR = '$WFTMP_WIN';
   var wf = require('$REPO_DIR/workflow.js');
-  wf.initState('enforce-shtd', '$REPO_DIR/workflows/enforce-shtd.yml', '$WFTMP_WIN');
+  wf.initState('cross-project-reset', '$REPO_DIR/workflows/cross-project-reset.yml', '$WFTMP_WIN');
   delete require.cache[require.resolve('$REPO_DIR/load-modules.js')];
   var lm = require('$REPO_DIR/load-modules.js');
   var paths = ['$WFTMP_WIN/test-event/always.js', '$WFTMP_WIN/test-event/wf-only.js'];
