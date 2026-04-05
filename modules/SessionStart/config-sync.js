@@ -58,8 +58,11 @@ module.exports = function(input) {
 
     // WHY: Push uses whatever gh auth is active. If CLAUDE_CONFIG_GH_USER is set,
     // switch to that account before pushing and switch back after.
+    var safeUser = /^[a-zA-Z0-9_-]+$/;
     var configUser = process.env.CLAUDE_CONFIG_GH_USER || "";
     var defaultUser = process.env.CLAUDE_DEFAULT_GH_USER || "";
+    if (configUser && !safeUser.test(configUser)) configUser = "";
+    if (defaultUser && !safeUser.test(defaultUser)) defaultUser = "";
 
     if (configUser) {
       cp.execSync("gh auth switch --user " + configUser + " 2>&1", {
@@ -74,6 +77,7 @@ module.exports = function(input) {
         cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"]
       }).trim();
     } catch (e) { branch = "main"; }
+    if (!/^[a-zA-Z0-9._\-\/]+$/.test(branch)) branch = "main";
 
     try {
       cp.execSync("git push origin " + branch + " 2>&1", {
