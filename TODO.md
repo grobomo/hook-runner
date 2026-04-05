@@ -355,11 +355,11 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Status
 - 219 tasks completed, 0 pending
 - Version: 2.5.10 (released, tagged, marketplace synced, live hooks synced)
-- 58 modules across 9 workflows, 40 test suites
-- Health: 81 OK, 0 warnings, 0 failures
+- 64 modules across 10 workflows, 40 test suites (260 module tests)
+- Health: 82 OK, 0 warnings, 0 failures
 - Performance: PreToolUse ~228ms/call (25 modules), SessionStart ~4s (8 modules, config-sync dominates)
 - CI: GitHub Actions runs tests + secret-scan on push/PR (Linux + Windows) — badge in README
-- Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
+- Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
 - CLI: setup, report, health, sync, stats, list, test, test-module, upgrade, uninstall, prune, version, help, perf, export, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live)
 - Project is at natural plateau — no actionable improvements remain
 
