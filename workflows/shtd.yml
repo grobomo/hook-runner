@@ -52,6 +52,9 @@ modules:
   - drift-review
   - enforcement-gate
   - hook-editing-gate
+  - hook-integrity-check
+  - hook-integrity-monitor
+  - workflow-compliance-gate
   - pr-per-task-gate
   - push-unpushed
   - remote-tracking-gate

@@ -46,7 +46,7 @@ var SCRIPT_DIR = __dirname;
 var REPO_DIR = SCRIPT_DIR;
 
 var HOOK_LOG_PATH = path.join(HOOKS_DIR, "hook-log.jsonl");
-var VERSION = "2.5.10";
+var VERSION = require(path.join(__dirname, "package.json")).version;
 
 // Shared file lists — single source of truth (see constants.js)
 var RUNNER_FILES = require(path.join(__dirname, "constants.js")).RUNNER_FILES;
@@ -764,7 +764,7 @@ function cmdUpgrade(args, dryRun) {
   console.log("  Local version:  " + VERSION);
   console.log("  Remote version: " + remoteVersion);
   console.log("");
-  if (remoteVersion === VERSION && !args.includes("--force")) {
+  if (remoteVersion === VERSION && args.indexOf("--force") === -1) {
     console.log("  Already up to date. Use --force to re-download anyway.");
     return;
   }

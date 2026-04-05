@@ -313,7 +313,7 @@ function cmdInstall() {
       var crontab = "";
       try { crontab = execSync("crontab -l 2>/dev/null", { encoding: "utf-8" }); } catch(e) {}
       // Remove existing entry
-      var lines = crontab.split("\n").filter(function(l) { return !l.includes(TASK_NAME); });
+      var lines = crontab.split("\n").filter(function(l) { return l.indexOf(TASK_NAME) === -1; });
       lines.push(cronLine);
       var newCrontab = lines.filter(function(l) { return l.trim(); }).join("\n") + "\n";
       // WHY: Pipe via stdin to avoid shell injection from crontab content containing quotes
@@ -345,7 +345,7 @@ function cmdUninstall() {
     try {
       var crontab = "";
       try { crontab = execSync("crontab -l 2>/dev/null", { encoding: "utf-8" }); } catch(e) {}
-      var lines = crontab.split("\n").filter(function(l) { return !l.includes(TASK_NAME); });
+      var lines = crontab.split("\n").filter(function(l) { return l.indexOf(TASK_NAME) === -1; });
       var newCrontab = lines.filter(function(l) { return l.trim(); }).join("\n") + "\n";
       // WHY: Pipe via stdin to avoid shell injection from crontab content containing quotes
       require("child_process").execFileSync("crontab", ["-"], { input: newCrontab });
@@ -381,7 +381,7 @@ function cmdStatus() {
   } else {
     try {
       var crontab = execSync("crontab -l 2>/dev/null", { encoding: "utf-8" });
-      if (crontab.includes(TASK_NAME)) {
+      if (crontab.indexOf(TASK_NAME) !== -1) {
         registered = true;
         console.log("  Scheduler: registered (cron)");
       } else {
@@ -446,8 +446,8 @@ function cmdLog() {
 }
 
 // --- CLI dispatch ---
-if (args.includes("--install")) { cmdInstall(); }
-else if (args.includes("--uninstall")) { cmdUninstall(); }
-else if (args.includes("--status")) { cmdStatus(); }
-else if (args.includes("--log")) { cmdLog(); }
+if (args.indexOf("--install") !== -1) { cmdInstall(); }
+else if (args.indexOf("--uninstall") !== -1) { cmdUninstall(); }
+else if (args.indexOf("--status") !== -1) { cmdStatus(); }
+else if (args.indexOf("--log") !== -1) { cmdLog(); }
 else { main(); }
