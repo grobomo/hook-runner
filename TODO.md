@@ -200,13 +200,14 @@ See `specs/watchdog/tasks.md` for full task list.
 
 ## Workflow Tag Alignment
 - [x] T220: Fix 34 workflow tag mismatches + audit shared-module logic (PR #101)
+- [x] T221: Update README workflow table with all 10 workflows + module counts (PR #102)
 
 ## Status
-- 142 tasks completed, 1 pending (T215 delegated to claude-code-skills)
+- 143 tasks completed, 1 pending (T215 delegated to claude-code-skills)
 - Version: 2.1.0
 - 369 tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
-- Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
+- Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live), perf, export
 
 ## Performance & Features (v1.4.0)
