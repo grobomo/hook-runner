@@ -226,8 +226,11 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Docs
 - [x] T231: Add CHANGELOG.md covering all versions from 1.0.0 to 2.2.1
 
+## Enhancements
+- [x] T232: Show changelog diff in --upgrade output
+
 ## Status
-- 153 tasks completed, 1 pending (T215 delegated to claude-code-skills)
+- 154 tasks completed, 1 pending (T215 delegated to claude-code-skills)
 - Version: 2.2.1
 - 371 tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
