@@ -258,6 +258,7 @@ Full catalog in `modules/` directory:
 | `enforcement-gate` | Requires git repo + TODO.md before edits |
 | `env-var-check` | Blocks edits if required env vars missing |
 | `git-rebase-safety` | Warns about reversed --ours/--theirs during rebase |
+| `hook-editing-gate` | Enforces WORKFLOW tag, WHY comment, exit(1) in hook files |
 | `test-checkpoint-gate` | Blocks code without e2e test (auto-detects `scripts/test/test-TXXX*.sh`) |
 | `instruction-to-hook-gate` | Converts user directives into hook modules |
 | `messaging-safety-gate` | Blocks outbound messaging unless authorized |
