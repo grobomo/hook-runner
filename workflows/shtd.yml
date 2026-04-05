@@ -47,7 +47,7 @@ steps:
 
 modules:
   - spec-gate
-  - gsd-gate
+  - test-checkpoint-gate
   - branch-pr-gate
   - remote-tracking-gate
   - pr-per-task-gate

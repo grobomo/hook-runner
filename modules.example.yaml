@@ -18,7 +18,7 @@ modules:
     - branch-pr-gate         # Model C branching: feature branch → task branch → PR
     - remote-tracking-gate   # blocks edits if branch not pushed to remote
     - spec-gate              # blocks code without specs/tasks.md
-    - gsd-gate               # blocks code without e2e test in checkpoint
+    - test-checkpoint-gate    # blocks code without e2e test (auto-detects scripts/test/test-TXXX*.sh)
     - continuous-claude-gate # blocks code without tracked task workflow
 
     # Safety
