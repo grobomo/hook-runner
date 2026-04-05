@@ -43,6 +43,19 @@ else
   assert "loads PostToolUse modules" "0" "1"
 fi
 
+# Test: PreToolUse runner also normalizes Windows paths (T227)
+if grep -q 'file_path.*replace.*\\\\' run-pretooluse.js 2>/dev/null; then
+  assert "PreToolUse has file_path backslash normalization" "0" "0"
+else
+  assert "PreToolUse has file_path backslash normalization" "0" "1"
+fi
+
+if grep -q 'tool_input.path.*replace.*\\\\' run-pretooluse.js 2>/dev/null; then
+  assert "PreToolUse has path backslash normalization" "0" "0"
+else
+  assert "PreToolUse has path backslash normalization" "0" "1"
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ]

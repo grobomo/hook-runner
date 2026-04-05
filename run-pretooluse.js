@@ -15,6 +15,14 @@ try {
   process.exit(0);
 }
 
+// WHY: Windows tools pass backslash paths — modules expect forward slashes for consistent matching.
+if (input && input.tool_input && typeof input.tool_input.file_path === "string") {
+  input.tool_input.file_path = input.tool_input.file_path.replace(/\\/g, "/");
+}
+if (input && input.tool_input && typeof input.tool_input.path === "string") {
+  input.tool_input.path = input.tool_input.path.replace(/\\/g, "/");
+}
+
 var ctx = hookLog.extractContext("PreToolUse", input);
 var modules = loadModules(path.join(__dirname, "run-modules", "PreToolUse"));
 
