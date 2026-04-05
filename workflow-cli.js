@@ -429,6 +429,19 @@ function cmdWorkflow(args) {
         copied++;
       }
     }
+    // Sync core files (runners, loader, logger, async helper)
+    var coreFiles = [
+      "run-pretooluse.js", "run-posttooluse.js", "run-stop.js",
+      "run-sessionstart.js", "run-userpromptsubmit.js",
+      "load-modules.js", "hook-log.js", "run-async.js"
+    ];
+    for (var ci2 = 0; ci2 < coreFiles.length; ci2++) {
+      var srcCore = path.join(__dirname, coreFiles[ci2]);
+      if (fs.existsSync(srcCore)) {
+        fs.copyFileSync(srcCore, path.join(liveHooksDir, coreFiles[ci2]));
+        copied++;
+      }
+    }
     // Sync modules
     var events = ["PreToolUse", "PostToolUse", "SessionStart", "Stop", "UserPromptSubmit"];
     for (var ei2 = 0; ei2 < events.length; ei2++) {
@@ -436,10 +449,23 @@ function cmdWorkflow(args) {
       var dstModDir = path.join(liveHooksDir, "run-modules", events[ei2]);
       if (!fs.existsSync(srcModDir)) continue;
       if (!fs.existsSync(dstModDir)) fs.mkdirSync(dstModDir, { recursive: true });
-      var mods = fs.readdirSync(srcModDir).filter(function(f) { return f.endsWith(".js"); });
-      for (var mi4 = 0; mi4 < mods.length; mi4++) {
-        fs.copyFileSync(path.join(srcModDir, mods[mi4]), path.join(dstModDir, mods[mi4]));
-        copied++;
+      var entries = fs.readdirSync(srcModDir, { withFileTypes: true });
+      for (var mi4 = 0; mi4 < entries.length; mi4++) {
+        var ent = entries[mi4];
+        if (ent.isFile() && ent.name.endsWith(".js")) {
+          fs.copyFileSync(path.join(srcModDir, ent.name), path.join(dstModDir, ent.name));
+          copied++;
+        } else if (ent.isDirectory() && ent.name !== "archive") {
+          // Project-scoped subdirectories (e.g. hackathon26/, ddei-email-security/)
+          var subSrc = path.join(srcModDir, ent.name);
+          var subDst = path.join(dstModDir, ent.name);
+          if (!fs.existsSync(subDst)) fs.mkdirSync(subDst, { recursive: true });
+          var subFiles = fs.readdirSync(subSrc).filter(function(f) { return f.endsWith(".js"); });
+          for (var si = 0; si < subFiles.length; si++) {
+            fs.copyFileSync(path.join(subSrc, subFiles[si]), path.join(subDst, subFiles[si]));
+            copied++;
+          }
+        }
       }
     }
     console.log("Synced " + copied + " files to " + liveHooksDir);
