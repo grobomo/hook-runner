@@ -86,6 +86,23 @@ module.exports = function(input) {
     warnings.push("Hook log directory not writable: " + path.dirname(logPath));
   }
 
+  // 5. Check watchdog alert flag (T128)
+  var alertPath = path.join(hooksDir, ".watchdog-alert");
+  if (fs.existsSync(alertPath)) {
+    try {
+      var alert = JSON.parse(fs.readFileSync(alertPath, "utf-8"));
+      var alertMsg = "WATCHDOG ALERT (" + alert.timestamp + "): " + (alert.failures || []).join(", ");
+      if (alert.repairs && alert.repairs.length > 0) {
+        alertMsg += " — auto-repaired: " + alert.repairs.join(", ");
+      }
+      warnings.unshift(alertMsg);
+      // Clear the alert after reading it (one-shot notification)
+      try { fs.unlinkSync(alertPath); } catch(e) {}
+    } catch(e) {
+      warnings.unshift("Watchdog alert flag exists but unreadable");
+    }
+  }
+
   if (warnings.length === 0) return null;
 
   return { text: "hook-runner health: " + warnings.length + " issue(s) found:\n" + warnings.map(function(w) { return "  - " + w; }).join("\n") };

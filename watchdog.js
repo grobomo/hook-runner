@@ -252,4 +252,190 @@ function main() {
   process.exit(exitCode);
 }
 
-main();
+// --- Scheduler Integration (T125-T127) ---
+const TASK_NAME = 'HookRunnerWatchdog';
+const isWindows = process.platform === 'win32';
+
+function getWatchdogScriptPath() {
+  // Resolve to absolute path of this script
+  return path.resolve(__dirname, 'watchdog.js');
+}
+
+function getVbsWrapperPath() {
+  return path.join(hooksDir, 'watchdog-hidden.vbs');
+}
+
+function createVbsWrapper() {
+  const nodePath = process.execPath;
+  const scriptPath = getWatchdogScriptPath().replace(/\//g, '\\');
+  const vbs = `Set WshShell = CreateObject("WScript.Shell")
+WshShell.Run "cmd /c ""${nodePath}"" ""${scriptPath}""""", 0, True
+`;
+  const vbsPath = getVbsWrapperPath();
+  fs.writeFileSync(vbsPath, vbs);
+  return vbsPath;
+}
+
+function cmdInstall() {
+  const { execSync } = require('child_process');
+
+  if (isWindows) {
+    const vbsPath = createVbsWrapper();
+    // Delete existing task if any
+    try { execSync(`schtasks /Delete /TN "${TASK_NAME}" /F`, { stdio: 'pipe' }); } catch(e) {}
+    // Create task: every 10 minutes, starts immediately
+    const cmd = `schtasks /Create /TN "${TASK_NAME}" /TR "wscript.exe \\"${vbsPath.replace(/\//g, '\\')}\\"" /SC MINUTE /MO 10 /F`;
+    try {
+      execSync(cmd, { stdio: 'pipe' });
+      console.log(`Installed scheduled task "${TASK_NAME}" (every 10 min)`);
+      console.log(`  VBS wrapper: ${vbsPath}`);
+      console.log(`  Script: ${getWatchdogScriptPath()}`);
+    } catch (e) {
+      console.error('Failed to create scheduled task:', e.message);
+      process.exit(2);
+    }
+  } else {
+    // Linux/macOS: cron
+    const scriptPath = getWatchdogScriptPath();
+    const nodePath = process.execPath;
+    const cronLine = `*/10 * * * * ${nodePath} ${scriptPath} > /dev/null 2>&1 # ${TASK_NAME}`;
+    try {
+      let crontab = '';
+      try { crontab = execSync('crontab -l 2>/dev/null', { encoding: 'utf-8' }); } catch(e) {}
+      // Remove existing entry
+      const lines = crontab.split('\n').filter(l => !l.includes(TASK_NAME));
+      lines.push(cronLine);
+      const newCrontab = lines.filter(l => l.trim()).join('\n') + '\n';
+      execSync(`echo '${newCrontab}' | crontab -`, { stdio: 'pipe' });
+      console.log(`Installed cron job "${TASK_NAME}" (every 10 min)`);
+      console.log(`  Script: ${scriptPath}`);
+    } catch (e) {
+      console.error('Failed to install cron job:', e.message);
+      process.exit(2);
+    }
+  }
+  process.exit(0);
+}
+
+function cmdUninstall() {
+  const { execSync } = require('child_process');
+
+  if (isWindows) {
+    try {
+      execSync(`schtasks /Delete /TN "${TASK_NAME}" /F`, { stdio: 'pipe' });
+      console.log(`Removed scheduled task "${TASK_NAME}"`);
+    } catch (e) {
+      console.log(`Task "${TASK_NAME}" not found (already removed)`);
+    }
+    // Clean up VBS wrapper
+    const vbsPath = getVbsWrapperPath();
+    if (fs.existsSync(vbsPath)) fs.unlinkSync(vbsPath);
+  } else {
+    try {
+      let crontab = '';
+      try { crontab = execSync('crontab -l 2>/dev/null', { encoding: 'utf-8' }); } catch(e) {}
+      const lines = crontab.split('\n').filter(l => !l.includes(TASK_NAME));
+      const newCrontab = lines.filter(l => l.trim()).join('\n') + '\n';
+      execSync(`echo '${newCrontab}' | crontab -`, { stdio: 'pipe' });
+      console.log(`Removed cron job "${TASK_NAME}"`);
+    } catch (e) {
+      console.log(`Cron job "${TASK_NAME}" not found (already removed)`);
+    }
+  }
+  process.exit(0);
+}
+
+function cmdStatus() {
+  const { execSync } = require('child_process');
+
+  console.log('=== Watchdog Status ===');
+
+  // Check scheduler registration
+  let registered = false;
+  if (isWindows) {
+    try {
+      const out = execSync(`schtasks /Query /TN "${TASK_NAME}" /FO LIST 2>&1`, { encoding: 'utf-8' });
+      registered = true;
+      const statusMatch = out.match(/Status:\s*(.+)/);
+      const nextMatch = out.match(/Next Run Time:\s*(.+)/);
+      const lastMatch = out.match(/Last Run Time:\s*(.+)/);
+      console.log(`  Scheduler: registered`);
+      if (statusMatch) console.log(`  Task status: ${statusMatch[1].trim()}`);
+      if (lastMatch) console.log(`  Last run: ${lastMatch[1].trim()}`);
+      if (nextMatch) console.log(`  Next run: ${nextMatch[1].trim()}`);
+    } catch (e) {
+      console.log('  Scheduler: not registered');
+    }
+  } else {
+    try {
+      const crontab = execSync('crontab -l 2>/dev/null', { encoding: 'utf-8' });
+      if (crontab.includes(TASK_NAME)) {
+        registered = true;
+        console.log('  Scheduler: registered (cron)');
+      } else {
+        console.log('  Scheduler: not registered');
+      }
+    } catch (e) {
+      console.log('  Scheduler: not registered');
+    }
+  }
+
+  // Check last log entry
+  const logPath = path.join(hooksDir, 'watchdog-log.jsonl');
+  if (fs.existsSync(logPath)) {
+    const lines = fs.readFileSync(logPath, 'utf-8').trim().split('\n');
+    if (lines.length > 0) {
+      try {
+        const last = JSON.parse(lines[lines.length - 1]);
+        console.log(`  Last check: ${last.timestamp} — ${last.status} (${last.passed}/${last.checks} passed)`);
+      } catch(e) {}
+    }
+    console.log(`  Log entries: ${lines.length}`);
+  } else {
+    console.log('  Log: no entries yet');
+  }
+
+  // Check alert flag
+  const alertPath = path.join(hooksDir, '.watchdog-alert');
+  if (fs.existsSync(alertPath)) {
+    try {
+      const alert = JSON.parse(fs.readFileSync(alertPath, 'utf-8'));
+      console.log(`  ALERT: ${alert.timestamp} — ${alert.failures.join(', ')}`);
+    } catch(e) {
+      console.log('  ALERT: flag exists but unreadable');
+    }
+  }
+
+  process.exit(registered ? 0 : 1);
+}
+
+// --- Log viewer (T129) ---
+function cmdLog() {
+  const logPath = path.join(hooksDir, 'watchdog-log.jsonl');
+  if (!fs.existsSync(logPath)) {
+    console.log('No watchdog log found.');
+    process.exit(0);
+  }
+
+  const count = parseInt(getArg('--last') || '20', 10);
+  const lines = fs.readFileSync(logPath, 'utf-8').trim().split('\n');
+  const recent = lines.slice(-count);
+
+  console.log(`=== Watchdog Log (last ${recent.length} of ${lines.length}) ===`);
+  for (const line of recent) {
+    try {
+      const e = JSON.parse(line);
+      const icon = e.status === 'healthy' ? 'OK' : e.status === 'repaired' ? 'REPAIRED' : 'BROKEN';
+      const detail = e.failures && e.failures.length > 0 ? ` — ${e.failures.join(', ')}` : '';
+      console.log(`  ${e.timestamp}  [${icon}]  ${e.passed}/${e.checks} checks${detail}`);
+    } catch(e) {}
+  }
+  process.exit(0);
+}
+
+// --- CLI dispatch ---
+if (args.includes('--install')) { cmdInstall(); }
+else if (args.includes('--uninstall')) { cmdUninstall(); }
+else if (args.includes('--status')) { cmdStatus(); }
+else if (args.includes('--log')) { cmdLog(); }
+else { main(); }
