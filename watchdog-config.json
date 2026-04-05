@@ -1,0 +1,16 @@
+{
+  "required_workflows": ["shtd"],
+  "required_runners": [
+    "run-pretooluse.js",
+    "run-posttooluse.js",
+    "run-stop.js",
+    "run-sessionstart.js",
+    "run-userpromptsubmit.js",
+    "load-modules.js",
+    "workflow.js"
+  ],
+  "required_modules": [
+    "Stop/auto-continue.js",
+    "PreToolUse/branch-pr-gate.js"
+  ]
+}
