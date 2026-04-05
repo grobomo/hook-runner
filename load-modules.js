@@ -13,25 +13,36 @@
 var fs = require("fs");
 var path = require("path");
 
+// Cache header lines (first 5) per file path within a single loadModules() call.
+// Each hook invocation is a fresh Node process, so no stale cache risk.
+var _headerCache = {};
+
+function getHeaderLines(filePath) {
+  if (_headerCache[filePath]) return _headerCache[filePath];
+  try {
+    var content = fs.readFileSync(filePath, "utf-8");
+    var lines = content.split("\n").slice(0, 5);
+    _headerCache[filePath] = lines;
+    return lines;
+  } catch (e) { return []; }
+}
+
 /**
  * Parse "// requires: mod1, mod2" from the first 5 lines of a module file.
  * Only matches module-name patterns (lowercase with hyphens, no spaces in names).
  * Returns array of required module base names (without .js).
  */
 function parseRequires(filePath) {
-  try {
-    var content = fs.readFileSync(filePath, "utf-8");
-    var lines = content.split("\n").slice(0, 5);
-    for (var i = 0; i < lines.length; i++) {
-      var match = lines[i].match(/^\/\/\s*requires:\s*(.+)/i);
-      if (match) {
-        var deps = match[1].split(",").map(function(s) { return s.trim(); }).filter(Boolean);
-        // Only accept valid module names (lowercase, hyphens, digits — no spaces/descriptions)
-        var valid = deps.filter(function(d) { return /^[a-z0-9][-a-z0-9]*$/.test(d); });
-        if (valid.length > 0) return valid;
-      }
+  var lines = getHeaderLines(filePath);
+  for (var i = 0; i < lines.length; i++) {
+    var match = lines[i].match(/^\/\/\s*requires:\s*(.+)/i);
+    if (match) {
+      var deps = match[1].split(",").map(function(s) { return s.trim(); }).filter(Boolean);
+      // Only accept valid module names (lowercase, hyphens, digits — no spaces/descriptions)
+      var valid = deps.filter(function(d) { return /^[a-z0-9][-a-z0-9]*$/.test(d); });
+      if (valid.length > 0) return valid;
     }
-  } catch (e) { /* can't read, no deps */ }
+  }
   return [];
 }
 
@@ -40,14 +51,11 @@ function parseRequires(filePath) {
  * Returns the workflow name or null if no tag found.
  */
 function parseWorkflowTag(filePath) {
-  try {
-    var content = fs.readFileSync(filePath, "utf-8");
-    var lines = content.split("\n").slice(0, 5);
-    for (var i = 0; i < lines.length; i++) {
-      var match = lines[i].match(/^\/\/\s*WORKFLOW:\s*(\S+)/i);
-      if (match) return match[1];
-    }
-  } catch (e) { /* can't read */ }
+  var lines = getHeaderLines(filePath);
+  for (var i = 0; i < lines.length; i++) {
+    var match = lines[i].match(/^\/\/\s*WORKFLOW:\s*(\S+)/i);
+    if (match) return match[1];
+  }
   return null;
 }
 
