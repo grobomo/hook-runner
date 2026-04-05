@@ -339,9 +339,12 @@ See `specs/watchdog/tasks.md` for full task list.
 
 - [x] T291: Version bump to 2.5.8 + CHANGELOG (#167)
 
+## Report Enhancement
+- [x] T292: Add workflow + WHY metadata to HTML report — workflow summary cards, filter buttons, workflow badge per module, WHY text shown prominently (#168)
+
 ## Status
-- 214 tasks completed, 0 pending
-- Version: 2.5.6 (released, tagged, marketplace synced, live hooks synced)
+- 215 tasks completed, 0 pending
+- Version: 2.5.8 (released, tagged, marketplace synced, live hooks synced)
 - 58 modules across 9 workflows, 536 tests passing across 40 test suites
 - Health: 77 OK, 0 warnings, 0 failures
 - Performance: PreToolUse ~228ms/call (25 modules), SessionStart ~4s (8 modules, config-sync dominates)
