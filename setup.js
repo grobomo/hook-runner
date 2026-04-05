@@ -46,7 +46,7 @@ var SCRIPT_DIR = __dirname;
 var REPO_DIR = SCRIPT_DIR;
 
 var HOOK_LOG_PATH = path.join(HOOKS_DIR, "hook-log.jsonl");
-var VERSION = "2.4.2";
+var VERSION = "2.4.3";
 
 // ============================================================
 // 0. Hook Log Stats
