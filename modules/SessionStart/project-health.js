@@ -12,8 +12,12 @@ module.exports = function(input) {
   var settingsPath = path.join(home, ".claude", "settings.json");
   var warnings = [];
 
-  // 1. Check core runners exist
-  var runners = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "run-userpromptsubmit.js", "load-modules.js", "hook-log.js"];
+  // 1. Check core runners exist (shared constant)
+  var constantsPath = path.join(hooksDir, "constants.js");
+  var runners;
+  try { runners = require(constantsPath).RUNNER_FILES; } catch(e) {
+    runners = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "run-userpromptsubmit.js", "load-modules.js", "hook-log.js", "run-async.js", "workflow.js", "workflow-cli.js", "constants.js"];
+  }
   var missingRunners = [];
   for (var i = 0; i < runners.length; i++) {
     if (!fs.existsSync(path.join(hooksDir, runners[i]))) {
