@@ -223,8 +223,11 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Live Cleanup (session 2026-04-05b)
 - [x] Archived 4 fleet-specific shtd_ modules (task-claim, e2e-merge-gate, audit-logger, task-release) — ~320ms/call savings
 
+## Docs
+- [x] T231: Add CHANGELOG.md covering all versions from 1.0.0 to 2.2.1
+
 ## Status
-- 152 tasks completed, 1 pending (T215 delegated to claude-code-skills)
+- 153 tasks completed, 1 pending (T215 delegated to claude-code-skills)
 - Version: 2.2.1
 - 371 tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
