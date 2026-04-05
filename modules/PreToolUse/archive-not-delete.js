@@ -44,6 +44,7 @@ module.exports = function(input) {
     /build\//,
     /\bgit\s+rm\s+(-r\s+)?--cached\b/,  // index-only removal, doesn't delete from disk
     /\bgit\s+rm\s+--cached\b/,          // same without -r
+    /\.git\/.*\.lock\b/,                // stale git lock files (index.lock, etc.) — standard recovery
   ];
 
   for (var i = 0; i < destructive.length; i++) {
