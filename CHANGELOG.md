@@ -2,6 +2,14 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.5.1] — 2026-04-05
+
+### Fixed
+- `--uninstall` now removes `workflow.js` and `workflow-cli.js` (were installed but not cleaned up) (#144)
+
+### Improved
+- DRY: shared `RUNNER_FILES` constant eliminates 3 divergent file lists in install/upgrade/uninstall (#145)
+
 ## [2.5.0] — 2026-04-05
 
 ### Improved

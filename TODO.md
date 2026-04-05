@@ -299,9 +299,14 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T265: sync-live now copies runners + project-scoped module subdirs (66→78 files)
 - [x] T266: Version bump to 2.5.0 + CHANGELOG
 
+## Bug Fix & DRY
+- [x] T267: Fix uninstall leaving workflow.js and workflow-cli.js behind (#144)
+- [x] T268: DRY — shared RUNNER_FILES constant for install/upgrade/uninstall (#145)
+- [x] T269: Version bump to 2.5.1 + CHANGELOG
+
 ## Status
-- 189 tasks completed, 0 pending
-- Version: 2.5.0 (released, tagged, marketplace synced, live hooks synced)
+- 192 tasks completed, 0 pending
+- Version: 2.5.1 (released, tagged, marketplace synced, live hooks synced)
 - Clones: 2055 total, 0 stars/forks/issues — stable utility, no community demand for features
 - 402 tests passing across 40 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
