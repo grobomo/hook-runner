@@ -293,9 +293,13 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T261: Remove dead hasAsync var + --perf labels removed modules and excludes from overhead estimates
 - [x] T262: Version bump to 2.4.2 + CHANGELOG
 
+## Performance
+- [x] T263: Shared git context in PreToolUse runner — one git call shared across 4 modules (~80ms savings per tool call)
+- [x] T264: Version bump to 2.4.3 + CHANGELOG
+
 ## Status
-- 185 tasks completed, 0 pending
-- Version: 2.4.2 (released, tagged, marketplace synced, live hooks synced)
+- 187 tasks completed, 0 pending
+- Version: 2.4.3 (released, tagged, marketplace synced, live hooks synced)
 - 402 tests passing across 40 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
