@@ -178,8 +178,21 @@ See `specs/publish-ready/tasks.md` for full task list with checkpoints.
 - [x] T210-T213: Document — README rewrite, troubleshooting, CLAUDE.md/SKILL.md
 - [ ] T214-T216: Ship — v2.0.0 bump, marketplace sync, e2e fresh install test
 
+## Hook System Watchdog (T122-T129)
+
+WHY: Test suite silently disabled shtd globally. No independent monitor caught it.
+Watchdog runs every 10 min via OS scheduler, checks config, auto-repairs, alerts.
+
+See `specs/watchdog/tasks.md` for full task list.
+
+- [ ] T122: watchdog.js — core checks + auto-repair + alert flag + logging
+- [ ] T123: watchdog-config.json — declares healthy state
+- [ ] T124: Fix T205 test — stop sabotaging global workflow-config.json
+- [ ] T125-T127: Scheduler integration (--install, --uninstall, --status)
+- [ ] T128-T129: SessionStart alert integration + --log command
+
 ## Status
-- 109 tasks completed, 28 pending
+- 115 tasks completed, 28 pending
 - Active: T201+ (publish-ready), T116-T121 (drift detector + runner fixes), T106-T111 (dispatcher/worker)
 - Version: 1.6.0
 - 264 tests passing across 24 test suites
