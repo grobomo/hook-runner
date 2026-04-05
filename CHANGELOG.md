@@ -2,6 +2,16 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.2.3] — 2026-04-05
+
+### Fixed
+- workflow.js converted from ES6 to ES5 for consistency with all other files (#120)
+- `require("path")` moved from inner function to module level in run-async.js (#120)
+- Missing `--confirm` flag added to `--help` output (#120)
+
+### Changed
+- Module header cache in load-modules.js — each file read once instead of twice per invocation (#121)
+
 ## [2.2.2] — 2026-04-05
 
 ### Fixed
