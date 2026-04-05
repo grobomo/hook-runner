@@ -309,9 +309,15 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T271: Module validation tests check headers + traverse subdirs (100→244 tests) (#148)
 - [x] T272: Version bump to 2.5.2 + CHANGELOG
 
+## Bug Fixes & DRY (session 2026-04-05g)
+- [x] T273: Fix sync-live missing workflow.js and workflow-cli.js (#150)
+- [x] T274: DRY — extract RUNNER_FILES to constants.js shared by setup.js and workflow-cli.js (#151)
+- [x] T275: Fix uninstall leaving report.js behind + add constants.js to package.json (#152)
+- [x] T276: Version bump to 2.5.3 + CHANGELOG
+
 ## Status
-- 195 tasks completed, 0 pending
-- Version: 2.5.2 (released, tagged, marketplace synced, live hooks synced)
+- 199 tasks completed, 0 pending
+- Version: 2.5.3 (released, tagged, marketplace synced, live hooks synced)
 - Clones: 2055 total, 0 stars/forks/issues — stable utility, no community demand for features
 - 544 tests passing across 40 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README

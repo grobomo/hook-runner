@@ -2,6 +2,16 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.5.3] — 2026-04-05
+
+### Fixed
+- `sync-live` now copies `workflow.js` and `workflow-cli.js` to live hooks (#150)
+- `--uninstall` now removes `report.js` (was orphaned after uninstall) (#152)
+- Added `constants.js` to `package.json` files array (fixed broken `npx` install) (#152)
+
+### Improved
+- DRY: extracted `RUNNER_FILES` to `constants.js` shared by `setup.js` and `workflow-cli.js` (#151)
+
 ## [2.5.2] — 2026-04-05
 
 ### Improved
