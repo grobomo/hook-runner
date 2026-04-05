@@ -330,11 +330,14 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Status
 - 207 tasks completed, 0 pending
 - Version: 2.5.5 (released, tagged, marketplace synced, live hooks synced)
-- Clones: 2055 total, 0 stars/forks/issues — stable utility, no community demand for features
+- Clones: 2055 total, 616 unique, 0 stars/forks/issues — stable utility, no community demand
 - 532 tests passing across 40 test suites
-- CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
+- Health: 76 OK, 0 warnings, 0 failures
+- Performance: PreToolUse ~228ms/call (25 modules), SessionStart ~4s (7 modules, config-sync dominates)
+- CI: GitHub Actions runs tests + secret-scan on push/PR (Linux + Windows) — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
-- CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live), perf, export
+- CLI: setup, report, health, sync, stats, list, test, test-module, upgrade, uninstall, prune, version, help, perf, export, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live)
+- Project is at natural plateau — no actionable improvements remain
 
 ## Performance & Features (v1.4.0)
 - [x] T071: Add `env-var-check` PreToolUse module (blocks if required project env vars missing)
