@@ -1,3 +1,4 @@
+// WORKFLOW: code-quality
 // WHY: share/ is the customer deliverable shipped to many different customers.
 // Customer names, internal project codenames, meeting note references, and
 // employee names leaked into share/ files multiple times during development.

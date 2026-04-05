@@ -1,3 +1,5 @@
+// WORKFLOW: dispatcher-worker
+// WHY: Local Claude implemented features directly instead of delegating to fleet workers.
 // Enforce: local Claude manages fleet, workers implement features.
 // Blocks Edit/Write to implementation files in any project with specs/.
 // Blocks Bash commands that look like implementation work (npm test, node app, etc.)
