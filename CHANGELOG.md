@@ -2,6 +2,14 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.4.1] — 2026-04-05
+
+### Improved
+- branch-pr-gate: defer `getBranch()` git subprocess until after state-change check — saves ~150ms for non-state-changing Bash commands (#136)
+
+### Added
+- Test suite for `--test-module` command (9 tests covering usage, errors, all event types, custom input) (#136)
+
 ## [2.4.0] — 2026-04-05
 
 ### Added
