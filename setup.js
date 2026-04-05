@@ -2009,6 +2009,30 @@ function healthCheck() {
     results.push({ check: "log", file: "hook-log.jsonl", status: "error", detail: "hooks dir not writable" });
   }
 
+  // 7. Detect duplicate/redundant modules (e.g. shtd_branch-gate vs branch-pr-gate)
+  for (var ddi = 0; ddi < events.length; ddi++) {
+    var ddEvt = events[ddi];
+    var ddDir = path.join(HOOKS_DIR, "run-modules", ddEvt);
+    if (!fs.existsSync(ddDir)) continue;
+    var ddFiles;
+    try { ddFiles = fs.readdirSync(ddDir).filter(function(f) { return f.endsWith(".js"); }).sort(); } catch(e) { continue; }
+    // Build map of base names (strip shtd_ prefix, normalize hyphens)
+    var baseNameMap = {};
+    for (var ddf = 0; ddf < ddFiles.length; ddf++) {
+      var name = ddFiles[ddf].replace(/\.js$/, "");
+      // Normalize: strip shtd_ prefix, replace _ with -, remove -gate suffix variance
+      var base = name.replace(/^shtd_/, "").replace(/_/g, "-");
+      if (!baseNameMap[base]) baseNameMap[base] = [];
+      baseNameMap[base].push(name);
+    }
+    var bk = Object.keys(baseNameMap);
+    for (var bki = 0; bki < bk.length; bki++) {
+      if (baseNameMap[bk[bki]].length > 1) {
+        results.push({ check: "duplicate", file: ddEvt + "/" + baseNameMap[bk[bki]].join(", "), status: "warning", detail: "possible duplicates — similar base name '" + bk[bki] + "'" });
+      }
+    }
+  }
+
   return results;
 }
 
