@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.5.8] — 2026-04-05
+
+### Fixed
+- Replace `.startsWith()` and `.endsWith()` ES6 methods with `indexOf()` in 9 module files for ES5 consistency (#166)
+
 ## [2.5.7] — 2026-04-05
 
 ### Performance
