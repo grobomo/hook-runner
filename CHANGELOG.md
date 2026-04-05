@@ -2,6 +2,16 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.3.0] — 2026-04-05
+
+### Added
+- Windows CI job (`windows-latest`) — cross-platform validation on every push (#123)
+- "Why hook-runner?" philosophy section in README — raw hooks → modules → workflows (#124)
+- Integration guide in README — context-reset, skill-maker, mcp-manager, marketplace (#124)
+
+### Fixed
+- `grep -P` (Perl regex) replaced with portable `grep -o` / `sed` in 3 test scripts (#123)
+
 ## [2.2.3] — 2026-04-05
 
 ### Fixed
