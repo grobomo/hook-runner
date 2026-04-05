@@ -847,7 +847,7 @@ function cmdUninstall(args, dryRun) {
   } else {
     uninstallChanges.push({ what: "settings.json", status: "not found" });
   }
-  var runnerFiles = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "run-userpromptsubmit.js", "load-modules.js", "hook-log.js", "run-async.js", "setup.js"];
+  var runnerFiles = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "run-userpromptsubmit.js", "load-modules.js", "hook-log.js", "run-async.js", "workflow.js", "workflow-cli.js", "setup.js"];
   for (var uf = 0; uf < runnerFiles.length; uf++) {
     var fp = path.join(HOOKS_DIR, runnerFiles[uf]);
     if (fs.existsSync(fp)) {
