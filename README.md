@@ -252,6 +252,7 @@ Full catalog in `modules/` directory:
 | `settings-change-gate` | Requires rationale when modifying config |
 | `spec-gate` | Blocks code without specs/tasks.md |
 | `why-reminder` | Reminds to explain WHY before every code edit |
+| `worker-loop` | Blocks PR creation until task's e2e test passes |
 | `workflow-gate` | Enforces step order in active workflows |
 
 #### Project-Scoped PreToolUse
