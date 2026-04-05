@@ -91,14 +91,17 @@ else
   fail "No task sources should block: $OUTPUT"
 fi
 
-# 4. Project with specs/*/tasks.md (original behavior still works)
+# 4. Project with specs/*/tasks.md + spec.md (original behavior still works)
 PROJ4="$TMPDIR/proj-specs"
 mkdir -p "$PROJ4/specs/feat1" "$PROJ4/src"
 git init -q "$PROJ4"
+echo "# Feature 1 Spec" > "$PROJ4/specs/feat1/spec.md"
 cat > "$PROJ4/specs/feat1/tasks.md" <<'EOF'
 - [ ] T001: Build it
 EOF
 echo "x" > "$PROJ4/src/app.js"
+# Need at least one commit for git rev-parse HEAD to work
+(cd "$PROJ4" && git add -A && git commit -q -m "init" 2>/dev/null) || true
 
 OUTPUT=$(run_gate "$PROJ4" "$PROJ4/src/app.js")
 if echo "$OUTPUT" | grep -q "PASSED"; then

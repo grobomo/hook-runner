@@ -344,6 +344,9 @@ Full catalog in `modules/` directory:
 #### Project-Scoped PreToolUse
 | Module | Project | Description |
 |--------|---------|-------------|
+| `no-customer-env-changes` | ep-incident-response | Blocks infrastructure changes during incident response |
+| `no-data-exfil` | ep-incident-response | Blocks data export/download during incident response |
+| `v1-read-only` | ep-incident-response | Blocks Vision One write operations during incident response |
 | `share-is-generic` | ddei-email-security | Domain-specific gate for email security project |
 | `use-workers` | hackathon26 | Forces delegation to fleet workers |
 
