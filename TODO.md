@@ -185,17 +185,17 @@ Watchdog runs every 10 min via OS scheduler, checks config, auto-repairs, alerts
 
 See `specs/watchdog/tasks.md` for full task list.
 
-- [ ] T122: watchdog.js — core checks + auto-repair + alert flag + logging
-- [ ] T123: watchdog-config.json — declares healthy state
-- [ ] T124: Fix T205 test — stop sabotaging global workflow-config.json
-- [ ] T125-T127: Scheduler integration (--install, --uninstall, --status)
-- [ ] T128-T129: SessionStart alert integration + --log command
+- [x] T122: watchdog.js — core checks + auto-repair + alert flag + logging
+- [x] T123: watchdog-config.json — declares healthy state
+- [x] T124: Fix T205 test — stop sabotaging global workflow-config.json
+- [x] T125-T127: Scheduler integration (--install, --uninstall, --status)
+- [x] T128-T129: SessionStart alert integration + --log command
 
 ## Status
-- 115 tasks completed, 28 pending
+- 123 tasks completed, 20 pending
 - Active: T201+ (publish-ready), T116-T121 (drift detector + runner fixes), T106-T111 (dispatcher/worker)
 - Version: 1.6.0
-- 264 tests passing across 24 test suites
+- 309 tests passing across 31 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live), perf, export
