@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.5.4] — 2026-04-05
+
+### Improved
+- Watchdog `required_runners` now checks all deployed files including `constants.js` (#154)
+- `healthCheck()` and `project-health` module now use shared `RUNNER_FILES` constant (72→76 checks) (#155)
+
 ## [2.5.3] — 2026-04-05
 
 ### Fixed
