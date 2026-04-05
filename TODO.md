@@ -232,11 +232,17 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Release
 - [x] T233: Git tags for all 11 versions + GitHub release for v2.2.1
 
+## Context Optimization (session 2026-04-05c)
+- [x] Moved 42 archived rules from ~/.claude/rules/archive/ to ~/.claude/rules-archive/
+  - Rules were still loaded into every conversation (~8K tokens wasted)
+  - All 42 rules are enforced by hook-runner modules at the tool-call level
+  - 13 active knowledge/config rules remain in ~/.claude/rules/
+
 ## Status
 - 156 tasks completed, 0 pending
 - All tasks complete
 - Version: 2.2.1
-- 371 tests passing across 38 test suites
+- 379 tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live), perf, export
