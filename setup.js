@@ -703,6 +703,7 @@ function cmdHelp() {
   console.log("  --workflow      Manage enforceable step pipelines (list|start|status|complete|reset)");
   console.log("  --export [file] Export installed modules as shareable YAML (default: modules-export.yaml)");
   console.log("  --perf          Analyze module timing data and identify bottlenecks");
+  console.log("  --test-module   Test a single module with sample inputs");
   console.log("  --test          Run all test suites");
   console.log("  --upgrade       Fetch latest runners from GitHub and update local copies");
   console.log("  --uninstall     Remove hook-runner from settings.json and hooks dir");
@@ -1432,6 +1433,112 @@ function cmdExport(args) {
   console.log("  Share this file — others can import with: cp " + outFile + " ~/.claude/hooks/modules.yaml && node setup.js --sync");
 }
 
+function cmdTestModule(args) {
+  var idx = args.indexOf("--test-module");
+  var modPath = args[idx + 1];
+  if (!modPath) {
+    console.error("Usage: node setup.js --test-module <path-to-module.js> [--input <json-file>]");
+    process.exit(1);
+  }
+  modPath = path.resolve(modPath);
+  if (!fs.existsSync(modPath)) {
+    console.error("Module not found: " + modPath);
+    process.exit(1);
+  }
+  console.log("[hook-runner] Test Module");
+  console.log("========================");
+  console.log("  Module: " + modPath);
+
+  // Load module
+  var mod;
+  try {
+    mod = require(modPath);
+  } catch (e) {
+    console.error("  FAIL: could not load — " + e.message);
+    process.exit(1);
+  }
+  if (typeof mod !== "function") {
+    console.error("  FAIL: exports " + typeof mod + ", expected function");
+    process.exit(1);
+  }
+  console.log("  Loaded: exports function");
+
+  // Check headers
+  var headerLines = fs.readFileSync(modPath, "utf-8").split("\n").slice(0, 5);
+  var hasWhy = headerLines.some(function(l) { return /\/\/\s*WHY:/.test(l); });
+  var hasWorkflow = headerLines.some(function(l) { return /\/\/\s*WORKFLOW:/.test(l); });
+  console.log("  WHY comment: " + (hasWhy ? "yes" : "MISSING"));
+  console.log("  WORKFLOW tag: " + (hasWorkflow ? headerLines.filter(function(l) { return /WORKFLOW:/.test(l); })[0].trim() : "MISSING"));
+  console.log("");
+
+  // Custom input or built-in samples
+  var inputIdx = args.indexOf("--input");
+  var customInputs = null;
+  if (inputIdx !== -1 && args[inputIdx + 1]) {
+    try {
+      var raw = fs.readFileSync(args[inputIdx + 1], "utf-8");
+      var parsed = JSON.parse(raw);
+      customInputs = Array.isArray(parsed) ? parsed : [parsed];
+    } catch (e) {
+      console.error("  Could not parse input file: " + e.message);
+      process.exit(1);
+    }
+  }
+
+  var sampleBase = path.join(process.cwd(), "src");
+  var samples = customInputs || [
+    { label: "Edit .js file", tool_name: "Edit", tool_input: { file_path: path.join(sampleBase, "index.js"), old_string: "foo", new_string: "bar" } },
+    { label: "Write new file", tool_name: "Write", tool_input: { file_path: path.join(sampleBase, "out.txt"), content: "hello" } },
+    { label: "Bash: git status", tool_name: "Bash", tool_input: { command: "git status" } },
+    { label: "Bash: rm -rf", tool_name: "Bash", tool_input: { command: "rm -rf /tmp/stuff" } },
+    { label: "Read file", tool_name: "Read", tool_input: { file_path: path.join(sampleBase, "README.md") } },
+  ];
+
+  var runAsync = require("./run-async");
+  var passed = 0, blocked = 0, errors = 0;
+
+  function runNext(i) {
+    if (i >= samples.length) {
+      console.log("");
+      console.log("  " + samples.length + " inputs: " + passed + " pass, " + blocked + " block, " + errors + " error");
+      return;
+    }
+    var sample = samples[i];
+    var label = sample.label || sample.tool_name + " " + (sample.tool_input.command || sample.tool_input.file_path || "").substring(0, 40);
+    var t0 = Date.now();
+    try {
+      var result = mod(sample);
+      if (runAsync.isThenable(result)) {
+        runAsync.withTimeout(result, 4000, path.basename(modPath)).then(
+          function(val) { printResult(label, val, null, Date.now() - t0); runNext(i + 1); },
+          function(err) { printResult(label, null, err, Date.now() - t0); runNext(i + 1); }
+        );
+      } else {
+        printResult(label, result, null, Date.now() - t0);
+        runNext(i + 1);
+      }
+    } catch (e) {
+      printResult(label, null, e, Date.now() - t0);
+      runNext(i + 1);
+    }
+  }
+
+  function printResult(label, result, err, ms) {
+    if (err) {
+      console.log("  ERROR [" + ms + "ms] " + label + " — " + err.message);
+      errors++;
+    } else if (result && result.decision) {
+      console.log("  BLOCK [" + ms + "ms] " + label + " — " + (result.reason || "").substring(0, 80));
+      blocked++;
+    } else {
+      console.log("  PASS  [" + ms + "ms] " + label);
+      passed++;
+    }
+  }
+
+  runNext(0);
+}
+
 function cmdWorkflow(args) {
   return require(path.join(__dirname, "workflow-cli.js"))(args);
 }
@@ -1451,6 +1558,7 @@ function main() {
   if (args.indexOf("--export") !== -1) return cmdExport(args);
   if (args.indexOf("--perf") !== -1) return cmdPerf();
   if (args.indexOf("--list") !== -1) return cmdList();
+  if (args.indexOf("--test-module") !== -1) return cmdTestModule(args);
   if (args.indexOf("--test") !== -1) return cmdTest();
   if (args.indexOf("--health") !== -1) return cmdHealth();
   if (args.indexOf("--sync") !== -1) return cmdSync(dryRun);

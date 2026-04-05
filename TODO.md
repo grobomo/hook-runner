@@ -276,8 +276,11 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Workflow Cleanup
 - [x] T255: Fix workflow YAML/tag mismatches — dispatcher-worker 9→1, cross-project-reset 0→1, archive enforce-shtd, update shtd 17→16
 
+## Developer Experience
+- [x] T256: Add --test-module command (test a single module with sample inputs, supports --input for custom JSON)
+
 ## Status
-- 178 tasks completed, 0 pending
+- 179 tasks completed, 0 pending
 - Version: 2.3.2
 - 394 tests passing across 39 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
