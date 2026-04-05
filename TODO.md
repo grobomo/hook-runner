@@ -238,9 +238,12 @@ See `specs/watchdog/tasks.md` for full task list.
   - All 42 rules are enforced by hook-runner modules at the tool-call level
   - 13 active knowledge/config rules remain in ~/.claude/rules/
 
+## Bug Fix: config-sync stale lock (session 2026-04-05d)
+- [x] T234: Fix config-sync module to detect and remove stale git index.lock before `git add`
+- [x] T235: Fix config-sync to push current branch (not hardcoded `main`)
+
 ## Status
-- 156 tasks completed, 0 pending
-- All tasks complete
+- 158 tasks completed, 0 pending
 - Version: 2.2.1
 - 379 tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
