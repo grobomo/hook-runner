@@ -27,7 +27,8 @@ module.exports = function(input) {
   if (/specs\/|\.claude\/|\.github\/|cloudformation\//i.test(filePath)) return null;
 
   try {
-    var branch = cp.execSync("git branch --show-current", { cwd: process.cwd(), encoding: "utf-8" }).trim();
+    var branch = (input._git && input._git.branch) || "";
+    if (!branch) branch = cp.execSync("git branch --show-current", { cwd: process.cwd(), encoding: "utf-8" }).trim();
     if (!branch || branch === "main" || branch === "master") return null;
 
     try {
