@@ -243,11 +243,12 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T235: Fix config-sync to push current branch (not hardcoded `main`)
 - [x] T236: Add `.git/*.lock` exception to archive-not-delete gate (stale lock cleanup is standard git recovery)
 - [x] T237: Add module behavior test suite (archive-not-delete exceptions, config-sync structure)
+- [x] T238: Update CLAUDE.md and TODO.md test counts (39 suites, 394 tests)
 
 ## Status
-- 160 tasks completed, 0 pending
+- 161 tasks completed, 0 pending
 - Version: 2.2.1
-- 379 tests passing across 38 test suites
+- 394 tests passing across 39 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live), perf, export
