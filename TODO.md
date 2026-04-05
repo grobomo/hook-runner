@@ -324,8 +324,11 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T282: Sanitize env var inputs in config-sync to prevent command injection (#159)
 - [x] T283: Version bump to 2.5.5 + CHANGELOG
 
+## Docs
+- [x] T284: Add --test-module to CLI Reference section in README (#161)
+
 ## Status
-- 206 tasks completed, 0 pending
+- 207 tasks completed, 0 pending
 - Version: 2.5.5 (released, tagged, marketplace synced, live hooks synced)
 - Clones: 2055 total, 0 stars/forks/issues — stable utility, no community demand for features
 - 532 tests passing across 40 test suites
