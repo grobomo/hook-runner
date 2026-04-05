@@ -147,12 +147,12 @@ so the workflow scales naturally from one Claude to a CCC fleet.
 - Dispatcher: spec tasks, write e2e acceptance tests, create branches, distribute, monitor, merge
 - Worker: receive task + e2e tests, write failing unit tests, implement, loop until pass, PR
 
-- [ ] T106: Relax spec-gate — accept TODO.md `- [ ] TXXX:` as valid task source (not just specs/*/tasks.md)
-- [ ] T107: Rename gsd-gate to test-checkpoint-gate, relax to auto-detect scripts/test/test-TXXX*.sh
-- [ ] T108: Add dispatcher-worker.yml workflow with role-aware steps
-- [ ] T109: Worker loop module — blocks PR until e2e test script exits 0
-- [ ] T110: Enable SHTD globally with relaxed gates, verify single-instance workflow end-to-end
-- [ ] T111: Document dispatcher/worker model in README + CLAUDE.md
+- [x] T106: Relax spec-gate — accept TODO.md `- [ ] TXXX:` as valid task source (not just specs/*/tasks.md)
+- [x] T107: Rename gsd-gate to test-checkpoint-gate, relax to auto-detect scripts/test/test-TXXX*.sh
+- [x] T108: Add dispatcher-worker.yml workflow with role-aware steps
+- [x] T109: Worker loop module — blocks PR until e2e test script exits 0
+- [x] T110: Enable SHTD globally with relaxed gates, verify single-instance workflow end-to-end
+- [x] T111: Document dispatcher/worker model in README + CLAUDE.md
 
 ## Cross-Project Drift Detector & Runner Fixes (from chat-export session 2026-04-04)
 
@@ -194,10 +194,10 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T128-T129: SessionStart alert integration + --log command
 
 ## Status
-- 127 tasks completed, 16 pending
+- 133 tasks completed, 10 pending
 - Active: T201+ (publish-ready), T116-T121 (drift detector + runner fixes), T106-T111 (dispatcher/worker)
 - Version: 2.0.0
-- 317 tests passing across 32 test suites
+- 360 tests passing across 37 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live), perf, export
