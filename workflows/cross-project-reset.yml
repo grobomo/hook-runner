@@ -27,4 +27,5 @@ steps:
     completion:
       require_files: []
 
-modules: []
+modules:
+  - cwd-drift-detector

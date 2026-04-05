@@ -71,12 +71,4 @@ steps:
     role: dispatcher
 
 modules:
-  - spec-gate
-  - test-checkpoint-gate
-  - branch-pr-gate
-  - remote-tracking-gate
   - worker-loop
-  - enforcement-gate
-  - secret-scan-gate
-  - commit-msg-check
-  - push-unpushed

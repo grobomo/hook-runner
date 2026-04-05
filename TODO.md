@@ -273,12 +273,15 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Discoverability
 - [x] T254: Add GitHub repo topics (claude-code, hooks, workflow, etc.) + description for search visibility
 
+## Workflow Cleanup
+- [x] T255: Fix workflow YAML/tag mismatches — dispatcher-worker 9→1, cross-project-reset 0→1, archive enforce-shtd, update shtd 17→16
+
 ## Status
-- 177 tasks completed, 0 pending
+- 178 tasks completed, 0 pending
 - Version: 2.3.2
 - 394 tests passing across 39 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
-- Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
+- Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live), perf, export
 
 ## Performance & Features (v1.4.0)
