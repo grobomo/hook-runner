@@ -67,11 +67,17 @@ module.exports = function(input) {
     } catch(e) {}
   }
 
-  // No specs at all — block
+  // Also check TODO.md for task entries (relaxed mode: `- [ ] TXXX:` is valid)
+  for (var ti = 0; ti < roots.length; ti++) {
+    var todoPath = path.join(roots[ti], "TODO.md");
+    if (fs.existsSync(todoPath)) allTasks.push(todoPath);
+  }
+
+  // No task sources at all — block
   if (allTasks.length === 0) {
     return {
       decision: "block",
-      reason: "SPEC GATE: No specs/ with tasks.md found.\n" +
+      reason: "SPEC GATE: No specs/ with tasks.md or TODO.md found.\n" +
         "WHY: Every change must be specced so the dev team can see what you're doing\n" +
         "and why via GitHub PRs. Unspecced work is invisible — nobody can review it,\n" +
         "understand the intent, or track progress. Specs ARE the project history.\n" +
@@ -79,11 +85,12 @@ module.exports = function(input) {
         "  1. /speckit.specify — define what and why\n" +
         "  2. /speckit.plan — design the approach\n" +
         "  3. /speckit.tasks — generate trackable tasks\n" +
+        "  OR: Add `- [ ] TXXX: description` entries to TODO.md\n" +
         "Blocked: " + path.basename(targetFile)
     };
   }
 
-  // Check that at least one tasks.md has unchecked tasks
+  // Check that at least one task source has unchecked tasks
   var hasUnchecked = false;
   for (var k = 0; k < allTasks.length; k++) {
     try {
@@ -101,7 +108,7 @@ module.exports = function(input) {
       reason: "SPEC GATE: All tasks checked off — no unchecked work to do.\n" +
         "WHY: Every change must map to a spec task so the dev team can track progress\n" +
         "through PRs. Undocumented work is invisible and can't be reviewed or monitored.\n" +
-        "FIX: Add the new work to specs/<feature>/tasks.md, or /speckit.specify for a new feature.\n" +
+        "FIX: Add the new work to specs/<feature>/tasks.md or TODO.md, or /speckit.specify for a new feature.\n" +
         "Blocked: " + path.basename(targetFile)
     };
   }
