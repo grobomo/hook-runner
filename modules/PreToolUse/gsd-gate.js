@@ -90,14 +90,13 @@ module.exports = function(input) {
   if (tasksWithoutTests.length > 0) {
     return {
       decision: "block",
-      reason: "GSD GATE: Spec tasks missing completion test scripts:\n" +
+      reason: "TEST CHECKPOINT GATE: Spec tasks missing completion test scripts:\n" +
         tasksWithoutTests.map(function(t) { return "  - " + t; }).join("\n") + "\n\n" +
-        "All code changes must go through the speckit → task → PR workflow.\n" +
-        "If you're fixing a bug in another project, follow that project's workflow:\n" +
-        "  1. Create a spec + tasks.md with test scripts in THAT project\n" +
-        "  2. Work on a feature branch, not main\n" +
-        "  3. One PR per task\n\n" +
-        "FIX: Add `**Checkpoint**: ... `bash scripts/test/<test>.sh` exits 0` to each phase.\n" +
+        "WHY: During the hackathon, PRs merged from mobile had no tests and broke production.\n" +
+        "Every task must have an automated e2e test as proof of completion — no manual verification.\n" +
+        "Tests are what make autonomous fleet workers reliable: a worker can't merge broken code\n" +
+        "if a test must pass first.\n\n" +
+        "FIX: Add `**Checkpoint**: `bash scripts/test/<test>.sh` exits 0` to each phase.\n" +
         "Blocked: " + path.basename(targetFile)
     };
   }
