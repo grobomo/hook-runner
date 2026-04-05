@@ -1,5 +1,5 @@
 {
-  "required_workflows": ["shtd"],
+  "required_workflows": ["shtd", "code-quality", "self-improvement", "session-management", "messaging-safety"],
   "required_runners": [
     "run-pretooluse.js",
     "run-posttooluse.js",

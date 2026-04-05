@@ -76,7 +76,7 @@ for r in run-pretooluse.js run-posttooluse.js run-stop.js run-sessionstart.js ru
 done
 echo 'module.exports = function() { return null; };' > "$TMPDIR/run-modules/Stop/auto-continue.js"
 echo 'module.exports = function() { return null; };' > "$TMPDIR/run-modules/PreToolUse/branch-pr-gate.js"
-echo '{"shtd": true}' > "$TMPDIR/workflow-config.json"
+echo '{"shtd": true, "code-quality": true, "self-improvement": true, "session-management": true, "messaging-safety": true}' > "$TMPDIR/workflow-config.json"
 
 EC=0
 OUT=$(node watchdog.js --hooks-dir "$TMPDIR" --config watchdog-config.json 2>&1) || EC=$?

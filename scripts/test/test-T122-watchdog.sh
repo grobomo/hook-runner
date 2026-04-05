@@ -80,7 +80,7 @@ fi
 # Test 7: missing config file → uses defaults
 rm -f "$TMPDIR/watchdog-config.json"
 echo "// stub" > "$TMPDIR/run-stop.js"
-echo '{"shtd": true}' > "$TMPDIR/workflow-config.json"
+echo '{"shtd": true, "code-quality": true, "self-improvement": true, "session-management": true, "messaging-safety": true}' > "$TMPDIR/workflow-config.json"
 EC4=0
 OUT4=$(node watchdog.js --hooks-dir "$TMPDIR" 2>&1) || EC4=$?
 assert "no config file uses defaults" "0" "$EC4"
