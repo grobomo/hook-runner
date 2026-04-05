@@ -368,15 +368,19 @@ See `specs/hook-integrity/` for full spec and tasks.
 ## Bug Fixes & Polish (session 2026-04-05h)
 - [x] T305: Fix project dir decoding in --integrity CLI — greedy filesystem-aware decode (#180)
 - [x] T306: Add decode tests + version bump to 2.6.1 (#181)
+- [x] T307: Fix 2 failing test suites — T105 docs version extraction, T204 portable-paths comment (#183)
+- [x] T308: Optimize spec-gate — use shared git context from runner (~45ms savings per Edit/Write) (#184)
+- [x] T309: Version bump to 2.6.2 + CHANGELOG (#184)
+- [x] Marketplace sync v2.6.1 → claude-code-skills
 - [x] Pruned 100+ stale remote branches from merged PRs
 - [x] Deleted stale local branch 174-T298-code-quality
 
 ## Status
-- 229 tasks completed, 0 pending
-- Version: 2.6.1 (released, live hooks synced)
+- 234 tasks completed, 0 pending
+- Version: 2.6.2 (released, live hooks synced)
 - 67 modules across 10 workflows, 41 test suites (280 module tests)
 - Health: 86 OK, 0 warnings, 0 failures
-- Performance: PreToolUse ~228ms/call (26 modules), SessionStart ~4s (9 modules)
+- Performance: PreToolUse ~220ms/call (26 modules), SessionStart ~4s (9 modules)
 - CI: GitHub Actions runs tests + secret-scan on push/PR (Linux + Windows) — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
 - CLI: setup, report, health, sync, stats, list, test, test-module, upgrade, uninstall, prune, version, help, perf, export, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live)
