@@ -20,20 +20,23 @@ module.exports = function(input) {
   // Only check files in tracked directories (hooks, rules, skills, scripts)
   var norm = filePath.replace(/\\/g, "/");
   var watchedDirs = ["/hooks/", "/rules/", "/skills/", "/scripts/"];
-  var isWatched = watchedDirs.some(function(d) { return norm.indexOf(d) !== -1; });
+  var isWatched = false;
+  for (var i = 0; i < watchedDirs.length; i++) {
+    if (norm.indexOf(watchedDirs[i]) !== -1) { isWatched = true; break; }
+  }
   if (!isWatched) return null;
 
-  // Check git history for this file
+  // Check git history — rev-list --count is faster than log --oneline + line counting
   var dir = path.dirname(filePath);
   try {
-    var log = cp.execSync(
-      'git log --oneline -- "' + path.basename(filePath) + '"',
-      { cwd: dir, encoding: "utf-8", timeout: 3000, stdio: ["pipe", "pipe", "pipe"] }
+    var countStr = cp.execSync(
+      'git rev-list --count HEAD -- "' + path.basename(filePath) + '"',
+      { cwd: dir, encoding: "utf-8", timeout: 1500, stdio: ["pipe", "pipe", "pipe"] }
     ).trim();
 
-    if (!log) return null; // new file, no history
+    var commitCount = parseInt(countStr, 10);
+    if (!commitCount || commitCount < ITERATION_THRESHOLD) return null;
 
-    var commitCount = log.split("\n").length;
     if (commitCount >= ITERATION_THRESHOLD) {
       return {
         decision: "block",
