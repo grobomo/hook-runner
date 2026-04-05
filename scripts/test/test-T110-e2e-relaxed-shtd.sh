@@ -44,11 +44,18 @@ JSEOF
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR" "$HELPER"' EXIT
 
+# git init with CI-safe config
+git_init() {
+  git init -q "$1"
+  git -C "$1" config user.email "test@test.com"
+  git -C "$1" config user.name "test"
+  git -C "$1" commit --allow-empty -m "init" -q
+}
+
 # Set up a project that uses TODO.md (no specs/)
 PROJ="$TMPDIR/my-project"
 mkdir -p "$PROJ/src" "$PROJ/scripts/test"
-git init -q "$PROJ"
-git -C "$PROJ" commit --allow-empty -m "init" -q
+git_init "$PROJ"
 
 # --- Step 1: Spec gate with TODO.md ---
 # No TODO.md yet — spec-gate should block

@@ -40,6 +40,14 @@ JSEOF
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR" "$HELPER"' EXIT
 
+# git init with CI-safe config
+git_init() {
+  git init -q "$1"
+  git -C "$1" config user.email "test@test.com"
+  git -C "$1" config user.name "test"
+  git -C "$1" commit --allow-empty -m "init" -q
+}
+
 # 1. Module loads and exports a function
 OUTPUT=$(node -e "var m = require('$REPO_DIR/modules/PreToolUse/worker-loop.js'); if (typeof m !== 'function') throw new Error('not a function')" 2>&1) || true
 if [ -z "$OUTPUT" ]; then
@@ -59,8 +67,7 @@ fi
 # 3. gh pr create on branch without task ID passes (no match)
 PROJ3="$TMPDIR/proj-no-task"
 mkdir -p "$PROJ3"
-git init -q "$PROJ3"
-git -C "$PROJ3" commit --allow-empty -m "init" -q
+git_init "$PROJ3"
 git -C "$PROJ3" checkout -b some-feature 2>/dev/null
 OUTPUT=$(node "$HELPER" "$PROJ3" "gh pr create --title test" 2>&1) || true
 if echo "$OUTPUT" | grep -q "PASSED"; then
@@ -72,8 +79,7 @@ fi
 # 4. gh pr create with passing test allows PR
 PROJ4="$TMPDIR/proj-pass"
 mkdir -p "$PROJ4/scripts/test" "$PROJ4/src"
-git init -q "$PROJ4"
-git -C "$PROJ4" commit --allow-empty -m "init" -q
+git_init "$PROJ4"
 git -C "$PROJ4" checkout -b 001-T050-feat 2>/dev/null
 printf '#!/usr/bin/env bash\nexit 0\n' > "$PROJ4/scripts/test/test-T050-feat.sh"
 chmod +x "$PROJ4/scripts/test/test-T050-feat.sh"
@@ -96,8 +102,7 @@ fi
 # 6. gh pr create with failing test blocks PR
 PROJ6="$TMPDIR/proj-fail"
 mkdir -p "$PROJ6/scripts/test" "$PROJ6/src"
-git init -q "$PROJ6"
-git -C "$PROJ6" commit --allow-empty -m "init" -q
+git_init "$PROJ6"
 git -C "$PROJ6" checkout -b 001-T060-buggy 2>/dev/null
 printf '#!/usr/bin/env bash\necho "ASSERTION FAILED"\nexit 1\n' > "$PROJ6/scripts/test/test-T060-buggy.sh"
 chmod +x "$PROJ6/scripts/test/test-T060-buggy.sh"
@@ -119,8 +124,7 @@ fi
 # 8. No test file = pass through (test-checkpoint-gate handles that)
 PROJ8="$TMPDIR/proj-no-test"
 mkdir -p "$PROJ8/src"
-git init -q "$PROJ8"
-git -C "$PROJ8" commit --allow-empty -m "init" -q
+git_init "$PROJ8"
 git -C "$PROJ8" checkout -b 001-T070-notest 2>/dev/null
 
 OUTPUT=$(node "$HELPER" "$PROJ8" "gh pr create --title 'T070: notest'" 2>&1) || true
