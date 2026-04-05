@@ -98,7 +98,9 @@ function validateBranchName(name) {
   return null;
 }
 
-function getBranch() {
+function getBranch(input) {
+  // Use shared git context from runner if available (saves ~40ms)
+  if (input && input._git && input._git.branch) return input._git.branch;
   try {
     return cp.execSync("git rev-parse --abbrev-ref HEAD", {
       encoding: "utf-8", timeout: 5000
@@ -146,7 +148,7 @@ module.exports = function(input) {
       }
     }
 
-    var branch = getBranch();
+    var branch = getBranch(input);
     if (!branch) return null;
 
     if (branch === "main" || branch === "master") {
@@ -204,7 +206,7 @@ module.exports = function(input) {
     }
 
     // Only now spawn git — we know this is a state-changing command
-    var branch = getBranch();
+    var branch = getBranch(input);
     if (!branch) return null;
 
     if (branch === "main" || branch === "master") {

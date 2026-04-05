@@ -52,9 +52,12 @@ module.exports = function(input) {
   // On task branches, iterative edits before committing are normal workflow.
   // The branch-pr-gate already ensures you're on the right branch.
   try {
-    var branch = child_process.execSync("git rev-parse --abbrev-ref HEAD", {
-      cwd: gitRoot, encoding: "utf-8", timeout: 5000
-    }).trim();
+    var branch = (input._git && input._git.branch) || "";
+    if (!branch) {
+      branch = child_process.execSync("git rev-parse --abbrev-ref HEAD", {
+        cwd: gitRoot, encoding: "utf-8", timeout: 5000
+      }).trim();
+    }
     if (branch === "main" || branch === "master") {
       var status = child_process.execSync("git status --porcelain", {
         cwd: gitRoot, encoding: "utf-8", timeout: 5000

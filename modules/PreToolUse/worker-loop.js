@@ -22,10 +22,12 @@ module.exports = function(input) {
   if (!/gh\s+pr\s+create/.test(cmd)) return null;
 
   // Extract task ID from current branch name
-  var branch = "";
-  try {
-    branch = cp.execSync("git rev-parse --abbrev-ref HEAD", { encoding: "utf-8", timeout: 5000 }).trim();
-  } catch(e) { return null; }
+  var branch = (input._git && input._git.branch) || "";
+  if (!branch) {
+    try {
+      branch = cp.execSync("git rev-parse --abbrev-ref HEAD", { encoding: "utf-8", timeout: 5000 }).trim();
+    } catch(e) { return null; }
+  }
 
   var taskMatch = branch.match(/T(\d{3,4})/i);
   if (!taskMatch) return null;

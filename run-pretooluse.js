@@ -23,6 +23,19 @@ if (input && input.tool_input && typeof input.tool_input.path === "string") {
   input.tool_input.path = input.tool_input.path.replace(/\\/g, "/");
 }
 
+// WHY: 4 PreToolUse modules each spawn `git rev-parse --abbrev-ref HEAD` independently.
+// One shared call here saves ~80ms per tool invocation (3 redundant git spawns eliminated).
+try {
+  var cp = require("child_process");
+  var branch = cp.execSync("git rev-parse --abbrev-ref HEAD", {
+    encoding: "utf-8", timeout: 3000, stdio: ["pipe", "pipe", "pipe"]
+  }).trim();
+  if (branch) {
+    if (!input._git) input._git = {};
+    input._git.branch = branch;
+  }
+} catch (e) { /* not in a git repo — modules handle this gracefully */ }
+
 var ctx = hookLog.extractContext("PreToolUse", input);
 var modules = loadModules(path.join(__dirname, "run-modules", "PreToolUse"));
 
