@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# Test T118: hook-editing-gate enforces quality standards
+set -euo pipefail
+REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"
+PASS=0; FAIL=0
+pass() { echo "  PASS: $1"; PASS=$((PASS + 1)); }
+fail() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
+
+echo "=== hook-runner: hook-editing-gate (T118) ==="
+
+MODULE="$REPO_DIR/modules/PreToolUse/hook-editing-gate.js"
+# Use $HOME for portable test paths
+HOOKS_DIR="$HOME/.claude/hooks"
+
+run_gate() {
+  local tool="$1"
+  local file_path="$2"
+  local content="$3"
+  local input
+  if [ "$tool" = "Write" ]; then
+    input="{\"file_path\":\"$file_path\",\"content\":$(echo "$content" | node -e "process.stdout.write(JSON.stringify(require('fs').readFileSync(0,'utf-8')))")}"
+  else
+    input="{\"file_path\":\"$file_path\",\"new_string\":$(echo "$content" | node -e "process.stdout.write(JSON.stringify(require('fs').readFileSync(0,'utf-8')))")}"
+  fi
+  node -e "
+    var mod = require('$MODULE');
+    var result = mod({ tool_name: '$tool', tool_input: JSON.parse(process.argv[1]) });
+    if (result && result.decision === 'block') {
+      process.stdout.write('BLOCKED: ' + result.reason.split('\n')[0]);
+      process.exit(1);
+    } else {
+      process.stdout.write('PASSED');
+    }
+  " "$input" 2>&1 || true
+}
+
+# 1. Non-hook files pass through
+OUTPUT=$(run_gate "Edit" "/some/src/app.js" "console.log('hi')")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "non-hook files pass through"
+else
+  fail "non-hook should pass: $OUTPUT"
+fi
+
+# 2. Module with WORKFLOW and WHY passes
+GOOD_MODULE='// WORKFLOW: shtd
+// WHY: Tests broke production
+"use strict";
+module.exports = function(input) { return null; };'
+OUTPUT=$(run_gate "Write" "$HOOKS_DIR/run-modules/PreToolUse/my-gate.js" "$GOOD_MODULE")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "module with WORKFLOW + WHY passes"
+else
+  fail "good module should pass: $OUTPUT"
+fi
+
+# 3. Module missing WORKFLOW tag blocks
+BAD_NO_WORKFLOW='// WHY: Tests broke
+"use strict";
+module.exports = function(input) { return null; };'
+OUTPUT=$(run_gate "Write" "$HOOKS_DIR/run-modules/PreToolUse/bad-gate.js" "$BAD_NO_WORKFLOW")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "module without WORKFLOW tag blocked"
+else
+  fail "missing WORKFLOW should block: $OUTPUT"
+fi
+
+# 4. Module missing WHY comment blocks
+BAD_NO_WHY='// WORKFLOW: shtd
+"use strict";
+module.exports = function(input) { return null; };'
+OUTPUT=$(run_gate "Write" "$HOOKS_DIR/run-modules/PreToolUse/no-why.js" "$BAD_NO_WHY")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "module without WHY comment blocked"
+else
+  fail "missing WHY should block: $OUTPUT"
+fi
+
+# 5. Runner with exit(0) in block context blocked
+BAD_RUNNER='if (result.decision === "block") { process.exit(0); }'
+OUTPUT=$(run_gate "Edit" "$HOOKS_DIR/run-pretooluse.js" "$BAD_RUNNER")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "runner with exit(0) for blocks blocked"
+else
+  fail "exit(0) in block should block: $OUTPUT"
+fi
+
+# 6. Runner with exit(1) for blocks passes
+GOOD_RUNNER='if (result.decision === "block") { process.exit(1); }'
+OUTPUT=$(run_gate "Edit" "$HOOKS_DIR/run-pretooluse.js" "$GOOD_RUNNER")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "runner with exit(1) for blocks passes"
+else
+  fail "exit(1) should pass: $OUTPUT"
+fi
+
+# 7. Small edits to modules pass (not full file writes)
+SMALL_EDIT='return null;'
+OUTPUT=$(run_gate "Edit" "$HOOKS_DIR/run-modules/PreToolUse/some.js" "$SMALL_EDIT")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "small edits pass (no WORKFLOW/WHY check)"
+else
+  fail "small edits should pass: $OUTPUT"
+fi
+
+echo ""
+echo "=== Results: $PASS passed, $FAIL failed ==="
+[ "$FAIL" -eq 0 ] || exit 1
