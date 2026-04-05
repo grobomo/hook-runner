@@ -203,9 +203,13 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T221: Update README workflow table with all 10 workflows + module counts (PR #102)
 - [x] T222: Add split workflows to watchdog required list (PR #103)
 - [x] T223: Add duplicate module detection to health check (PR #104)
+- [x] T224: Exclude archive/ from --list project-scoped scan (PR #105)
+
+## Live Cleanup
+- [x] Archived 6 redundant shtd_* live modules (~140ms/call savings): shtd_branch-gate, shtd_pr-per-task-gate, shtd_remote-tracking-gate, shtd_secret-scan-gate, shtd_spec-gate, shtd_workflow-gate
 
 ## Status
-- 145 tasks completed, 1 pending (T215 delegated to claude-code-skills)
+- 146 tasks completed, 1 pending (T215 delegated to claude-code-skills)
 - Version: 2.1.0
 - 369 tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
