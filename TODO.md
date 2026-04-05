@@ -214,10 +214,17 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Release
 - [x] T226: Version bump to 2.2.0
 
+## Bug Fixes & Catalog Sync
+- [x] T227: Add Windows path normalization to PreToolUse runner (PR #109)
+- [x] T228: Sync 4 live modules to catalog + fix README module table (PR #110)
+
+## Live Cleanup (session 2026-04-05b)
+- [x] Archived 4 fleet-specific shtd_ modules (task-claim, e2e-merge-gate, audit-logger, task-release) — ~320ms/call savings
+
 ## Status
-- 148 tasks completed, 1 pending (T215 delegated to claude-code-skills)
+- 150 tasks completed, 1 pending (T215 delegated to claude-code-skills)
 - Version: 2.2.0
-- 369 tests passing across 38 test suites
+- 369+ tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live), perf, export
