@@ -31,6 +31,12 @@ custom_commands:
   - name: health
     command: "node $SKILL_DIR/setup.js --health"
     description: "Verify all runners and modules load correctly"
+  - name: workflow
+    command: "node $SKILL_DIR/setup.js --workflow list"
+    description: "List workflows with enabled state and module counts"
+  - name: audit
+    command: "node $SKILL_DIR/setup.js --workflow audit"
+    description: "Audit workflow coverage — orphans, mismatches, untagged modules"
 ---
 
 # hook-runner

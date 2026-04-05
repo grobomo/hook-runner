@@ -35,7 +35,11 @@ module.exports = function(input) {
     } catch(e) {
       return {
         decision: "block",
-        reason: "Branch '" + branch + "' has no remote tracking. Run: git push -u origin " + branch + " — all work must be visible on GitHub."
+        reason: "REMOTE TRACKING GATE: Branch '" + branch + "' has no remote tracking.\n" +
+          "WHY: Untracked branches are invisible on GitHub Mobile. The dev team monitors\n" +
+          "progress via push notifications — if your branch doesn't track a remote,\n" +
+          "nobody knows you're working.\n" +
+          "FIX: git push -u origin " + branch
       };
     }
   } catch(e) {
