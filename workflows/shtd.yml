@@ -46,16 +46,20 @@ steps:
       require_files: []
 
 modules:
-  - spec-gate
-  - test-checkpoint-gate
   - branch-pr-gate
-  - remote-tracking-gate
-  - pr-per-task-gate
-  - continuous-claude-gate
-  - enforcement-gate
-  - secret-scan-gate
   - commit-msg-check
-  - push-unpushed
-  - test-before-done
+  - continuous-claude-gate
+  - cwd-drift-detector
   - drift-review
+  - enforcement-gate
+  - hook-editing-gate
+  - pr-per-task-gate
+  - push-unpushed
+  - remote-tracking-gate
+  - secret-scan-gate
+  - spec-gate
+  - task-completion-gate
+  - test-before-done
+  - test-checkpoint-gate
   - why-reminder
+  - workflow-gate

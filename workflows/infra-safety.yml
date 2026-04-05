@@ -12,9 +12,11 @@ steps:
 modules:
   - aws-tagging-gate
   - crlf-ssh-key-check
+  - disk-space-guard
   - env-var-check
   - hook-autocommit
   - no-adhoc-commands
   - no-focus-steal
   - settings-audit-log
   - settings-change-gate
+  - settings-hooks-gate

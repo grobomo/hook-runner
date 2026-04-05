@@ -11,12 +11,13 @@ steps:
 
 modules:
   - auto-continue
-  - never-give-up
-  - log-gotchas
-  - mark-turn-complete
+  - backup-check
+  - chat-export
+  - config-sync
   - load-instructions
   - load-lessons
+  - log-gotchas
+  - mark-turn-complete
+  - never-give-up
   - project-health
-  - backup-check
-  - config-sync
   - workflow-summary
