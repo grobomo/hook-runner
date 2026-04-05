@@ -193,8 +193,12 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T125-T127: Scheduler integration (--install, --uninstall, --status)
 - [x] T128-T129: SessionStart alert integration + --log command
 
+## Docs & Polish
+- [x] T217: Audit fixes — workflow-gate tag, gitignore cleanup, test count update
+- [x] T218: Write Your First Module tutorial in README
+
 ## Status
-- 138 tasks completed, 5 pending (1 delegated to claude-code-skills)
+- 140 tasks completed, 3 pending (1 delegated to claude-code-skills)
 - Active: T201+ (publish-ready), T116-T121 (drift detector + runner fixes), T106-T111 (dispatcher/worker)
 - Version: 2.0.0
 - 369 tests passing across 38 test suites
