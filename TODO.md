@@ -117,25 +117,40 @@ WHY: Modules are implementation details — workflows are the human-readable int
 "Enable SHTD" is how a human thinks. The 9 modules behind it are how it's enforced.
 On context reset, Claude reads workflow state and immediately knows all active constraints.
 
-- [ ] T097: Add `modules:` field to workflow YAML definitions listing which modules belong
-- [ ] T098: Add workflow-config.json (enabled/disabled state per workflow, global + per-project)
-- [ ] T099: Update load-modules.js filterByWorkflow to use enable/disable config (not just step-state)
-- [ ] T100: Tag every module with `// WORKFLOW: <name>` — no orphans
-- [ ] T101: Add `--workflow enable/disable <name>` CLI commands
-- [ ] T102: Add `--workflow audit` — list orphan modules, workflow coverage report
-- [ ] T103: Add `--workflow query <tool>` — show which workflows affect Bash/Edit/Write
-- [ ] T104: Update SessionStart module to inject active workflow summary on context reset
-- [ ] T105: Update docs (README, CLAUDE.md, SKILL.md) + marketplace sync
+- [x] T097: Add `modules:` field to workflow YAML definitions listing which modules belong
+- [x] T098: Add workflow-config.json (enabled/disabled state per workflow, global + per-project)
+- [x] T099: Update load-modules.js filterByWorkflow to use enable/disable config (not just step-state)
+- [x] T100: Tag every module with `// WORKFLOW: <name>` — no orphans
+- [x] T101: Add `--workflow enable/disable <name>` CLI commands
+- [x] T102: Add `--workflow audit` — list orphan modules, workflow coverage report
+- [x] T103: Add `--workflow query <tool>` — show which workflows affect Bash/Edit/Write
+- [x] T104: Update SessionStart module to inject active workflow summary on context reset
+- [ ] T105: Update docs (README, CLAUDE.md, SKILL.md) + version bump + marketplace sync
+
+## Reduced-Friction SHTD + Dispatcher/Worker Model (T106+)
+
+WHY: Current SHTD gates have too much ceremony for single-instance work. Reduce friction
+so the workflow scales naturally from one Claude to a CCC fleet.
+
+**Role separation:**
+- Dispatcher: spec tasks, write e2e acceptance tests, create branches, distribute, monitor, merge
+- Worker: receive task + e2e tests, write failing unit tests, implement, loop until pass, PR
+
+- [ ] T106: Relax spec-gate — accept TODO.md `- [ ] TXXX:` as valid task source (not just specs/*/tasks.md)
+- [ ] T107: Rename gsd-gate to test-checkpoint-gate, relax to auto-detect scripts/test/test-TXXX*.sh
+- [ ] T108: Add dispatcher-worker.yml workflow with role-aware steps
+- [ ] T109: Worker loop module — blocks PR until e2e test script exits 0
+- [ ] T110: Enable SHTD globally with relaxed gates, verify single-instance workflow end-to-end
+- [ ] T111: Document dispatcher/worker model in README + CLAUDE.md
 
 ## Status
-- 96 tasks completed, 9 pending
-- All sync targets up to date (live, skill, marketplace)
-- Next: consider usage examples, blog post, or new module ideas
+- 104 tasks completed, 7 pending
+- Next: T105 (docs + release), then T106-T111 (dispatcher/worker model)
 - Version: 1.5.1
-- 183 tests passing across 13 test files
+- 233 tests passing across 20 test suites
 - CI: GitHub Actions runs all tests on push/PR — badge in README
-- Workflow engine: workflow.js + workflow-gate.js + 5 built-in templates
-- CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow, perf, export
+- Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
+- CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset), perf, export
 
 ## Performance & Features (v1.4.0)
 - [x] T071: Add `env-var-check` PreToolUse module (blocks if required project env vars missing)
