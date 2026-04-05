@@ -9,7 +9,7 @@ module.exports = function(input) {
   var normalized = filePath.replace(/\\/g, "/");
 
   // Only check files in rules directories
-  if (!normalized.includes("/rules/") || !normalized.endsWith(".md")) return null;
+  if (normalized.indexOf("/rules/") === -1 || normalized.indexOf(".md", normalized.length - 3) === -1) return null;
 
   var warnings = [];
   var fileName = path.basename(normalized, ".md");
