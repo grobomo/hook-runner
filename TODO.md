@@ -289,9 +289,13 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Release
 - [x] T260: Version bump to 2.4.1 + CHANGELOG
 
+## Cleanup
+- [x] T261: Remove dead hasAsync var + --perf labels removed modules and excludes from overhead estimates
+- [x] T262: Version bump to 2.4.2 + CHANGELOG
+
 ## Status
-- 183 tasks completed, 0 pending
-- Version: 2.4.1
+- 185 tasks completed, 0 pending
+- Version: 2.4.2
 - 402 tests passing across 40 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
