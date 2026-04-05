@@ -474,6 +474,8 @@ function cmdWorkflow(args) {
         }
       }
     }
+    // Write repo path marker for hook-integrity-check module
+    try { fs.writeFileSync(path.join(liveHooksDir, ".hook-runner-repo"), __dirname + "\n"); } catch (e) { /* best effort */ }
     console.log("Synced " + copied + " files to " + liveHooksDir);
     return;
   }
