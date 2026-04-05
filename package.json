@@ -1,6 +1,6 @@
 {
   "name": "hook-runner",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "description": "Modular hook runner system for Claude Code. One runner per event, modules in folders.",
   "bin": {
     "hook-runner": "setup.js"
@@ -17,6 +17,8 @@
     "run-sessionstart.js",
     "run-stop.js",
     "run-userpromptsubmit.js",
+    "watchdog.js",
+    "watchdog-config.json",
     "modules/",
     "workflows/"
   ],
