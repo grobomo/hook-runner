@@ -1004,7 +1004,7 @@ function cmdList() {
     try {
       var liveEvtDir = path.join(liveDir, events[pe]);
       var liveEntries = fs.readdirSync(liveEvtDir, { withFileTypes: true });
-      var projDirs = liveEntries.filter(function(e) { return e.isDirectory(); });
+      var projDirs = liveEntries.filter(function(e) { return e.isDirectory() && e.name !== "archive"; });
       for (var pd = 0; pd < projDirs.length; pd++) {
         var projPath = path.join(liveEvtDir, projDirs[pd].name);
         var projMods = fs.readdirSync(projPath).filter(function(f) { return f.endsWith(".js"); });
