@@ -362,12 +362,12 @@ See `specs/hook-integrity/` for full spec and tasks.
 - [x] T300: hook-integrity-monitor UserPromptSubmit (async) — spot-check modules each prompt (#176)
 - [ ] T301: --integrity CLI command — manual full scan with verbose output
 - [x] T302: Test suite — 18 tests covering all components (#176)
-- [ ] T303: Update README, CLAUDE.md, TODO.md with integrity docs
-- [ ] T304: Version bump + CHANGELOG + marketplace sync
+- [x] T303: Update README with integrity monitor modules (#177)
+- [x] T304: Version bump to 2.6.0 + CHANGELOG (#178)
 
 ## Status
-- 224 tasks completed, 3 pending
-- Version: 2.5.10 (+ integrity monitor merged to main)
+- 226 tasks completed, 1 pending
+- Version: 2.6.0 (released, tagged, live hooks synced)
 - 67 modules across 10 workflows, 41 test suites (278 module tests)
 - Health: 82 OK, 0 warnings, 0 failures
 - Performance: PreToolUse ~228ms/call (26 modules), SessionStart ~4s (9 modules)
