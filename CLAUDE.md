@@ -19,7 +19,7 @@ Modular hook runner for Claude Code. Workflows group modules into enforceable pi
 - `modules/` — distributable module catalog organized by event type
 - `workflows/` — built-in workflow definitions (YAML)
 - `specs/` — feature specs with tasks and checkpoints
-- `scripts/test/` — test scripts (28 suites, 184+ tests)
+- `scripts/test/` — test scripts (31 suites, 309+ tests)
 - `package.json` — npm package (enables `npx grobomo/hook-runner`)
 
 ## Testing
