@@ -347,10 +347,10 @@ See `specs/watchdog/tasks.md` for full task list.
 
 ## Module Sync & Audit Fix
 - [x] T294: Sync 2 drifted modules from live to catalog (spec-gate, test-checkpoint-gate)
-- [ ] T295: Add ep-incident-response project-scoped modules + customer-data-guard workflow + fix audit to scan subdirs
+- [x] T295: Add ep-incident-response project-scoped modules + customer-data-guard workflow + fix audit to scan subdirs (#170)
 
 ## Status
-- 217 tasks completed, 1 pending
+- 218 tasks completed, 0 pending
 - Version: 2.5.9 (released, tagged, marketplace synced, live hooks synced)
 - 58 modules across 9 workflows, 40 test suites
 - Health: 81 OK, 0 warnings, 0 failures
