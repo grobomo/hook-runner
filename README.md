@@ -149,6 +149,28 @@ Rules:
 | **PostToolUse** | After Edit/Write | `{decision: "block"}` or `null` |
 | **Stop** | Session ending | `{decision: "block"}` or `null` |
 
+### Write Your First Module
+
+Create a file that blocks `rm -rf` commands:
+
+```bash
+# Create the module file
+cat > ~/.claude/hooks/run-modules/PreToolUse/no-rm-rf.js << 'EOF'
+// WORKFLOW: shtd
+// WHY: Accidentally ran rm -rf on a project directory.
+module.exports = function(input) {
+  if (input.tool_name !== "Bash") return null;
+  var cmd = (input.tool_input || {}).command || "";
+  if (/rm\s+-rf/.test(cmd)) {
+    return { decision: "block", reason: "Blocked rm -rf. Use archive/ instead." };
+  }
+  return null;
+};
+EOF
+```
+
+That's it. Next time Claude tries `rm -rf`, this module blocks it with a helpful message. No settings.json changes needed — the runner auto-discovers modules in the folder.
+
 ### Project-Scoped Modules
 
 Modules in a subfolder matching your project name only run for that project:
