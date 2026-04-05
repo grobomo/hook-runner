@@ -158,10 +158,10 @@ so the workflow scales naturally from one Claude to a CCC fleet.
 
 - [x] T116: Commit cwd-drift-detector.js — new PreToolUse module that blocks cross-project file access and instructs Claude to spawn a new tab via context-reset. Allows TODO.md/SESSION_STATE.md writes and context-reset commands through.
 - [x] T117: Commit PostToolUse runner cleanup — path normalization + exit(1) for blocks + stderr output
-- [ ] T118: Create hook-editing enforcement gate — PreToolUse module that fires on Edit/Write targeting run-modules/ or run-*.js, enforces: (1) exit(1) not exit(0) for blocks, (2) stderr output for TUI visibility, (3) WORKFLOW tag present, (4) WHY comment present
-- [ ] T119: Document hook design rule: PreToolUse for behavioral enforcement (blocking), PostToolUse for monitoring/reporting (non-blocking). Add to CLAUDE.md and hook-editing gate.
-- [ ] T120: Audit hooks repo dirty state — 37 modified + 25 untracked files on branch 002-T007-validate-self-analysis. Inventory changes, create proper specs/branches/PRs.
-- [ ] T121: PR branch 002-T007-validate-self-analysis — contains: shtd workflow refactor, exit(1) runner fix, secret-scan gate fix, cwd-drift-detector
+- [x] T118: Create hook-editing enforcement gate — PreToolUse module (WORKFLOW tag, WHY comment, exit(1) checks)
+- [x] T119: Document hook design rule in CLAUDE.md (PreToolUse=blocking, PostToolUse=monitoring)
+- [x] T120: Audit hooks repo — branch 002-T007 fully superseded by publish-ready + T106-T111. Deleted.
+- [x] T121: Branch 002-T007-validate-self-analysis deleted (all fixes already in main via T117, T201-T204)
 
 ## Publish-Ready v2.0.0 (T201-T216)
 
@@ -194,10 +194,10 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T128-T129: SessionStart alert integration + --log command
 
 ## Status
-- 133 tasks completed, 10 pending
+- 137 tasks completed, 6 pending
 - Active: T201+ (publish-ready), T116-T121 (drift detector + runner fixes), T106-T111 (dispatcher/worker)
 - Version: 2.0.0
-- 360 tests passing across 37 test suites
+- 369 tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live), perf, export
