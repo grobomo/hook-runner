@@ -270,8 +270,11 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T252: Show failed suite names in --test output + FAIL marker for crashed suites (#130)
 - [x] T253: Version bump to 2.3.2 + CHANGELOG + marketplace sync
 
+## Discoverability
+- [x] T254: Add GitHub repo topics (claude-code, hooks, workflow, etc.) + description for search visibility
+
 ## Status
-- 176 tasks completed, 0 pending
+- 177 tasks completed, 0 pending
 - Version: 2.3.2
 - 394 tests passing across 39 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
