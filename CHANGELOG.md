@@ -2,6 +2,16 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.2.2] — 2026-04-05
+
+### Fixed
+- config-sync: detect and remove stale git `index.lock` (>60s) before `git add` (#115)
+- config-sync: push current branch instead of hardcoded `main` (#115)
+- archive-not-delete: allow `rm .git/*.lock` for standard git recovery (#116)
+
+### Added
+- Module behavior test suite: 15 tests for archive-not-delete exceptions + config-sync logic (#117)
+
 ## [2.2.1] — 2026-04-05
 
 ### Fixed

@@ -244,10 +244,11 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T236: Add `.git/*.lock` exception to archive-not-delete gate (stale lock cleanup is standard git recovery)
 - [x] T237: Add module behavior test suite (archive-not-delete exceptions, config-sync structure)
 - [x] T238: Update CLAUDE.md and TODO.md test counts (39 suites, 394 tests)
+- [x] T239: Version bump to 2.2.2 + CHANGELOG entry
 
 ## Status
-- 161 tasks completed, 0 pending
-- Version: 2.2.1
+- 162 tasks completed, 0 pending
+- Version: 2.2.2
 - 394 tests passing across 39 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
