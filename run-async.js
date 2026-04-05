@@ -11,6 +11,7 @@
  *   runAsync(modules, input, EVENT, handleResult, handleDone);
  */
 
+var path = require("path");
 var DEFAULT_TIMEOUT = 4000; // 4s per module (Claude Code hook timeout is 5s)
 
 /**
@@ -58,7 +59,6 @@ function runModules(modulePaths, input, handleResult, handleDone, timeout) {
     }
 
     var modPath = modulePaths[i];
-    var path = require("path");
     var modName = path.basename(modPath, ".js");
     i++;
 

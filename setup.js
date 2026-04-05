@@ -715,6 +715,7 @@ function cmdHelp() {
   console.log("  --install       Skip report, just install runners");
   console.log("  --open          Open report in browser (default: don't open)");
   console.log("  --force         With --uninstall: also remove non-empty module dirs");
+  console.log("  --confirm       With --uninstall: restore original settings.json from backup");
   console.log("  --yes           Non-interactive: auto-confirm install + enable default workflows");
   console.log("");
   console.log("Examples:");
