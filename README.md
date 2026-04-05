@@ -43,14 +43,18 @@ node setup.js --workflow query Edit        # which workflows affect Edit?
 
 ### Built-in Workflows
 
-| Workflow | What it enforces |
-|----------|-----------------|
-| `shtd` | Spec → tasks → branch → test → implement → PR. The full development pipeline. |
-| `dispatcher-worker` | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
-| `messaging-safety` | Blocks outbound messages (Teams, email) unless the target is explicitly authorized. |
-| `no-local-docker` | Blocks local Docker commands, forces remote infrastructure. |
-| `cross-project-reset` | Blocks cross-project file access, forces proper project switching. |
-| `enforce-shtd` | Extended SHTD that requires a workflow YAML definition step. |
+| Workflow | Modules | What it enforces |
+|----------|---------|-----------------|
+| `shtd` | 13 | Spec → tasks → branch → test → implement → PR. The full development pipeline. |
+| `code-quality` | 10 | Prevents hardcoded paths, fragile heuristics, missed test coverage, stale docs. |
+| `session-management` | 10 | Auto-continue, context injection, health checks, backups, workflow summary. |
+| `dispatcher-worker` | 9 | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
+| `infra-safety` | 8 | No ad-hoc commands, required tags, env var checks, config audit. |
+| `self-improvement` | 6 | Detect instructions, interrupts, and troubleshooting patterns; enforce durable rules. |
+| `messaging-safety` | 1 | Blocks outbound messages (Teams, email) unless target is explicitly authorized. |
+| `no-local-docker` | 1 | Blocks local Docker commands, forces remote infrastructure. |
+| `cross-project-reset` | 0 | Blocks cross-project file access, forces proper project switching. |
+| `enforce-shtd` | 0 | Extended SHTD that requires a workflow YAML definition step. |
 
 ### Workflow State Machine
 
