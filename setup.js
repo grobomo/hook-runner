@@ -1296,11 +1296,12 @@ function cmdPerf() {
       var evDir = path.join(modsDir, modEvents[me]);
       if (fs.existsSync(evDir)) {
         try {
-          fs.readdirSync(evDir, { withFileTypes: true }).forEach(function(e) {
-            if (e.isFile() && e.name.endsWith(".js")) {
-              installedModules[modEvents[me] + "/" + e.name.replace(".js", "")] = true;
+          var entries = fs.readdirSync(evDir, { withFileTypes: true });
+          for (var ei = 0; ei < entries.length; ei++) {
+            if (entries[ei].isFile() && entries[ei].name.endsWith(".js")) {
+              installedModules[modEvents[me] + "/" + entries[ei].name.replace(".js", "")] = true;
             }
-          });
+          }
         } catch(e) {}
       }
     }

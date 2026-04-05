@@ -17,12 +17,14 @@ var MAX_LESSONS = 10; // inject the 10 most recent
 function checkBgErrors() {
   // Surface background script errors that the user can't see
   var msgs = [];
-  [ERROR_LOG, ANALYSIS_LOG].forEach(function(logFile) {
+  var logFiles = [ERROR_LOG, ANALYSIS_LOG];
+  for (var i = 0; i < logFiles.length; i++) {
+    var logFile = logFiles[i];
     try {
-      if (!fs.existsSync(logFile)) return;
+      if (!fs.existsSync(logFile)) continue;
       var stat = fs.statSync(logFile);
       // Only report if modified in last 24 hours
-      if (Date.now() - stat.mtimeMs > 86400000) return;
+      if (Date.now() - stat.mtimeMs > 86400000) continue;
       var lines = fs.readFileSync(logFile, "utf-8").trim().split("\n");
       var errors = lines.filter(function(l) {
         return /error|fail|stderr/i.test(l);
@@ -32,7 +34,7 @@ function checkBgErrors() {
           errors.join("\n"));
       }
     } catch(e) {}
-  });
+  }
   return msgs.length > 0 ? msgs.join("\n\n") : "";
 }
 
