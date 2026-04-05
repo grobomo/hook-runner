@@ -2,10 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
-## [2.4.3] — 2026-04-05
+## [2.5.0] — 2026-04-05
 
 ### Improved
 - Shared git context in PreToolUse runner — one `git rev-parse` call shared across 4 modules instead of each spawning independently (~80ms savings per tool call) (#140)
+- `--workflow sync-live` now copies core files (runners, loader, logger) and project-scoped module subdirectories (#142)
+  - File count: 66 → 78. Runner changes are now deployed automatically.
 
 ## [2.4.2] — 2026-04-05
 
