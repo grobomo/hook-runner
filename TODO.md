@@ -286,9 +286,12 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T258: Optimize branch-pr-gate — defer getBranch() until after state-change check (~150ms savings for non-state-changing Bash commands)
 - [x] T259: Add --test-module test suite (9 tests: usage, error handling, all event types, custom input)
 
+## Release
+- [x] T260: Version bump to 2.4.1 + CHANGELOG
+
 ## Status
-- 182 tasks completed, 0 pending
-- Version: 2.4.0
+- 183 tasks completed, 0 pending
+- Version: 2.4.1
 - 402 tests passing across 40 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
