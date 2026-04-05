@@ -429,13 +429,8 @@ function cmdWorkflow(args) {
         copied++;
       }
     }
-    // Sync core files (runners, loader, logger, async helper, workflow engine)
-    var coreFiles = [
-      "run-pretooluse.js", "run-posttooluse.js", "run-stop.js",
-      "run-sessionstart.js", "run-userpromptsubmit.js",
-      "load-modules.js", "hook-log.js", "run-async.js",
-      "workflow.js", "workflow-cli.js"
-    ];
+    // Sync core files — shared constant (see constants.js)
+    var coreFiles = require(path.join(__dirname, "constants.js")).RUNNER_FILES;
     for (var ci2 = 0; ci2 < coreFiles.length; ci2++) {
       var srcCore = path.join(__dirname, coreFiles[ci2]);
       if (fs.existsSync(srcCore)) {
