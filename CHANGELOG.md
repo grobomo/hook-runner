@@ -2,6 +2,14 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.5.9] — 2026-04-05
+
+### Added
+- **Report: Workflow summary** — clickable cards showing each workflow and its modules, with block counts (#168)
+- **Report: Workflow filter** — toolbar buttons to filter all modules by workflow name (#168)
+- **Report: Workflow badge** — colored badge on each module card showing its workflow (#168)
+- **Report: WHY text** — incident description shown prominently below module name, no longer buried in source (#168)
+
 ## [2.5.8] — 2026-04-05
 
 ### Fixed
