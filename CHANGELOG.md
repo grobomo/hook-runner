@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.3.1] — 2026-04-05
+
+### Fixed
+- watchdog.js converted from ES6 to ES5 for consistency with all other files (#126)
+- Cron install/uninstall: replaced `execSync echo pipe` with `execFileSync stdin` to prevent shell injection from crontab content (#126)
+
 ## [2.3.0] — 2026-04-05
 
 ### Added
