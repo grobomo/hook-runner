@@ -285,7 +285,7 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Status
 - 180 tasks completed, 0 pending
 - Version: 2.4.0
-- 394 tests passing across 39 test suites
+- 393 tests passing across 39 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live), perf, export
