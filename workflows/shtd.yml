@@ -49,7 +49,6 @@ modules:
   - branch-pr-gate
   - commit-msg-check
   - continuous-claude-gate
-  - cwd-drift-detector
   - drift-review
   - enforcement-gate
   - hook-editing-gate
