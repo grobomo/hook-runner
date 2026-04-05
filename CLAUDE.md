@@ -1,5 +1,9 @@
 # Hook Runner
 
+**Hook Runner:** `grobomo/hook-runner` (public) — the engine. Install to `~/.claude/hooks/`.
+**SHTD Workflow:** `grobomo/shtd-workflow` (public) — workflow modules that plug into hook-runner.
+**This install:** Hook-runner + SHTD. Changes go to the appropriate grobomo repo via SHTD flow.
+
 Modular hook system for Claude Code. One runner per event, modules auto-loaded.
 
 ## Architecture

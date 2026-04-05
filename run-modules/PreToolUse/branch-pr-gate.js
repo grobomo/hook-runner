@@ -1,3 +1,4 @@
+// WORKFLOW: shtd
 // WHY: Claude committed directly to main, bypassing review.
 "use strict";
 // Branch-PR gate: enforces Model C workflow.
@@ -46,7 +47,7 @@ var READ_ONLY_PATTERNS = [
   /^\s*curl\b/,
   /^\s*chmod\b/,
   /^\s*sleep\b/,
-  /^\s*MSYS_NO_PATHCONV/,
+  // REMOVED: MSYS_NO_PATHCONV — was env prefix, bypassed ALL az gates (2026-04-05)
 ];
 
 // State-changing commands that require a task branch
@@ -97,7 +98,9 @@ function validateBranchName(name) {
   return null;
 }
 
-function getBranch() {
+function getBranch(input) {
+  // Use shared git context from runner if available (saves ~40ms)
+  if (input && input._git && input._git.branch) return input._git.branch;
   try {
     return cp.execSync("git rev-parse --abbrev-ref HEAD", {
       encoding: "utf-8", timeout: 5000
@@ -120,20 +123,32 @@ module.exports = function(input) {
     if (!targetFile) return null;
     var norm = targetFile.replace(/\\/g, "/");
 
-    // Allow bootstrap/config/spec/planning/test files on any branch
-    var allowPatterns = [
-      /TODO\.md$/, /SESSION_STATE\.md$/, /CLAUDE\.md$/, /README\.md$/,
-      /\.claude\//, /\/specs\//, /\.planning\//, /\.specify\//,
-      /\.github\//, /\/hooks\//, /\/rules\//,
-      /\.gitignore$/, /scripts\/test\//, /\.json$/,
-    ];
+    // Allow bootstrap/config/spec/planning/test files on any branch.
+    // EXCEPTION: when ~/.claude IS the project, JS/SH code files are NOT exempt —
+    // they must go through branches+PRs like any other project's code.
     var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
-    if (home && norm.startsWith(home + "/.claude/")) return null;
-    for (var i = 0; i < allowPatterns.length; i++) {
-      if (allowPatterns[i].test(norm)) return null;
+    var projectDir = (process.env.CLAUDE_PROJECT_DIR || "").replace(/\\/g, "/");
+    var isClaudeProject = projectDir && (
+      projectDir === home + "/.claude" ||
+      projectDir.replace(/\/+$/, "") === home + "/.claude"
+    );
+
+    // When ~/.claude is the project, JS/SH files are code, not config
+    if (isClaudeProject && /\.(js|sh|ts|py)$/.test(norm)) {
+      // Fall through to branch check — these are code files
+    } else {
+      var allowPatterns = [
+        /TODO\.md$/, /SESSION_STATE\.md$/, /CLAUDE\.md$/, /README\.md$/,
+        /\.claude\//, /\/specs\//, /\.planning\//, /\.specify\//,
+        /\.github\//, /\/hooks\//, /\/rules\//,
+        /\.gitignore$/, /scripts\/test\//, /\.json$/,
+      ];
+      for (var i = 0; i < allowPatterns.length; i++) {
+        if (allowPatterns[i].test(norm)) return null;
+      }
     }
 
-    var branch = getBranch();
+    var branch = getBranch(input);
     if (!branch) return null;
 
     if (branch === "main" || branch === "master") {
@@ -164,28 +179,18 @@ module.exports = function(input) {
     var cmd = "";
     try { cmd = (typeof input.tool_input === "string" ? JSON.parse(input.tool_input) : input.tool_input || {}).command || ""; } catch(e) { cmd = (input.tool_input || {}).command || ""; }
     if (!cmd) return null;
-
+    // Strip env var prefixes so actual command is matched (MSYS_NO_PATHCONV fix 2026-04-05)
+    var stripped = cmd.replace(/^(\s*[A-Z_]+=\S*\s+)+/, "");
     // Always allow read-only commands
     for (var r = 0; r < READ_ONLY_PATTERNS.length; r++) {
-      if (READ_ONLY_PATTERNS[r].test(cmd)) return null;
+      if (READ_ONLY_PATTERNS[r].test(stripped)) return null;
     }
 
-    // Early check: git commit on main is ALWAYS blocked (no allowlist bypass)
-    var earlyBranch = getBranch();
-    if ((earlyBranch === "main" || earlyBranch === "master") && /^\s*git\s+commit/.test(cmd)) {
-      return {
-        decision: "block",
-        reason: "BRANCH GATE: git commit blocked on " + earlyBranch + ".\n" +
-          "WHY: Commits on main are invisible to the dev team.\n" +
-          "Even specs/docs must go through PRs so everyone sees the change and the reason.\n" +
-          "FIX: git checkout -b <NNN>-<verb-noun>"
-      };
-    }
-
-    // Check if this is a state-changing command
+    // Check if this is a state-changing command BEFORE spawning git
+    // (avoids ~150ms getBranch() overhead for non-state-changing commands)
     var isStateChange = false;
     for (var s = 0; s < STATE_CHANGE_PATTERNS.length; s++) {
-      if (STATE_CHANGE_PATTERNS[s].test(cmd)) { isStateChange = true; break; }
+      if (STATE_CHANGE_PATTERNS[s].test(stripped)) { isStateChange = true; break; }
     }
     if (!isStateChange) return null; // unknown commands pass through
 
@@ -201,7 +206,8 @@ module.exports = function(input) {
       return null; // valid name, allow creation
     }
 
-    var branch = earlyBranch; // reuse from early commit check
+    // Only now spawn git — we know this is a state-changing command
+    var branch = getBranch(input);
     if (!branch) return null;
 
     if (branch === "main" || branch === "master") {

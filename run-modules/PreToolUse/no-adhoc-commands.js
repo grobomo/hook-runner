@@ -1,3 +1,4 @@
+// WORKFLOW: infra-safety
 // WHY: Ad-hoc AWS/SSH commands died with the session. Scripts survive.
 // Block ad-hoc Bash commands for AWS, SSH, Docker, and infrastructure.
 // ALL operations must go through reusable scripts in scripts/.
@@ -9,7 +10,8 @@ module.exports = function(input) {
   if (input.tool_name !== "Bash") return null;
 
   var cmd = (input.tool_input || {}).command || "";
-  var normalized = cmd.replace(/\s+/g, " ").trim();
+  // Strip env var prefixes (MSYS_NO_PATHCONV=1 etc.) so actual command is matched (2026-04-05)
+  var normalized = cmd.replace(/\s+/g, " ").trim().replace(/^([A-Z_]+=\S*\s+)+/, "");
 
   // Allow running scripts (the whole point) — command must START with a script path
   if (/^\s*(bash\s+)?scripts\//.test(normalized)) return null;
@@ -49,6 +51,13 @@ module.exports = function(input) {
     };
   }
 
+  // Block: terraform/azcopy
+  if (/^\s*(terraform|azcopy)\s/.test(normalized)) {
+    return { decision: "block", reason: "NO AD-HOC TF/AZCOPY. Script it.\nBlocked: " + cmd.substring(0, 150) };
+  }
+  if (/\baz\s+\w+/.test(normalized)) {
+    return { decision: "block", reason: "NO AD-HOC AZ. Create a script.\nBlocked: " + cmd.substring(0, 150) };
+  }
   // Block: raw SSH/SCP
   if (/^\s*(ssh|scp)\s/.test(normalized)) {
     return {
