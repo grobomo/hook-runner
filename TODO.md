@@ -267,10 +267,12 @@ See `specs/watchdog/tasks.md` for full task list.
 
 ## Robustness
 - [x] T251: Increase per-suite test timeout from 60s to 120s (module validation suite can timeout under load) (#128)
+- [x] T252: Show failed suite names in --test output + FAIL marker for crashed suites (#130)
+- [x] T253: Version bump to 2.3.2 + CHANGELOG + marketplace sync
 
 ## Status
-- 174 tasks completed, 0 pending
-- Version: 2.3.1
+- 176 tasks completed, 0 pending
+- Version: 2.3.2
 - 394 tests passing across 39 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates

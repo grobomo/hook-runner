@@ -2,6 +2,13 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.3.2] — 2026-04-05
+
+### Fixed
+- Per-suite test timeout increased from 60s to 120s — prevents false failures under load (#128)
+- `--test` now names which suites failed in summary line (#130)
+- `--test` prints `FAIL: suite crashed (exit code N)` when a suite crashes (#130)
+
 ## [2.3.1] — 2026-04-05
 
 ### Fixed
