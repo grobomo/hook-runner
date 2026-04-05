@@ -18,7 +18,7 @@ assert() {
 }
 
 # Test 1: setup.js loads and shows version
-EXPECTED_VER=$(grep -oP 'VERSION = "\K[^"]+' setup.js)
+EXPECTED_VER=$(sed -n 's/.*VERSION = "\([^"]*\)".*/\1/p' setup.js)
 OUT=$(node setup.js --version 2>&1)
 if echo "$OUT" | grep -q "$EXPECTED_VER"; then
   assert "version is $EXPECTED_VER" "0" "0"

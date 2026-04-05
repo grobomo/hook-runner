@@ -48,7 +48,7 @@ process.exit(bad > 0 ? 1 : 0);
 " "$REPO_DIR" 2>&1)
 
 if echo "$LOAD_RESULT" | grep -q "0 failed"; then
-  COUNT=$(echo "$LOAD_RESULT" | grep -oP '\d+ loaded')
+  COUNT=$(echo "$LOAD_RESULT" | grep -o '[0-9][0-9]* loaded')
   pass "all catalog modules load ($COUNT)"
 else
   fail "some modules failed to load: $LOAD_RESULT"
