@@ -724,6 +724,26 @@ function cmdHelp() {
   console.log("  node setup.js --uninstall --dry-run  # preview removal");
 }
 
+/**
+ * Extract changelog sections between two versions.
+ * Returns text of all ## [x.y.z] sections where x.y.z is newer than localVer.
+ */
+function extractChangelogBetween(changelog, localVer, remoteVer) {
+  var lines = changelog.split("\n");
+  var collecting = false;
+  var result = [];
+  for (var i = 0; i < lines.length; i++) {
+    var heading = lines[i].match(/^## \[([^\]]+)\]/);
+    if (heading) {
+      var ver = heading[1];
+      if (ver === localVer) break; // stop at current version
+      collecting = true;
+    }
+    if (collecting) result.push(lines[i]);
+  }
+  return result.length > 0 ? result.join("\n").trim() : null;
+}
+
 function cmdUpgrade(args, dryRun) {
   console.log("[hook-runner] Upgrade");
   console.log("========================");
@@ -748,6 +768,16 @@ function cmdUpgrade(args, dryRun) {
   if (remoteVersion === VERSION && !args.includes("--force")) {
     console.log("  Already up to date. Use --force to re-download anyway.");
     return;
+  }
+  // Show what changed between versions
+  var changelog = fetchFromGitHub(source, branch, "CHANGELOG.md");
+  if (changelog) {
+    var sections = extractChangelogBetween(changelog, VERSION, remoteVersion);
+    if (sections) {
+      console.log("  What's new:");
+      console.log("  " + sections.replace(/\n/g, "\n  "));
+      console.log("");
+    }
   }
   var updated = 0, skipped = 0;
   for (var ui = 0; ui < coreFiles.length; ui++) {
