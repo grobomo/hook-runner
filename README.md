@@ -72,7 +72,7 @@ node setup.js --workflow query Edit        # which workflows affect Edit?
 | Workflow | Modules | What it enforces |
 |----------|---------|-----------------|
 | `shtd` | 16 | Spec → tasks → branch → test → implement → PR. The full development pipeline. |
-| `session-management` | 11 | Auto-continue, context injection, health checks, backups, workflow summary. |
+| `session-management` | 12 | Auto-continue, context injection, health checks, backups, terminal title, workflow summary. |
 | `code-quality` | 10 | Prevents hardcoded paths, fragile heuristics, missed test coverage, stale docs. |
 | `infra-safety` | 10 | No ad-hoc commands, required tags, env var checks, config audit. |
 | `self-improvement` | 6 | Detect instructions, interrupts, and troubleshooting patterns; enforce durable rules. |
@@ -389,6 +389,7 @@ Full catalog in `modules/` directory:
 | `load-instructions` | Injects working instructions at session start |
 | `load-lessons` | Injects recent self-analysis lessons |
 | `project-health` | Runs health check, warns about issues |
+| `terminal-title` | Sets terminal title to project folder name |
 | `workflow-summary` | Injects active workflow summary |
 
 ## Troubleshooting

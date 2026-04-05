@@ -20,4 +20,5 @@ modules:
   - mark-turn-complete
   - never-give-up
   - project-health
+  - terminal-title
   - workflow-summary
