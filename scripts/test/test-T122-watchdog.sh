@@ -21,7 +21,7 @@ mkdir -p "$TMPDIR/run-modules/Stop" "$TMPDIR/run-modules/PreToolUse"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 # Create minimal runner files
-for r in run-pretooluse.js run-posttooluse.js run-stop.js run-sessionstart.js run-userpromptsubmit.js load-modules.js workflow.js; do
+for r in run-pretooluse.js run-posttooluse.js run-stop.js run-sessionstart.js run-userpromptsubmit.js load-modules.js hook-log.js run-async.js workflow.js workflow-cli.js constants.js; do
   echo "// stub" > "$TMPDIR/$r"
 done
 

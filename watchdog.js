@@ -27,7 +27,8 @@ var DEFAULT_CONFIG = {
   required_runners: [
     "run-pretooluse.js", "run-posttooluse.js", "run-stop.js",
     "run-sessionstart.js", "run-userpromptsubmit.js",
-    "load-modules.js", "workflow.js"
+    "load-modules.js", "hook-log.js", "run-async.js",
+    "workflow.js", "workflow-cli.js", "constants.js"
   ],
   required_modules: ["Stop/auto-continue.js", "PreToolUse/branch-pr-gate.js"]
 };
