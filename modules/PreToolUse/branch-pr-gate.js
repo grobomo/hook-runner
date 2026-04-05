@@ -183,19 +183,8 @@ module.exports = function(input) {
       if (READ_ONLY_PATTERNS[r].test(cmd)) return null;
     }
 
-    // Early check: git commit on main is ALWAYS blocked (no allowlist bypass)
-    var earlyBranch = getBranch();
-    if ((earlyBranch === "main" || earlyBranch === "master") && /^\s*git\s+commit/.test(cmd)) {
-      return {
-        decision: "block",
-        reason: "BRANCH GATE: git commit blocked on " + earlyBranch + ".\n" +
-          "WHY: Commits on main are invisible to the dev team.\n" +
-          "Even specs/docs must go through PRs so everyone sees the change and the reason.\n" +
-          "FIX: git checkout -b <NNN>-<verb-noun>"
-      };
-    }
-
-    // Check if this is a state-changing command
+    // Check if this is a state-changing command BEFORE spawning git
+    // (avoids ~150ms getBranch() overhead for non-state-changing commands)
     var isStateChange = false;
     for (var s = 0; s < STATE_CHANGE_PATTERNS.length; s++) {
       if (STATE_CHANGE_PATTERNS[s].test(cmd)) { isStateChange = true; break; }
@@ -214,7 +203,8 @@ module.exports = function(input) {
       return null; // valid name, allow creation
     }
 
-    var branch = earlyBranch; // reuse from early commit check
+    // Only now spawn git — we know this is a state-changing command
+    var branch = getBranch();
     if (!branch) return null;
 
     if (branch === "main" || branch === "master") {
