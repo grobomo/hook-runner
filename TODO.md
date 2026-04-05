@@ -258,12 +258,16 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T246: Community adoption: "Why hook-runner?" section in README — raw hooks vs modules vs workflows progression (#124)
 - [x] T247: Integration guide in README — context-reset, skill-maker, mcp-manager, marketplace (#124)
 
+## Code Review (session 2026-04-05f continued)
+- [x] T249: Convert watchdog.js from ES6 to ES5 + fix cron shell injection (#126)
+- [x] T250: Version bump to 2.3.1 + marketplace sync (#127)
+
 ## Release
 - [x] T248: Version bump to 2.3.0 + CHANGELOG + marketplace sync (#125)
 
 ## Status
-- 171 tasks completed, 0 pending
-- Version: 2.3.0
+- 173 tasks completed, 0 pending
+- Version: 2.3.1
 - 394 tests passing across 39 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
