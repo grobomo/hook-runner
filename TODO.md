@@ -304,11 +304,16 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T268: DRY — shared RUNNER_FILES constant for install/upgrade/uninstall (#145)
 - [x] T269: Version bump to 2.5.1 + CHANGELOG
 
+## Code Quality
+- [x] T270: Add missing WORKFLOW/WHY headers to 4 project-scoped modules (#147)
+- [x] T271: Module validation tests check headers + traverse subdirs (100→244 tests) (#148)
+- [x] T272: Version bump to 2.5.2 + CHANGELOG
+
 ## Status
-- 192 tasks completed, 0 pending
-- Version: 2.5.1 (released, tagged, marketplace synced, live hooks synced)
+- 195 tasks completed, 0 pending
+- Version: 2.5.2 (released, tagged, marketplace synced, live hooks synced)
 - Clones: 2055 total, 0 stars/forks/issues — stable utility, no community demand for features
-- 402 tests passing across 40 test suites
+- 544 tests passing across 40 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live), perf, export

@@ -46,7 +46,7 @@ var SCRIPT_DIR = __dirname;
 var REPO_DIR = SCRIPT_DIR;
 
 var HOOK_LOG_PATH = path.join(HOOKS_DIR, "hook-log.jsonl");
-var VERSION = "2.5.1";
+var VERSION = "2.5.2";
 
 // Shared file lists — single source of truth for install/upgrade/uninstall
 var RUNNER_FILES = [

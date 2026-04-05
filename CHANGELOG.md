@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.5.2] — 2026-04-05
+
+### Improved
+- Added WORKFLOW/WHY header checks to module validation tests (#147, #148)
+- Module tests now traverse project-scoped subdirectories (test count: ~100 → 244)
+
 ## [2.5.1] — 2026-04-05
 
 ### Fixed
