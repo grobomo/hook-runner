@@ -1,3 +1,4 @@
+// WORKFLOW: shtd
 // WHY: PRs merged from mobile had no tests, breaking production.
 "use strict";
 // requires: enforcement-gate, spec-gate
