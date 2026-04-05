@@ -45,7 +45,7 @@ module.exports = function(input) {
 
   // Only scan added lines (lines starting with +, excluding file headers)
   var addedLines = diff.split("\n").filter(function(line) {
-    return line.charAt(0) === "+" && !line.startsWith("+++");
+    return line.charAt(0) === "+" && line.indexOf("+++") !== 0;
   });
   var addedText = addedLines.join("\n");
 

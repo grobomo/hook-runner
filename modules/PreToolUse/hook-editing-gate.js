@@ -25,7 +25,7 @@ module.exports = function(input) {
 
   // Only check hook infrastructure files
   var isRunner = /run-[a-z]+\.js$/.test(base);
-  var isModule = /run-modules\//.test(norm) && base.endsWith(".js");
+  var isModule = /run-modules\//.test(norm) && base.indexOf(".js", base.length - 3) !== -1;
   if (!isRunner && !isModule) return null;
 
   // Get the content being written

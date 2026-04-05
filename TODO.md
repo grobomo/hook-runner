@@ -334,9 +334,11 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Performance & ES5 Fixes
 - [x] T287: Optimize preserve-iterated-content — rev-list --count instead of log --oneline, timeout 3s→1.5s, fix .some() ES6→for-loop
 - [x] T288: Fix rule-hygiene .includes() ES6 method → indexOf() for ES5 consistency
+- [x] T289: Version bump to 2.5.7 + CHANGELOG (#165)
+- [x] T290: Replace .startsWith()/.endsWith() ES6 with indexOf() in 9 module files
 
 ## Status
-- 211 tasks completed, 0 pending
+- 213 tasks completed, 0 pending
 - Version: 2.5.6 (released, tagged, marketplace synced, live hooks synced)
 - 58 modules across 9 workflows, 536 tests passing across 40 test suites
 - Health: 77 OK, 0 warnings, 0 failures
