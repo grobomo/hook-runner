@@ -352,8 +352,11 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Release
 - [x] T296: Version bump to 2.5.10 + CHANGELOG (#171)
 
+## Test Fixes
+- [x] T297: Fix 3 failing test suites — spec-gate test needs spec.md + git commit, README module docs (#173)
+
 ## Status
-- 219 tasks completed, 0 pending
+- 220 tasks completed, 0 pending
 - Version: 2.5.10 (released, tagged, marketplace synced, live hooks synced)
 - 64 modules across 10 workflows, 40 test suites (260 module tests)
 - Health: 82 OK, 0 warnings, 0 failures
