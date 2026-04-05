@@ -8,6 +8,8 @@
 var path = require("path");
 
 module.exports = function(input) {
+  // Only set title when connected to a real terminal (skip in test/CI)
+  if (!process.stdout.isTTY) return null;
   var folderName = path.basename(process.cwd());
   // ESC ]0; ... BEL sets terminal title in most terminals (Windows Terminal, iTerm2, etc.)
   process.stdout.write("\x1b]0;" + folderName + "\x07");
