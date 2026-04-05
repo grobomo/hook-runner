@@ -19,7 +19,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - `modules/` — distributable module catalog organized by event type
 - `workflows/` — built-in workflow definitions (YAML)
 - `package.json` — npm package metadata (enables `npx grobomo/hook-runner`)
-- `scripts/test/` — test scripts (180 tests across 12 files)
+- `scripts/test/` — test scripts (233 tests across 20 suites)
 
 ## Sync Targets (must stay identical)
 1. Repo: this directory
@@ -29,7 +29,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 ## Testing
 ```bash
-node setup.js --test    # runs all 12 suites (180 tests)
+node setup.js --test    # runs all 20 suites (233 tests)
 ```
 
 ## Module Contract
@@ -49,7 +49,7 @@ node setup.js --list        # catalog vs installed
 node setup.js --stats       # text summary of hook log
 node setup.js --perf        # module timing analysis
 node setup.js --export      # export module config as YAML
-node setup.js --workflow     # list|start|status|complete|reset
+node setup.js --workflow     # list|audit|query|enable|disable|start|status|complete|reset
 node setup.js --test        # run all test suites
 node setup.js --upgrade     # fetch latest from GitHub
 node setup.js --uninstall   # remove hook-runner
