@@ -48,6 +48,14 @@ var REPO_DIR = SCRIPT_DIR;
 var HOOK_LOG_PATH = path.join(HOOKS_DIR, "hook-log.jsonl");
 var VERSION = "2.5.0";
 
+// Shared file lists — single source of truth for install/upgrade/uninstall
+var RUNNER_FILES = [
+  "run-pretooluse.js", "run-posttooluse.js", "run-stop.js",
+  "run-sessionstart.js", "run-userpromptsubmit.js",
+  "load-modules.js", "hook-log.js", "run-async.js",
+  "workflow.js", "workflow-cli.js"
+];
+
 // ============================================================
 // 0. Hook Log Stats
 // ============================================================
@@ -349,16 +357,15 @@ function installRunners(dryRun) {
   if (!dryRun) fs.mkdirSync(HOOKS_DIR, { recursive: true });
 
   // Copy runner scripts + load-modules.js
-  var runnerFiles = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "run-userpromptsubmit.js", "load-modules.js", "hook-log.js", "run-async.js", "workflow.js", "workflow-cli.js"];
-  for (var i = 0; i < runnerFiles.length; i++) {
-    var src = path.join(REPO_DIR, runnerFiles[i]);
-    var dest = path.join(HOOKS_DIR, runnerFiles[i]);
+  for (var i = 0; i < RUNNER_FILES.length; i++) {
+    var src = path.join(REPO_DIR, RUNNER_FILES[i]);
+    var dest = path.join(HOOKS_DIR, RUNNER_FILES[i]);
     if (!fs.existsSync(src)) {
-      changes.push({ action: "skip", file: runnerFiles[i], reason: "source not found" });
+      changes.push({ action: "skip", file: RUNNER_FILES[i], reason: "source not found" });
       continue;
     }
     if (!dryRun) fs.copyFileSync(src, dest);
-    changes.push({ action: dryRun ? "would-copy" : "copied", file: runnerFiles[i], dest: dest });
+    changes.push({ action: dryRun ? "would-copy" : "copied", file: RUNNER_FILES[i], dest: dest });
   }
 
   // Create run-modules directories
@@ -751,12 +758,7 @@ function cmdUpgrade(args, dryRun) {
   console.log("========================");
   var source = "grobomo/hook-runner";
   var branch = "main";
-  var coreFiles = [
-    "setup.js", "report.js", "workflow.js", "workflow-cli.js",
-    "run-pretooluse.js", "run-posttooluse.js", "run-stop.js",
-    "run-sessionstart.js", "run-userpromptsubmit.js",
-    "load-modules.js", "hook-log.js", "run-async.js"
-  ];
+  var coreFiles = ["setup.js", "report.js"].concat(RUNNER_FILES);
   var remoteSetup = fetchFromGitHub(source, branch, "setup.js");
   if (!remoteSetup) {
     console.log("  ERROR: Could not fetch from GitHub. Check network connection.");
@@ -847,7 +849,7 @@ function cmdUninstall(args, dryRun) {
   } else {
     uninstallChanges.push({ what: "settings.json", status: "not found" });
   }
-  var runnerFiles = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "run-userpromptsubmit.js", "load-modules.js", "hook-log.js", "run-async.js", "workflow.js", "workflow-cli.js", "setup.js"];
+  var runnerFiles = RUNNER_FILES.concat(["setup.js"]);
   for (var uf = 0; uf < runnerFiles.length; uf++) {
     var fp = path.join(HOOKS_DIR, runnerFiles[uf]);
     if (fs.existsSync(fp)) {
