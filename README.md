@@ -274,18 +274,19 @@ Full catalog in `modules/` directory:
 ### PreToolUse (gates before tool execution)
 | Module | Description |
 |--------|-------------|
+| `archive-not-delete` | Blocks file deletion, suggests archiving instead |
 | `aws-tagging-gate` | Enforces required tags on AWS resource creation |
 | `block-local-docker` | Blocks docker/docker-compose commands |
 | `branch-pr-gate` | Enforces feature branch → task branch → PR workflow |
 | `claude-p-pattern` | Enforces correct `claude -p` invocation pattern |
 | `continuous-claude-gate` | Blocks code without tracked task workflow |
-| `cwd-drift-detector` | Blocks cross-project file access |
 | `crlf-ssh-key-check` | Blocks SSH key copy without CRLF stripping |
+| `cwd-drift-detector` | Blocks cross-project file access |
+| `disk-space-guard` | Blocks destructive commands after disk space errors |
 | `enforcement-gate` | Requires git repo + TODO.md before edits |
 | `env-var-check` | Blocks edits if required env vars missing |
 | `git-rebase-safety` | Warns about reversed --ours/--theirs during rebase |
 | `hook-editing-gate` | Enforces WORKFLOW tag, WHY comment, exit(1) in hook files |
-| `test-checkpoint-gate` | Blocks code without e2e test (auto-detects `scripts/test/test-TXXX*.sh`) |
 | `instruction-to-hook-gate` | Converts user directives into hook modules |
 | `messaging-safety-gate` | Blocks outbound messaging unless authorized |
 | `no-adhoc-commands` | Blocks raw aws/ssh/docker/kubectl, forces scripts/ |
@@ -299,7 +300,10 @@ Full catalog in `modules/` directory:
 | `root-cause-gate` | Blocks retry without root cause diagnosis |
 | `secret-scan-gate` | Blocks commits with API keys or tokens |
 | `settings-change-gate` | Requires rationale when modifying config |
+| `settings-hooks-gate` | Blocks adding hooks directly to settings.json |
 | `spec-gate` | Blocks code without specs/tasks.md |
+| `task-completion-gate` | Blocks marking tasks complete without PR evidence |
+| `test-checkpoint-gate` | Blocks code without e2e test (auto-detects `scripts/test/test-TXXX*.sh`) |
 | `why-reminder` | Reminds to explain WHY before every code edit |
 | `worker-loop` | Blocks PR creation until task's e2e test passes |
 | `workflow-gate` | Enforces step order in active workflows |
@@ -332,6 +336,7 @@ Full catalog in `modules/` directory:
 | Module | Description |
 |--------|-------------|
 | `auto-continue` | Blocks stopping — always find the next task |
+| `chat-export` | Auto-exports session to HTML on stop |
 | `drift-review` | Checks work matches the active spec task |
 | `log-gotchas` | Captures debugging lessons before stopping |
 | `mark-turn-complete` | Writes turn marker for interrupt detection |
