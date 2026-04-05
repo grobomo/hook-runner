@@ -156,8 +156,8 @@ so the workflow scales naturally from one Claude to a CCC fleet.
 
 ## Cross-Project Drift Detector & Runner Fixes (from chat-export session 2026-04-04)
 
-- [ ] T116: Commit cwd-drift-detector.js — new PreToolUse module that blocks cross-project file access and instructs Claude to spawn a new tab via context-reset. Allows TODO.md/SESSION_STATE.md writes and context-reset commands through.
-- [ ] T117: Commit PostToolUse runner cleanup — removed unused suggest decision path from run-posttooluse.js
+- [x] T116: Commit cwd-drift-detector.js — new PreToolUse module that blocks cross-project file access and instructs Claude to spawn a new tab via context-reset. Allows TODO.md/SESSION_STATE.md writes and context-reset commands through.
+- [x] T117: Commit PostToolUse runner cleanup — path normalization + exit(1) for blocks + stderr output
 - [ ] T118: Create hook-editing enforcement gate — PreToolUse module that fires on Edit/Write targeting run-modules/ or run-*.js, enforces: (1) exit(1) not exit(0) for blocks, (2) stderr output for TUI visibility, (3) WORKFLOW tag present, (4) WHY comment present
 - [ ] T119: Document hook design rule: PreToolUse for behavioral enforcement (blocking), PostToolUse for monitoring/reporting (non-blocking). Add to CLAUDE.md and hook-editing gate.
 - [ ] T120: Audit hooks repo dirty state — 37 modified + 25 untracked files on branch 002-T007-validate-self-analysis. Inventory changes, create proper specs/branches/PRs.
@@ -171,9 +171,11 @@ so anyone can `npx grobomo/hook-runner` and get a working system.
 
 See `specs/publish-ready/tasks.md` for full task list with checkpoints.
 
-- [ ] T201-T204: Clean — remove hardcoded paths from all modules
-- [ ] T205-T209: Harden — onboarding UX, uninstall restore, CI coverage
-- [ ] T210-T213: Document — README rewrite, troubleshooting, CLAUDE.md/SKILL.md
+- [x] T201-T204: Clean — remove hardcoded paths from all modules
+- [x] T205-T206, T208: Harden — onboarding --yes, uninstall --confirm, CI all suites
+- [ ] T207: Health check portable-paths validation
+- [ ] T209: CI install test (npx fresh install)
+- [x] T210-T213: Document — README rewrite, troubleshooting, CLAUDE.md/SKILL.md
 - [ ] T214-T216: Ship — v2.0.0 bump, marketplace sync, e2e fresh install test
 
 ## Status
