@@ -52,7 +52,7 @@ module.exports = function(input) {
       var files = fs.readdirSync(testDir);
       for (var fi = 0; fi < files.length; fi++) {
         var pattern = new RegExp("^test-" + taskId, "i");
-        if (pattern.test(files[fi]) && files[fi].endsWith(".sh")) {
+        if (pattern.test(files[fi]) && files[fi].indexOf(".sh", files[fi].length - 3) !== -1) {
           testScript = path.join(testDir, files[fi]);
           break;
         }

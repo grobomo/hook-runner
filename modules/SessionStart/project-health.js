@@ -47,14 +47,14 @@ module.exports = function(input) {
         var subFiles;
         try { subFiles = fs.readdirSync(fPath); } catch(e) { continue; }
         for (var si = 0; si < subFiles.length; si++) {
-          if (!subFiles[si].endsWith(".js")) continue;
+          if (subFiles[si].indexOf(".js", subFiles[si].length - 3) === -1) continue;
           try {
             require(path.join(fPath, subFiles[si]));
           } catch(e) {
             loadErrors.push(events[ei] + "/" + files[fi] + "/" + subFiles[si] + ": " + e.message);
           }
         }
-      } else if (files[fi].endsWith(".js")) {
+      } else if (files[fi].indexOf(".js", files[fi].length - 3) !== -1) {
         try {
           require(fPath);
         } catch(e) {

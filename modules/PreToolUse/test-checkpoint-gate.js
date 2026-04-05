@@ -33,7 +33,7 @@ module.exports = function(input) {
 
   // Allow user home config
   var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
-  if (home && norm.startsWith(home + "/.claude/")) return null;
+  if (home && norm.indexOf(home + "/.claude/") === 0) return null;
 
   // Find project roots
   var projectDir = (process.env.CLAUDE_PROJECT_DIR || "").replace(/\\/g, "/");

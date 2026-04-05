@@ -23,9 +23,22 @@ module.exports = function(input) {
   var dirName = path.dirname(filePath);
 
   // Skip if the file itself is a test file — no need to remind
-  var isTestFile = TEST_PREFIXES.some(function(p) { return basename.startsWith(p); }) ||
-    TEST_SUFFIXES.some(function(s) { return basename.endsWith(s); }) ||
-    TEST_DIRS.some(function(d) { return filePath.replace(/\\/g, "/").indexOf("/" + d + "/") !== -1; });
+  var isTestFile = false;
+  for (var pi = 0; pi < TEST_PREFIXES.length; pi++) {
+    if (basename.indexOf(TEST_PREFIXES[pi]) === 0) { isTestFile = true; break; }
+  }
+  if (!isTestFile) {
+    for (var si2 = 0; si2 < TEST_SUFFIXES.length; si2++) {
+      var suf = TEST_SUFFIXES[si2];
+      if (basename.length >= suf.length && basename.indexOf(suf, basename.length - suf.length) !== -1) { isTestFile = true; break; }
+    }
+  }
+  if (!isTestFile) {
+    var normPath = filePath.replace(/\\/g, "/");
+    for (var di2 = 0; di2 < TEST_DIRS.length; di2++) {
+      if (normPath.indexOf("/" + TEST_DIRS[di2] + "/") !== -1) { isTestFile = true; break; }
+    }
+  }
 
   if (isTestFile) return null;
 
@@ -61,8 +74,8 @@ module.exports = function(input) {
       var sib = siblings[si];
       if (sib === basename) continue;
       var sibLower = sib.toLowerCase();
-      if ((sibLower.startsWith("test-" + nameNoExt.toLowerCase()) ||
-           sibLower.startsWith("test_" + nameNoExt.toLowerCase()) ||
+      if ((sibLower.indexOf("test-" + nameNoExt.toLowerCase()) === 0 ||
+           sibLower.indexOf("test_" + nameNoExt.toLowerCase()) === 0 ||
            sibLower === nameNoExt.toLowerCase() + ".test.js" ||
            sibLower === nameNoExt.toLowerCase() + ".test.ts" ||
            sibLower === nameNoExt.toLowerCase() + ".spec.js" ||
