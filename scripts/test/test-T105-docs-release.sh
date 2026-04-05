@@ -9,14 +9,15 @@ check() {
 }
 echo "=== hook-runner: docs & release ==="
 
-# Extract expected version from setup.js
-EXPECTED_VER=$(sed -n 's/.*VERSION = "\([^"]*\)".*/\1/p' "$REPO_DIR/setup.js")
+# Extract expected version from package.json (single source of truth)
+EXPECTED_VER=$(node -e "process.stdout.write(require('$REPO_DIR/package.json').version)")
 
-# 1. Version in setup.js matches package.json
-check "setup.js version is $EXPECTED_VER" 'grep -q "\"$EXPECTED_VER\"" "$REPO_DIR/setup.js"'
+# 1. setup.js reads version from package.json (dynamic, verify at runtime)
+RUNTIME_VER=$(node -e "process.stdout.write(require('$REPO_DIR/setup.js').VERSION)")
+check "setup.js version is $EXPECTED_VER" '[ "$RUNTIME_VER" = "$EXPECTED_VER" ]'
 
-# 2. package.json version matches setup.js
-check "package.json version is $EXPECTED_VER" 'grep -q "\"$EXPECTED_VER\"" "$REPO_DIR/package.json"'
+# 2. package.json has a version
+check "package.json version is $EXPECTED_VER" 'grep -q "\"version\": \"$EXPECTED_VER\"" "$REPO_DIR/package.json"'
 
 # 3. CLAUDE.md has updated test counts
 check "CLAUDE.md has updated test counts" 'grep -qE "[0-9]+ suites" "$REPO_DIR/CLAUDE.md"'
