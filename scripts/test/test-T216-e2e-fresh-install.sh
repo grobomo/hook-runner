@@ -19,10 +19,10 @@ assert() {
 
 # Test 1: setup.js loads and shows version
 OUT=$(node setup.js --version 2>&1)
-if echo "$OUT" | grep -q "2.0.0"; then
-  assert "version is 2.0.0" "0" "0"
+if echo "$OUT" | grep -q "2.1.0"; then
+  assert "version is 2.1.0" "0" "0"
 else
-  assert "version is 2.0.0" "0" "1"
+  assert "version is 2.1.0" "0" "1"
 fi
 
 # Test 2: --dry-run --yes completes without error

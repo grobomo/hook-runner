@@ -10,10 +10,10 @@ check() {
 echo "=== hook-runner: docs & release ==="
 
 # 1. Version bumped in setup.js
-check "setup.js version is 2.0.0" 'grep -q "2.0.0" "$REPO_DIR/setup.js"'
+check "setup.js version is 2.1.0" 'grep -q "2.1.0" "$REPO_DIR/setup.js"'
 
 # 2. Version bumped in package.json
-check "package.json version is 2.0.0" 'grep -q "2.0.0" "$REPO_DIR/package.json"'
+check "package.json version is 2.1.0" 'grep -q "2.1.0" "$REPO_DIR/package.json"'
 
 # 3. CLAUDE.md has updated test counts
 check "CLAUDE.md has updated test counts" 'grep -qE "[0-9]+ suites" "$REPO_DIR/CLAUDE.md"'
