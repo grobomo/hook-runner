@@ -173,10 +173,12 @@ See `specs/publish-ready/tasks.md` for full task list with checkpoints.
 
 - [x] T201-T204: Clean — remove hardcoded paths from all modules
 - [x] T205-T206, T208: Harden — onboarding --yes, uninstall --confirm, CI all suites
-- [ ] T207: Health check portable-paths validation
+- [x] T207: Health check portable-paths validation
 - [ ] T209: CI install test (npx fresh install)
 - [x] T210-T213: Document — README rewrite, troubleshooting, CLAUDE.md/SKILL.md
-- [ ] T214-T216: Ship — v2.0.0 bump, marketplace sync, e2e fresh install test
+- [x] T214: Version bump to 2.0.0
+- [ ] T215: Marketplace sync (claude-code-skills)
+- [ ] T216: E2e fresh install test
 
 ## Hook System Watchdog (T122-T129)
 
@@ -192,9 +194,9 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T128-T129: SessionStart alert integration + --log command
 
 ## Status
-- 123 tasks completed, 20 pending
+- 126 tasks completed, 17 pending
 - Active: T201+ (publish-ready), T116-T121 (drift detector + runner fixes), T106-T111 (dispatcher/worker)
-- Version: 1.6.0
+- Version: 2.0.0
 - 309 tests passing across 31 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
