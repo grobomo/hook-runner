@@ -1974,7 +1974,31 @@ function healthCheck() {
     results.push({ check: "settings", file: "settings.json", status: "missing" });
   }
 
-  // 5. Check hook log writability
+  // 5. Portable paths — flag modules with hardcoded absolute user paths
+  var pathPatterns = [/C:\\Users\\/i, /\/home\/\w+/, /\/Users\/\w+/];
+  // Modules that detect paths as their purpose — not false positives
+  var pathCheckExclude = ["no-hardcoded-paths.js", "cwd-drift-detector.js", "portable-paths.js"];
+  for (var pi = 0; pi < events.length; pi++) {
+    var pEvt = events[pi];
+    var pModDir = path.join(HOOKS_DIR, "run-modules", pEvt);
+    if (!fs.existsSync(pModDir)) continue;
+    var pFiles;
+    try { pFiles = fs.readdirSync(pModDir).filter(function(f) { return f.endsWith(".js"); }); } catch(e) { continue; }
+    for (var pfi = 0; pfi < pFiles.length; pfi++) {
+      if (pathCheckExclude.indexOf(pFiles[pfi]) >= 0) continue;
+      var pPath = path.join(pModDir, pFiles[pfi]);
+      var pContent;
+      try { pContent = fs.readFileSync(pPath, "utf-8"); } catch(e) { continue; }
+      for (var ppi = 0; ppi < pathPatterns.length; ppi++) {
+        if (pathPatterns[ppi].test(pContent)) {
+          results.push({ check: "portable-path", file: pEvt + "/" + pFiles[pfi], status: "warning", detail: "contains hardcoded absolute path" });
+          break;
+        }
+      }
+    }
+  }
+
+  // 6. Check hook log writability
   try {
     fs.accessSync(path.dirname(HOOK_LOG_PATH), fs.constants.W_OK);
     results.push({ check: "log", file: "hook-log.jsonl", status: "ok", detail: fs.existsSync(HOOK_LOG_PATH) ? "exists" : "will be created on first trigger" });
