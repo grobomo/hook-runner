@@ -2,6 +2,15 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.5.10] — 2026-04-05
+
+### Added
+- **customer-data-guard workflow** — read-only incident response with 3 project-scoped modules (no-customer-env-changes, no-data-exfil, v1-read-only) (#170)
+
+### Fixed
+- **Workflow audit** now scans project-scoped subdirectories, not just top-level modules (#170)
+- **Catalog sync** — spec-gate (branch-aware matching, auto-SHTD activation) and test-checkpoint-gate (tighter allowlist) synced from live (#170)
+
 ## [2.5.9] — 2026-04-05
 
 ### Added
