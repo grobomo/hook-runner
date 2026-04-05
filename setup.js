@@ -1290,7 +1290,26 @@ function cmdPerf() {
   var hs = readHookStats(0);
   var hsKeys = Object.keys(hs).sort();
 
-  // Group by event
+  // Build set of currently installed modules for cross-reference
+  var installedModules = {};
+  var modsDir = path.join(HOOKS_DIR, "run-modules");
+  if (fs.existsSync(modsDir)) {
+    var modEvents = ["PreToolUse", "PostToolUse", "Stop", "SessionStart", "UserPromptSubmit"];
+    for (var me = 0; me < modEvents.length; me++) {
+      var evDir = path.join(modsDir, modEvents[me]);
+      if (fs.existsSync(evDir)) {
+        try {
+          fs.readdirSync(evDir, { withFileTypes: true }).forEach(function(e) {
+            if (e.isFile() && e.name.endsWith(".js")) {
+              installedModules[modEvents[me] + "/" + e.name.replace(".js", "")] = true;
+            }
+          });
+        } catch(e) {}
+      }
+    }
+  }
+
+  // Group by event (only count installed modules toward overhead estimate)
   var events = {};
   var timed = [];
   for (var i = 0; i < hsKeys.length; i++) {
@@ -1303,8 +1322,10 @@ function cmdPerf() {
       var avg = Math.round(st.msTotal / st.msCount);
       var entry = { key: key, name: parts.slice(1).join("/"), avg: avg, max: st.msMax, count: st.msCount, total: st.total };
       events[evt].modules.push(entry);
-      events[evt].totalAvg += avg;
-      events[evt].count++;
+      if (installedModules[key]) {
+        events[evt].totalAvg += avg;
+        events[evt].count++;
+      }
       timed.push(entry);
     }
   }
@@ -1315,7 +1336,7 @@ function cmdPerf() {
     return;
   }
 
-  // Per-event overhead
+  // Per-event overhead (only installed modules)
   var evtNames = Object.keys(events).sort();
   console.log("\n  Estimated overhead per event (sum of avg module times):");
   for (var j = 0; j < evtNames.length; j++) {
@@ -1333,7 +1354,8 @@ function cmdPerf() {
       var s = slow[k];
       var note = "";
       if (s.max > 100) note = "  *** spikes to " + s.max + "ms";
-      console.log("    " + s.key + "  avg:" + s.avg + "ms  max:" + s.max + "ms  (" + s.count + " calls)" + note);
+      var removed = !installedModules[s.key] ? " [removed]" : "";
+      console.log("    " + s.key + "  avg:" + s.avg + "ms  max:" + s.max + "ms  (" + s.count + " calls)" + note + removed);
     }
   } else {
     console.log("\n  All modules under 5ms avg — no bottlenecks detected.");
