@@ -1596,8 +1596,8 @@ function healthCheck() {
   var results = [];
   var events = ["PreToolUse", "PostToolUse", "Stop", "SessionStart", "UserPromptSubmit"];
 
-  // 1. Check runners exist
-  var runners = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "run-userpromptsubmit.js", "load-modules.js", "hook-log.js"];
+  // 1. Check runners exist (uses shared constant)
+  var runners = RUNNER_FILES;
   for (var ri = 0; ri < runners.length; ri++) {
     var rPath = path.join(HOOKS_DIR, runners[ri]);
     if (fs.existsSync(rPath)) {
