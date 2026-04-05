@@ -1595,6 +1595,65 @@ function main() {
 // Integrity Check
 // ============================================================
 
+// Decode .claude/projects/ encoded dir name back to a filesystem path.
+// Encoding replaces \ / : . with - (lossy). Greedy: try joining segments
+// left-to-right, checking which combinations exist on disk.
+// e.g. "C--Users-joelg-Documents-ProjectsCL1-hook-runner" → "C:\Users\joelg\Documents\ProjectsCL1\hook-runner"
+// e.g. "C--Users-joelg--claude" → "C:\Users\joelg\.claude" (-- mid-string = dot-prefix)
+function decodeProjectDir(encoded) {
+  // Drive letter: first segment before first -- is the drive letter
+  var driveIdx = encoded.indexOf("--");
+  if (driveIdx < 1) return null;
+  var drive = encoded.substring(0, driveIdx) + ":";
+  var rest = encoded.substring(driveIdx + 2); // skip the --
+  if (!rest) return drive + path.sep;
+
+  var segments = rest.split("-");
+  // Greedy: accumulate segments, emit a path component when the path exists
+  var current = drive + path.sep;
+  var accum = segments[0];
+
+  for (var i = 1; i < segments.length; i++) {
+    // Empty segment means original had -- (dot-prefix like .claude)
+    if (segments[i] === "") {
+      // Emit current accum as path component, next segment gets dot prefix
+      if (accum) {
+        current = path.join(current, accum);
+      }
+      // Consume the next non-empty segment with a dot prefix
+      if (i + 1 < segments.length) {
+        i++;
+        accum = "." + segments[i];
+      } else {
+        accum = "";
+      }
+      continue;
+    }
+
+    // Try treating this - as a path separator
+    var asDir = path.join(current, accum);
+    if (fs.existsSync(asDir)) {
+      // Also check if joining more segments would match a longer name
+      var joined = accum + "-" + segments[i];
+      var asJoined = path.join(current, joined);
+      if (fs.existsSync(asJoined)) {
+        // Prefer the longer match (e.g. "hook-runner" over "hook")
+        accum = joined;
+        continue;
+      }
+      // The dir exists and extending doesn't — emit this component
+      current = asDir;
+      accum = segments[i];
+    } else {
+      // Doesn't exist as dir — this - must be part of the name (hyphen or dot)
+      accum = accum + "-" + segments[i];
+    }
+  }
+
+  // Final component
+  return path.join(current, accum);
+}
+
 function cmdIntegrity(args) {
   var crypto = require("crypto");
   var jsonMode = args.indexOf("--json") !== -1;
@@ -1693,13 +1752,14 @@ function cmdIntegrity(args) {
     results.workflows.enforced = Object.keys(globalConfig).filter(function(k) { return globalConfig[k] === true; });
 
     // Check all known project dirs
+    // Encoding in .claude/projects/ replaces \ / : . with - (lossy).
+    // Greedy decode: split segments, join checking filesystem existence.
     var projectsDir = path.join(process.env.HOME || process.env.USERPROFILE || "", ".claude", "projects");
     if (fs.existsSync(projectsDir)) {
       var projDirs = fs.readdirSync(projectsDir);
       for (var pi = 0; pi < projDirs.length; pi++) {
-        // Decode project dir name (C--Users-joelg... → C:\Users\joelg\...)
-        var decoded = projDirs[pi].replace(/--/g, ":\\").replace(/-/g, "\\");
-        if (!fs.existsSync(decoded)) continue;
+        var decoded = decodeProjectDir(projDirs[pi]);
+        if (!decoded || !fs.existsSync(decoded)) continue;
         var projConfigPath = path.join(decoded, "workflow-config.json");
         if (!fs.existsSync(projConfigPath)) continue;
         var projConfig;
