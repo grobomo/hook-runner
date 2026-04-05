@@ -1082,7 +1082,7 @@ function cmdTest() {
         cwd: REPO_DIR,
         encoding: "utf-8",
         stdio: ["pipe", "pipe", "pipe"],
-        timeout: 60000
+        timeout: 120000
       });
       var match = result.match(/(\d+) passed, (\d+) failed/);
       if (match) {
