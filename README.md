@@ -2,206 +2,69 @@
 
 [![Tests](https://github.com/grobomo/hook-runner/actions/workflows/test.yml/badge.svg)](https://github.com/grobomo/hook-runner/actions/workflows/test.yml)
 
-Modular hook runner system for Claude Code. One runner per event, modules in folders. Drop a `.js` file in a folder to add behavior — no settings.json editing needed.
+Modular hook system for Claude Code. Enforce workflows, block mistakes, inject context — all with plain `.js` files in folders. No settings.json editing needed.
 
-## Hooks Report (works for everyone)
+## What is hook-runner?
 
-Even if you don't use hook-runner, you can generate a report of your existing hooks:
+Claude Code [hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) let you run scripts at key moments: before a tool runs, after it runs, when a session starts, when it stops. hook-runner turns this into a **module system** — drop a `.js` file in a folder and it runs automatically.
 
-```bash
-node setup.js --report          # generates an HTML report
-node setup.js --report --open   # generates and opens in browser
-```
+On top of modules, **workflows** group related modules into enforceable pipelines. Enable a workflow and its modules activate together. Disable it and they all go silent. This is how you scale from one person's preferences to a team's engineering standards.
 
-The report shows:
-- **Every hook** in your `settings.json` — event type, command, matchers, timeout
-- **File status** — whether referenced scripts exist (missing files highlighted in red)
-- **Source code** — expandable view of each hook script with line numbers
-- **Block/error stats** — which hooks are actually blocking tool calls (from `hook-log.jsonl`)
-- **Latency chart** — horizontal bar chart of avg/max module execution time
-- **Flow diagram** — visual timeline of hook events from session start to stop
-- **Search + filter** — find hooks by name instantly
-
-No installation required — just clone and run `node setup.js --report`.
-
-## Quick Start (full system)
+## Quick Start
 
 ```bash
-# One-liner install from GitHub
-npx grobomo/hook-runner
+# One-liner install (enables default workflows)
+npx grobomo/hook-runner --yes
 
-# Or clone first
+# Or step by step
 git clone https://github.com/grobomo/hook-runner.git
 cd hook-runner && node setup.js
-
-# Commands
-/hook-runner setup        # scan → report → backup → install → verify
-/hook-runner report       # just see current hooks (HTML report)
-/hook-runner dry-run      # preview changes without modifying anything
-/hook-runner health       # verify all runners and modules load correctly
-/hook-runner sync         # sync modules from GitHub per modules.yaml
-/hook-runner stats        # quick text summary of hook log activity
-/hook-runner list         # show catalog vs installed modules
-/hook-runner test         # run all test suites
-/hook-runner upgrade      # fetch latest from GitHub and update local copies
-/hook-runner uninstall    # preview clean removal (dry-run by default)
-/hook-runner prune        # prune log entries older than 7 days
-/hook-runner version      # show hook-runner version
 ```
 
 The setup wizard will:
 1. Scan your current hooks and generate a styled HTML report
-2. Show what hook-runner would look like
-3. Back up all existing hook files to `~/.claude/hooks/archive/`
-4. Install the runner system
-5. Re-generate the report showing the result
+2. Back up existing hooks to `~/.claude/hooks/archive/`
+3. Install the runner system
+4. Enable default workflows (with `--yes`)
 
-## Architecture
-
-```
-~/.claude/hooks/
-  report.js                     # HTML report generator
-  load-modules.js              # shared loader (global + project-scoped)
-  run-pretooluse.js            # PreToolUse runner
-  run-posttooluse.js           # PostToolUse runner
-  run-stop.js                  # Stop runner
-  run-sessionstart.js          # SessionStart runner
-  run-userpromptsubmit.js      # UserPromptSubmit runner
-  run-modules/
-    PreToolUse/
-      *.js                     # global modules (run for all projects)
-      my-project/*.js          # project-scoped (only when project name matches)
-    PostToolUse/*.js
-    Stop/*.js
-    SessionStart/*.js
-```
-
-## How It Works
-
-Each `run-*.js` runner:
-1. Reads stdin synchronously (`fs.readFileSync(0)`)
-2. Uses `load-modules.js` to discover global + project-scoped modules
-3. Calls each module with parsed input
-4. First block/deny wins — remaining modules are skipped
-5. If all return `null`, action is allowed
-
-## Module Contract
-
-```javascript
-// run-modules/<Event>/my-gate.js
-module.exports = function(input) {
-  // PreToolUse/PostToolUse: input.tool_name, input.tool_input
-  // Stop: input.session_id, input.stop_hook_active
-  // SessionStart: return { text: "injected context" }
-  if (shouldBlock) {
-    return { decision: "block", reason: "Why it's blocked" };
-  }
-  return null; // pass
-};
-```
-
-Rules:
-- **Sync or async** — modules can return a value (sync) or a Promise (async). Async modules are awaited with a 4s per-module timeout.
-- Use `require()` not `import`
-- **Return null to pass**, `{decision: "block", reason: "..."}` to block
-- **Alphabetical order** — prefix with `01-` to control execution order
-- **Dependencies** — add `// requires: mod1, mod2` in first 5 lines; missing deps = module skipped with warning
-- **Never edit settings.json** — runners are already registered, just add module files
-
-## Event Types
-
-| Event | Runner | Matchers | Module Return |
-|-------|--------|----------|---------------|
-| SessionStart | run-sessionstart.js | none | `{text: "..."}` |
-| UserPromptSubmit | run-userpromptsubmit.js | none | `{decision: "block"}` or `null` |
-| PreToolUse | run-pretooluse.js | Edit, Write, Bash | `{decision: "block"}` or `null` |
-| PostToolUse | run-posttooluse.js | Edit, Write | `{decision: "block"}` or `null` |
-| Stop | run-stop.js | none | `{decision: "block"}` or `null` |
-
-## Logging
-
-Runners log every module invocation to `~/.claude/hooks/hook-log.jsonl`. Each line records the timestamp, event, module name, result (pass/block/error), execution time (ms), and context (tool name, command snippet, project). The log auto-rotates at 10MB. Stats include both current and rotated log files.
-
-```bash
-/hook-runner stats             # quick text summary to stdout
-/hook-runner prune             # prune entries older than 7 days
-node setup.js --prune 3        # keep only last 3 days
-node setup.js --prune 7 --dry-run  # preview without deleting
-```
-
-The `--stats` command shows total invocations, block rate, per-module hit counts, and average/max latency per module — useful for CI or quick terminal checks without opening the HTML report.
-
-The setup report (`/hook-runner report`) reads the log and shows hit counts and sample triggers per module.
-
-### Async Module Example
-
-```javascript
-// run-modules/SessionStart/backup-config.js
-module.exports = function(input) {
-  return new Promise(function(resolve) {
-    var cp = require("child_process");
-    cp.exec("node /path/to/backup.js", function(err) {
-      resolve(err ? null : { text: "Config backup complete" });
-    });
-  });
-};
-```
-
-Async modules have a 4-second timeout per module. If a module times out, it's logged as an error and the next module runs.
-
-## Project-Scoped Modules
-
-Modules in a subfolder matching your project name only run for that project:
-
-```
-run-modules/PreToolUse/
-  global-gate.js              # runs for ALL projects
-  my-project/
-    custom-gate.js            # runs ONLY when CLAUDE_PROJECT_DIR basename = "my-project"
-```
-
-## Module Sync
-
-Sync modules from GitHub to a new machine (or keep an existing install updated):
-
-```bash
-# 1. Install the runner system
-/hook-runner setup
-
-# 2. Create ~/.claude/hooks/modules.yaml (pick which modules you want)
-curl -fsSL https://raw.githubusercontent.com/grobomo/hook-runner/main/modules.example.yaml > ~/.claude/hooks/modules.yaml
-# Edit modules.yaml — comment out modules you don't want
-
-# 3. Sync
-/hook-runner sync            # install/update selected modules
-/hook-runner sync-dry-run    # preview first
-```
+To undo everything: `node setup.js --uninstall --confirm`
 
 ## Workflows
 
-Workflows group related modules into enforceable pipelines with step ordering. Modules tagged with `// WORKFLOW: name` only run when that workflow is active.
+Workflows are the primary abstraction. Instead of managing 30+ individual modules, you enable a workflow and its modules activate automatically.
 
 ```bash
-/hook-runner workflow list                    # show all available workflows
-/hook-runner workflow start shtd              # activate the SHTD pipeline
-/hook-runner workflow status                  # show current step + progress
-/hook-runner workflow complete spec           # mark a step as done
-/hook-runner workflow reset                   # clear active workflow
+node setup.js --workflow list              # see available workflows
+node setup.js --workflow enable shtd       # enable the SHTD pipeline
+node setup.js --workflow disable shtd      # disable it
+node setup.js --workflow audit             # coverage report
+node setup.js --workflow query Edit        # which workflows affect Edit?
 ```
 
 ### Built-in Workflows
 
-| Workflow | Description |
-|----------|-------------|
-| `shtd` | Spec → tasks → branch → test → implement → verify → PR |
-| `enforce-shtd` | Extended SHTD with workflow YAML definition step |
-| `cross-project-reset` | Safe project switching with state preservation |
-| `no-local-docker` | Block local Docker, force remote infrastructure |
-| `messaging-safety` | Block outbound messaging unless target authorized |
+| Workflow | What it enforces |
+|----------|-----------------|
+| `shtd` | Spec → tasks → branch → test → implement → PR. The full development pipeline. |
+| `messaging-safety` | Blocks outbound messages (Teams, email) unless the target is explicitly authorized. |
+| `no-local-docker` | Blocks local Docker commands, forces remote infrastructure. |
+| `cross-project-reset` | Blocks cross-project file access, forces proper project switching. |
+| `enforce-shtd` | Extended SHTD that requires a workflow YAML definition step. |
+
+### Workflow State Machine
+
+Active workflows track progress through steps:
+
+```bash
+node setup.js --workflow start shtd        # activate the pipeline
+node setup.js --workflow status            # see current step
+node setup.js --workflow complete spec     # mark spec step done
+node setup.js --workflow reset             # clear active workflow
+```
 
 ### Custom Workflows
 
-Create `workflows/*.yml` in your project or `~/.claude/hooks/workflows/`:
+Create `workflows/my-workflow.yml`:
 
 ```yaml
 name: my-workflow
@@ -210,24 +73,151 @@ version: 1
 steps:
   - id: setup
     name: Set up environment
-    gate:
-      require_files: []
   - id: build
     name: Build the thing
     gate:
       require_step: setup
+modules:
+  - my-gate-module
 ```
 
-Tag modules with `// WORKFLOW: my-workflow` in the first 5 lines to restrict them to this workflow.
+Tag modules with `// WORKFLOW: my-workflow` in the first 5 lines.
 
-### Export Config
+### Workflow CRUD
 
 ```bash
-/hook-runner export                 # export installed modules as modules-export.yaml
-/hook-runner export my-config.yaml  # custom output path
+node setup.js --workflow create my-flow    # generate YAML + stubs
+node setup.js --workflow add-module my-flow my-gate  # create tagged module
+node setup.js --workflow sync-live         # copy to live hooks dir
 ```
 
-Share the exported YAML — others import with `cp my-config.yaml ~/.claude/hooks/modules.yaml && /hook-runner sync`.
+## Modules
+
+Modules are the building blocks. Each is a single `.js` file that receives hook input and returns a decision.
+
+### Module Contract
+
+```javascript
+// ~/.claude/hooks/run-modules/PreToolUse/my-gate.js
+// WORKFLOW: shtd
+// WHY: Explain the real incident that caused this module to exist.
+module.exports = function(input) {
+  // input.tool_name: "Edit", "Write", "Bash", etc.
+  // input.tool_input: { file_path, command, content, ... }
+  if (shouldBlock) {
+    return { decision: "block", reason: "WHY this is blocked" };
+  }
+  return null; // pass — allow the action
+};
+```
+
+Rules:
+- **Return null** to pass, `{decision: "block", reason: "..."}` to block
+- **Sync or async** — return a Promise for async work (4s timeout)
+- **Dependencies** — `// requires: mod1, mod2` in first 5 lines
+- **Workflow tag** — `// WORKFLOW: name` restricts module to that workflow
+
+### Event Types
+
+| Event | When it fires | Module returns |
+|-------|--------------|----------------|
+| **SessionStart** | New session begins | `{text: "context to inject"}` |
+| **UserPromptSubmit** | User sends a message | `{decision: "block"}` or `null` |
+| **PreToolUse** | Before Edit/Write/Bash | `{decision: "block"}` or `null` |
+| **PostToolUse** | After Edit/Write | `{decision: "block"}` or `null` |
+| **Stop** | Session ending | `{decision: "block"}` or `null` |
+
+### Project-Scoped Modules
+
+Modules in a subfolder matching your project name only run for that project:
+
+```
+run-modules/PreToolUse/
+  global-gate.js              # runs for ALL projects
+  my-project/
+    custom-gate.js            # runs ONLY when project name = "my-project"
+```
+
+## Architecture
+
+```
+~/.claude/hooks/
+  run-pretooluse.js            # PreToolUse runner
+  run-posttooluse.js           # PostToolUse runner
+  run-stop.js                  # Stop runner
+  run-sessionstart.js          # SessionStart runner
+  run-userpromptsubmit.js      # UserPromptSubmit runner
+  load-modules.js              # shared loader (global + project-scoped + workflow filtering)
+  hook-log.js                  # centralized logging (JSONL)
+  run-async.js                 # async module executor (Promise detection, 4s timeout)
+  workflow.js                  # workflow engine (YAML state machine)
+  run-modules/
+    PreToolUse/*.js            # gate modules
+    PostToolUse/*.js           # post-action checks
+    Stop/*.js                  # session-end controls
+    SessionStart/*.js          # context injection
+    UserPromptSubmit/*.js      # prompt processing
+  workflows/*.yml              # workflow definitions
+```
+
+Each runner reads stdin, discovers modules via `load-modules.js`, calls each in order. First block wins.
+
+## CLI Reference
+
+```bash
+# Setup & Management
+node setup.js                          # full setup wizard
+node setup.js --yes                    # non-interactive setup + default workflows
+node setup.js --report [--open]        # HTML hooks report
+node setup.js --health                 # verify runners + modules
+node setup.js --uninstall [--confirm]  # remove (--confirm restores backup)
+
+# Modules
+node setup.js --list                   # catalog vs installed comparison
+node setup.js --sync [--dry-run]       # sync from GitHub per modules.yaml
+node setup.js --export [file.yaml]     # export config as shareable YAML
+node setup.js --upgrade [--dry-run]    # fetch latest from GitHub
+
+# Workflows
+node setup.js --workflow list          # available workflows
+node setup.js --workflow enable <name> [--global]
+node setup.js --workflow disable <name> [--global]
+node setup.js --workflow audit         # coverage + orphan report
+node setup.js --workflow query <tool>  # which workflows affect a tool
+node setup.js --workflow create <name> # generate YAML + stubs
+node setup.js --workflow add-module <workflow> <module>
+node setup.js --workflow sync-live     # copy to live hooks
+
+# Monitoring
+node setup.js --stats                  # text summary of hook activity
+node setup.js --perf                   # module timing analysis
+node setup.js --prune [N]             # prune log entries older than N days
+
+# Development
+node setup.js --test                   # run all test suites
+node setup.js --version                # show version
+node setup.js --help                   # show all commands
+```
+
+## Logging
+
+Every module invocation is logged to `~/.claude/hooks/hook-log.jsonl` with timestamp, event, module name, result, execution time, and context. Log auto-rotates at 10MB.
+
+The HTML report (`--report`) visualizes this data with hit counts, latency charts, and a flow diagram. The `--stats` command gives a quick text summary.
+
+## Module Sync
+
+Sync modules from GitHub to a new machine or keep an existing install updated:
+
+```bash
+# Create modules.yaml (pick which modules you want)
+curl -fsSL https://raw.githubusercontent.com/grobomo/hook-runner/main/modules.example.yaml \
+  > ~/.claude/hooks/modules.yaml
+
+# Sync
+node setup.js --sync              # install/update selected modules
+node setup.js --sync --dry-run    # preview first
+```
 
 ## Available Modules
 
@@ -236,80 +226,100 @@ Full catalog in `modules/` directory:
 ### PreToolUse (gates before tool execution)
 | Module | Description |
 |--------|-------------|
-| `aws-tagging-gate` | Enforces required tags on AWS resource creation (env-configurable) |
-| `block-local-docker` | Blocks docker/docker-compose (allows ps/logs/inspect). Tagged: `no-local-docker` workflow |
-| `branch-pr-gate` | Model C workflow: feature branch → task branch → PR |
-| `claude-p-pattern` | Enforces correct `claude -p` invocation (stdin redirect, not pipe/args) |
+| `aws-tagging-gate` | Enforces required tags on AWS resource creation |
+| `block-local-docker` | Blocks docker/docker-compose commands |
+| `branch-pr-gate` | Enforces feature branch → task branch → PR workflow |
+| `claude-p-pattern` | Enforces correct `claude -p` invocation pattern |
 | `continuous-claude-gate` | Blocks code without tracked task workflow |
-| `cwd-drift-detector` | Blocks cross-project file access, instructs spawning new tab via context-reset |
-| `crlf-ssh-key-check` | Blocks scp/cp of SSH keys without `tr -d '\r'` (Windows CRLF corruption) |
-| `enforcement-gate` | Requires git repo + TODO.md. Dirty-tree check on main only. |
-| `env-var-check` | Blocks edits if `.env.required` vars are missing (cached per project) |
+| `cwd-drift-detector` | Blocks cross-project file access |
+| `crlf-ssh-key-check` | Blocks SSH key copy without CRLF stripping |
+| `enforcement-gate` | Requires git repo + TODO.md before edits |
+| `env-var-check` | Blocks edits if required env vars missing |
 | `git-rebase-safety` | Warns about reversed --ours/--theirs during rebase |
-| `gsd-gate` | Blocks code without e2e test in checkpoint |
-| `instruction-to-hook-gate` | Enforces converting user directives ("always X") into hook modules |
-| `messaging-safety-gate` | Blocks outbound messaging unless target authorized. Tagged: `messaging-safety` workflow |
+| `gsd-gate` | Blocks code without e2e test checkpoint |
+| `instruction-to-hook-gate` | Converts user directives into hook modules |
+| `messaging-safety-gate` | Blocks outbound messaging unless authorized |
 | `no-adhoc-commands` | Blocks raw aws/ssh/docker/kubectl, forces scripts/ |
-| `no-focus-steal` | Blocks background process launches that steal window focus |
-| `no-fragile-heuristics` | Blocks pixel-ratio/color-counting heuristics; use AI judgment instead |
-| `no-hardcoded-paths` | Blocks Write/Edit with hardcoded absolute user paths in content |
-| `no-passive-rules` | Blocks creating .md rules when a hook module would be more effective |
-| `pr-per-task-gate` | Blocks `gh pr create` if PR title doesn't include a task ID (T001, etc.) |
-| `preserve-iterated-content` | Warns on full-file rewrites of files with significant git history |
+| `no-focus-steal` | Blocks background processes that steal window focus |
+| `no-fragile-heuristics` | Blocks pixel-counting heuristics |
+| `no-hardcoded-paths` | Blocks hardcoded absolute paths in code |
+| `no-passive-rules` | Blocks .md rules when a hook module is better |
+| `pr-per-task-gate` | Requires task ID in PR titles |
+| `preserve-iterated-content` | Warns on full-file rewrites of iterated files |
 | `remote-tracking-gate` | Blocks edits if branch not pushed to remote |
-| `root-cause-gate` | Blocks retry/cleanup without root cause diagnosis |
-| `secret-scan-gate` | Blocks git commit if staged diff contains API keys, tokens, or passwords |
-| `settings-change-gate` | Injects reminder to state rationale when modifying ~/.claude/ config |
+| `root-cause-gate` | Blocks retry without root cause diagnosis |
+| `secret-scan-gate` | Blocks commits with API keys or tokens |
+| `settings-change-gate` | Requires rationale when modifying config |
 | `spec-gate` | Blocks code without specs/tasks.md |
-| `why-reminder` | Non-blocking WHY-first reminder before every Write/Edit to code/docs |
+| `why-reminder` | Reminds to explain WHY before every code edit |
 | `workflow-gate` | Enforces step order in active workflows |
 
 #### Project-Scoped PreToolUse
 | Module | Project | Description |
 |--------|---------|-------------|
 | `share-is-generic` | ddei-email-security | Domain-specific gate for email security project |
-| `use-workers` | hackathon26 | Forces delegation to fleet workers instead of local execution |
-
-### UserPromptSubmit (processes user prompts)
-| Module | Description |
-|--------|-------------|
-| `instruction-detector` | Detects "always/never/from now on" directives, flags for downstream enforcement |
-| `interrupt-detector` | Detects user interrupts (missing turn marker) and triggers self-analysis |
-| `prompt-logger` | Logs prompts to `~/.claude/hooks/prompt-log.jsonl` for audit (never blocks) |
+| `use-workers` | hackathon26 | Forces delegation to fleet workers |
 
 ### PostToolUse (checks after tool execution)
 | Module | Description |
 |--------|-------------|
-| `commit-msg-check` | Blocks WIP/fixup commits and over-long first lines (>72 chars) |
-| `hook-autocommit` | Auto-commits hook module edits to the run-modules git repo |
+| `commit-msg-check` | Blocks WIP/fixup commits and long first lines |
+| `hook-autocommit` | Auto-commits hook module edits |
 | `rule-hygiene` | Validates rule files are single-topic, under 20 lines |
-| `settings-audit-log` | Records all ~/.claude/ config modifications to audit log (JSONL) |
-| `test-coverage-check` | Warns when source files with corresponding test files are modified |
-| `troubleshoot-detector` | Detects fail-fail-succeed patterns and prompts creating a hook to prevent recurrence |
-| `update-stale-docs` | Detects stale docs/comments after code edits and prompts updates |
+| `settings-audit-log` | Records config modifications to audit log |
+| `test-coverage-check` | Warns when source files modified without tests |
+| `troubleshoot-detector` | Detects fail-fail-succeed patterns |
+| `update-stale-docs` | Detects stale docs after code edits |
+
+### UserPromptSubmit (processes user prompts)
+| Module | Description |
+|--------|-------------|
+| `instruction-detector` | Detects "always/never" directives for enforcement |
+| `interrupt-detector` | Detects user interrupts, triggers self-analysis |
+| `prompt-logger` | Logs prompts to JSONL for audit |
 
 ### Stop (controls session ending)
 | Module | Description |
 |--------|-------------|
 | `auto-continue` | Blocks stopping — always find the next task |
-| `drift-review` | Checks if recent work matches the active spec task before continuing |
-| `log-gotchas` | Ensures debugging lessons are captured as rule files before stopping |
-| `mark-turn-complete` | Writes turn marker so interrupt-detector can detect incomplete turns |
-| `never-give-up` | Blocks "impossible" declarations — forces research before giving up |
-| `push-unpushed` | Blocks stop if unpushed commits on feature branch |
-| `test-before-done` | Reminds to run e2e tests before declaring features complete |
+| `drift-review` | Checks work matches the active spec task |
+| `log-gotchas` | Captures debugging lessons before stopping |
+| `mark-turn-complete` | Writes turn marker for interrupt detection |
+| `never-give-up` | Blocks "impossible" — forces research first |
+| `push-unpushed` | Blocks stop with unpushed commits |
+| `test-before-done` | Reminds to run e2e tests before done |
 
 #### Project-Scoped Stop
 | Module | Project | Description |
 |--------|---------|-------------|
-| `delegate-and-monitor` | hackathon26 | Delegates tasks to fleet workers and monitors completion |
+| `delegate-and-monitor` | hackathon26 | Delegates tasks to fleet workers |
 
 ### SessionStart (injects context)
 | Module | Description |
 |--------|-------------|
-| `backup-check` | Async — warns if claude-backup is stale (>72h) or missing |
-| `config-sync` | Auto-syncs ~/.claude config to git remote for backup/bootstrap |
+| `backup-check` | Warns if config backup is stale |
+| `config-sync` | Auto-syncs ~/.claude config to git remote |
 | `load-instructions` | Injects working instructions at session start |
-| `load-lessons` | Reads self-analysis lessons (JSONL) and injects recent ones as context |
-| `project-health` | Runs health check on session start, warns about issues |
-| `workflow-summary` | Injects active workflow summary on session start/context reset |
+| `load-lessons` | Injects recent self-analysis lessons |
+| `project-health` | Runs health check, warns about issues |
+| `workflow-summary` | Injects active workflow summary |
+
+## Troubleshooting
+
+**Module not running?**
+- Check `node setup.js --health` for load errors
+- Check `node setup.js --workflow audit` for workflow tag issues
+- Check `node setup.js --list` to see if it's installed
+
+**Hook blocked something it shouldn't?**
+- Check `node setup.js --stats` to see which module blocked
+- Read the module's `// WHY:` comment to understand intent
+- Disable its workflow: `node setup.js --workflow disable <name>`
+
+**Want to see what's happening?**
+- `node setup.js --report --open` for visual overview
+- `node setup.js --perf` for timing data
+- Check `~/.claude/hooks/hook-log.jsonl` for raw logs
+
+**Uninstall cleanly:**
+- `node setup.js --uninstall --confirm` restores your original settings.json

@@ -1,10 +1,11 @@
 ---
 name: hook-runner
-description: "Modular hook runner for Claude Code. One runner per event, modules in folders. Setup wizard migrates existing hooks."
+description: "Modular hook runner for Claude Code. Workflows group modules into enforceable pipelines."
 keywords:
   - hook
   - hooks
   - runner
+  - workflow
   - pretooluse
   - posttooluse
   - stop
@@ -12,127 +13,81 @@ keywords:
   - enforcement
   - gate
   - module
+  - shtd
 custom_commands:
   - name: setup
     command: "node $SKILL_DIR/setup.js"
-    description: "Run hook-runner setup wizard — scans hooks, shows report, backs up, installs"
+    description: "Run setup wizard — scan, report, backup, install"
   - name: report
-    command: "node $SKILL_DIR/setup.js --report"
-    description: "Generate hooks report without installing"
-  - name: dry-run
-    command: "node $SKILL_DIR/setup.js --dry-run"
-    description: "Preview what hook-runner would change without modifying anything"
-  - name: sync
-    command: "node $SKILL_DIR/setup.js --sync"
-    description: "Sync modules from GitHub per ~/.claude/hooks/modules.yaml"
-  - name: sync-dry-run
-    command: "node $SKILL_DIR/setup.js --sync --dry-run"
-    description: "Preview module sync without installing"
+    command: "node $SKILL_DIR/setup.js --report --open"
+    description: "Generate and open HTML hooks report"
   - name: health
     command: "node $SKILL_DIR/setup.js --health"
-    description: "Verify all runners and modules load correctly"
+    description: "Verify runners, modules, and settings"
   - name: workflow
     command: "node $SKILL_DIR/setup.js --workflow list"
-    description: "List workflows with enabled state and module counts"
+    description: "List workflows with enabled state"
   - name: audit
     command: "node $SKILL_DIR/setup.js --workflow audit"
-    description: "Audit workflow coverage — orphans, mismatches, untagged modules"
+    description: "Audit workflow coverage and orphan modules"
+  - name: stats
+    command: "node $SKILL_DIR/setup.js --stats"
+    description: "Quick text summary of hook activity"
+  - name: test
+    command: "node $SKILL_DIR/setup.js --test"
+    description: "Run all test suites"
 ---
 
 # hook-runner
 
-Modular hook runner system for Claude Code. Replaces per-hook entries in settings.json with a runner + module architecture.
+Modular hook runner for Claude Code. Workflows group related modules into enforceable pipelines. Enable a workflow and its modules activate together.
 
-## Architecture
-
-```
-~/.claude/hooks/
-  load-modules.js              # shared loader (global + project-scoped)
-  run-pretooluse.js            # PreToolUse runner
-  run-posttooluse.js           # PostToolUse runner
-  run-stop.js                  # Stop runner
-  run-sessionstart.js          # SessionStart runner
-  run-modules/
-    PreToolUse/*.js            # gate modules — block or allow tool calls
-    PostToolUse/*.js           # observation modules — check tool results
-    Stop/*.js                  # stop-control modules — block/allow stopping
-    SessionStart/*.js          # context modules — inject text at session start
-```
-
-## Setup
-
-Run the setup wizard to migrate from standalone hooks to hook-runner:
+## Quick Start
 
 ```
-/hook-runner setup         # full wizard: scan → report → backup → install → verify
-/hook-runner report        # just see what hooks you have (HTML report)
-/hook-runner dry-run       # preview changes without modifying anything
+npx grobomo/hook-runner --yes    # install + enable default workflows
+node setup.js --uninstall --confirm  # clean removal, restore original settings
 ```
 
-## Module Sync (new PC setup)
-
-Pull modules from GitHub using a config file:
+## Workflows
 
 ```
-# 1. Install hook-runner (setup wizard installs runners + creates dirs)
-/hook-runner setup
-
-# 2. Create your module config (or copy from another machine)
-#    Edit ~/.claude/hooks/modules.yaml to pick which modules you want
-
-# 3. Sync modules from GitHub
-/hook-runner sync          # install/update modules per config
-/hook-runner sync-dry-run  # preview what would change
+/hook-runner workflow              # list available workflows
+node setup.js --workflow enable shtd --global
+node setup.js --workflow audit     # coverage report
+node setup.js --workflow query Edit  # which workflows affect Edit?
 ```
 
-Config format (`~/.claude/hooks/modules.yaml`):
-```yaml
-source: grobomo/hook-runner   # GitHub repo with modules/ directory
-branch: main
-modules:
-  PreToolUse:
-    - enforcement-gate        # git repo + clean tree + TODO.md
-    - branch-pr-gate          # Model C branching workflow
-    - root-cause-gate         # blocks cleanup without diagnosis
-  Stop:
-    - auto-continue           # never stop, find next task
-```
-
-See `modules.example.yaml` in the repo for the full list of available modules.
+Built-in: `shtd` (spec→test→implement→PR), `messaging-safety`, `no-local-docker`, `cross-project-reset`.
 
 ## Module Contract
 
 ```javascript
-// run-modules/<Event>/my-module.js
+// WORKFLOW: shtd
+// WHY: Explain the real incident that caused this module.
 module.exports = function(input) {
-  // input.tool_name, input.tool_input (PreToolUse/PostToolUse)
-  // input.session_id, input.stop_hook_active (Stop)
-  if (shouldBlock) {
-    return { decision: "block", reason: "Why it's blocked" };
-  }
-  return null; // allow
+  if (shouldBlock) return { decision: "block", reason: "WHY blocked" };
+  return null; // pass
 };
 ```
 
-- Modules can be sync (return value) or async (return Promise, 4s timeout per module)
-- Use `require()` not `import`
-- Return `null` to pass, `{decision: "block", reason: "..."}` to block
-- Modules run alphabetically — prefix with `01-` for ordering
-- First block wins — remaining modules are skipped
+- Return `null` to pass, `{decision: "block"}` to block
+- Sync or async (4s timeout for async)
+- `// WORKFLOW: name` restricts to that workflow
+- `// requires: mod1` for dependencies
 
-## Project-Scoped Modules
-
-Put modules in a subfolder named after your project:
+## CLI
 
 ```
-run-modules/PreToolUse/
-  my-global-gate.js           # runs for ALL projects
-  my-project/
-    project-specific-gate.js  # runs ONLY when CLAUDE_PROJECT_DIR basename = "my-project"
+node setup.js                     # setup wizard
+node setup.js --yes               # non-interactive + default workflows
+node setup.js --report [--open]   # HTML report
+node setup.js --health            # verify installation
+node setup.js --list              # catalog vs installed
+node setup.js --sync              # sync from GitHub
+node setup.js --stats             # hook activity summary
+node setup.js --perf              # timing analysis
+node setup.js --workflow <cmd>    # workflow management
+node setup.js --test              # run all tests
+node setup.js --uninstall --confirm  # restore original settings
 ```
-
-## Adding Behavior
-
-1. Create `~/.claude/hooks/run-modules/<Event>/your-module.js`
-2. Export a sync function matching the contract above
-3. Never add entries to settings.json — runners are already registered
