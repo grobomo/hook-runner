@@ -8,6 +8,5 @@ archive/
 .test-results/
 SESSION_STATE.md
 .test-tmp-*
-.test-debug-85134-done/
 .workflow-state.json
-.test-tmp-*
+workflow-config.json
