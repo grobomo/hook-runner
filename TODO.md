@@ -318,11 +318,15 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T278: Use RUNNER_FILES constant in health checks — 72→76 checks (#155)
 - [x] T279: Version bump to 2.5.4 + CHANGELOG
 
+## Code Quality
+- [x] T280: Replace remaining .forEach() with for-loops for ES5 consistency (#157)
+- [x] T281: Fix stale test count in TODO.md (544→532, archived modules reduced count)
+
 ## Status
-- 202 tasks completed, 0 pending
+- 204 tasks completed, 0 pending
 - Version: 2.5.4 (released, tagged, marketplace synced, live hooks synced)
 - Clones: 2055 total, 0 stars/forks/issues — stable utility, no community demand for features
-- 544 tests passing across 40 test suites
+- 532 tests passing across 40 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live), perf, export
