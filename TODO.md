@@ -265,8 +265,11 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Release
 - [x] T248: Version bump to 2.3.0 + CHANGELOG + marketplace sync (#125)
 
+## Robustness
+- [x] T251: Increase per-suite test timeout from 60s to 120s (module validation suite can timeout under load) (#128)
+
 ## Status
-- 173 tasks completed, 0 pending
+- 174 tasks completed, 0 pending
 - Version: 2.3.1
 - 394 tests passing across 39 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
