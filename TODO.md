@@ -251,8 +251,15 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T241: Optimize load-modules.js — cache header reads so each module file is read once instead of twice per invocation
 - [x] T242: Version bump to 2.2.3 + CHANGELOG entry + marketplace sync
 
+## Zoom Out (session 2026-04-05f)
+- [x] T243: Sync live hooks to ensure all v2.2.3 changes are active
+- [x] T244: Evaluate npm registry publish — `hook-runner` taken (squatter), `claude-hook-runner` available but not worth maintenance overhead. GitHub install (`npx grobomo/hook-runner`) works well for niche audience.
+- [x] T245: Add Windows CI job (GitHub Actions `windows-latest`) — tests already pass on Windows locally, CI validates cross-platform (#123)
+- [ ] T246: Community adoption: write a blog-post-style section in README explaining the hook philosophy and when to use workflows vs raw hooks
+- [ ] T247: Integration guide: how to use hook-runner with other Claude Code tools (context-reset, skill-maker, mcp-manager)
+
 ## Status
-- 165 tasks completed, 0 pending
+- 168 tasks completed, 2 pending
 - Version: 2.2.3
 - 394 tests passing across 39 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
