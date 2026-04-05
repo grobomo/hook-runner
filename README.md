@@ -310,3 +310,4 @@ Full catalog in `modules/` directory:
 | `load-instructions` | Injects working instructions at session start |
 | `load-lessons` | Reads self-analysis lessons (JSONL) and injects recent ones as context |
 | `project-health` | Runs health check on session start, warns about issues |
+| `workflow-summary` | Injects active workflow summary on session start/context reset |

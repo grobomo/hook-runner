@@ -19,3 +19,4 @@ modules:
   - project-health
   - backup-check
   - config-sync
+  - workflow-summary
