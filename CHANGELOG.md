@@ -2,6 +2,14 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.4.2] — 2026-04-05
+
+### Improved
+- `--perf` labels removed/archived modules with `[removed]` and excludes them from overhead estimates (#138)
+
+### Fixed
+- Remove unused `hasAsync` variable from run-async.js (#138)
+
 ## [2.4.1] — 2026-04-05
 
 ### Improved
