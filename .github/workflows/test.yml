@@ -35,5 +35,5 @@ jobs:
         run: |
           npx grobomo/hook-runner --version
           npx grobomo/hook-runner --help
-          npx grobomo/hook-runner --health
           npx grobomo/hook-runner --yes --dry-run
+          # --health skipped: requires installed runners (only valid post-install)
