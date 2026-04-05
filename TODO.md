@@ -249,10 +249,11 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Code Review (session 2026-04-05e)
 - [x] T240: Code review fixes — ES5 consistency in workflow.js, path require cleanup in run-async.js, --confirm in help text (#120)
 - [x] T241: Optimize load-modules.js — cache header reads so each module file is read once instead of twice per invocation
+- [x] T242: Version bump to 2.2.3 + CHANGELOG entry + marketplace sync
 
 ## Status
-- 164 tasks completed, 0 pending
-- Version: 2.2.2
+- 165 tasks completed, 0 pending
+- Version: 2.2.3
 - 394 tests passing across 39 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
