@@ -200,6 +200,12 @@ EOF
 
 That's it. Next time Claude tries `rm -rf`, this module blocks it with a helpful message. No settings.json changes needed — the runner auto-discovers modules in the folder.
 
+Test it in isolation before waiting for a real hook trigger:
+
+```bash
+node setup.js --test-module ~/.claude/hooks/run-modules/PreToolUse/no-rm-rf.js
+```
+
 ### Project-Scoped Modules
 
 Modules in a subfolder matching your project name only run for that project:
