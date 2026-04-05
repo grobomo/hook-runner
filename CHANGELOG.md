@@ -2,6 +2,14 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.5.5] — 2026-04-05
+
+### Fixed
+- Replaced remaining `.forEach()` with for-loops for ES5 consistency (#157)
+
+### Security
+- Sanitize env var inputs in `config-sync` module to prevent command injection (#159)
+
 ## [2.5.4] — 2026-04-05
 
 ### Improved
