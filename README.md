@@ -79,6 +79,7 @@ node setup.js --workflow query Edit        # which workflows affect Edit?
 | `messaging-safety` | 1 | Blocks outbound messages (Teams, email) unless target is explicitly authorized. |
 | `no-local-docker` | 1 | Blocks local Docker commands, forces remote infrastructure. |
 | `cross-project-reset` | 1 | Blocks cross-project file access, forces proper project switching. |
+| `customer-data-guard` | 3 | Read-only incident response — blocks env changes, data exfil, and V1 modifications. |
 | `dispatcher-worker` | 1 | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
 
 ### Workflow State Machine

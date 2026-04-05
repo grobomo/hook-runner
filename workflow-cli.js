@@ -155,18 +155,28 @@ function cmdWorkflow(args) {
       yamlModules[workflows[ai].name] = workflows[ai].modules || [];
     }
 
-    // Scan all modules across all events
+    // Scan all modules across all events (top-level + project-scoped subdirs)
     var modulesDir = path.join(__dirname, "modules");
     var events = ["PreToolUse", "PostToolUse", "SessionStart", "Stop", "UserPromptSubmit"];
     var allModules = []; // {name, event, path, tag}
     for (var ei = 0; ei < events.length; ei++) {
       var evDir = path.join(modulesDir, events[ei]);
       if (!fs.existsSync(evDir)) continue;
-      var files = fs.readdirSync(evDir).filter(function(f) { return f.endsWith(".js"); }).sort();
-      for (var fi = 0; fi < files.length; fi++) {
-        var modPath = path.join(evDir, files[fi]);
-        var tag = lm.parseWorkflowTag(modPath);
-        allModules.push({ name: files[fi].replace(/\.js$/, ""), event: events[ei], path: modPath, tag: tag });
+      var entries = fs.readdirSync(evDir, { withFileTypes: true });
+      for (var fi = 0; fi < entries.length; fi++) {
+        if (entries[fi].isFile() && entries[fi].name.endsWith(".js")) {
+          var modPath = path.join(evDir, entries[fi].name);
+          var tag = lm.parseWorkflowTag(modPath);
+          allModules.push({ name: entries[fi].name.replace(/\.js$/, ""), event: events[ei], path: modPath, tag: tag });
+        } else if (entries[fi].isDirectory() && entries[fi].name !== "archive" && entries[fi].name.charAt(0) !== "_") {
+          var subDir = path.join(evDir, entries[fi].name);
+          var subFiles = fs.readdirSync(subDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+          for (var si = 0; si < subFiles.length; si++) {
+            var subModPath = path.join(subDir, subFiles[si]);
+            var subTag = lm.parseWorkflowTag(subModPath);
+            allModules.push({ name: subFiles[si].replace(/\.js$/, ""), event: events[ei], path: subModPath, tag: subTag });
+          }
+        }
       }
     }
 
