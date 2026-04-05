@@ -241,9 +241,10 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Bug Fix: config-sync stale lock (session 2026-04-05d)
 - [x] T234: Fix config-sync module to detect and remove stale git index.lock before `git add`
 - [x] T235: Fix config-sync to push current branch (not hardcoded `main`)
+- [x] T236: Add `.git/*.lock` exception to archive-not-delete gate (stale lock cleanup is standard git recovery)
 
 ## Status
-- 158 tasks completed, 0 pending
+- 159 tasks completed, 0 pending
 - Version: 2.2.1
 - 379 tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
