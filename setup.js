@@ -1399,7 +1399,9 @@ function cmdExport(args) {
   console.log("  Share this file — others can import with: cp " + outFile + " ~/.claude/hooks/modules.yaml && node setup.js --sync");
 }
 
-var cmdWorkflow = require(path.join(__dirname, "workflow-cli.js"));
+function cmdWorkflow(args) {
+  return require(path.join(__dirname, "workflow-cli.js"))(args);
+}
 
 function main() {
   var args = process.argv.slice(2);

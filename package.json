@@ -9,6 +9,7 @@
     "setup.js",
     "report.js",
     "workflow.js",
+    "workflow-cli.js",
     "load-modules.js",
     "hook-log.js",
     "run-async.js",
