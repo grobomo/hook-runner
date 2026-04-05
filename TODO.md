@@ -208,8 +208,11 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Live Cleanup
 - [x] Archived 6 redundant shtd_* live modules (~140ms/call savings): shtd_branch-gate, shtd_pr-per-task-gate, shtd_remote-tracking-gate, shtd_secret-scan-gate, shtd_spec-gate, shtd_workflow-gate
 
+## Refactor
+- [x] T225: Extract cmdWorkflow into workflow-cli.js (setup.js 2041→1598 lines, PR #106)
+
 ## Status
-- 146 tasks completed, 1 pending (T215 delegated to claude-code-skills)
+- 147 tasks completed, 1 pending (T215 delegated to claude-code-skills)
 - Version: 2.1.0
 - 369 tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README

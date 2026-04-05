@@ -12,6 +12,7 @@ Modular hook runner for Claude Code. Workflows group modules into enforceable pi
 - `setup.js` — CLI entry point with command handlers
 - `report.js` — HTML report generator
 - `workflow.js` — YAML workflow engine (state machine, gate validation)
+- `workflow-cli.js` — workflow CLI subcommands (list, audit, query, create, etc.)
 - `load-modules.js` — module loader (global + project-scoped + workflow filtering + dependency validation)
 - `hook-log.js` — centralized logger (JSONL per invocation, per-module timing)
 - `run-async.js` — async module executor (Promise detection, 4s timeout)
@@ -67,5 +68,5 @@ node setup.js --help         # show all commands
 This is a grobomo repo. Before pushing:
 1. `gh auth switch --user grobomo`
 2. Push
-3. Sync to marketplace: `cp setup.js report.js load-modules.js workflow.js ../claude-code-skills/plugins/hook-runner/`
+3. Sync to marketplace: `cp setup.js report.js load-modules.js workflow.js workflow-cli.js ../claude-code-skills/plugins/hook-runner/`
 4. Switch back to default account
