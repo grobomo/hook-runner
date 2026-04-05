@@ -273,6 +273,7 @@ node setup.js --perf                   # module timing analysis
 node setup.js --prune [N]             # prune log entries older than N days
 
 # Development
+node setup.js --test-module <file> [--input <json>]  # test one module
 node setup.js --test                   # run all test suites
 node setup.js --version                # show version
 node setup.js --help                   # show all commands
