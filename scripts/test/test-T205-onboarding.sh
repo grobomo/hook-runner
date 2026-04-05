@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # WHY: T205 — verify setup wizard offers default workflows on install
+# WHY-FIX: T124 — original test used --global enable/disable, sabotaging real workflow-config.json
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
@@ -31,16 +32,28 @@ else
   assert "dry-run --yes mentions workflow enablement" "0" "1"
 fi
 
-# Test: cmdWorkflow enable function exists and works (via --workflow enable)
-OUT=$(node setup.js --workflow enable shtd --global 2>&1 || true)
+# Test: cmdWorkflow enable/disable works using project-scoped temp dir (NEVER --global)
+TMPDIR="$(pwd)/.test-tmp-T205-$$"
+mkdir -p "$TMPDIR/workflows"
+cp workflows/shtd.yml "$TMPDIR/workflows/"
+trap 'rm -rf "$TMPDIR"' EXIT
+
+OUT=$(CLAUDE_PROJECT_DIR="$TMPDIR" node setup.js --workflow enable shtd 2>&1 || true)
 if echo "$OUT" | grep -qi "enabled\|already"; then
-  assert "workflow enable shtd works" "0" "0"
+  assert "workflow enable shtd works (project-scoped)" "0" "0"
 else
-  assert "workflow enable shtd works" "0" "1"
+  assert "workflow enable shtd works (project-scoped)" "0" "1"
 fi
 
-# Disable it after test
-node setup.js --workflow disable shtd --global 2>&1 >/dev/null || true
+# Verify it wrote to the temp dir, not global
+if [ -f "$TMPDIR/workflow-config.json" ]; then
+  assert "config written to temp dir (not global)" "0" "0"
+else
+  assert "config written to temp dir (not global)" "0" "1"
+fi
+
+# Disable using project scope — safe, only affects temp dir
+CLAUDE_PROJECT_DIR="$TMPDIR" node setup.js --workflow disable shtd 2>&1 >/dev/null || true
 
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
