@@ -8,6 +8,7 @@
   "files": [
     "setup.js",
     "report.js",
+    "constants.js",
     "workflow.js",
     "workflow-cli.js",
     "load-modules.js",

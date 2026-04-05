@@ -844,7 +844,7 @@ function cmdUninstall(args, dryRun) {
   } else {
     uninstallChanges.push({ what: "settings.json", status: "not found" });
   }
-  var runnerFiles = RUNNER_FILES.concat(["setup.js"]);
+  var runnerFiles = RUNNER_FILES.concat(["setup.js", "report.js"]);
   for (var uf = 0; uf < runnerFiles.length; uf++) {
     var fp = path.join(HOOKS_DIR, runnerFiles[uf]);
     if (fs.existsSync(fp)) {
