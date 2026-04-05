@@ -241,6 +241,7 @@ Full catalog in `modules/` directory:
 | `branch-pr-gate` | Model C workflow: feature branch → task branch → PR |
 | `claude-p-pattern` | Enforces correct `claude -p` invocation (stdin redirect, not pipe/args) |
 | `continuous-claude-gate` | Blocks code without tracked task workflow |
+| `cwd-drift-detector` | Blocks cross-project file access, instructs spawning new tab via context-reset |
 | `crlf-ssh-key-check` | Blocks scp/cp of SSH keys without `tr -d '\r'` (Windows CRLF corruption) |
 | `enforcement-gate` | Requires git repo + TODO.md. Dirty-tree check on main only. |
 | `env-var-check` | Blocks edits if `.env.required` vars are missing (cached per project) |
