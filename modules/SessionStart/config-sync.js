@@ -34,6 +34,17 @@ module.exports = function(input) {
   var lines = status.split("\n").filter(function(l) { return l.trim(); });
   var count = lines.length;
 
+  // Remove stale index.lock if present (left by crashed git processes)
+  var fs = require("fs");
+  var lockFile = path.join(claudeDir, ".git", "index.lock");
+  try {
+    var lockStat = fs.statSync(lockFile);
+    // If lock is older than 60 seconds, it's stale — remove it
+    if (Date.now() - lockStat.mtimeMs > 60000) {
+      fs.unlinkSync(lockFile);
+    }
+  } catch (e) { /* no lock file — normal */ }
+
   // Auto-commit and push
   try {
     cp.execSync("git add -A", {
@@ -56,8 +67,16 @@ module.exports = function(input) {
       });
     }
 
+    // Push current branch (not hardcoded main — repo may be on a different branch)
+    var branch = "";
     try {
-      cp.execSync("git push origin main 2>&1", {
+      branch = cp.execSync("git rev-parse --abbrev-ref HEAD", {
+        cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"]
+      }).trim();
+    } catch (e) { branch = "main"; }
+
+    try {
+      cp.execSync("git push origin " + branch + " 2>&1", {
         cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"],
         timeout: 15000
       });
