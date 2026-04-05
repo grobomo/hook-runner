@@ -10,6 +10,32 @@ Claude Code [hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) let yo
 
 On top of modules, **workflows** group related modules into enforceable pipelines. Enable a workflow and its modules activate together. Disable it and they all go silent. This is how you scale from one person's preferences to a team's engineering standards.
 
+## Why hook-runner?
+
+Claude Code hooks are powerful but raw: you write shell commands in `settings.json`, they run on every invocation, and there's no structure. This works for one person with three hooks. It doesn't work when you have 30+ enforcement rules, some that only apply in certain contexts, and teammates who need the same guardrails.
+
+hook-runner solves three problems:
+
+**1. Modules over shell commands.** Each rule is a `.js` file that receives structured input (tool name, file path, command) and returns a decision. No string parsing, no fragile regexes against `settings.json` entries. Modules are testable, documented, and version-controlled.
+
+**2. Workflows over individual modules.** You don't think "I need to enable spec-gate, branch-gate, test-checkpoint-gate, and worker-loop." You think "I want the SHTD development pipeline." Workflows group related modules so you enable one name and get a complete enforcement regime.
+
+**3. When to use which.** Use a **raw hook** (in `settings.json`) for one-off scripts that don't need to coordinate with anything — a notification sound on completion, a logging call. Use a **module** when the rule should be testable, has a `// WHY:` story behind it, and belongs to a category of enforcement. Use a **workflow** when multiple modules work together to enforce a process — a development pipeline, a safety regime, a deployment checklist.
+
+The progression is: raw hooks for experiments, modules for durable rules, workflows for team-wide standards.
+
+## Integrating with other Claude Code tools
+
+hook-runner is one piece of a larger Claude Code tooling ecosystem. Here's how the pieces connect:
+
+- **context-reset** — When a session's context gets long, `context-reset` saves conversation state to `SESSION_STATE.md` and starts fresh. hook-runner's `SessionStart` modules inject active workflow status on the new session so Claude picks up where it left off without losing enforcement context.
+
+- **skill-maker** — Skills are reusable prompts; hooks are enforcement. A skill tells Claude *how* to do something, a hook tells it *what it must not do*. Use skill-maker to create workflows that call hook-runner's CLI (`--workflow start`, `--health`, `--report`).
+
+- **mcp-manager** — MCP servers provide Claude with tools (browser automation, API access). hook-runner gates *which* tools Claude can use and *how*. For example, a PreToolUse module can block `Bash` commands that hit production endpoints, while mcp-manager provides the staging endpoint via an MCP tool.
+
+- **claude-code-skills marketplace** — hook-runner is published to `grobomo/claude-code-skills`. Install the skill to get `--workflow`, `--report`, and the full module catalog. The marketplace copy stays in sync with this repo.
+
 ## Quick Start
 
 ```bash
