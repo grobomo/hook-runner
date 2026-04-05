@@ -128,11 +128,13 @@ module.exports = function(input) {
     autoActivateShtd(roots[ai]);
   }
 
-  // Get current branch for feature matching
-  var branch = "";
-  for (var bi = 0; bi < roots.length; bi++) {
-    branch = getGitBranch(roots[bi]);
-    if (branch) break;
+  // Get current branch for feature matching (prefer shared context from runner)
+  var branch = (input._git && input._git.branch) || "";
+  if (!branch) {
+    for (var bi = 0; bi < roots.length; bi++) {
+      branch = getGitBranch(roots[bi]);
+      if (branch) break;
+    }
   }
   var featureWords = branchFeatureWords(branch);
 
