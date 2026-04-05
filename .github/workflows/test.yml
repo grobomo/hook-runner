@@ -22,6 +22,21 @@ jobs:
       - name: Run all test suites
         run: node setup.js --test
 
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # WHY: T245 — hook-runner is used daily on Windows (Git Bash). Tests
+      # use pwd -W fallback and mktemp but CI must verify cross-platform.
+      - name: Run all test suites
+        shell: bash
+        run: node setup.js --test
+
   install-test:
     runs-on: ubuntu-latest
     steps:

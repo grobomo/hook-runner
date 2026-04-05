@@ -10,7 +10,7 @@ check() {
 echo "=== hook-runner: docs & release ==="
 
 # Extract expected version from setup.js
-EXPECTED_VER=$(grep -oP 'VERSION = "\K[^"]+' "$REPO_DIR/setup.js")
+EXPECTED_VER=$(sed -n 's/.*VERSION = "\([^"]*\)".*/\1/p' "$REPO_DIR/setup.js")
 
 # 1. Version in setup.js matches package.json
 check "setup.js version is $EXPECTED_VER" 'grep -q "\"$EXPECTED_VER\"" "$REPO_DIR/setup.js"'
