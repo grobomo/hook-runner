@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.5.6] — 2026-04-05
+
+### Added
+- `terminal-title` SessionStart module — sets terminal title to project folder name for multi-tab disambiguation (#162)
+- `session-management` workflow now has 12 modules (was 11)
+
 ## [2.5.5] — 2026-04-05
 
 ### Fixed
