@@ -337,8 +337,10 @@ See `specs/watchdog/tasks.md` for full task list.
 - [x] T289: Version bump to 2.5.7 + CHANGELOG (#165)
 - [x] T290: Replace .startsWith()/.endsWith() ES6 with indexOf() in 9 module files
 
+- [x] T291: Version bump to 2.5.8 + CHANGELOG (#167)
+
 ## Status
-- 213 tasks completed, 0 pending
+- 214 tasks completed, 0 pending
 - Version: 2.5.6 (released, tagged, marketplace synced, live hooks synced)
 - 58 modules across 9 workflows, 536 tests passing across 40 test suites
 - Health: 77 OK, 0 warnings, 0 failures
