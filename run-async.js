@@ -49,7 +49,6 @@ function withTimeout(promise, ms, label) {
  */
 function runModules(modulePaths, input, handleResult, handleDone, timeout) {
   timeout = timeout || DEFAULT_TIMEOUT;
-  var hasAsync = false;
   var i = 0;
 
   function next() {
@@ -69,7 +68,6 @@ function runModules(modulePaths, input, handleResult, handleDone, timeout) {
 
       if (isThenable(result)) {
         // Async module — await with timeout
-        hasAsync = true;
         withTimeout(result, timeout, modName).then(
           function (val) {
             var ms = Date.now() - t0;
