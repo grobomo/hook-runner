@@ -177,7 +177,7 @@ See `specs/publish-ready/tasks.md` for full task list with checkpoints.
 - [x] T209: CI install test (npx fresh install)
 - [x] T210-T213: Document — README rewrite, troubleshooting, CLAUDE.md/SKILL.md
 - [x] T214: Version bump to 2.0.0
-- [ ] T215: Marketplace sync (claude-code-skills) — delegated to claude-code-skills/TODO.md
+- [x] T215: Marketplace sync (claude-code-skills) — synced v2.2.1 (76 files, 57 modules)
 - [x] T216: E2e fresh install test
 
 ## Hook System Watchdog (T122-T129)
@@ -229,8 +229,12 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Enhancements
 - [x] T232: Show changelog diff in --upgrade output
 
+## Release
+- [x] T233: Git tags for all 11 versions + GitHub release for v2.2.1
+
 ## Status
-- 154 tasks completed, 1 pending (T215 delegated to claude-code-skills)
+- 156 tasks completed, 0 pending
+- All tasks complete
 - Version: 2.2.1
 - 371 tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
