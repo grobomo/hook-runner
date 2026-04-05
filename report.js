@@ -38,21 +38,68 @@ function escHtml(s) {
 }
 
 /**
+ * Read the first 10 lines of a module file (cached per report generation).
+ */
+var _reportHeaderCache = {};
+function getHeaderLines(filePath) {
+  if (_reportHeaderCache[filePath]) return _reportHeaderCache[filePath];
+  try {
+    var content = fs.readFileSync(filePath, "utf-8");
+    _reportHeaderCache[filePath] = content.split("\n").slice(0, 10);
+    return _reportHeaderCache[filePath];
+  } catch (e) { return []; }
+}
+
+/**
  * Read the first comment line from a module as its description.
  */
 function getModuleDescription(filePath) {
-  try {
-    var content = fs.readFileSync(filePath, "utf-8");
-    var lines = content.split("\n");
-    for (var i = 0; i < Math.min(lines.length, 10); i++) {
-      var line = lines[i].trim();
-      if (line.startsWith("//")) {
-        var desc = line.replace(/^\/\/\s*/, "");
-        if (desc.length > 10 && !/^#!|^"use strict"|^@module/.test(desc)) return desc;
-      }
+  var lines = getHeaderLines(filePath);
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trim();
+    if (line.indexOf("//") === 0) {
+      var desc = line.replace(/^\/\/\s*/, "");
+      if (desc.length > 10 && !/^#!|^"use strict"|^@module|^WORKFLOW:|^WHY:|^requires:/.test(desc)) return desc;
     }
-  } catch (e) { /* skip */ }
+  }
   return "";
+}
+
+/**
+ * Parse "// WORKFLOW: name" from a module's header lines.
+ */
+function getModuleWorkflow(filePath) {
+  var lines = getHeaderLines(filePath);
+  for (var i = 0; i < lines.length; i++) {
+    var match = lines[i].match(/^\/\/\s*WORKFLOW:\s*(\S+)/i);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+/**
+ * Parse "// WHY: ..." from a module's header lines.
+ * May span multiple consecutive comment lines after the WHY tag.
+ */
+function getModuleWhy(filePath) {
+  var lines = getHeaderLines(filePath);
+  for (var i = 0; i < lines.length; i++) {
+    var match = lines[i].match(/^\/\/\s*WHY:\s*(.+)/i);
+    if (match) {
+      var why = match[1].trim();
+      // Collect continuation lines (comments that don't start a new tag)
+      for (var j = i + 1; j < lines.length; j++) {
+        var cont = lines[j].match(/^\/\/\s+([^A-Z].*)/);
+        if (cont && !/^\/\/\s*(WORKFLOW|WHY|requires):/i.test(lines[j])) {
+          why += " " + cont[1].trim();
+        } else {
+          break;
+        }
+      }
+      return why;
+    }
+  }
+  return null;
 }
 
 /**
@@ -80,7 +127,8 @@ function collectModules(modulesDir) {
     var fp = path.join(modulesDir, globalFiles[i]);
     result.push({
       name: globalFiles[i], path: fp, scope: "global",
-      description: getModuleDescription(fp), source: getModuleSource(fp), archived: false
+      description: getModuleDescription(fp), source: getModuleSource(fp), archived: false,
+      workflow: getModuleWorkflow(fp), why: getModuleWhy(fp)
     });
   }
 
@@ -93,7 +141,8 @@ function collectModules(modulesDir) {
         var afp = path.join(archiveDir, archiveFiles[a]);
         result.push({
           name: "archive/" + archiveFiles[a], path: afp, scope: "archived",
-          description: getModuleDescription(afp), source: getModuleSource(afp), archived: true
+          description: getModuleDescription(afp), source: getModuleSource(afp), archived: true,
+          workflow: getModuleWorkflow(afp), why: getModuleWhy(afp)
         });
       }
     } catch (e) { /* skip */ }
@@ -108,7 +157,8 @@ function collectModules(modulesDir) {
       var sfp = path.join(subDir, subFiles[sf]);
       result.push({
         name: subdirs[s].name + "/" + subFiles[sf], path: sfp, scope: subdirs[s].name,
-        description: getModuleDescription(sfp), source: getModuleSource(sfp), archived: false
+        description: getModuleDescription(sfp), source: getModuleSource(sfp), archived: false,
+        workflow: getModuleWorkflow(sfp), why: getModuleWhy(sfp)
       });
     }
   }
@@ -332,6 +382,29 @@ function generateReport(scan, outputPath, hookStats) {
   h.push('.sample-file{color:#d2a8ff}');
   h.push('.sample-project{color:#3fb950;font-size:.7rem;opacity:.7}');
   h.push('.sample-reason{color:#8b949e;font-size:.75rem;width:100%;margin-top:.2rem;padding-left:1rem;white-space:pre-wrap;max-height:3rem;overflow:hidden}');
+  // Workflow badge on module cards
+  h.push('.wf-badge{font-size:.7rem;padding:.1rem .5rem;border-radius:10px;font-weight:600;letter-spacing:.02em;white-space:nowrap}');
+  h.push('.wf-shtd{background:#da363322;color:#f85149;border:1px solid #da363344}');
+  h.push('.wf-code-quality{background:#23863622;color:#3fb950;border:1px solid #23863644}');
+  h.push('.wf-messaging-safety{background:#9e6a0322;color:#d29922;border:1px solid #9e6a0344}');
+  h.push('.wf-no-local-docker{background:#1f6feb22;color:#58a6ff;border:1px solid #1f6feb44}');
+  h.push('.wf-default{background:#30363d;color:#8b949e;border:1px solid #484f58}');
+  // WHY text
+  h.push('.module-why{color:#8b949e;font-size:.8rem;padding:.25rem 1.5rem .25rem 3.3rem;font-style:italic;border-bottom:1px solid #21262d}');
+  // Workflow summary section
+  h.push('.wf-summary{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1.5rem;margin-bottom:2rem}');
+  h.push('.wf-summary h2{color:#d2a8ff;font-size:1.1rem;margin-bottom:1rem}');
+  h.push('.wf-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}');
+  h.push('.wf-card{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:1rem;cursor:pointer;transition:border-color .15s}');
+  h.push('.wf-card:hover{border-color:#58a6ff}');
+  h.push('.wf-card-name{font-weight:600;color:#c9d1d9;font-size:.95rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.5rem}');
+  h.push('.wf-card-count{font-size:.75rem;color:#8b949e;background:#21262d;padding:.1rem .4rem;border-radius:3px}');
+  h.push('.wf-card-modules{display:flex;flex-wrap:wrap;gap:.3rem}');
+  h.push('.wf-card-mod{font-size:.7rem;color:#8b949e;background:#161b22;padding:.15rem .4rem;border-radius:3px;border:1px solid #21262d}');
+  // Workflow filter buttons
+  h.push('.wf-filters{display:flex;gap:.4rem;flex-wrap:wrap}');
+  h.push('.wf-filter-btn{background:#21262d;border:1px solid #30363d;border-radius:10px;padding:.3rem .7rem;color:#8b949e;font-size:.75rem;cursor:pointer;transition:all .15s}');
+  h.push('.wf-filter-btn:hover,.wf-filter-btn.active{background:#1f6feb33;color:#58a6ff;border-color:#1f6feb}');
   h.push('.module-chevron{color:#484f58;transition:transform .2s;flex-shrink:0}');
   h.push('.module-chevron.open{transform:rotate(90deg)}');
   h.push('.module-detail{display:none;padding:0 1.5rem 1rem 2.5rem}');
@@ -417,6 +490,49 @@ function generateReport(scan, outputPath, hookStats) {
     h.push('</div>');
   }
 
+  // Build workflow summary: workflow name → { modules: [{event, name}], blocks, enabled }
+  var workflowMap = {};
+  for (var wi = 0; wi < eventNames.length; wi++) {
+    var wEvt = eventNames[wi];
+    var wMods = eventModules[wEvt] || [];
+    for (var wm = 0; wm < wMods.length; wm++) {
+      if (wMods[wm].archived) continue;
+      var wfName = wMods[wm].workflow || "(untagged)";
+      if (!workflowMap[wfName]) workflowMap[wfName] = { modules: [], blocks: 0 };
+      var wModName = wMods[wm].name.replace(/\.js$/, "");
+      workflowMap[wfName].modules.push({ event: wEvt, name: wModName });
+      var wStatsKey = wEvt + "/" + wModName;
+      if (hookStats[wStatsKey]) workflowMap[wfName].blocks += hookStats[wStatsKey].block;
+    }
+  }
+  var workflowNames = Object.keys(workflowMap).sort(function(a, b) {
+    if (a === "(untagged)") return 1;
+    if (b === "(untagged)") return -1;
+    return a < b ? -1 : 1;
+  });
+
+  // Workflow summary section
+  if (workflowNames.length > 0) {
+    h.push('<div class="wf-summary"><h2>Workflows (' + workflowNames.length + ')</h2>');
+    h.push('<div class="wf-summary-grid">');
+    for (var wsi = 0; wsi < workflowNames.length; wsi++) {
+      var wn = workflowNames[wsi];
+      var wd = workflowMap[wn];
+      h.push('<div class="wf-card" onclick="filterByWorkflow(\'' + escHtml(wn) + '\')">');
+      h.push('<div class="wf-card-name"><span class="wf-badge wf-' + escHtml(wn.replace(/[^a-z0-9-]/g, "-")) + '">' + escHtml(wn) + '</span>');
+      h.push('<span class="wf-card-count">' + wd.modules.length + ' module' + (wd.modules.length !== 1 ? 's' : '') + '</span>');
+      if (wd.blocks > 0) h.push('<span class="stat-block" style="font-size:.7rem;padding:.1rem .4rem">' + wd.blocks + ' blocked</span>');
+      h.push('</div>');
+      h.push('<div class="wf-card-modules">');
+      for (var wmi = 0; wmi < wd.modules.length; wmi++) {
+        var wmod = wd.modules[wmi];
+        h.push('<span class="wf-card-mod" title="' + escHtml(wmod.event) + '">' + escHtml(wmod.name) + '</span>');
+      }
+      h.push('</div></div>');
+    }
+    h.push('</div></div>');
+  }
+
   // Claude event labels that appear above hook event names
   var CLAUDE_EVENTS = {
     SessionStart: "Session begins",
@@ -472,6 +588,14 @@ function generateReport(scan, outputPath, hookStats) {
   h.push('<input class="search-box" type="text" placeholder="Filter hooks by name..." oninput="filterHooks(this.value)">');
   h.push('<button class="toolbar-btn" onclick="expandAll()">Expand All</button>');
   h.push('<button class="toolbar-btn" onclick="collapseAll()">Collapse All</button>');
+  if (workflowNames.length > 0) {
+    h.push('<div class="wf-filters">');
+    h.push('<button class="wf-filter-btn active" onclick="filterByWorkflow(\'all\')">All</button>');
+    for (var wfi = 0; wfi < workflowNames.length; wfi++) {
+      h.push('<button class="wf-filter-btn" onclick="filterByWorkflow(\'' + escHtml(workflowNames[wfi]) + '\')">' + escHtml(workflowNames[wfi]) + '</button>');
+    }
+    h.push('</div>');
+  }
   h.push('</div>');
 
   // Helper to render a module/hook card with source code
@@ -495,12 +619,17 @@ function generateReport(scan, outputPath, hookStats) {
     var modStats2 = hookStats2[statsKey2] || null;
     var modId2 = evt3 + "--" + item.name.replace(/\.js$/, "").replace(/[^a-zA-Z0-9-]/g, "-");
 
-    h2.push('<div class="module" id="' + modId2 + '" data-name="' + escHtml(item.name.toLowerCase()) + '">');
+    var itemWorkflow = item.workflow || "";
+    h2.push('<div class="module" id="' + modId2 + '" data-name="' + escHtml(item.name.toLowerCase()) + '" data-workflow="' + escHtml(itemWorkflow) + '">');
     h2.push('<div class="module-header" onclick="toggleModule(this)">');
     h2.push('<span class="module-chevron">&#9654;</span>');
     h2.push('<div class="module-icon ' + iconClass2 + '"></div>');
     h2.push('<span class="module-name"' + nameStyle2 + '>' + escHtml(item.name) + '</span>');
     if (item.description) h2.push('<span class="module-desc">&mdash; ' + escHtml(item.description) + '</span>');
+    if (itemWorkflow) {
+      var wfCssClass = "wf-badge wf-" + itemWorkflow.replace(/[^a-z0-9-]/g, "-");
+      h2.push('<span class="' + wfCssClass + '">' + escHtml(itemWorkflow) + '</span>');
+    }
 
     // Block/error/timing badges
     if (modStats2 && (modStats2.block > 0 || modStats2.error > 0 || modStats2.msCount > 0)) {
@@ -516,6 +645,11 @@ function generateReport(scan, outputPath, hookStats) {
 
     h2.push('<span class="module-scope ' + scopeClass2 + '">' + scopeLabel2 + '</span>');
     h2.push('</div>');
+
+    // WHY text — shown prominently between header and detail
+    if (item.why) {
+      h2.push('<div class="module-why">' + escHtml(item.why) + '</div>');
+    }
 
     // Detail section
     h2.push('<div class="module-detail">');
@@ -645,6 +779,11 @@ function generateReport(scan, outputPath, hookStats) {
   h.push('m.scrollIntoView({behavior:"smooth",block:"center"});m.classList.add("module-highlight");setTimeout(function(){m.classList.remove("module-highlight")},2100)}');
   // Search filter
   h.push('function filterHooks(q){q=q.toLowerCase();document.querySelectorAll(".module").forEach(function(m){var n=m.getAttribute("data-name")||"";m.style.display=(!q||n.indexOf(q)!==-1)?"":"none"})}');
+  // Workflow filter
+  h.push('function filterByWorkflow(wf){');
+  h.push('document.querySelectorAll(".wf-filter-btn").forEach(function(b){b.classList.remove("active");if(b.textContent===wf||(wf==="all"&&b.textContent==="All"))b.classList.add("active")});');
+  h.push('document.querySelectorAll(".module").forEach(function(m){var mw=m.getAttribute("data-workflow")||"";if(wf==="all"){m.style.display=""}else if(wf==="(untagged)"){m.style.display=mw===""?"":"none"}else{m.style.display=mw===wf?"":"none"}});');
+  h.push('expandAll()}');
   // Expand all / collapse all
   h.push('function expandAll(){document.querySelectorAll(".event-section").forEach(function(sec){var hdr=sec.querySelector(".event-header");var body=sec.querySelector(".event-body");if(body&&!body.classList.contains("open")){body.classList.add("open");hdr.querySelector(".chevron").classList.add("open");hdr.classList.remove("collapsed")}})}');
   h.push('function collapseAll(){document.querySelectorAll(".event-section").forEach(function(sec){var hdr=sec.querySelector(".event-header");var body=sec.querySelector(".event-body");if(body&&body.classList.contains("open")){body.classList.remove("open");hdr.querySelector(".chevron").classList.remove("open");hdr.classList.add("collapsed")}})}');
@@ -663,6 +802,8 @@ module.exports = {
   collectModules: collectModules,
   getModuleDescription: getModuleDescription,
   getModuleSource: getModuleSource,
+  getModuleWorkflow: getModuleWorkflow,
+  getModuleWhy: getModuleWhy,
   escHtml: escHtml,
   EVENT_ORDER: EVENT_ORDER,
   EVENT_TITLES: EVENT_TITLES,
