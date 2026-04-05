@@ -365,11 +365,17 @@ See `specs/hook-integrity/` for full spec and tasks.
 - [x] T303: Update README with integrity monitor modules (#177)
 - [x] T304: Version bump to 2.6.0 + CHANGELOG (#178)
 
+## Bug Fixes & Polish (session 2026-04-05h)
+- [x] T305: Fix project dir decoding in --integrity CLI — greedy filesystem-aware decode (#180)
+- [x] T306: Add decode tests + version bump to 2.6.1 (#181)
+- [x] Pruned 100+ stale remote branches from merged PRs
+- [x] Deleted stale local branch 174-T298-code-quality
+
 ## Status
-- 227 tasks completed, 0 pending
-- Version: 2.6.0 (released, tagged, live hooks synced)
-- 67 modules across 10 workflows, 41 test suites (278 module tests)
-- Health: 82 OK, 0 warnings, 0 failures
+- 229 tasks completed, 0 pending
+- Version: 2.6.1 (released, live hooks synced)
+- 67 modules across 10 workflows, 41 test suites (280 module tests)
+- Health: 86 OK, 0 warnings, 0 failures
 - Performance: PreToolUse ~228ms/call (26 modules), SessionStart ~4s (9 modules)
 - CI: GitHub Actions runs tests + secret-scan on push/PR (Linux + Windows) — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
