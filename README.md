@@ -46,6 +46,7 @@ node setup.js --workflow query Edit        # which workflows affect Edit?
 | Workflow | What it enforces |
 |----------|-----------------|
 | `shtd` | Spec → tasks → branch → test → implement → PR. The full development pipeline. |
+| `dispatcher-worker` | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
 | `messaging-safety` | Blocks outbound messages (Teams, email) unless the target is explicitly authorized. |
 | `no-local-docker` | Blocks local Docker commands, forces remote infrastructure. |
 | `cross-project-reset` | Blocks cross-project file access, forces proper project switching. |
@@ -90,6 +91,27 @@ node setup.js --workflow create my-flow    # generate YAML + stubs
 node setup.js --workflow add-module my-flow my-gate  # create tagged module
 node setup.js --workflow sync-live         # copy to live hooks dir
 ```
+
+### Relaxed SHTD Mode
+
+Projects without full speckit ceremony can use **TODO.md** as the task source:
+
+- `spec-gate` accepts `- [ ] TXXX: description` entries in `TODO.md` (not just `specs/*/tasks.md`)
+- `test-checkpoint-gate` auto-detects `scripts/test/test-TXXX*.sh` files as test coverage
+- `worker-loop` gates `gh pr create` on test results — runs the test and blocks if it fails
+
+This means a simple project needs only:
+1. `TODO.md` with `- [ ] T001: ...` entries
+2. `scripts/test/test-T001-*.sh` for each task
+3. Feature branch per task (`git checkout -b 001-T001-slug`)
+
+### Dispatcher/Worker Model
+
+For fleet operations (CCC), enable the `dispatcher-worker` workflow. Roles are set via `CLAUDE_ROLE` env var:
+
+- **Dispatcher** (`CLAUDE_ROLE=dispatcher`): specs tasks, writes acceptance tests, creates branches, distributes to workers, monitors, merges PRs
+- **Worker** (`CLAUDE_ROLE=worker`): receives task + tests, implements until tests pass, creates PR
+- **Single instance** (no `CLAUDE_ROLE`): both roles active, all gates enforced
 
 ## Modules
 
