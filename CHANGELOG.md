@@ -2,6 +2,14 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.6.1] — 2026-04-05
+
+### Fixed
+- **Project dir decoding** — `--integrity` CLI now correctly resolves hyphenated names (`hook-runner`), dot-prefix dirs (`.claude`), and nested paths using greedy filesystem-aware decode (#180)
+
+### Added
+- **Decode tests** — `--integrity --json` validation and `decodeProjectDir` path resolution tests (#181)
+
 ## [2.6.0] — 2026-04-05
 
 ### Added
