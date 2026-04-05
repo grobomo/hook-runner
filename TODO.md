@@ -360,13 +360,13 @@ See `specs/hook-integrity/` for full spec and tasks.
 - [x] T298: workflow-compliance-gate PreToolUse — blocks if globally enforced workflow disabled at project level (#176)
 - [x] T299: hook-integrity-check SessionStart — verify live modules match repo, auto-repair drift (#176)
 - [x] T300: hook-integrity-monitor UserPromptSubmit (async) — spot-check modules each prompt (#176)
-- [ ] T301: --integrity CLI command — manual full scan with verbose output
+- [x] T301: --integrity CLI command — full scan with verbose output + --json mode (#179)
 - [x] T302: Test suite — 18 tests covering all components (#176)
 - [x] T303: Update README with integrity monitor modules (#177)
 - [x] T304: Version bump to 2.6.0 + CHANGELOG (#178)
 
 ## Status
-- 226 tasks completed, 1 pending
+- 227 tasks completed, 0 pending
 - Version: 2.6.0 (released, tagged, live hooks synced)
 - 67 modules across 10 workflows, 41 test suites (278 module tests)
 - Health: 82 OK, 0 warnings, 0 failures
