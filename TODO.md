@@ -321,10 +321,12 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Code Quality
 - [x] T280: Replace remaining .forEach() with for-loops for ES5 consistency (#157)
 - [x] T281: Fix stale test count in TODO.md (544→532, archived modules reduced count)
+- [x] T282: Sanitize env var inputs in config-sync to prevent command injection (#159)
+- [x] T283: Version bump to 2.5.5 + CHANGELOG
 
 ## Status
-- 204 tasks completed, 0 pending
-- Version: 2.5.4 (released, tagged, marketplace synced, live hooks synced)
+- 206 tasks completed, 0 pending
+- Version: 2.5.5 (released, tagged, marketplace synced, live hooks synced)
 - Clones: 2055 total, 0 stars/forks/issues — stable utility, no community demand for features
 - 532 tests passing across 40 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
