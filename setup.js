@@ -1636,8 +1636,147 @@ function cmdWorkflow(args) {
     return;
   }
 
+  if (sub === "create") {
+    var createName = args[args.indexOf("create") + 1];
+    if (!createName) { console.error("Usage: --workflow create <name> [--dir <path>]"); process.exit(1); }
+    // WHY: Manual workflow creation requires editing YAML, module files, and live copies.
+    // This command generates a complete scaffold so workflows are a first-class CLI citizen.
+    var dirIdx = args.indexOf("--dir");
+    var targetBase = dirIdx !== -1 && args[dirIdx + 1] ? args[dirIdx + 1] : __dirname;
+    var wfDir = path.join(targetBase, "workflows");
+    if (!fs.existsSync(wfDir)) fs.mkdirSync(wfDir, { recursive: true });
+    var wfPath = path.join(wfDir, createName + ".yml");
+    if (fs.existsSync(wfPath)) {
+      console.error('Workflow "' + createName + '" already exists at ' + wfPath);
+      process.exit(1);
+    }
+    var yaml = [
+      "name: " + createName,
+      "description: TODO — explain WHY this workflow exists and what problem it solves",
+      "version: 1",
+      "steps:",
+      "  - id: active",
+      "    name: Workflow is active",
+      "    gate:",
+      "      require_files: []",
+      "    completion:",
+      "      require_files: []",
+      "",
+      "modules: []",
+      "",
+    ].join("\n");
+    fs.writeFileSync(wfPath, yaml);
+    console.log('Created workflow "' + createName + '" at ' + wfPath);
+    console.log("Next steps:");
+    console.log("  1. Edit description to explain WHY this workflow exists");
+    console.log("  2. Add modules: --workflow add-module " + createName + " <module-name>");
+    console.log("  3. Enable: --workflow enable " + createName);
+    return;
+  }
+
+  if (sub === "add-module") {
+    var addWfName = args[args.indexOf("add-module") + 1];
+    var addModName = args[args.indexOf("add-module") + 2];
+    if (!addWfName || !addModName) {
+      console.error("Usage: --workflow add-module <workflow> <module-name> [--event <Event>]");
+      process.exit(1);
+    }
+    // WHY: Adding a module to a workflow requires creating a JS file with the right tag,
+    // updating the YAML modules list, and copying to live hooks. Automate all three.
+    var evIdx = args.indexOf("--event");
+    var event = evIdx !== -1 && args[evIdx + 1] ? args[evIdx + 1] : "PreToolUse";
+    var modDir = path.join(__dirname, "modules", event);
+    if (!fs.existsSync(modDir)) fs.mkdirSync(modDir, { recursive: true });
+    var modPath = path.join(modDir, addModName + ".js");
+    if (fs.existsSync(modPath)) {
+      console.log('Module "' + addModName + '" already exists. Updating WORKFLOW tag and YAML.');
+    } else {
+      // WHY: Every module must trace back to a real incident or design decision.
+      // The stub forces the author to fill in WHY before the module does anything.
+      var stub = [
+        "// WORKFLOW: " + addWfName,
+        '// WHY: TODO — describe the real incident or problem that caused this module.',
+        '"use strict";',
+        "",
+        "module.exports = function(input) {",
+        "  // TODO: implement gate logic",
+        "  return null;",
+        "};",
+        "",
+      ].join("\n");
+      fs.writeFileSync(modPath, stub);
+      console.log("Created module: " + modPath);
+    }
+    // Update YAML modules list
+    var wfDir2 = path.join(__dirname, "workflows");
+    var wfPath2 = path.join(wfDir2, addWfName + ".yml");
+    if (fs.existsSync(wfPath2)) {
+      var content = fs.readFileSync(wfPath2, "utf-8");
+      if (content.indexOf("  - " + addModName) === -1) {
+        // Add module to modules list
+        content = content.replace(/^modules:\s*\[?\]?/m, "modules:\n  - " + addModName);
+        if (content.indexOf("modules:") === -1) {
+          content += "\nmodules:\n  - " + addModName + "\n";
+        } else if (content.indexOf("  - " + addModName) === -1) {
+          content = content.replace(/(modules:.*\n(?:\s+-\s+\S+\n)*)/m, "$1  - " + addModName + "\n");
+        }
+        fs.writeFileSync(wfPath2, content);
+        console.log("Added to " + wfPath2);
+      } else {
+        console.log("Module already listed in " + wfPath2);
+      }
+    } else {
+      console.log("Warning: workflow YAML not found at " + wfPath2);
+    }
+    // Copy to live hooks
+    var liveDir = path.join(HOME, ".claude", "hooks", "run-modules", event);
+    if (fs.existsSync(liveDir)) {
+      try {
+        fs.copyFileSync(modPath, path.join(liveDir, addModName + ".js"));
+        console.log("Copied to live: " + path.join(liveDir, addModName + ".js"));
+      } catch(e) {
+        console.log("Warning: could not copy to live hooks: " + e.message);
+      }
+    }
+    return;
+  }
+
+  if (sub === "sync-live") {
+    // WHY: After editing modules/workflows in the repo, the live hooks dir
+    // needs to be updated. This copies all workflow YAMLs and tagged modules.
+    var home = process.env.HOME || process.env.USERPROFILE || "";
+    var liveHooksDir = path.join(home, ".claude", "hooks");
+    var liveWfDir = path.join(liveHooksDir, "workflows");
+    if (!fs.existsSync(liveWfDir)) fs.mkdirSync(liveWfDir, { recursive: true });
+    // Sync workflow YAMLs
+    var srcWfDir = path.join(__dirname, "workflows");
+    var copied = 0;
+    if (fs.existsSync(srcWfDir)) {
+      var wfFiles = fs.readdirSync(srcWfDir).filter(function(f) { return f.endsWith(".yml") || f.endsWith(".yaml"); });
+      for (var wi2 = 0; wi2 < wfFiles.length; wi2++) {
+        fs.copyFileSync(path.join(srcWfDir, wfFiles[wi2]), path.join(liveWfDir, wfFiles[wi2]));
+        copied++;
+      }
+    }
+    // Sync modules
+    var events = ["PreToolUse", "PostToolUse", "SessionStart", "Stop", "UserPromptSubmit"];
+    for (var ei2 = 0; ei2 < events.length; ei2++) {
+      var srcModDir = path.join(__dirname, "modules", events[ei2]);
+      var dstModDir = path.join(liveHooksDir, "run-modules", events[ei2]);
+      if (!fs.existsSync(srcModDir)) continue;
+      if (!fs.existsSync(dstModDir)) fs.mkdirSync(dstModDir, { recursive: true });
+      var mods = fs.readdirSync(srcModDir).filter(function(f) { return f.endsWith(".js"); });
+      for (var mi4 = 0; mi4 < mods.length; mi4++) {
+        fs.copyFileSync(path.join(srcModDir, mods[mi4]), path.join(dstModDir, mods[mi4]));
+        copied++;
+      }
+    }
+    console.log("Synced " + copied + " files to " + liveHooksDir);
+    return;
+  }
+
   console.error("Unknown workflow subcommand: " + sub);
-  console.error("Usage: --workflow [list|audit|query <tool>|enable <name>|disable <name>|start <name>|status|complete <step>|reset]");
+  console.error("Usage: --workflow [list|audit|query|create|add-module|sync-live|enable|disable|start|status|complete|reset]");
   process.exit(1);
 }
 

@@ -260,6 +260,7 @@ Full catalog in `modules/` directory:
 | `secret-scan-gate` | Blocks git commit if staged diff contains API keys, tokens, or passwords |
 | `settings-change-gate` | Injects reminder to state rationale when modifying ~/.claude/ config |
 | `spec-gate` | Blocks code without specs/tasks.md |
+| `why-reminder` | Non-blocking WHY-first reminder before every Write/Edit to code/docs |
 | `workflow-gate` | Enforces step order in active workflows |
 
 #### Project-Scoped PreToolUse

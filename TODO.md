@@ -125,7 +125,18 @@ On context reset, Claude reads workflow state and immediately knows all active c
 - [x] T102: Add `--workflow audit` — list orphan modules, workflow coverage report
 - [x] T103: Add `--workflow query <tool>` — show which workflows affect Bash/Edit/Write
 - [x] T104: Update SessionStart module to inject active workflow summary on context reset
-- [ ] T105: Update docs (README, CLAUDE.md, SKILL.md) + version bump + marketplace sync
+- [x] T105: Update docs (README, CLAUDE.md, SKILL.md) + version bump to 1.6.0
+- [x] T112: Add why-reminder PreToolUse gate + WHY in all SHTD block messages
+
+## Workflow CRUD Automation (T113)
+
+WHY: Creating/editing workflows requires touching 3+ files (YAML, module, live copy).
+Manual file management is error-prone and breaks the principle that workflows are the
+primary abstraction. Automate CRUD so workflows are first-class CLI citizens.
+
+- [ ] T113: Add `--workflow create <name>` — generates YAML + optional module stubs + copies to live
+- [ ] T114: Add `--workflow add-module <workflow> <module>` — creates module file with WORKFLOW tag + WHY stub, adds to YAML, copies to live
+- [ ] T115: Add `--workflow sync` — copies all workflow YAMLs + tagged modules to live hooks dir
 
 ## Reduced-Friction SHTD + Dispatcher/Worker Model (T106+)
 
@@ -144,10 +155,10 @@ so the workflow scales naturally from one Claude to a CCC fleet.
 - [ ] T111: Document dispatcher/worker model in README + CLAUDE.md
 
 ## Status
-- 104 tasks completed, 7 pending
-- Next: T105 (docs + release), then T106-T111 (dispatcher/worker model)
-- Version: 1.5.1
-- 233 tests passing across 20 test suites
+- 106 tasks completed, 9 pending
+- Next: T113-T115 (workflow CRUD), then T106-T111 (dispatcher/worker model)
+- Version: 1.6.0
+- 240+ tests passing across 21 test suites
 - CI: GitHub Actions runs all tests on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
 - CLI commands: setup, report, dry-run, health, sync, stats, list, test, upgrade, uninstall, prune, version, help, workflow (list/audit/query/enable/disable/start/status/complete/reset), perf, export
