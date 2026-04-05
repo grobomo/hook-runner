@@ -1071,7 +1071,7 @@ function cmdTest() {
     console.log("  No test scripts found in " + testDir);
     process.exit(1);
   }
-  var totalPass = 0, totalFail = 0, suiteFail = 0;
+  var totalPass = 0, totalFail = 0, suiteFail = 0, failedSuites = [];
   for (var ti = 0; ti < testFiles.length; ti++) {
     var testPath = path.join(testDir, testFiles[ti]);
     var suiteName = testFiles[ti].replace("test-", "").replace(".sh", "");
@@ -1088,7 +1088,7 @@ function cmdTest() {
       if (match) {
         totalPass += parseInt(match[1], 10);
         totalFail += parseInt(match[2], 10);
-        if (parseInt(match[2], 10) > 0) suiteFail++;
+        if (parseInt(match[2], 10) > 0) { suiteFail++; failedSuites.push(suiteName); }
       }
       var lines = result.trim().split("\n");
       var summaryLines = lines.slice(-3);
@@ -1097,6 +1097,8 @@ function cmdTest() {
       }
     } catch(e) {
       suiteFail++;
+      failedSuites.push(suiteName);
+      console.log("    FAIL: suite crashed (exit code " + (e.status || "unknown") + ")");
       var errOut = (e.stdout || "") + (e.stderr || "");
       var errLines = errOut.trim().split("\n").slice(-5);
       for (var el = 0; el < errLines.length; el++) {
@@ -1113,7 +1115,7 @@ function cmdTest() {
   console.log("========================");
   console.log("[hook-runner] " + testFiles.length + " suites, " + totalPass + " passed, " + totalFail + " failed");
   if (suiteFail > 0) {
-    console.log("[hook-runner] " + suiteFail + " suite(s) had failures");
+    console.log("[hook-runner] " + suiteFail + " suite(s) had failures: " + failedSuites.join(", "));
     process.exit(1);
   }
 }
