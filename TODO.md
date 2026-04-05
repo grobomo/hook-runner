@@ -279,9 +279,12 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Developer Experience
 - [x] T256: Add --test-module command (test a single module with sample inputs, supports --input for custom JSON)
 
+## Release
+- [x] T257: Version bump to 2.4.0 + CHANGELOG
+
 ## Status
-- 179 tasks completed, 0 pending
-- Version: 2.3.2
+- 180 tasks completed, 0 pending
+- Version: 2.4.0
 - 394 tests passing across 39 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates

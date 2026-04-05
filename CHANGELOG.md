@@ -2,6 +2,15 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.4.0] — 2026-04-05
+
+### Added
+- `--test-module <path>` command — test a single module with sample inputs, supports `--input <json>` for custom test data (#134)
+
+### Fixed
+- Workflow YAML/tag mismatches: dispatcher-worker 9→1, cross-project-reset 0→1, shtd 17→16 (#133)
+- Removed empty enforce-shtd.yml workflow (0 modules, dead placeholder) (#133)
+
 ## [2.3.2] — 2026-04-05
 
 ### Fixed
