@@ -355,16 +355,26 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Test Fixes
 - [x] T297: Fix 3 failing test suites — spec-gate test needs spec.md + git commit, README module docs (#173)
 
+## Hook Integrity Monitor (T298-T304)
+See `specs/hook-integrity/` for full spec and tasks.
+- [x] T298: workflow-compliance-gate PreToolUse — blocks if globally enforced workflow disabled at project level (#176)
+- [x] T299: hook-integrity-check SessionStart — verify live modules match repo, auto-repair drift (#176)
+- [x] T300: hook-integrity-monitor UserPromptSubmit (async) — spot-check modules each prompt (#176)
+- [ ] T301: --integrity CLI command — manual full scan with verbose output
+- [x] T302: Test suite — 18 tests covering all components (#176)
+- [ ] T303: Update README, CLAUDE.md, TODO.md with integrity docs
+- [ ] T304: Version bump + CHANGELOG + marketplace sync
+
 ## Status
-- 220 tasks completed, 0 pending
-- Version: 2.5.10 (released, tagged, marketplace synced, live hooks synced)
-- 64 modules across 10 workflows, 40 test suites (260 module tests)
+- 224 tasks completed, 3 pending
+- Version: 2.5.10 (+ integrity monitor merged to main)
+- 67 modules across 10 workflows, 41 test suites (278 module tests)
 - Health: 82 OK, 0 warnings, 0 failures
-- Performance: PreToolUse ~228ms/call (25 modules), SessionStart ~4s (8 modules, config-sync dominates)
+- Performance: PreToolUse ~228ms/call (26 modules), SessionStart ~4s (9 modules)
 - CI: GitHub Actions runs tests + secret-scan on push/PR (Linux + Windows) — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
 - CLI: setup, report, health, sync, stats, list, test, test-module, upgrade, uninstall, prune, version, help, perf, export, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live)
-- Project is at natural plateau — no actionable improvements remain
+- Hook integrity monitor: live since 2026-04-05, enforces workflow compliance + file integrity across all sessions
 
 ## Performance & Features (v1.4.0)
 - [x] T071: Add `env-var-check` PreToolUse module (blocks if required project env vars missing)
