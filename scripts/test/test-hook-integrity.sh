@@ -74,7 +74,37 @@ EXEOF
 RESULT=$(node "$TMPDIR_T/exc_test.js" 2>/dev/null || echo "error")
 [ "$RESULT" = "shtd" ] && pass "Exception whitelist JSON parsing" || fail "Exception whitelist: $RESULT"
 
-# --- Test 7: shtd.yml includes new modules ---
+# --- Test 7: decodeProjectDir resolves real paths ---
+cat > "$TMPDIR_T/decode_test.js" << 'DEOF'
+var fs = require("fs"), path = require("path");
+var setup = require(process.argv[2]);
+var fn = setup._decodeProjectDir;
+if (!fn) { process.stdout.write("NO_EXPORT"); process.exit(0); }
+var tests = [
+  ["C--Users-joelg-Documents-ProjectsCL1-hook-runner", "hook-runner"],
+  ["C--Users-joelg-Documents-ProjectsCL1-ep-incident-response", "ep-incident-response"],
+];
+var pass = 0;
+for (var i = 0; i < tests.length; i++) {
+  var decoded = fn(tests[i][0]);
+  if (decoded && decoded.indexOf(tests[i][1]) !== -1 && fs.existsSync(decoded)) pass++;
+}
+process.stdout.write(String(pass));
+DEOF
+RESULT=$(node "$TMPDIR_T/decode_test.js" "$REPO_DIR/setup.js" 2>/dev/null || echo "error")
+if [ "$RESULT" = "NO_EXPORT" ]; then
+  pass "decodeProjectDir: not exported (internal function)"
+elif [ "$RESULT" = "2" ]; then
+  pass "decodeProjectDir: resolves hyphenated paths"
+else
+  fail "decodeProjectDir: $RESULT/2 paths resolved"
+fi
+
+# --- Test 8: --integrity command runs without error ---
+RESULT=$(node "$REPO_DIR/setup.js" --integrity --json 2>/dev/null || echo "error")
+echo "$RESULT" | node -e "var d='';process.stdin.on('data',function(c){d+=c});process.stdin.on('end',function(){try{var j=JSON.parse(d);process.stdout.write(j.files&&j.workflows?'ok':'bad')}catch(e){process.stdout.write('parse-error')}})" | grep -q "ok" && pass "--integrity --json produces valid output" || fail "--integrity --json output invalid"
+
+# --- Test 9: shtd.yml includes new modules ---
 for mod in workflow-compliance-gate hook-integrity-check hook-integrity-monitor; do
   grep -q "$mod" "$REPO_DIR/workflows/shtd.yml" && pass "$mod in shtd.yml" || fail "$mod missing from shtd.yml"
 done
