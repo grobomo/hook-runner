@@ -22,7 +22,9 @@ module.exports = function(input) {
   // Allow project-specific rules in project .claude/rules/ — those are
   // checked into git and serve as project documentation. Only block
   // global rules (~/.claude/rules/) that should be hooks instead.
-  if (!/Users\/joelg\/\.claude\/rules\//.test(norm)) return null;
+  // WHY: Only block global rules (~/.claude/rules/), not project-scoped ones.
+  var home = (require("os").homedir() || "").replace(/\\/g, "/");
+  if (!home || norm.indexOf(home + "/.claude/rules/") === -1) return null;
 
   return "BLOCKED: Don't create passive .md rule files in ~/.claude/rules/. " +
     "Persistent lessons must be ACTIVE hook modules in " +

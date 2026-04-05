@@ -6,18 +6,23 @@
 var path = require("path");
 var os = require("os");
 
-var PROJECTS_ROOT = path.join(os.homedir(), "Documents", "ProjectsCL1").replace(/\\/g, "/");
+// WHY: PROJECTS_ROOT is configurable so this module works on any machine.
+// Set CLAUDE_PROJECTS_ROOT env var to override (e.g. ~/projects, ~/src).
+// Falls back to CLAUDE_PROJECT_DIR's parent if available, then skips detection.
+var PROJECTS_ROOT = (process.env.CLAUDE_PROJECTS_ROOT ||
+  (process.env.CLAUDE_PROJECT_DIR ? path.dirname(process.env.CLAUDE_PROJECT_DIR) : "") ||
+  "").replace(/\\/g, "/");
 var SKILLS_ROOT = path.join(os.homedir(), ".claude", "skills").replace(/\\/g, "/");
 
 /**
  * Extract a project directory from a file path or command.
- * Returns the project root (e.g. ~/Documents/ProjectsCL1/foo) or null.
+ * Returns the project root (e.g. ~/projects/foo) or null.
  */
 function extractProjectDir(filePath) {
   if (!filePath) return null;
   var fp = filePath.replace(/\\/g, "/");
 
-  // Match ~/Documents/ProjectsCL1/<project>/...
+  // Match <PROJECTS_ROOT>/<project>/...
   var projMatch = fp.match(new RegExp(PROJECTS_ROOT.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "/([^/]+)"));
   if (projMatch) return PROJECTS_ROOT + "/" + projMatch[1];
 
@@ -88,7 +93,7 @@ module.exports = function(input) {
     reason: "[cwd-drift] BLOCKED: You're in " + currentName + " but tried to access " + targetName + ".\n" +
       "DO THIS NOW:\n" +
       "1) Write " + targetName + " tasks to " + targetProject + "/TODO.md (use Write tool — that path is allowed once for this)\n" +
-      "2) Run: python C:/Users/joelg/Documents/ProjectsCL1/context-reset/context_reset.py --project-dir " + targetProject + "\n" +
+      "2) Run: python " + PROJECTS_ROOT + "/context-reset/context_reset.py --project-dir " + targetProject + "\n" +
       "   This spawns a NEW Claude tab that picks up TODO.md and works independently.\n" +
       "3) Continue working on " + currentName + " tasks in THIS session. Do not touch " + targetName + " files again."
   };
