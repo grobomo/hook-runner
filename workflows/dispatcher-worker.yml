@@ -1,0 +1,82 @@
+name: dispatcher-worker
+description: >
+  Role-aware workflow for CCC fleet operations. Dispatcher specs tasks, writes
+  acceptance tests, creates branches, and distributes. Workers receive tasks,
+  implement, run tests, and PR. Roles are set via CLAUDE_ROLE env var.
+version: 1
+
+# Roles:
+#   CLAUDE_ROLE=dispatcher — plans, specs, distributes, monitors, merges
+#   CLAUDE_ROLE=worker — implements, tests, PRs
+#   (unset) — single-instance mode, both roles active
+
+steps:
+  # Dispatcher steps
+  - id: spec
+    name: "[Dispatcher] Write spec and task list"
+    gate:
+      require_files: []
+    completion:
+      require_files: ["specs/*/tasks.md"]
+    role: dispatcher
+
+  - id: acceptance-tests
+    name: "[Dispatcher] Write e2e acceptance tests for each task"
+    gate:
+      require_step: spec
+    completion:
+      require_files: ["scripts/test/test-T*.sh"]
+    role: dispatcher
+
+  - id: distribute
+    name: "[Dispatcher] Create branches and assign tasks to workers"
+    gate:
+      require_step: acceptance-tests
+    completion:
+      require_files: []
+    role: dispatcher
+
+  # Worker steps
+  - id: receive
+    name: "[Worker] Receive task assignment with acceptance tests"
+    gate:
+      require_files: []
+    completion:
+      require_files: []
+    role: worker
+
+  - id: implement
+    name: "[Worker] Implement until acceptance tests pass"
+    gate:
+      require_step: receive
+    completion:
+      require_files: []
+    role: worker
+
+  - id: pr
+    name: "[Worker] Create PR into feature branch"
+    gate:
+      require_step: implement
+    completion:
+      require_files: []
+    role: worker
+
+  # Dispatcher merge step
+  - id: merge
+    name: "[Dispatcher] Review and merge worker PRs"
+    gate:
+      require_step: distribute
+    completion:
+      require_files: []
+    role: dispatcher
+
+modules:
+  - spec-gate
+  - test-checkpoint-gate
+  - branch-pr-gate
+  - remote-tracking-gate
+  - worker-loop
+  - enforcement-gate
+  - secret-scan-gate
+  - commit-msg-check
+  - push-unpushed
