@@ -1640,9 +1640,12 @@ function cmdWorkflow(args) {
     for (var tmi = 0; tmi < tagged.length; tmi++) {
       var mod = tagged[tmi];
       // Check if this module is listed in a different workflow's YAML
+      // Skip if the module is also listed in its tagged workflow (shared module)
+      var inTaggedWorkflow = yamlModules[mod.tag] && yamlModules[mod.tag].indexOf(mod.name) !== -1;
       for (var twi = 0; twi < wfNames.length; twi++) {
         if (wfNames[twi] === mod.tag) continue;
         if (yamlModules[wfNames[twi]].indexOf(mod.name) !== -1) {
+          if (inTaggedWorkflow) continue; // shared between workflows, tag matches primary
           mismatches.push(mod.event + "/" + mod.name + " tagged=" + mod.tag + " but listed in " + wfNames[twi] + " YAML");
         }
       }

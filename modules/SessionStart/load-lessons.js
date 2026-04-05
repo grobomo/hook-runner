@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: session-management
 // WHY: Self-analysis generates lessons from interrupts, but those lessons
 // are only useful if Claude reads them at the start of each session.
 // This module reads self-analysis-lessons.jsonl and injects recent

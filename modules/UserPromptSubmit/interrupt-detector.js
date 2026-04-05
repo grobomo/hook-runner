@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: self-improvement
 // WHY: User interrupts are social cues that Claude did something wrong.
 // In real life, people correct you with raised eyebrows or "wait, no."
 // In TUI, the interrupt IS that signal. When detected, this spawns a

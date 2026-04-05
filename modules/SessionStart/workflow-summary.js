@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: session-management
 // WHY: On context reset, Claude loses track of which workflows are active.
 // SessionStart: inject active workflow summary so Claude knows all active constraints.
 module.exports = function(input) {

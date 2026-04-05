@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: session-management
 // WHY: Need to detect when the user interrupts Claude mid-response.
 // Interrupts are social cues that something went wrong — they should
 // trigger self-analysis. This module writes a marker file when Claude

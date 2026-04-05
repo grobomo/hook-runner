@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: session-management
 // WHY: Important operational context was missing at session start.
 // SessionStart: inject working instructions at start of every session
 module.exports = function(input) {
