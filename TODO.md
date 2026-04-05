@@ -196,11 +196,12 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Docs & Polish
 - [x] T217: Audit fixes — workflow-gate tag, gitignore cleanup, test count update
 - [x] T218: Write Your First Module tutorial in README
+- [x] T219: Version bump to 2.1.0
 
 ## Status
-- 140 tasks completed, 3 pending (1 delegated to claude-code-skills)
+- 141 tasks completed, 3 pending (1 delegated to claude-code-skills)
 - Active: T201+ (publish-ready), T116-T121 (drift detector + runner fixes), T106-T111 (dispatcher/worker)
-- Version: 2.0.0
+- Version: 2.1.0
 - 369 tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 9 built-in workflow templates
