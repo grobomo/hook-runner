@@ -211,9 +211,12 @@ See `specs/watchdog/tasks.md` for full task list.
 ## Refactor
 - [x] T225: Extract cmdWorkflow into workflow-cli.js (setup.js 2041→1598 lines, PR #106)
 
+## Release
+- [x] T226: Version bump to 2.2.0
+
 ## Status
-- 147 tasks completed, 1 pending (T215 delegated to claude-code-skills)
-- Version: 2.1.0
+- 148 tasks completed, 1 pending (T215 delegated to claude-code-skills)
+- Version: 2.2.0
 - 369 tests passing across 38 test suites
 - CI: GitHub Actions runs tests + secret-scan on push/PR — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
