@@ -21,3 +21,19 @@ jobs:
       # automatically so new tests are always included.
       - name: Run all test suites
         run: node setup.js --test
+
+  install-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # WHY: T209 — verify that npx install from GitHub works for new users.
+      # No checkout — simulates a fresh environment with no local files.
+      - name: Test npx install from GitHub
+        run: |
+          npx grobomo/hook-runner --version
+          npx grobomo/hook-runner --help
+          npx grobomo/hook-runner --health
+          npx grobomo/hook-runner --yes --dry-run
