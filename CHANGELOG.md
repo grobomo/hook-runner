@@ -2,6 +2,15 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.5.7] — 2026-04-05
+
+### Performance
+- `preserve-iterated-content` module: use `git rev-list --count` instead of `git log --oneline` (faster, no output parsing), reduce timeout from 3s to 1.5s
+
+### Fixed
+- `preserve-iterated-content`: replace `.some()` ES6 method with for-loop for ES5 consistency
+- `rule-hygiene`: replace `.includes()` ES6 method with `indexOf()` for ES5 consistency
+
 ## [2.5.6] — 2026-04-05
 
 ### Added
