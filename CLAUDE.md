@@ -55,6 +55,14 @@ node setup.js --version      # show version
 node setup.js --help         # show all commands
 ```
 
+## Hook Design Rules
+- **PreToolUse** = behavioral enforcement (blocking). Gates that prevent bad actions.
+- **PostToolUse** = monitoring/reporting (non-blocking). Checks that warn or log.
+- **Runners** must use `exit(1)` for blocks (not `exit(0)`) so the TUI shows the block.
+- **Runners** must write block messages to `stderr` for TUI visibility.
+- **Modules** must have `// WORKFLOW: name` tag and `// WHY:` comment.
+- The `hook-editing-gate` module enforces these rules at edit time.
+
 ## Push Workflow
 This is a grobomo repo. Before pushing:
 1. `gh auth switch --user grobomo`
