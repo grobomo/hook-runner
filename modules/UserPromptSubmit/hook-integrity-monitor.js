@@ -11,7 +11,6 @@ var crypto = require("crypto");
 
 var RATE_LIMIT_MS = 60000; // 60 seconds
 var SAMPLE_SIZE = 5; // random modules to spot-check per prompt
-var _lastCheckTime = 0;
 
 function md5(filePath) {
   try {
@@ -19,13 +18,26 @@ function md5(filePath) {
   } catch (e) { return null; }
 }
 
-module.exports = async function(input) {
-  var now = Date.now();
-  if (now - _lastCheckTime < RATE_LIMIT_MS) return null;
-  _lastCheckTime = now;
+// WHY: Each hook invocation is a fresh Node process — in-memory _lastCheckTime
+// was always 0. File-based timestamp persists across invocations.
+function getLastCheckTime(hooksDir) {
+  var stampPath = path.join(hooksDir, ".integrity-last-check");
+  try {
+    return parseInt(fs.readFileSync(stampPath, "utf-8").trim(), 10) || 0;
+  } catch (e) { return 0; }
+}
+function setLastCheckTime(hooksDir) {
+  var stampPath = path.join(hooksDir, ".integrity-last-check");
+  try { fs.writeFileSync(stampPath, String(Date.now())); } catch (e) { /* best effort */ }
+}
 
+module.exports = async function(input) {
   var home = process.env.HOME || process.env.USERPROFILE;
   var hooksDir = path.join(home, ".claude", "hooks");
+  var now = Date.now();
+  if (now - getLastCheckTime(hooksDir) < RATE_LIMIT_MS) return null;
+  setLastCheckTime(hooksDir);
+
   var liveModDir = path.join(hooksDir, "run-modules");
   var markerPath = path.join(hooksDir, ".hook-runner-repo");
 
