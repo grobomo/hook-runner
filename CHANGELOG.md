@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.6.4] — 2026-04-05
+
+### Fixed
+- **hook-integrity-monitor rate limiter** — in-memory `_lastCheckTime` was always 0 (each hook invocation is a fresh Node process). Replaced with file-based timestamp in `~/.claude/hooks/.integrity-last-check`. Saves ~85ms per prompt when rate-limited.
+
 ## [2.6.3] — 2026-04-05
 
 ### Improved
