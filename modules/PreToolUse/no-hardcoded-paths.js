@@ -1,4 +1,4 @@
-// WORKFLOW: code-quality
+// WORKFLOW: shtd
 // WHY: Hardcoded C:SERS PATHS IN SCRIPTS BROKE PORTABILITY ACROSS MACHINES.
 // BLOCK WRITE/Edit with hardcoded absolute user paths in file content.
 // Catches Windows, Linux, and macOS home directory paths in new_string/content.

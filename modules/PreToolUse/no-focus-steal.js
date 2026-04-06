@@ -1,4 +1,4 @@
-// WORKFLOW: infra-safety
+// WORKFLOW: shtd
 // WHY: Background claude -p self-analysis opened a visible terminal tab that
 // stole focus from the user's work. On Windows, child_process.spawn with
 // detached+windowsHide still flashes a console.

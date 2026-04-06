@@ -2,6 +2,17 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.7.0] — 2026-04-05
+
+### Changed
+- **Workflow consolidation** — merged 6 active workflows (code-quality, infra-safety, messaging-safety, self-improvement, session-management) into **shtd**. Down from 11 workflows to 5 (2 active: shtd + customer-data-guard, 3 dormant). shtd now has 58 modules covering the entire dev workflow: spec→PR pipeline, code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement.
+
+### Fixed
+- **Report expand/collapse** — `toggleModule` used `nextElementSibling` which pointed to `.module-why` instead of `.module-detail` when WHY text was present. Now uses `parentElement.querySelector(".module-detail")`.
+
+### Added
+- **scripts/archive-live-workflows.sh** — reusable script to archive stale workflow YAMLs from live hooks dir
+
 ## [2.6.4] — 2026-04-05
 
 ### Fixed

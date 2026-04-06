@@ -1,4 +1,4 @@
-// WORKFLOW: infra-safety
+// WORKFLOW: shtd
 // WHY: Missing env vars caused silent failures deep in workflows.
 "use strict";
 // PreToolUse: block code edits if required environment variables are missing.

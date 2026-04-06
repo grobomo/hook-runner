@@ -1,4 +1,4 @@
-// WORKFLOW: session-management
+// WORKFLOW: shtd
 // WHY: Chat sessions contain valuable context that gets lost when sessions end.
 // Auto-exporting to HTML preserves every conversation for later reference without
 // manual intervention. Runs async so it doesn't block the stop flow.
