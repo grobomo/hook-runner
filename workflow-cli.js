@@ -37,7 +37,7 @@ function cmdWorkflow(args) {
       if (projectConfig[w.name] === true) state = "project";
       if (projectConfig[w.name] === false) state = "off (project override)";
       if (globalConfig[w.name] === false && !projectConfig.hasOwnProperty(w.name)) state = "off";
-      var stateLabel = state === "off" || state.startsWith("off") ? "  " : "ON";
+      var stateLabel = state === "off" || state.indexOf("off") === 0 ? "  " : "ON";
       console.log("[" + stateLabel + "] " + w.name + " — " + modCount + " modules — " + (w.description || ""));
       if (modCount > 0) {
         console.log("     modules: " + (w.modules || []).join(", "));
@@ -143,7 +143,7 @@ function cmdWorkflow(args) {
     var wfDir = path.join(__dirname, "workflows");
     var workflows = [];
     if (fs.existsSync(wfDir)) {
-      var wfFiles = fs.readdirSync(wfDir).filter(function(f) { return f.endsWith(".yml") || f.endsWith(".yaml"); }).sort();
+      var wfFiles = fs.readdirSync(wfDir).filter(function(f) { return f.slice(-4) === ".yml" || f.slice(-5) === ".yaml"; }).sort();
       for (var wfi = 0; wfi < wfFiles.length; wfi++) {
         try { workflows.push(wf.loadWorkflow(path.join(wfDir, wfFiles[wfi]))); } catch(e) {}
       }
@@ -164,13 +164,13 @@ function cmdWorkflow(args) {
       if (!fs.existsSync(evDir)) continue;
       var entries = fs.readdirSync(evDir, { withFileTypes: true });
       for (var fi = 0; fi < entries.length; fi++) {
-        if (entries[fi].isFile() && entries[fi].name.endsWith(".js")) {
+        if (entries[fi].isFile() && entries[fi].name.slice(-3) === ".js") {
           var modPath = path.join(evDir, entries[fi].name);
           var tag = lm.parseWorkflowTag(modPath);
           allModules.push({ name: entries[fi].name.replace(/\.js$/, ""), event: events[ei], path: modPath, tag: tag });
         } else if (entries[fi].isDirectory() && entries[fi].name !== "archive" && entries[fi].name.charAt(0) !== "_") {
           var subDir = path.join(evDir, entries[fi].name);
-          var subFiles = fs.readdirSync(subDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+          var subFiles = fs.readdirSync(subDir).filter(function(f) { return f.slice(-3) === ".js"; }).sort();
           for (var si = 0; si < subFiles.length; si++) {
             var subModPath = path.join(subDir, subFiles[si]);
             var subTag = lm.parseWorkflowTag(subModPath);
@@ -293,7 +293,7 @@ function cmdWorkflow(args) {
     var modulesDir = path.join(__dirname, "modules", "PreToolUse");
     var matches = [];
     if (fs.existsSync(modulesDir)) {
-      var files = fs.readdirSync(modulesDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+      var files = fs.readdirSync(modulesDir).filter(function(f) { return f.slice(-3) === ".js"; }).sort();
       for (var qi = 0; qi < files.length; qi++) {
         try {
           var src = fs.readFileSync(path.join(modulesDir, files[qi]), "utf-8");
@@ -433,7 +433,7 @@ function cmdWorkflow(args) {
     var srcWfDir = path.join(__dirname, "workflows");
     var copied = 0;
     if (fs.existsSync(srcWfDir)) {
-      var wfFiles = fs.readdirSync(srcWfDir).filter(function(f) { return f.endsWith(".yml") || f.endsWith(".yaml"); });
+      var wfFiles = fs.readdirSync(srcWfDir).filter(function(f) { return f.slice(-4) === ".yml" || f.slice(-5) === ".yaml"; });
       for (var wi2 = 0; wi2 < wfFiles.length; wi2++) {
         fs.copyFileSync(path.join(srcWfDir, wfFiles[wi2]), path.join(liveWfDir, wfFiles[wi2]));
         copied++;
@@ -458,7 +458,7 @@ function cmdWorkflow(args) {
       var entries = fs.readdirSync(srcModDir, { withFileTypes: true });
       for (var mi4 = 0; mi4 < entries.length; mi4++) {
         var ent = entries[mi4];
-        if (ent.isFile() && ent.name.endsWith(".js")) {
+        if (ent.isFile() && ent.name.slice(-3) === ".js") {
           fs.copyFileSync(path.join(srcModDir, ent.name), path.join(dstModDir, ent.name));
           copied++;
         } else if (ent.isDirectory() && ent.name !== "archive") {
@@ -466,7 +466,7 @@ function cmdWorkflow(args) {
           var subSrc = path.join(srcModDir, ent.name);
           var subDst = path.join(dstModDir, ent.name);
           if (!fs.existsSync(subDst)) fs.mkdirSync(subDst, { recursive: true });
-          var subFiles = fs.readdirSync(subSrc).filter(function(f) { return f.endsWith(".js"); });
+          var subFiles = fs.readdirSync(subSrc).filter(function(f) { return f.slice(-3) === ".js"; });
           for (var si = 0; si < subFiles.length; si++) {
             fs.copyFileSync(path.join(subSrc, subFiles[si]), path.join(subDst, subFiles[si]));
             copied++;

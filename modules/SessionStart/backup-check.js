@@ -1,7 +1,6 @@
 // WORKFLOW: shtd
 // WHY: Backups went stale for weeks without anyone noticing.
-// SessionStart: async example — check backup freshness at session start
-// Demonstrates async module support (hook-runner T030)
+// SessionStart: check backup freshness at session start.
 // Requires: claude-backup skill installed at ~/.claude/skills/claude-backup/
 var fs = require("fs");
 var path = require("path");

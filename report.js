@@ -121,7 +121,7 @@ function collectModules(modulesDir) {
   var entries = fs.readdirSync(modulesDir, { withFileTypes: true });
 
   // Global modules
-  var globalFiles = entries.filter(function(e) { return e.isFile() && e.name.endsWith(".js"); })
+  var globalFiles = entries.filter(function(e) { return e.isFile() && e.name.slice(-3) === ".js"; })
     .map(function(e) { return e.name; }).sort();
   for (var i = 0; i < globalFiles.length; i++) {
     var fp = path.join(modulesDir, globalFiles[i]);
@@ -136,7 +136,7 @@ function collectModules(modulesDir) {
   var archiveDir = path.join(modulesDir, "archive");
   if (fs.existsSync(archiveDir)) {
     try {
-      var archiveFiles = fs.readdirSync(archiveDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+      var archiveFiles = fs.readdirSync(archiveDir).filter(function(f) { return f.slice(-3) === ".js"; }).sort();
       for (var a = 0; a < archiveFiles.length; a++) {
         var afp = path.join(archiveDir, archiveFiles[a]);
         result.push({
@@ -152,7 +152,7 @@ function collectModules(modulesDir) {
   var subdirs = entries.filter(function(e) { return e.isDirectory() && e.name !== "archive"; });
   for (var s = 0; s < subdirs.length; s++) {
     var subDir = path.join(modulesDir, subdirs[s].name);
-    var subFiles = fs.readdirSync(subDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+    var subFiles = fs.readdirSync(subDir).filter(function(f) { return f.slice(-3) === ".js"; }).sort();
     for (var sf = 0; sf < subFiles.length; sf++) {
       var sfp = path.join(subDir, subFiles[sf]);
       result.push({
@@ -236,13 +236,20 @@ function analyzeHooks(eventModulesData, hookStats, perfData) {
   }
 
   // --- DRY detection: multiple PreToolUse modules sharing keyword stems ---
+  // Skip project-scoped modules (contain "/") — they share prefixes by design
   var nameWords = {};
   for (var dw = 0; dw < allMods.length; dw++) {
     if (allMods[dw].event !== "PreToolUse") continue;
+    if (allMods[dw].name.indexOf("/") !== -1) continue;
     var words = allMods[dw].name.replace(/\.js$/, "").split("-");
     for (var wi = 0; wi < words.length; wi++) {
       var w = words[wi].toLowerCase();
-      if (w.length < 5 || w === "check" || w === "guard" || w === "safety" || w === "gate") continue;
+      // Skip generic words that appear in many unrelated module names
+      var skipWords = ["check", "guard", "safety", "gate", "claude", "remote", "workflow",
+        "module", "config", "project", "integrity", "monitor", "system", "detect"];
+      var skip = w.length < 6;
+      for (var sw = 0; !skip && sw < skipWords.length; sw++) { if (w === skipWords[sw]) skip = true; }
+      if (skip) continue;
       if (!nameWords[w]) nameWords[w] = [];
       nameWords[w].push(allMods[dw].name);
     }
@@ -255,20 +262,70 @@ function analyzeHooks(eventModulesData, hookStats, perfData) {
     }
   }
 
+  // --- DRY detection: duplicate WHY text (modules with identical purpose) ---
+  // Same module in multiple events (e.g. config-sync in SessionStart + Stop) is expected — dedupe by name
+  var whyMap = {};
+  for (var dwy = 0; dwy < allMods.length; dwy++) {
+    var whyText = allMods[dwy].why;
+    if (!whyText || whyText.length < 20) continue;
+    // Normalize: lowercase, strip punctuation, take first 60 chars
+    var whyKey = whyText.toLowerCase().replace(/[^a-z0-9 ]/g, "").substring(0, 60).trim();
+    if (!whyMap[whyKey]) whyMap[whyKey] = [];
+    // Deduplicate by base module name (same module across events is expected)
+    var baseName = allMods[dwy].name.replace(/\.js$/, "");
+    var already = false;
+    for (var ddup = 0; ddup < whyMap[whyKey].length; ddup++) {
+      var existing = whyMap[whyKey][ddup];
+      // Same base name in different event = same module, not a DRY issue
+      if (existing.indexOf("/" + baseName) !== -1 || existing === baseName) { already = true; break; }
+    }
+    if (!already) whyMap[whyKey].push(allMods[dwy].event + "/" + baseName);
+  }
+  var whyMapKeys = Object.keys(whyMap);
+  for (var dwk = 0; dwk < whyMapKeys.length; dwk++) {
+    if (whyMap[whyMapKeys[dwk]].length >= 2) {
+      result.dry_issues.push("Duplicate WHY across " + whyMap[whyMapKeys[dwk]].join(" and ") +
+        " — likely redundant, consider merging");
+    }
+  }
+
+  // --- Performance: high spike ratio (max > 50x avg, top 3 only) ---
+  // Git-heavy modules naturally spike on cold calls; only flag extreme outliers
+  var spikeList = [];
+  for (var spi = 0; spi < allMods.length; spi++) {
+    var spSt = allMods[spi].stats;
+    if (spSt && spSt.msCount > 50) {
+      var spAvg = Math.round(spSt.msTotal / spSt.msCount);
+      var spRatio = spSt.msMax / Math.max(spAvg, 1);
+      if (spAvg > 10 && spRatio > 50 && spSt.msMax > 500) {
+        spikeList.push({ name: allMods[spi].name, avg: spAvg, max: spSt.msMax, ratio: Math.round(spRatio) });
+      }
+    }
+  }
+  spikeList.sort(function(a, b) { return b.ratio - a.ratio; });
+  for (var spj = 0; spj < Math.min(spikeList.length, 3); spj++) {
+    result.performance.push(spikeList[spj].name + " has sporadic spikes: avg " +
+      spikeList[spj].avg + "ms but max " + spikeList[spj].max + "ms (" + spikeList[spj].ratio + "x)");
+  }
+
   // --- Performance analysis ---
+  // Only flag per-tool-call events as overhead concerns.
+  // SessionStart/Stop run once per session — high ms is expected and not actionable.
+  var perCallEvents = { PreToolUse: 1, PostToolUse: 1, UserPromptSubmit: 1 };
   if (perfData) {
     var perfKeys = Object.keys(perfData);
     for (var pk = 0; pk < perfKeys.length; pk++) {
       var ms = perfData[perfKeys[pk]];
-      if (ms > 500) {
-        result.performance.push(perfKeys[pk] + " overhead is " + ms + "ms — consider optimizing slow modules");
+      if (perCallEvents[perfKeys[pk]] && ms > 500) {
+        result.performance.push(perfKeys[pk] + " overhead is " + ms + "ms per tool call — optimize slow modules");
       }
     }
   }
 
-  // Slow individual modules (avg > 50ms)
+  // Slow individual modules (avg > 50ms, per-call events only)
   var slowMods = [];
   for (var sm = 0; sm < allMods.length; sm++) {
+    if (!perCallEvents[allMods[sm].event]) continue;
     var st = allMods[sm].stats;
     if (st && st.msCount > 0) {
       var avg = Math.round(st.msTotal / st.msCount);
@@ -282,12 +339,14 @@ function analyzeHooks(eventModulesData, hookStats, perfData) {
   }
 
   // --- Redundancy: PreToolUse gates that never block despite many invocations ---
+  // Threshold 2000+ calls — low-volume gates haven't had enough exposure to judge
+  // Note: some gates are preventive (user learned not to trigger them) — flag for review, not removal
   var neverTriggered = [];
   for (var nt = 0; nt < allMods.length; nt++) {
     var ntStats = allMods[nt].stats;
-    if (ntStats && ntStats.total > 100 && (ntStats.block || 0) === 0 && (ntStats.error || 0) === 0) {
+    if (ntStats && ntStats.total > 2000 && (ntStats.block || 0) === 0 && (ntStats.error || 0) === 0) {
       if (allMods[nt].event === "PreToolUse") {
-        neverTriggered.push(allMods[nt].name + " — " + ntStats.total + " calls, 0 blocks");
+        neverTriggered.push(allMods[nt].name + " — " + ntStats.total + " calls, 0 blocks (may be preventive)");
       }
     }
   }
@@ -314,13 +373,29 @@ function analyzeHooks(eventModulesData, hookStats, perfData) {
     result.top_recommendations.push("Fix error-prone modules: " + epNames.join("; "));
   }
 
+  // --- Suggested modules: check for common patterns not covered ---
+  var allNames = [];
+  for (var an = 0; an < allMods.length; an++) allNames.push(allMods[an].name.toLowerCase());
+  var allNamesStr = allNames.join(" ");
+  // Check for event balance — PreToolUse-heavy systems often lack PostToolUse monitoring
+  var preCount = (modsByEvent["PreToolUse"] || []).length;
+  var postCount = (modsByEvent["PostToolUse"] || []).length;
+  if (preCount > 10 && postCount < preCount / 4) {
+    result.missing_modules.push("PostToolUse is underrepresented (" + postCount + " vs " +
+      preCount + " PreToolUse) — consider adding monitoring modules for tool output validation");
+  }
+  // Check if there's a large file / output size gate
+  if (allNamesStr.indexOf("size") === -1 && allNamesStr.indexOf("large") === -1) {
+    result.missing_modules.push("No file-size gate — consider blocking Write/Edit of unusually large files");
+  }
+
   // --- Quality score ---
+  // Deterrent gates (never block) don't count as demerits — they prevent behavior proactively
   var demerits = 0;
   if (missingWhy.length > 0) demerits += Math.min(missingWhy.length, 5);
   if (missingWorkflow.length > 0) demerits += Math.min(missingWorkflow.length, 5);
   if (result.coverage_gaps.length > 2) demerits += 2;
   if (errorProne.length > 0) demerits += errorProne.length * 2;
-  if (neverTriggered.length > 5) demerits += 2;
   if (slowMods.length > 3) demerits += 1;
 
   if (demerits === 0) { result.quality.score = "A"; }
@@ -345,9 +420,9 @@ function analyzeHooks(eventModulesData, hookStats, perfData) {
     result.top_recommendations.push("Optimize " + slowMods[0].name + " (avg " +
       slowMods[0].avg + "ms) — biggest performance bottleneck");
   }
-  if (neverTriggered.length > 3) {
-    result.top_recommendations.push("Review " + neverTriggered.length +
-      " PreToolUse gates that never block — may be obsolete");
+  if (neverTriggered.length > 5) {
+    result.top_recommendations.push(neverTriggered.length +
+      " PreToolUse gates never block — likely preventive deterrents, review if any are truly obsolete");
   }
 
   // Healthy system message
@@ -356,6 +431,152 @@ function analyzeHooks(eventModulesData, hookStats, perfData) {
   }
 
   return JSON.stringify(result);
+}
+
+/**
+ * Build the structured prompt for LLM analysis.
+ * Same data that analyzeHooks() uses, but formatted as markdown for claude -p.
+ */
+function buildAnalysisPrompt(eventModulesData, hookStats, perfData) {
+  var summary = [];
+  summary.push("# Hook System Analysis Input");
+  summary.push("");
+
+  if (perfData) {
+    summary.push("## Performance");
+    var perfKeys = Object.keys(perfData);
+    for (var pi = 0; pi < perfKeys.length; pi++) {
+      summary.push("- " + perfKeys[pi] + ": ~" + perfData[perfKeys[pi]] + "ms overhead");
+    }
+    summary.push("");
+  }
+
+  var events = Object.keys(eventModulesData);
+  for (var ei = 0; ei < events.length; ei++) {
+    var evt = events[ei];
+    var mods = eventModulesData[evt];
+    if (mods.length === 0) continue;
+    summary.push("## " + evt + " (" + mods.length + " modules)");
+    for (var mi = 0; mi < mods.length; mi++) {
+      var m = mods[mi];
+      var line = "- **" + m.name + "**";
+      if (m.workflow) line += " [" + m.workflow + "]";
+      if (m.description) line += " — " + m.description;
+      if (m.stats) {
+        var parts = [];
+        if (m.stats.block > 0) parts.push(m.stats.block + " blocks");
+        if (m.stats.error > 0) parts.push(m.stats.error + " errors");
+        if (m.stats.msCount > 0) parts.push("avg " + Math.round(m.stats.msTotal / m.stats.msCount) + "ms, max " + m.stats.msMax + "ms");
+        if (parts.length > 0) line += " (" + parts.join(", ") + ")";
+      }
+      summary.push(line);
+      if (m.why) summary.push("  WHY: " + m.why);
+    }
+    summary.push("");
+  }
+
+  var totalBlocks = 0, totalErrors = 0, totalCalls = 0;
+  var sKeys = Object.keys(hookStats);
+  for (var si = 0; si < sKeys.length; si++) {
+    totalBlocks += hookStats[sKeys[si]].block || 0;
+    totalErrors += hookStats[sKeys[si]].error || 0;
+    totalCalls += hookStats[sKeys[si]].total || 0;
+  }
+  summary.push("## Summary Stats");
+  summary.push("- Total invocations: " + totalCalls);
+  summary.push("- Total blocks: " + totalBlocks);
+  summary.push("- Total errors: " + totalErrors);
+  summary.push("");
+
+  summary.push("Analyze this Claude Code hook system. Respond in this exact JSON format (no markdown fences):");
+  summary.push('{"quality":{"score":"A/B/C/D","summary":"1 sentence"},');
+  summary.push('"coverage_gaps":["gap1","gap2"],');
+  summary.push('"dry_issues":["issue1","issue2"],');
+  summary.push('"performance":["observation1","observation2"],');
+  summary.push('"redundant_modules":["mod1 reason","mod2 reason"],');
+  summary.push('"missing_modules":["suggested module and why"],');
+  summary.push('"top_recommendations":["rec1","rec2","rec3"]}');
+  summary.push("Be specific. Reference module names. Focus on actionable improvements.");
+
+  return summary.join("\n");
+}
+
+/**
+ * Run deep LLM analysis via claude -p.
+ * Saves prompt to ~/.claude/reports/analysis-prompt.txt for manual re-run.
+ * @returns {string} JSON string or "" on failure
+ */
+function deepAnalyze(eventModulesData, hookStats, perfData) {
+  var cp = require("child_process");
+  var prompt = buildAnalysisPrompt(eventModulesData, hookStats, perfData);
+
+  var promptDir = path.join(HOME, ".claude", "reports");
+  try { fs.mkdirSync(promptDir, { recursive: true }); } catch (e) {}
+  var promptFile = path.join(promptDir, "analysis-prompt.txt");
+  fs.writeFileSync(promptFile, prompt);
+  process.stderr.write("[report] Analysis prompt saved: " + promptFile + "\n");
+
+  try {
+    var result = cp.execSync(
+      "claude -p --dangerously-skip-permissions < " + JSON.stringify(promptFile).replace(/\\/g, "/"),
+      { encoding: "utf-8", timeout: 300000, shell: true, maxBuffer: 2 * 1024 * 1024 }
+    ).trim();
+    var resultFile = path.join(promptDir, "analysis-result.json");
+    fs.writeFileSync(resultFile, result);
+    process.stderr.write("[report] Analysis result saved: " + resultFile + "\n");
+    return result;
+  } catch (e) {
+    process.stderr.write("[report] LLM analysis failed: " + (e.message || e) + "\n");
+    process.stderr.write("[report] Re-run: claude -p < " + promptFile.replace(/\\/g, "/") + "\n");
+    process.stderr.write("[report] Then: node setup.js --analyze --input <result-file>\n");
+    return "";
+  }
+}
+
+/**
+ * Merge LLM analysis into local analysis.
+ * LLM provides deeper semantic analysis — prefer it for qualitative categories.
+ */
+function mergeAnalysis(localJson, llmJson) {
+  var local, llm;
+  try { local = JSON.parse(localJson); } catch (e) { return llmJson || localJson; }
+  try {
+    var cleaned = llmJson.replace(/^```json?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
+    llm = JSON.parse(cleaned);
+  } catch (e) {
+    process.stderr.write("[report] LLM JSON parse failed: " + (e.message || e) + "\n");
+    return localJson;
+  }
+
+  // LLM provides deeper semantic analysis — prefer it for these categories
+  if (llm.coverage_gaps && llm.coverage_gaps.length > 0) local.coverage_gaps = llm.coverage_gaps;
+  if (llm.dry_issues && llm.dry_issues.length > 0) local.dry_issues = llm.dry_issues;
+  if (llm.redundant_modules && llm.redundant_modules.length > 0) local.redundant_modules = llm.redundant_modules;
+  if (llm.missing_modules && llm.missing_modules.length > 0) local.missing_modules = llm.missing_modules;
+  // Merge performance — combine unique entries
+  if (llm.performance && llm.performance.length > 0) {
+    var perfSet = {};
+    for (var i = 0; i < local.performance.length; i++) perfSet[local.performance[i]] = true;
+    for (var j = 0; j < llm.performance.length; j++) {
+      if (!perfSet[llm.performance[j]]) local.performance.push(llm.performance[j]);
+    }
+  }
+  // Merge recommendations — LLM first, then unique local ones
+  if (llm.top_recommendations && llm.top_recommendations.length > 0) {
+    var recSet = {};
+    var merged = [];
+    for (var ri = 0; ri < llm.top_recommendations.length; ri++) {
+      merged.push(llm.top_recommendations[ri]);
+      recSet[llm.top_recommendations[ri]] = true;
+    }
+    for (var rj = 0; rj < local.top_recommendations.length; rj++) {
+      if (!recSet[local.top_recommendations[rj]]) merged.push(local.top_recommendations[rj]);
+    }
+    local.top_recommendations = merged;
+  }
+  if (llm.quality) local.quality = llm.quality;
+
+  return JSON.stringify(local);
 }
 
 /**
@@ -1019,7 +1240,7 @@ function generateReport(scan, outputPath, hookStats, options) {
     h.push('</div></div>');
   }
 
-  // LLM Analysis section (opt-in via options.analyze)
+  // Analysis section (opt-in via options.analyze)
   if (options.analyze) {
     // Build analysis input from eventModules data
     var analysisData = {};
@@ -1055,8 +1276,26 @@ function generateReport(scan, outputPath, hookStats, options) {
       if (overhead > 0) perfOverview[pEvt] = overhead;
     }
 
-    process.stderr.write("[report] Running hook system analysis...\n");
-    var analysisResult = analyzeHooks(analysisData, hookStats, perfOverview);
+    // Local static analysis (always runs — fast)
+    process.stderr.write("[report] Running local analysis...\n");
+    var localResult = analyzeHooks(analysisData, hookStats, perfOverview);
+
+    // Deep LLM analysis: --deep runs claude -p, --input loads pre-computed JSON
+    var llmResult = "";
+    if (options.inputFile) {
+      try {
+        llmResult = fs.readFileSync(options.inputFile, "utf-8").trim();
+        process.stderr.write("[report] Loaded LLM analysis from " + options.inputFile + "\n");
+      } catch (e) {
+        process.stderr.write("[report] Failed to read " + options.inputFile + ": " + e.message + "\n");
+      }
+    } else if (options.deep) {
+      process.stderr.write("[report] Running deep LLM analysis via claude -p (may take 2-5 min)...\n");
+      llmResult = deepAnalyze(analysisData, hookStats, perfOverview);
+    }
+
+    // Merge if LLM result available
+    var analysisResult = llmResult ? mergeAnalysis(localResult, llmResult) : localResult;
     if (analysisResult) {
       h.push(renderAnalysisHtml(analysisResult));
     }
@@ -1092,6 +1331,8 @@ function generateReport(scan, outputPath, hookStats, options) {
 // Exports for use by setup.js
 module.exports = {
   generateReport: generateReport,
+  analyzeHooks: analyzeHooks,
+  renderAnalysisHtml: renderAnalysisHtml,
   collectModules: collectModules,
   getModuleDescription: getModuleDescription,
   getModuleSource: getModuleSource,

@@ -3,11 +3,21 @@
 // because ~/.claude wasn't committed/pushed. This auto-syncs to grobomo/claude-config
 // so the cloud copy stays current and new PCs can bootstrap from it.
 "use strict";
+var fs = require("fs");
 var cp = require("child_process");
 var path = require("path");
 
+var DEBOUNCE_MS = 3600000; // 1 hour — no need to sync on every session
+
 module.exports = function(input) {
   var claudeDir = path.join(process.env.HOME || process.env.USERPROFILE, ".claude");
+
+  // Debounce: skip if last successful sync was less than 1 hour ago
+  var stampPath = path.join(claudeDir, ".config-sync-last-run");
+  try {
+    var lastRun = parseInt(fs.readFileSync(stampPath, "utf-8").trim(), 10) || 0;
+    if (Date.now() - lastRun < DEBOUNCE_MS) return null;
+  } catch (e) { /* no stamp = first run, continue */ }
 
   // Only run if ~/.claude is a git repo
   try {
@@ -35,7 +45,6 @@ module.exports = function(input) {
   var count = lines.length;
 
   // Remove stale index.lock if present (left by crashed git processes)
-  var fs = require("fs");
   var lockFile = path.join(claudeDir, ".git", "index.lock");
   try {
     var lockStat = fs.statSync(lockFile);
@@ -94,6 +103,8 @@ module.exports = function(input) {
       }
     }
 
+    // Record successful sync time for debounce
+    try { fs.writeFileSync(stampPath, String(Date.now())); } catch (e2) { /* best effort */ }
     return { text: "Config sync: committed and pushed " + count + " changed file(s) to cloud backup." };
   } catch (e) {
     if (defaultUser) {

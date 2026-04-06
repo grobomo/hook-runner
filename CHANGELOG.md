@@ -2,6 +2,41 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.8.0] — 2026-04-05
+
+### Added
+- **`--analyze` flag** for `--report` — generates a System Analysis section with quality score, coverage gaps, DRY issues, performance observations, redundancy detection, and recommendations. Uses heuristic rules (no external LLM dependency).
+- **force-push-gate** (PreToolUse) — blocks `git push --force` to main/master. Force-pushing destroys shared history with no undo.
+- **crlf-detector** (PostToolUse) — warns when Write/Edit produces CRLF line endings in shell scripts, YAML, Python, and other Unix-sensitive files.
+- **git-destructive-guard** (PreToolUse) — blocks `git reset --hard`, `git checkout .`, `git clean -f` without diagnosis.
+- **config-sync** (Stop) — auto-commits and pushes ~/.claude changes to cloud backup at session end.
+
+### Performance
+- **Merged hook-integrity-check into hook-integrity-monitor** — eliminated ~378ms from SessionStart. The UserPromptSubmit monitor now does a full scan on first invocation (or every hour), then spot-checks between.
+- **Debounced config-sync** — skips if last successful sync was <1 hour ago. Cuts SessionStart from ~4093ms to ~400ms on subsequent sessions within the same hour.
+
+### Fixed
+- **4 test suites fixed** — T094 (module docs), T097 (workflow modules), T101 (workflow CLI), T104 (workflow summary) all referenced `code-quality` workflow consolidated into `shtd` in T313. Tests now use correct workflow names.
+- **T094/T097 `find` hangs on Windows** — replaced `find` with `node` for module enumeration. Git Bash `find` is extremely slow on Windows.
+- **Analysis spike detection** — raised threshold from 30x to 50x ratio and added 500ms floor to reduce noise from normal git cold-call spikes.
+- **Analysis redundancy threshold** — raised from 1000 to 2000 calls with "(may be preventive)" qualifier for gates that succeed because users learned the rules.
+- **Duplicate WHY detection** — now shows event/module path (e.g. `SessionStart/config-sync and Stop/config-sync`) instead of ambiguous bare names.
+- **README module table** — added `crlf-detector`, `force-push-gate`, `git-destructive-guard`, `config-sync` (Stop).
+
+### Removed
+- **gsd-gate** — archived from live hooks. Fully superseded by test-checkpoint-gate.
+- **hook-integrity-check** (SessionStart) — merged into hook-integrity-monitor (UserPromptSubmit).
+- **test-tmp-mod-200506** — test artifact archived from catalog.
+
+## [2.7.1] — 2026-04-05
+
+### Performance
+- **config-sync moved from SessionStart to Stop** — cuts SessionStart overhead from ~4093ms to ~776ms (81% reduction). Config sync runs at session end instead of start, where the 3-7s git push latency isn't blocking the user.
+
+### Fixed
+- **CHANGELOG duplicate** — report expand/collapse fix was listed in both 2.7.0 and 2.6.4; removed duplicate from 2.6.4.
+- **backup-check** — removed "async example" language; this is a production module, not a demo.
+
 ## [2.7.0] — 2026-04-05
 
 ### Changed
@@ -18,7 +53,6 @@ All notable changes to hook-runner are documented here.
 
 ### Fixed
 - **hook-integrity-monitor rate limiter** — in-memory `_lastCheckTime` was always 0 (each hook invocation is a fresh Node process). Replaced with file-based timestamp in `~/.claude/hooks/.integrity-last-check`. Saves ~85ms per prompt when rate-limited.
-- **report expand/collapse** — `toggleModule` used `nextElementSibling` which pointed to `.module-why` instead of `.module-detail` when WHY text was present. Now uses `parentElement.querySelector(".module-detail")`.
 
 ## [2.6.3] — 2026-04-05
 

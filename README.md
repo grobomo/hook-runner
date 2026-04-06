@@ -318,6 +318,8 @@ Full catalog in `modules/` directory:
 | `disk-space-guard` | Blocks destructive commands after disk space errors |
 | `enforcement-gate` | Requires git repo + TODO.md before edits |
 | `env-var-check` | Blocks edits if required env vars missing |
+| `force-push-gate` | Blocks git push --force to main/master |
+| `git-destructive-guard` | Blocks git reset --hard, checkout ., clean -f without diagnosis |
 | `git-rebase-safety` | Warns about reversed --ours/--theirs during rebase |
 | `hook-editing-gate` | Enforces WORKFLOW tag, WHY comment, exit(1) in hook files |
 | `instruction-to-hook-gate` | Converts user directives into hook modules |
@@ -355,6 +357,7 @@ Full catalog in `modules/` directory:
 | Module | Description |
 |--------|-------------|
 | `commit-msg-check` | Blocks WIP/fixup commits and long first lines |
+| `crlf-detector` | Warns when Write/Edit produces CRLF in shell scripts, YAML, Python |
 | `hook-autocommit` | Auto-commits hook module edits |
 | `rule-hygiene` | Validates rule files are single-topic, under 20 lines |
 | `settings-audit-log` | Records config modifications to audit log |
@@ -375,6 +378,7 @@ Full catalog in `modules/` directory:
 |--------|-------------|
 | `auto-continue` | Blocks stopping — always find the next task |
 | `chat-export` | Auto-exports session to HTML on stop |
+| `config-sync` | Auto-commits and pushes ~/.claude changes to cloud backup |
 | `drift-review` | Checks work matches the active spec task |
 | `log-gotchas` | Captures debugging lessons before stopping |
 | `mark-turn-complete` | Writes turn marker for interrupt detection |
