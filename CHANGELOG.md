@@ -11,6 +11,7 @@ All notable changes to hook-runner are documented here.
 - **Report expand/collapse** — `toggleModule` used `nextElementSibling` which pointed to `.module-why` instead of `.module-detail` when WHY text was present. Now uses `parentElement.querySelector(".module-detail")`.
 
 ### Added
+- **`--analyze` command** — generates report with LLM-powered analysis (quality score, coverage gaps, DRY issues, performance observations, recommendations). Uses `claude -p` when run from terminal; gracefully skips when unavailable.
 - **scripts/archive-live-workflows.sh** — reusable script to archive stale workflow YAMLs from live hooks dir
 
 ## [2.6.4] — 2026-04-05

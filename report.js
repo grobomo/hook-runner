@@ -166,8 +166,258 @@ function collectModules(modulesDir) {
   return result;
 }
 
-function generateReport(scan, outputPath, hookStats) {
+/**
+ * Analyze hook system using heuristic rules. Returns analysis JSON string.
+ * @param {object} eventModulesData - { eventName: [{name, workflow, why, description, stats}] }
+ * @param {object} hookStats - per-module stats from hook-log
+ * @param {object} perfData - { event: overhead_ms } from --perf
+ * @returns {string} JSON string with analysis results
+ */
+function analyzeHooks(eventModulesData, hookStats, perfData) {
+  var result = {
+    quality: { score: "A", summary: "" },
+    coverage_gaps: [],
+    dry_issues: [],
+    performance: [],
+    redundant_modules: [],
+    missing_modules: [],
+    top_recommendations: []
+  };
+
+  // Flatten all modules for cross-event analysis
+  var allMods = [];
+  var events = Object.keys(eventModulesData);
+  var modsByEvent = {};
+  for (var ei = 0; ei < events.length; ei++) {
+    var evt = events[ei];
+    var mods = eventModulesData[evt];
+    modsByEvent[evt] = mods;
+    for (var mi = 0; mi < mods.length; mi++) {
+      allMods.push({ event: evt, name: mods[mi].name, workflow: mods[mi].workflow,
+        why: mods[mi].why, description: mods[mi].description, stats: mods[mi].stats });
+    }
+  }
+
+  var totalModules = allMods.length;
+  var totalBlocks = 0, totalErrors = 0, totalCalls = 0;
+  var sKeys = Object.keys(hookStats);
+  for (var si = 0; si < sKeys.length; si++) {
+    totalBlocks += hookStats[sKeys[si]].block || 0;
+    totalErrors += hookStats[sKeys[si]].error || 0;
+    totalCalls += hookStats[sKeys[si]].total || 0;
+  }
+
+  // --- Coverage gap detection ---
+  var canonicalEvents = ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"];
+  for (var ce = 0; ce < canonicalEvents.length; ce++) {
+    if (!modsByEvent[canonicalEvents[ce]] || modsByEvent[canonicalEvents[ce]].length === 0) {
+      result.coverage_gaps.push("No modules for " + canonicalEvents[ce] + " event");
+    }
+  }
+
+  // Modules missing WHY comment
+  var missingWhy = [];
+  for (var mw = 0; mw < allMods.length; mw++) {
+    if (!allMods[mw].why) missingWhy.push(allMods[mw].name);
+  }
+  if (missingWhy.length > 0) {
+    result.coverage_gaps.push(missingWhy.length + " module(s) missing WHY comment: " +
+      missingWhy.slice(0, 5).join(", ") + (missingWhy.length > 5 ? " (+" + (missingWhy.length - 5) + " more)" : ""));
+  }
+
+  // Modules missing WORKFLOW tag
+  var missingWorkflow = [];
+  for (var mt = 0; mt < allMods.length; mt++) {
+    if (!allMods[mt].workflow) missingWorkflow.push(allMods[mt].name);
+  }
+  if (missingWorkflow.length > 0) {
+    result.coverage_gaps.push(missingWorkflow.length + " module(s) missing WORKFLOW tag: " +
+      missingWorkflow.slice(0, 5).join(", ") + (missingWorkflow.length > 5 ? " (+" + (missingWorkflow.length - 5) + " more)" : ""));
+  }
+
+  // --- DRY detection: multiple PreToolUse modules sharing keyword stems ---
+  var nameWords = {};
+  for (var dw = 0; dw < allMods.length; dw++) {
+    if (allMods[dw].event !== "PreToolUse") continue;
+    var words = allMods[dw].name.replace(/\.js$/, "").split("-");
+    for (var wi = 0; wi < words.length; wi++) {
+      var w = words[wi].toLowerCase();
+      if (w.length < 5 || w === "check" || w === "guard" || w === "safety" || w === "gate") continue;
+      if (!nameWords[w]) nameWords[w] = [];
+      nameWords[w].push(allMods[dw].name);
+    }
+  }
+  var wordKeys = Object.keys(nameWords);
+  for (var dk = 0; dk < wordKeys.length; dk++) {
+    if (nameWords[wordKeys[dk]].length >= 3) {
+      result.dry_issues.push(nameWords[wordKeys[dk]].length + " PreToolUse modules share keyword '" +
+        wordKeys[dk] + "': " + nameWords[wordKeys[dk]].join(", ") + " — review for consolidation");
+    }
+  }
+
+  // --- Performance analysis ---
+  if (perfData) {
+    var perfKeys = Object.keys(perfData);
+    for (var pk = 0; pk < perfKeys.length; pk++) {
+      var ms = perfData[perfKeys[pk]];
+      if (ms > 500) {
+        result.performance.push(perfKeys[pk] + " overhead is " + ms + "ms — consider optimizing slow modules");
+      }
+    }
+  }
+
+  // Slow individual modules (avg > 50ms)
+  var slowMods = [];
+  for (var sm = 0; sm < allMods.length; sm++) {
+    var st = allMods[sm].stats;
+    if (st && st.msCount > 0) {
+      var avg = Math.round(st.msTotal / st.msCount);
+      if (avg > 50) slowMods.push({ name: allMods[sm].name, event: allMods[sm].event, avg: avg, max: st.msMax });
+    }
+  }
+  slowMods.sort(function(a, b) { return b.avg - a.avg; });
+  for (var sl = 0; sl < Math.min(slowMods.length, 5); sl++) {
+    result.performance.push(slowMods[sl].name + " (" + slowMods[sl].event + ") avg " +
+      slowMods[sl].avg + "ms, max " + slowMods[sl].max + "ms");
+  }
+
+  // --- Redundancy: PreToolUse gates that never block despite many invocations ---
+  var neverTriggered = [];
+  for (var nt = 0; nt < allMods.length; nt++) {
+    var ntStats = allMods[nt].stats;
+    if (ntStats && ntStats.total > 100 && (ntStats.block || 0) === 0 && (ntStats.error || 0) === 0) {
+      if (allMods[nt].event === "PreToolUse") {
+        neverTriggered.push(allMods[nt].name + " — " + ntStats.total + " calls, 0 blocks");
+      }
+    }
+  }
+  for (var nti = 0; nti < Math.min(neverTriggered.length, 5); nti++) {
+    result.redundant_modules.push(neverTriggered[nti]);
+  }
+
+  // --- Error-prone modules ---
+  var errorProne = [];
+  for (var ep = 0; ep < allMods.length; ep++) {
+    var epStats = allMods[ep].stats;
+    if (epStats && epStats.error > 0 && epStats.total > 0) {
+      var errorRate = Math.round(100 * epStats.error / epStats.total);
+      if (errorRate > 5) {
+        errorProne.push({ name: allMods[ep].name, rate: errorRate, errors: epStats.error, total: epStats.total });
+      }
+    }
+  }
+  if (errorProne.length > 0) {
+    var epNames = [];
+    for (var epi = 0; epi < Math.min(errorProne.length, 3); epi++) {
+      epNames.push(errorProne[epi].name + " (" + errorProne[epi].rate + "%)");
+    }
+    result.top_recommendations.push("Fix error-prone modules: " + epNames.join("; "));
+  }
+
+  // --- Quality score ---
+  var demerits = 0;
+  if (missingWhy.length > 0) demerits += Math.min(missingWhy.length, 5);
+  if (missingWorkflow.length > 0) demerits += Math.min(missingWorkflow.length, 5);
+  if (result.coverage_gaps.length > 2) demerits += 2;
+  if (errorProne.length > 0) demerits += errorProne.length * 2;
+  if (neverTriggered.length > 5) demerits += 2;
+  if (slowMods.length > 3) demerits += 1;
+
+  if (demerits === 0) { result.quality.score = "A"; }
+  else if (demerits <= 3) { result.quality.score = "B"; }
+  else if (demerits <= 8) { result.quality.score = "C"; }
+  else { result.quality.score = "D"; }
+
+  result.quality.summary = totalModules + " modules, " + totalCalls + " invocations, " +
+    totalBlocks + " blocks, " + totalErrors + " errors" +
+    (demerits > 0 ? " (" + demerits + " demerits)" : "");
+
+  // --- Top recommendations ---
+  if (missingWhy.length > 0) {
+    result.top_recommendations.push("Add WHY comments to " + missingWhy.length +
+      " module(s) — documents the incident that motivated each gate");
+  }
+  if (missingWorkflow.length > 0) {
+    result.top_recommendations.push("Add WORKFLOW tags to " + missingWorkflow.length +
+      " module(s) — enables proper filtering when workflows are toggled");
+  }
+  if (slowMods.length > 0) {
+    result.top_recommendations.push("Optimize " + slowMods[0].name + " (avg " +
+      slowMods[0].avg + "ms) — biggest performance bottleneck");
+  }
+  if (neverTriggered.length > 3) {
+    result.top_recommendations.push("Review " + neverTriggered.length +
+      " PreToolUse gates that never block — may be obsolete");
+  }
+
+  // Healthy system message
+  if (result.top_recommendations.length === 0) {
+    result.top_recommendations.push("System is healthy — all modules tagged, all events covered, no performance outliers");
+  }
+
+  return JSON.stringify(result);
+}
+
+/**
+ * Render analysis section as HTML.
+ * @param {string} analysisJson - JSON string from analyzeHooks()
+ * @returns {string} HTML block
+ */
+function renderAnalysisHtml(analysisJson) {
+  var a;
+  try {
+    // Strip markdown fences if present
+    var cleaned = analysisJson.replace(/^```json?\s*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
+    a = JSON.parse(cleaned);
+  } catch (e) {
+    return '<div class="analysis-section"><h2>Analysis</h2><p style="color:#f85149">Analysis failed to parse. Raw output:</p><pre style="white-space:pre-wrap;color:#8b949e;font-size:.8rem">' + escHtml(analysisJson.substring(0, 2000)) + '</pre></div>';
+  }
+
+  var h = [];
+  h.push('<div class="analysis-section">');
+  h.push('<h2 style="color:#c9d1d9;margin:1.5rem 0 1rem">System Analysis</h2>');
+
+  // Quality score
+  if (a.quality) {
+    var scoreColor = a.quality.score === "A" ? "#3fb950" : a.quality.score === "B" ? "#58a6ff" : a.quality.score === "C" ? "#d29922" : "#f85149";
+    h.push('<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">');
+    h.push('<div style="font-size:2.5rem;font-weight:bold;color:' + scoreColor + '">' + escHtml(a.quality.score || "?") + '</div>');
+    h.push('<div style="color:#8b949e">' + escHtml(a.quality.summary || "") + '</div>');
+    h.push('</div>');
+  }
+
+  // Grid of analysis categories
+  h.push('<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem">');
+
+  var sections = [
+    { key: "top_recommendations", title: "Top Recommendations", icon: "&#9733;", color: "#3fb950" },
+    { key: "coverage_gaps", title: "Coverage Gaps", icon: "&#9888;", color: "#d29922" },
+    { key: "dry_issues", title: "DRY Issues", icon: "&#128260;", color: "#58a6ff" },
+    { key: "performance", title: "Performance", icon: "&#9889;", color: "#d29922" },
+    { key: "redundant_modules", title: "Potentially Redundant", icon: "&#128465;", color: "#f85149" },
+    { key: "missing_modules", title: "Suggested Modules", icon: "&#10133;", color: "#3fb950" }
+  ];
+
+  for (var si = 0; si < sections.length; si++) {
+    var sec = sections[si];
+    var items = a[sec.key];
+    if (!items || !Array.isArray(items) || items.length === 0) continue;
+    h.push('<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1rem">');
+    h.push('<div style="color:' + sec.color + ';font-weight:bold;margin-bottom:.5rem">' + sec.icon + ' ' + escHtml(sec.title) + '</div>');
+    h.push('<ul style="margin:0;padding-left:1.2rem;color:#c9d1d9;font-size:.85rem">');
+    for (var ii = 0; ii < items.length; ii++) {
+      h.push('<li style="margin-bottom:.3rem">' + escHtml(items[ii]) + '</li>');
+    }
+    h.push('</ul></div>');
+  }
+
+  h.push('</div></div>');
+  return h.join("\n");
+}
+
+function generateReport(scan, outputPath, hookStats, options) {
   hookStats = hookStats || {};
+  options = options || {};
   var now = new Date().toISOString().slice(0, 10);
 
   // Detect if already using hook-runner
@@ -767,6 +1017,49 @@ function generateReport(scan, outputPath, hookStats) {
     }
 
     h.push('</div></div>');
+  }
+
+  // LLM Analysis section (opt-in via options.analyze)
+  if (options.analyze) {
+    // Build analysis input from eventModules data
+    var analysisData = {};
+    for (var aei = 0; aei < eventNames.length; aei++) {
+      var aEvt = eventNames[aei];
+      var aMods = eventModules[aEvt] || [];
+      var aModList = [];
+      for (var ami = 0; ami < aMods.length; ami++) {
+        if (aMods[ami].archived) continue;
+        var aModName = aMods[ami].name.replace(/\.js$/, "");
+        var aStatsKey = aEvt + "/" + aModName;
+        aModList.push({
+          name: aModName,
+          workflow: aMods[ami].workflow || "",
+          why: aMods[ami].why || "",
+          description: aMods[ami].description || "",
+          stats: hookStats[aStatsKey] || null
+        });
+      }
+      if (aModList.length > 0) analysisData[aEvt] = aModList;
+    }
+    // Compute perf overview
+    var perfOverview = {};
+    for (var pei = 0; pei < eventNames.length; pei++) {
+      var pEvt = eventNames[pei];
+      var pMods = analysisData[pEvt] || [];
+      var overhead = 0;
+      for (var pmi = 0; pmi < pMods.length; pmi++) {
+        if (pMods[pmi].stats && pMods[pmi].stats.msCount > 0) {
+          overhead += Math.round(pMods[pmi].stats.msTotal / pMods[pmi].stats.msCount);
+        }
+      }
+      if (overhead > 0) perfOverview[pEvt] = overhead;
+    }
+
+    process.stderr.write("[report] Running hook system analysis...\n");
+    var analysisResult = analyzeHooks(analysisData, hookStats, perfOverview);
+    if (analysisResult) {
+      h.push(renderAnalysisHtml(analysisResult));
+    }
   }
 
   h.push('<div class="footer">Generated by <a href="https://github.com/grobomo/hook-runner" style="color:#58a6ff;text-decoration:none">hook-runner</a> &mdash; ' + now + ' &mdash; <a href="https://docs.anthropic.com/en/docs/claude-code/hooks" style="color:#58a6ff;text-decoration:none">Claude Code Hooks docs</a></div>');
