@@ -6,6 +6,7 @@ All notable changes to hook-runner are documented here.
 
 ### Fixed
 - **hook-integrity-monitor rate limiter** — in-memory `_lastCheckTime` was always 0 (each hook invocation is a fresh Node process). Replaced with file-based timestamp in `~/.claude/hooks/.integrity-last-check`. Saves ~85ms per prompt when rate-limited.
+- **report expand/collapse** — `toggleModule` used `nextElementSibling` which pointed to `.module-why` instead of `.module-detail` when WHY text was present. Now uses `parentElement.querySelector(".module-detail")`.
 
 ## [2.6.3] — 2026-04-05
 
