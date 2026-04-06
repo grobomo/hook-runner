@@ -379,9 +379,13 @@ See `specs/hook-integrity/` for full spec and tasks.
 - [x] T310: Share tracking remote in PreToolUse runner context — remote-tracking-gate uses input._git.tracking (~33ms savings per Edit/Write) (#187)
 - [x] Version bump to 2.6.3 + CHANGELOG
 
+## Bug Fix (session 2026-04-05j)
+- [x] T311: Fix hook-integrity-monitor rate limiter — in-memory var was always 0 (fresh process each invocation), replaced with file-based timestamp (~85ms savings per prompt when rate-limited) (#189)
+- [x] Version bump to 2.6.4 + CHANGELOG
+
 ## Status
-- 235 tasks completed, 0 pending
-- Version: 2.6.3 (released, live hooks synced)
+- 236 tasks completed, 0 pending
+- Version: 2.6.4 (released, live hooks synced)
 - 67 modules across 10 workflows, 41 test suites (272 module tests)
 - Health: 86 OK, 0 warnings, 0 failures
 - Performance: PreToolUse ~321ms/call (38 modules), SessionStart ~4s (8 modules)
