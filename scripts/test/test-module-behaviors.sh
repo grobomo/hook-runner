@@ -85,7 +85,14 @@ fi
 # config-sync: stale lock detection + branch-aware push
 # ============================================================
 
-CONFIG_SYNC_MOD="$HOME/.claude/hooks/run-modules/SessionStart/config-sync.js"
+# config-sync may be in SessionStart or Stop (SessionStart copy archived in some setups)
+if [ -f "$HOME/.claude/hooks/run-modules/SessionStart/config-sync.js" ]; then
+  CONFIG_SYNC_MOD="$HOME/.claude/hooks/run-modules/SessionStart/config-sync.js"
+elif [ -f "$HOME/.claude/hooks/run-modules/Stop/config-sync.js" ]; then
+  CONFIG_SYNC_MOD="$HOME/.claude/hooks/run-modules/Stop/config-sync.js"
+else
+  CONFIG_SYNC_MOD="$REPO_DIR/modules/Stop/config-sync.js"
+fi
 # Resolve to Windows path for Node.js readFileSync
 CONFIG_SYNC_WIN=$(cd "$(dirname "$CONFIG_SYNC_MOD")" && (pwd -W 2>/dev/null || pwd))/$(basename "$CONFIG_SYNC_MOD")
 

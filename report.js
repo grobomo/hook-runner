@@ -121,7 +121,7 @@ function collectModules(modulesDir) {
   var entries = fs.readdirSync(modulesDir, { withFileTypes: true });
 
   // Global modules
-  var globalFiles = entries.filter(function(e) { return e.isFile() && e.name.endsWith(".js"); })
+  var globalFiles = entries.filter(function(e) { return e.isFile() && e.name.slice(-3) === ".js"; })
     .map(function(e) { return e.name; }).sort();
   for (var i = 0; i < globalFiles.length; i++) {
     var fp = path.join(modulesDir, globalFiles[i]);
@@ -136,7 +136,7 @@ function collectModules(modulesDir) {
   var archiveDir = path.join(modulesDir, "archive");
   if (fs.existsSync(archiveDir)) {
     try {
-      var archiveFiles = fs.readdirSync(archiveDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+      var archiveFiles = fs.readdirSync(archiveDir).filter(function(f) { return f.slice(-3) === ".js"; }).sort();
       for (var a = 0; a < archiveFiles.length; a++) {
         var afp = path.join(archiveDir, archiveFiles[a]);
         result.push({
@@ -152,7 +152,7 @@ function collectModules(modulesDir) {
   var subdirs = entries.filter(function(e) { return e.isDirectory() && e.name !== "archive"; });
   for (var s = 0; s < subdirs.length; s++) {
     var subDir = path.join(modulesDir, subdirs[s].name);
-    var subFiles = fs.readdirSync(subDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+    var subFiles = fs.readdirSync(subDir).filter(function(f) { return f.slice(-3) === ".js"; }).sort();
     for (var sf = 0; sf < subFiles.length; sf++) {
       var sfp = path.join(subDir, subFiles[sf]);
       result.push({

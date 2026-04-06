@@ -29,12 +29,12 @@ function parseYaml(text) {
     var line = lines[i];
     var trimmed = line.trimEnd();
 
-    if (!trimmed || trimmed.startsWith("#")) { i++; continue; }
+    if (!trimmed || trimmed.charAt(0) === "#") { i++; continue; }
 
     var indent = line.length - line.trimStart().length;
 
     // Top-level scalar: "key: value"
-    if (indent === 0 && !trimmed.startsWith("-")) {
+    if (indent === 0 && trimmed.charAt(0) !== "-") {
       var m = trimmed.match(/^(\w+):\s*(.*)/);
       if (m) {
         currentArray = null; currentArrayKey = null; currentObj = null;
@@ -51,7 +51,7 @@ function parseYaml(text) {
     }
 
     // Array item: "  - id: value" or "  - value"
-    if (trimmed.startsWith("- ") || (indent > 0 && trimmed.trimStart().startsWith("- "))) {
+    if (trimmed.indexOf("- ") === 0 || (indent > 0 && trimmed.trimStart().indexOf("- ") === 0)) {
       var content = trimmed.trimStart().slice(2).trim();
       var kvMatch = content.match(/^(\w+):\s*(.*)/);
       if (kvMatch) {
@@ -65,7 +65,7 @@ function parseYaml(text) {
     }
 
     // Nested key under array item
-    if (indent > 0 && currentObj && !trimmed.trimStart().startsWith("-")) {
+    if (indent > 0 && currentObj && trimmed.trimStart().charAt(0) !== "-") {
       var nested = trimmed.trim();
       var kvMatch2 = nested.match(/^(\w+):\s*(.*)/);
       if (kvMatch2) {
@@ -109,10 +109,10 @@ function parseScalar(val) {
   if (val === "true") return true;
   if (val === "false") return false;
   if (/^\d+$/.test(val)) return parseInt(val, 10);
-  if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+  if ((val.charAt(0) === '"' && val.slice(-1) === '"') || (val.charAt(0) === "'" && val.slice(-1) === "'")) {
     return val.slice(1, -1);
   }
-  if (val.startsWith("[") && val.endsWith("]")) {
+  if (val.charAt(0) === "[" && val.slice(-1) === "]") {
     var inner = val.slice(1, -1).trim();
     if (!inner) return [];
     return inner.split(",").map(function(s) { return parseScalar(s.trim()); });
@@ -163,7 +163,7 @@ function findWorkflows(projectDir) {
     var files = fs.readdirSync(dir);
     for (var j = 0; j < files.length; j++) {
       var f = files[j];
-      if (!(f.endsWith(".yml") || f.endsWith(".yaml"))) continue;
+      if (!(f.slice(-4) === ".yml" || f.slice(-5) === ".yaml")) continue;
       try {
         var wf = loadWorkflow(path.join(dir, f));
         if (!seen[wf.name]) {

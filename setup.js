@@ -225,7 +225,7 @@ function scanHooks() {
           if (fs.existsSync(modulesDir)) {
             try {
               var mods = fs.readdirSync(modulesDir).filter(function(f) {
-                return f.endsWith(".js") && !f.startsWith(".");
+                return f.slice(-3) === ".js" && f.charAt(0) !== ".";
               });
               events[event].moduleCount = mods.length;
             } catch (e) { /* skip */ }
@@ -895,7 +895,7 @@ function cmdUninstall(args, dryRun) {
   if (confirmMode && fs.existsSync(archiveDir)) {
     // Find most recent backup with settings.json
     var backups = fs.readdirSync(archiveDir).filter(function(d) {
-      return d.startsWith("backup-") && fs.existsSync(path.join(archiveDir, d, "settings.json"));
+      return d.indexOf("backup-") === 0 && fs.existsSync(path.join(archiveDir, d, "settings.json"));
     }).sort().reverse();
     if (backups.length > 0) {
       var latestBackup = path.join(archiveDir, backups[0], "settings.json");
@@ -993,7 +993,7 @@ function cmdList() {
     var evDir = path.join(catalogDir, events[li]);
     catalog[events[li]] = [];
     try {
-      var files = fs.readdirSync(evDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+      var files = fs.readdirSync(evDir).filter(function(f) { return f.slice(-3) === ".js"; }).sort();
       catalog[events[li]] = files;
       catalogCount += files.length;
     } catch(e) {}
@@ -1005,7 +1005,7 @@ function cmdList() {
     var livEvDir = path.join(liveDir, events[lj]);
     installed[events[lj]] = [];
     try {
-      var livFiles = fs.readdirSync(livEvDir).filter(function(f) { return f.endsWith(".js"); }).sort();
+      var livFiles = fs.readdirSync(livEvDir).filter(function(f) { return f.slice(-3) === ".js"; }).sort();
       installed[events[lj]] = livFiles;
       installedCount += livFiles.length;
     } catch(e) {}
@@ -1040,7 +1040,7 @@ function cmdList() {
       var projDirs = liveEntries.filter(function(e) { return e.isDirectory() && e.name !== "archive"; });
       for (var pd = 0; pd < projDirs.length; pd++) {
         var projPath = path.join(liveEvtDir, projDirs[pd].name);
-        var projMods = fs.readdirSync(projPath).filter(function(f) { return f.endsWith(".js"); });
+        var projMods = fs.readdirSync(projPath).filter(function(f) { return f.slice(-3) === ".js"; });
         for (var pm = 0; pm < projMods.length; pm++) {
           projScoped.push(events[pe] + "/" + projDirs[pd].name + "/" + projMods[pm].replace(".js", ""));
         }
@@ -1064,7 +1064,7 @@ function cmdTest() {
   var testDir = path.join(REPO_DIR, "scripts", "test");
   var testFiles;
   try {
-    testFiles = fs.readdirSync(testDir).filter(function(f) { return f.startsWith("test-") && f.endsWith(".sh"); }).sort();
+    testFiles = fs.readdirSync(testDir).filter(function(f) { return f.indexOf("test-") === 0 && f.slice(-3) === ".sh"; }).sort();
   } catch(e) {
     console.log("  ERROR: test directory not found: " + testDir);
     process.exit(1);
@@ -1302,7 +1302,7 @@ function cmdPerf() {
         try {
           var entries = fs.readdirSync(evDir, { withFileTypes: true });
           for (var ei = 0; ei < entries.length; ei++) {
-            if (entries[ei].isFile() && entries[ei].name.endsWith(".js")) {
+            if (entries[ei].isFile() && entries[ei].name.slice(-3) === ".js") {
               installedModules[modEvents[me] + "/" + entries[ei].name.replace(".js", "")] = true;
             }
           }
@@ -1380,7 +1380,7 @@ function cmdPerf() {
 function cmdExport(args) {
   var outFile = null;
   for (var i = 0; i < args.length; i++) {
-    if (args[i] === "--export" && args[i + 1] && !args[i + 1].startsWith("--")) {
+    if (args[i] === "--export" && args[i + 1] && args[i + 1].indexOf("--") !== 0) {
       outFile = args[i + 1]; break;
     }
   }
@@ -1410,14 +1410,14 @@ function cmdExport(args) {
     for (var f = 0; f < entries.length; f++) {
       var entry = entries[f];
       var full = path.join(evtDir, entry);
-      if (entry.endsWith(".js") && fs.statSync(full).isFile()) {
+      if (entry.slice(-3) === ".js" && fs.statSync(full).isFile()) {
         globalMods.push(entry.replace(/\.js$/, ""));
       } else if (fs.statSync(full).isDirectory() && entry !== "archive") {
         // Project-scoped modules
         var projName = entry;
         if (!projectModules[projName]) projectModules[projName] = {};
         if (!projectModules[projName][evt]) projectModules[projName][evt] = [];
-        var projFiles = fs.readdirSync(full).filter(function(pf) { return pf.endsWith(".js"); }).sort();
+        var projFiles = fs.readdirSync(full).filter(function(pf) { return pf.slice(-3) === ".js"; }).sort();
         for (var pf = 0; pf < projFiles.length; pf++) {
           projectModules[projName][evt].push(projFiles[pf].replace(/\.js$/, ""));
         }
@@ -1864,7 +1864,7 @@ function healthCheck() {
         var subFiles;
         try { subFiles = fs.readdirSync(fPath); } catch(e) { continue; }
         for (var si = 0; si < subFiles.length; si++) {
-          if (!subFiles[si].endsWith(".js")) continue;
+          if (subFiles[si].slice(-3) !== ".js") continue;
           var subPath = path.join(fPath, subFiles[si]);
           try {
             var mod = require(subPath);
@@ -1877,7 +1877,7 @@ function healthCheck() {
             results.push({ check: "module", file: evt + "/" + f + "/" + subFiles[si], status: "error", detail: e.message });
           }
         }
-      } else if (f.endsWith(".js")) {
+      } else if (f.slice(-3) === ".js") {
         try {
           var mod2 = require(fPath);
           if (typeof mod2 !== "function") {
@@ -1899,7 +1899,7 @@ function healthCheck() {
     var depDir = path.join(HOOKS_DIR, "run-modules", depEvt);
     if (!fs.existsSync(depDir)) continue;
     var depFiles;
-    try { depFiles = fs.readdirSync(depDir).filter(function(f) { return f.endsWith(".js"); }); } catch(e) { continue; }
+    try { depFiles = fs.readdirSync(depDir).filter(function(f) { return f.slice(-3) === ".js"; }); } catch(e) { continue; }
     var depAvailable = {};
     for (var dj = 0; dj < depFiles.length; dj++) depAvailable[depFiles[dj].replace(/\.js$/, "")] = true;
     for (var dk = 0; dk < depFiles.length; dk++) {
@@ -1940,7 +1940,7 @@ function healthCheck() {
     var pModDir = path.join(HOOKS_DIR, "run-modules", pEvt);
     if (!fs.existsSync(pModDir)) continue;
     var pFiles;
-    try { pFiles = fs.readdirSync(pModDir).filter(function(f) { return f.endsWith(".js"); }); } catch(e) { continue; }
+    try { pFiles = fs.readdirSync(pModDir).filter(function(f) { return f.slice(-3) === ".js"; }); } catch(e) { continue; }
     for (var pfi = 0; pfi < pFiles.length; pfi++) {
       if (pathCheckExclude.indexOf(pFiles[pfi]) >= 0) continue;
       var pPath = path.join(pModDir, pFiles[pfi]);
@@ -1969,7 +1969,7 @@ function healthCheck() {
     var ddDir = path.join(HOOKS_DIR, "run-modules", ddEvt);
     if (!fs.existsSync(ddDir)) continue;
     var ddFiles;
-    try { ddFiles = fs.readdirSync(ddDir).filter(function(f) { return f.endsWith(".js"); }).sort(); } catch(e) { continue; }
+    try { ddFiles = fs.readdirSync(ddDir).filter(function(f) { return f.slice(-3) === ".js"; }).sort(); } catch(e) { continue; }
     // Build map of base names (strip shtd_ prefix, normalize hyphens)
     var baseNameMap = {};
     for (var ddf = 0; ddf < ddFiles.length; ddf++) {
