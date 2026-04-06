@@ -1,6 +1,6 @@
 name: shtd
-description: Spec-Hook-Test-Driven workflow — enforces spec → tasks → branch → test → implement → PR pipeline
-version: 1
+description: Spec-Hook-Test-Driven — all development discipline in one workflow. Enforces spec → branch → test → implement → PR pipeline, code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement.
+version: 2
 steps:
   - id: spec
     name: Write spec describing the feature or rule
@@ -46,6 +46,7 @@ steps:
       require_files: []
 
 modules:
+  # Development pipeline (was: shtd)
   - branch-pr-gate
   - commit-msg-check
   - continuous-claude-gate
@@ -65,3 +66,47 @@ modules:
   - test-checkpoint-gate
   - why-reminder
   - workflow-gate
+  # Code quality (was: code-quality)
+  - archive-not-delete
+  - claude-p-pattern
+  - git-rebase-safety
+  - no-fragile-heuristics
+  - no-hardcoded-paths
+  - preserve-iterated-content
+  - root-cause-gate
+  - rule-hygiene
+  - test-coverage-check
+  - update-stale-docs
+  # Infrastructure safety (was: infra-safety)
+  - aws-tagging-gate
+  - crlf-ssh-key-check
+  - disk-space-guard
+  - env-var-check
+  - hook-autocommit
+  - no-adhoc-commands
+  - no-focus-steal
+  - settings-audit-log
+  - settings-change-gate
+  - settings-hooks-gate
+  # Messaging safety (was: messaging-safety)
+  - messaging-safety-gate
+  # Self-improvement (was: self-improvement)
+  - instruction-to-hook-gate
+  - instruction-detector
+  - interrupt-detector
+  - troubleshoot-detector
+  - no-passive-rules
+  - prompt-logger
+  # Session lifecycle (was: session-management)
+  - auto-continue
+  - backup-check
+  - chat-export
+  - config-sync
+  - load-instructions
+  - load-lessons
+  - log-gotchas
+  - mark-turn-complete
+  - never-give-up
+  - project-health
+  - terminal-title
+  - workflow-summary

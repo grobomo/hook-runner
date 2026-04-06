@@ -72,3 +72,5 @@ steps:
 
 modules:
   - worker-loop
+  - use-workers
+  - delegate-and-monitor

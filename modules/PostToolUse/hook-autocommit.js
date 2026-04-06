@@ -1,4 +1,4 @@
-// WORKFLOW: infra-safety
+// WORKFLOW: shtd
 // WHY: Hook module edits were lost because they were never committed to the hook-runner repo.
 // Auto-commit hook module changes to the run-modules git repo.
 // Every Write/Edit to a hook module file gets committed automatically.
