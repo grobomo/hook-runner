@@ -48,7 +48,7 @@ check "returns text with shtd enabled" 'echo "$OUT_ENABLED" | grep -q "ACTIVE WO
 check "mentions shtd in output" 'echo "$OUT_ENABLED" | grep -q "shtd"'
 
 # 4. Has WORKFLOW tag
-check "has WORKFLOW tag" 'head -1 "$REPO_DIR/modules/SessionStart/workflow-summary.js" | grep -q "WORKFLOW: session-management"'
+check "has WORKFLOW tag" 'head -1 "$REPO_DIR/modules/SessionStart/workflow-summary.js" | grep -q "WORKFLOW: shtd"'
 
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="

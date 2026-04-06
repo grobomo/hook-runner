@@ -386,15 +386,15 @@ See `specs/hook-integrity/` for full spec and tasks.
 ## Report & Consolidation (session 2026-04-05k)
 - [x] T312: Fix report expand/collapse for modules with WHY text (#190)
 - [x] T313: Consolidate 11 workflows → 5 (shtd absorbs code-quality, infra-safety, messaging-safety, self-improvement, session-management). 40 modules retagged. Version 2.7.0. (#191)
-- [x] T314: Add `--analyze` command — LLM-powered report analysis via `claude -p` (quality score, coverage gaps, DRY, perf, recommendations) (#192)
-- [ ] T315: Run analysis, implement fixes, run again, implement second round
+- [x] T314: Add `--analyze` flag for `--report` — heuristic analysis engine (quality score, coverage gaps, DRY detection, perf spikes, redundancy, recommendations). No LLM dependency.
+- [x] T315: Implement analysis fixes — tune spike detection (50x threshold + 500ms floor), fix duplicate WHY display (include event path), fix 4 test suites (T094/T097/T101/T104) broken by T313 consolidation, replace `find` with node in tests (Windows perf), add 4 missing modules to README, archive test artifact
 
 ## Status
-- 239 tasks completed, 1 pending
-- Version: 2.7.0 (released, live hooks synced)
-- 67 modules across 5 workflows (2 active: shtd + customer-data-guard), 41 test suites
-- Health: 86 OK, 0 warnings, 0 failures
-- Performance: PreToolUse ~316ms/call (38 modules), SessionStart ~4s (8 modules)
+- 240 tasks completed, 0 pending
+- Version: 2.8.0
+- 77 modules across 5 workflows (2 active: shtd + customer-data-guard), 41 test suites
+- Health: 88 OK, 0 warnings, 0 failures
+- Performance: PreToolUse ~296ms/call (45 modules), SessionStart ~400ms (7 modules, debounced)
 - CI: GitHub Actions runs tests + secret-scan on push/PR (Linux + Windows) — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 5 workflow templates
 - CLI: setup, report, health, sync, stats, list, test, test-module, upgrade, uninstall, prune, version, help, perf, export, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live)

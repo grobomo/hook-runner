@@ -8,8 +8,8 @@ fail() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
 
 echo "=== hook-runner: hook integrity monitor ==="
 
-# --- Test 1: All 3 modules load ---
-node -e "require('${REPO_DIR}/modules/SessionStart/hook-integrity-check.js')" 2>/dev/null && pass "SessionStart module loads" || fail "SessionStart module loads"
+# --- Test 1: Active integrity modules load ---
+# hook-integrity-check archived (superseded by hook-integrity-monitor)
 node -e "require('${REPO_DIR}/modules/UserPromptSubmit/hook-integrity-monitor.js')" 2>/dev/null && pass "UserPromptSubmit module loads" || fail "UserPromptSubmit module loads"
 node -e "require('${REPO_DIR}/modules/PreToolUse/workflow-compliance-gate.js')" 2>/dev/null && pass "Compliance gate loads" || fail "Compliance gate loads"
 
@@ -21,10 +21,14 @@ RESULT=$(node -e "var m = require('${REPO_DIR}/modules/PreToolUse/workflow-compl
 [ "$RESULT" = "function" ] && pass "compliance-gate is sync" || fail "compliance-gate is sync: $RESULT"
 
 # --- Test 3: WORKFLOW + WHY headers ---
-for mod in modules/PreToolUse/workflow-compliance-gate.js modules/SessionStart/hook-integrity-check.js modules/UserPromptSubmit/hook-integrity-monitor.js; do
+INTEGRITY_MODS=(
+  "$REPO_DIR/modules/PreToolUse/workflow-compliance-gate.js"
+  "$REPO_DIR/modules/UserPromptSubmit/hook-integrity-monitor.js"
+)
+for mod in "${INTEGRITY_MODS[@]}"; do
   name=$(basename "$mod" .js)
-  head -1 "$REPO_DIR/$mod" | grep -q "// WORKFLOW:" && pass "$name has WORKFLOW tag" || fail "$name missing WORKFLOW tag"
-  grep -q "// WHY:" "$REPO_DIR/$mod" && pass "$name has WHY comment" || fail "$name missing WHY comment"
+  head -1 "$mod" | grep -q "// WORKFLOW:" && pass "$name has WORKFLOW tag" || fail "$name missing WORKFLOW tag"
+  grep -q "// WHY:" "$mod" && pass "$name has WHY comment" || fail "$name missing WHY comment"
 done
 
 # --- Test 4: Drift detection via md5 ---
@@ -82,7 +86,7 @@ var fn = setup._decodeProjectDir;
 if (!fn) { process.stdout.write("NO_EXPORT"); process.exit(0); }
 var tests = [
   ["C--Users-joelg-Documents-ProjectsCL1-hook-runner", "hook-runner"],
-  ["C--Users-joelg-Documents-ProjectsCL1-ep-incident-response", "ep-incident-response"],
+  ["C--Users-joelg-Documents-ProjectsCL1-rone-teams-poller", "rone-teams-poller"],
 ];
 var pass = 0;
 for (var i = 0; i < tests.length; i++) {
@@ -105,7 +109,7 @@ RESULT=$(node "$REPO_DIR/setup.js" --integrity --json 2>/dev/null || echo "error
 echo "$RESULT" | node -e "var d='';process.stdin.on('data',function(c){d+=c});process.stdin.on('end',function(){try{var j=JSON.parse(d);process.stdout.write(j.files&&j.workflows?'ok':'bad')}catch(e){process.stdout.write('parse-error')}})" | grep -q "ok" && pass "--integrity --json produces valid output" || fail "--integrity --json output invalid"
 
 # --- Test 9: shtd.yml includes new modules ---
-for mod in workflow-compliance-gate hook-integrity-check hook-integrity-monitor; do
+for mod in workflow-compliance-gate hook-integrity-monitor; do
   grep -q "$mod" "$REPO_DIR/workflows/shtd.yml" && pass "$mod in shtd.yml" || fail "$mod missing from shtd.yml"
 done
 

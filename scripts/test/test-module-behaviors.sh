@@ -85,14 +85,16 @@ fi
 # config-sync: stale lock detection + branch-aware push
 # ============================================================
 
-CONFIG_SYNC_MOD="$REPO_DIR/modules/SessionStart/config-sync.js"
+CONFIG_SYNC_MOD="$HOME/.claude/hooks/run-modules/SessionStart/config-sync.js"
+# Resolve to Windows path for Node.js readFileSync
+CONFIG_SYNC_WIN=$(cd "$(dirname "$CONFIG_SYNC_MOD")" && (pwd -W 2>/dev/null || pwd))/$(basename "$CONFIG_SYNC_MOD")
 
 echo ""
 echo "[config-sync] module structure"
 
 # Verify stale lock handling code exists
 if node -e "
-  var src = require('fs').readFileSync('$CONFIG_SYNC_MOD', 'utf-8');
+  var src = require('fs').readFileSync('$CONFIG_SYNC_WIN', 'utf-8');
   if (src.indexOf('index.lock') === -1) process.exit(1);
   if (src.indexOf('unlinkSync') === -1) process.exit(1);
 " 2>/dev/null; then
@@ -103,7 +105,7 @@ fi
 
 # Verify branch-aware push (no hardcoded 'main')
 if node -e "
-  var src = require('fs').readFileSync('$CONFIG_SYNC_MOD', 'utf-8');
+  var src = require('fs').readFileSync('$CONFIG_SYNC_WIN', 'utf-8');
   if (src.indexOf('git push origin main') !== -1) process.exit(1);
   if (src.indexOf('rev-parse --abbrev-ref HEAD') === -1) process.exit(1);
 " 2>/dev/null; then
@@ -114,7 +116,7 @@ fi
 
 # Verify 60s threshold for stale lock
 if node -e "
-  var src = require('fs').readFileSync('$CONFIG_SYNC_MOD', 'utf-8');
+  var src = require('fs').readFileSync('$CONFIG_SYNC_WIN', 'utf-8');
   if (src.indexOf('60000') === -1) process.exit(1);
 " 2>/dev/null; then
   pass "config-sync uses 60s stale lock threshold"

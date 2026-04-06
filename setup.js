@@ -698,7 +698,9 @@ function cmdHelp() {
   console.log("Commands:");
   console.log("  (none)          Full setup wizard (scan → report → backup → install)");
   console.log("  --report        Generate HTML hooks report (works without installing)");
-  console.log("  --analyze       Generate report with analysis (quality score, gaps, DRY, performance)");
+  console.log("  --analyze       Generate report with local analysis (quality score, gaps, DRY, performance)");
+  console.log("  --analyze --deep          Also run LLM analysis via claude -p (slower, richer insights)");
+  console.log("  --analyze --input <file>  Merge pre-computed LLM analysis JSON into the report");
   console.log("  --health        Verify runners, modules, and settings are correct");
   console.log("  --sync          Sync modules from GitHub per ~/.claude/hooks/modules.yaml");
   console.log("  --list          Show catalog vs installed modules with status");
@@ -1159,7 +1161,7 @@ function cmdSync(dryRun) {
   }
 }
 
-function cmdWizard(reportOnly, dryRun, openMode, autoYes, analyzeMode) {
+function cmdWizard(reportOnly, dryRun, openMode, autoYes, analyzeMode, deepMode, inputFile) {
   console.log("[hook-runner] Setup Wizard");
   console.log("========================");
 
@@ -1181,7 +1183,7 @@ function cmdWizard(reportOnly, dryRun, openMode, autoYes, analyzeMode) {
   // Step 2: Generate "before" report
   console.log("[2/5] Generating hooks report...");
   var beforeReport = path.join(REPORT_DIR, "hooks-report-before.html");
-  generateReport(scan, beforeReport, hookStats, { analyze: analyzeMode });
+  generateReport(scan, beforeReport, hookStats, { analyze: analyzeMode, deep: deepMode, inputFile: inputFile });
   console.log("  Report: " + beforeReport);
   if (openMode) openFile(beforeReport);
 
@@ -1590,8 +1592,11 @@ function main() {
   var reportOnly = args.indexOf("--report") !== -1;
   var analyzeMode = args.indexOf("--analyze") !== -1;
   if (analyzeMode) reportOnly = true; // --analyze implies --report
+  var deepMode = args.indexOf("--deep") !== -1;
+  var inputIdx = args.indexOf("--input");
+  var inputFile = inputIdx !== -1 && inputIdx + 1 < args.length ? args[inputIdx + 1] : null;
   var autoYes = args.indexOf("--yes") !== -1 || args.indexOf("-y") !== -1;
-  cmdWizard(reportOnly, dryRun, openMode, autoYes, analyzeMode);
+  cmdWizard(reportOnly, dryRun, openMode, autoYes, analyzeMode, deepMode, inputFile);
 }
 
 // ============================================================

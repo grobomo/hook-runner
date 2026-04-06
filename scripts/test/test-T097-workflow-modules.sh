@@ -25,25 +25,41 @@ MOD_COUNT=$(node -e "
 ")
 check "shtd workflow has modules listed" '[ "$MOD_COUNT" -gt 0 ]'
 
-# Modules listed in workflows should exist in modules/ catalog
-MISSING=""
-for yml in "$REPO_DIR"/workflows/*.yml; do
-  name=$(basename "$yml" .yml)
-  # Extract module names from modules: section
-  node -e "
-    var wf = require('$REPO_DIR/workflow.js');
-    var w = wf.loadWorkflow('$yml');
+# Modules listed in workflows should exist in modules/ catalog (use node, not find)
+MISSING=$(node -e "
+  var fs = require('fs'), path = require('path');
+  var wf = require('$REPO_DIR/workflow.js');
+  var ymls = fs.readdirSync('$REPO_DIR/workflows').filter(function(f){return f.indexOf('.yml')!==-1});
+  var missing = [];
+  ymls.forEach(function(y) {
+    var w = wf.loadWorkflow(path.join('$REPO_DIR/workflows', y));
     var mods = w.modules || [];
-    mods.forEach(function(m) { console.log(m); });
-  " | while read mod; do
-    # Check if module exists somewhere in modules/
-    found=$(find "$REPO_DIR/modules" -name "${mod}.js" 2>/dev/null | head -1)
-    if [ -z "$found" ]; then
-      MISSING="$MISSING $name:$mod"
-    fi
-  done
-done
+    var name = y.replace('.yml','');
+    mods.forEach(function(m) {
+      var events = ['PreToolUse','PostToolUse','SessionStart','Stop','UserPromptSubmit'];
+      var found = false;
+      for (var i = 0; i < events.length; i++) {
+        var p = path.join('$REPO_DIR/modules', events[i], m + '.js');
+        if (fs.existsSync(p)) { found = true; break; }
+        // Check project subdirs
+        var evtDir = path.join('$REPO_DIR/modules', events[i]);
+        try {
+          var subs = fs.readdirSync(evtDir, {withFileTypes:true}).filter(function(d){return d.isDirectory()&&d.name!=='archive'});
+          for (var s = 0; s < subs.length; s++) {
+            if (fs.existsSync(path.join(evtDir, subs[s].name, m + '.js'))) { found = true; break; }
+          }
+        } catch(e){}
+        if (found) break;
+      }
+      if (!found) missing.push(name + ':' + m);
+    });
+  });
+  if (missing.length) console.log(missing.join(' '));
+")
 check "all workflow modules exist in catalog" '[ -z "$MISSING" ]'
+if [ -n "$MISSING" ]; then
+  echo "    Missing: $MISSING"
+fi
 
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ]

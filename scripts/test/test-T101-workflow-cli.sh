@@ -43,12 +43,12 @@ DISABLED=$(node -e "
 check "shtd is disabled in config" '[ "$DISABLED" = "no" ]'
 
 # Test --workflow enable another workflow (project-level only, never touch global)
-CLAUDE_PROJECT_DIR="$TMPDIR" node "$REPO_DIR/setup.js" --workflow enable code-quality 2>&1 > /dev/null
-CQ_ENABLED=$(node -e "
+CLAUDE_PROJECT_DIR="$TMPDIR" node "$REPO_DIR/setup.js" --workflow enable no-local-docker 2>&1 > /dev/null
+NLD_ENABLED=$(node -e "
   var wf = require('$REPO_DIR/workflow.js');
-  console.log(wf.isWorkflowEnabled('code-quality', '$TMPDIR') ? 'yes' : 'no');
+  console.log(wf.isWorkflowEnabled('no-local-docker', '$TMPDIR') ? 'yes' : 'no');
 ")
-check "code-quality enabled (project)" '[ "$CQ_ENABLED" = "yes" ]'
+check "no-local-docker enabled (project)" '[ "$NLD_ENABLED" = "yes" ]'
 
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ]
