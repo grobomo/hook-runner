@@ -1598,8 +1598,8 @@ function main() {
 // Decode .claude/projects/ encoded dir name back to a filesystem path.
 // Encoding replaces \ / : . with - (lossy). Greedy: try joining segments
 // left-to-right, checking which combinations exist on disk.
-// e.g. "X--home-dev-projects-my-app" → "X:\home\dev\projects\my-app"
-// e.g. "X--home-dev--config" → "X:\home\dev\.config" (-- mid-string = dot-prefix)
+// e.g. "C--" + "Users-alice-projects-my-app" → $HOME + "\projects\my-app"
+// e.g. "C--" + "Users-alice--config" → $HOME + "\.config" (-- mid-string = dot-prefix)
 function decodeProjectDir(encoded) {
   // Drive letter: first segment before first -- is the drive letter
   var driveIdx = encoded.indexOf("--");
