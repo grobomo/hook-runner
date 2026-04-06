@@ -1,6 +1,6 @@
 // WORKFLOW: shtd
-// WHY: Ad-hoc AWS/SSH commands died with the session. Scripts survive.
-// Block ad-hoc Bash commands for AWS, SSH, Docker, and infrastructure.
+// WHY: Ad-hoc AWS/SSH/Azure commands died with the session. Scripts survive.
+// Block ad-hoc Bash commands for AWS, Azure, SSH, Docker, and infrastructure.
 // ALL operations must go through reusable scripts in scripts/.
 // If a script doesn't exist, you must CREATE IT first, then use it.
 // This applies to both local Claude and CCC workers.
@@ -11,6 +11,12 @@ module.exports = function(input) {
 
   var cmd = (input.tool_input || {}).command || "";
   var normalized = cmd.replace(/\s+/g, " ").trim();
+
+  // Strip env var prefixes like MSYS_NO_PATHCONV=1 before pattern matching.
+  // WHY: Azure commands on Git Bash need MSYS_NO_PATHCONV=1 prefix to prevent
+  // path mangling of /subscriptions/... args. Without stripping, the az/terraform
+  // patterns below never match and the block is silently bypassed.
+  var cmdNoEnv = normalized.replace(/^(\s*\w+=\S+\s+)+/, "");
 
   // Allow running scripts (the whole point) — command must START with a script path
   if (/^\s*(bash\s+)?scripts\//.test(normalized)) return null;
@@ -73,6 +79,57 @@ module.exports = function(input) {
     return {
       decision: "block",
       reason: "NO AD-HOC KUBECTL. Create a script in scripts/k8s/ for the operation.\n" +
+        "Blocked: " + cmd.substring(0, 150)
+    };
+  }
+
+  // Block: az CLI (Azure)
+  // WHY: ad-hoc az commands bypass deploy.ps1 and break customer reproducibility.
+  // All Azure ops must go through e2e-deploy.sh, share/scripts/, or wrapper scripts.
+  if (/^\s*az\s+\w+/.test(cmdNoEnv)) {
+    return {
+      decision: "block",
+      reason: "NO AD-HOC AZ CLI. Use e2e-deploy.sh or create a script in scripts/.\n" +
+        "Blocked: " + cmd.substring(0, 150)
+    };
+  }
+
+  // Block: terraform ad-hoc
+  if (/^\s*terraform\s/.test(cmdNoEnv)) {
+    return {
+      decision: "block",
+      reason: "NO AD-HOC TERRAFORM. Use deploy.ps1 or e2e-deploy.sh.\n" +
+        "Blocked: " + cmd.substring(0, 150)
+    };
+  }
+
+  // Block: azcopy ad-hoc
+  if (/^\s*azcopy\s/.test(cmdNoEnv)) {
+    return {
+      decision: "block",
+      reason: "NO AD-HOC AZCOPY. Create a script in scripts/ for the operation.\n" +
+        "Blocked: " + cmd.substring(0, 150)
+    };
+  }
+
+  // Block: Windows RDP/infra tools (mstsc, cmdkey, powershell.exe with infra commands)
+  // WHY: Ad-hoc mstsc/cmdkey/rdp_encrypt commands are unreadable one-off garbage.
+  // Use open-rdp.sh or source e2e-config.sh && open_rdp() instead.
+  if (/\bmstsc\b/.test(normalized) || /\bcmdkey\b/.test(normalized)) {
+    return {
+      decision: "block",
+      reason: "NO AD-HOC RDP. Use: bash open-rdp.sh (or source e2e-config.sh && open_rdp)\n" +
+        "Blocked: " + cmd.substring(0, 150)
+    };
+  }
+
+  // Block: ad-hoc powershell.exe with infrastructure commands
+  // WHY: powershell.exe -Command "Set-ItemProperty HKLM:..." is ad-hoc server config.
+  // Use harden_tester_for_rdp() in e2e-config.sh or create a script.
+  if (/\bpowershell\.exe\b/.test(normalized) && /\b(Set-ItemProperty|Remove-ItemProperty|HKLM:|HKCU:|Enable-Net|Restart-Service)\b/.test(normalized)) {
+    return {
+      decision: "block",
+      reason: "NO AD-HOC POWERSHELL infra commands. Use harden_tester_for_rdp() in e2e-config.sh or create a script.\n" +
         "Blocked: " + cmd.substring(0, 150)
     };
   }

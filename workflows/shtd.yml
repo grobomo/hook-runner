@@ -86,6 +86,7 @@ modules:
   - env-var-check
   - hook-autocommit
   - no-adhoc-commands
+  - cross-project-todo-gate
   - no-focus-steal
   - settings-audit-log
   - settings-change-gate

@@ -324,7 +324,8 @@ Full catalog in `modules/` directory:
 | `hook-editing-gate` | Enforces WORKFLOW tag, WHY comment, exit(1) in hook files |
 | `instruction-to-hook-gate` | Converts user directives into hook modules |
 | `messaging-safety-gate` | Blocks outbound messaging unless authorized |
-| `no-adhoc-commands` | Blocks raw aws/ssh/docker/kubectl, forces scripts/ |
+| `cross-project-todo-gate` | Blocks writing cross-project TODOs into local TODO.md |
+| `no-adhoc-commands` | Blocks raw aws/ssh/docker/kubectl/az/terraform, forces scripts/ |
 | `no-focus-steal` | Blocks background processes that steal window focus |
 | `no-fragile-heuristics` | Blocks pixel-counting heuristics |
 | `no-hardcoded-paths` | Blocks hardcoded absolute paths in code |
