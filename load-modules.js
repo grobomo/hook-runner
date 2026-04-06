@@ -158,7 +158,7 @@ module.exports = function loadModules(eventDir) {
   // 1. Global modules: top-level .js files
   var entries = fs.readdirSync(eventDir, { withFileTypes: true });
   var globalFiles = entries
-    .filter(function(e) { return e.isFile() && e.name.endsWith(".js"); })
+    .filter(function(e) { return e.isFile() && e.name.indexOf(".js") === e.name.length - 3; })
     .map(function(e) { return e.name; })
     .sort()
     .map(function(f) { return path.join(eventDir, f); });
@@ -174,7 +174,7 @@ module.exports = function loadModules(eventDir) {
       if (fs.existsSync(projectModDir) && fs.statSync(projectModDir).isDirectory()) {
         try {
           var projectFiles = fs.readdirSync(projectModDir)
-            .filter(function(f) { return f.endsWith(".js"); })
+            .filter(function(f) { return f.indexOf(".js") === f.length - 3; })
             .sort()
             .map(function(f) { return path.join(projectModDir, f); });
           allFiles = globalFiles.concat(projectFiles);

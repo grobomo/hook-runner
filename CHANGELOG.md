@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.8.1] — 2026-04-05
+
+### Fixed
+- **load-modules.js** — replaced 2 remaining `.endsWith()` ES6 calls with `indexOf()` for ES5 consistency
+
 ## [2.8.0] — 2026-04-05
 
 ### Added

@@ -395,9 +395,12 @@ See `specs/hook-integrity/` for full spec and tasks.
 - [x] T315b: Analysis round 2 — skip SessionStart/Stop from perf bottleneck reports (run once, not per tool call), fix duplicate WHY false positive (same module across events), note preventive deterrent gates as "(may be preventive)", optimize hook-integrity-monitor spot-check (mtime+size instead of MD5), optimize interrupt-detector (tail-read instead of full JSONL parse)
 - [x] T316c: Fix test-module-behaviors config-sync path (SessionStart archived, use Stop or repo fallback)
 
+## Code Review (session 2026-04-05m)
+- [x] T317: Fix 2 remaining `.endsWith()` ES6 calls in load-modules.js → `indexOf()` for ES5 consistency
+
 ## Status
-- 243 tasks completed, 0 pending
-- Version: 2.8.0
+- 244 tasks completed, 0 pending
+- Version: 2.8.1
 - 76 modules across 5 workflows (2 active: shtd + customer-data-guard), 42 test suites
 - Health: 89 OK, 0 warnings, 0 failures
 - Analysis score: A (0 demerits)
