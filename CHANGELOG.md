@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.6.3] — 2026-04-05
+
+### Improved
+- **PreToolUse runner** — shared `input._git.tracking` alongside branch context; `remote-tracking-gate` no longer spawns its own `git config` call (~33ms savings per Edit/Write on feature branches)
+
 ## [2.6.2] — 2026-04-05
 
 ### Fixed

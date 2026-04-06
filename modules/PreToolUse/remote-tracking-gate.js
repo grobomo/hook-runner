@@ -26,25 +26,28 @@ module.exports = function(input) {
   if (/\.(md|json|yaml|yml)$/i.test(filePath)) return null;
   if (/specs\/|\.claude\/|\.github\/|cloudformation\//i.test(filePath)) return null;
 
-  try {
-    var branch = (input._git && input._git.branch) || "";
-    if (!branch) branch = cp.execSync("git branch --show-current", { cwd: process.cwd(), encoding: "utf-8" }).trim();
-    if (!branch || branch === "main" || branch === "master") return null;
+  var branch = (input._git && input._git.branch) || "";
+  if (!branch || branch === "main" || branch === "master") return null;
 
+  // Use shared tracking info from runner (avoids per-module git spawn)
+  var tracking = input._git && typeof input._git.tracking === "string" ? input._git.tracking : null;
+  if (tracking === null) {
+    // Fallback: runner didn't provide tracking info
     try {
-      cp.execSync("git config --get branch." + branch + ".remote", { cwd: process.cwd(), encoding: "utf-8" });
+      tracking = cp.execSync("git config --get branch." + branch + ".remote", { cwd: process.cwd(), encoding: "utf-8" }).trim();
     } catch(e) {
-      return {
-        decision: "block",
-        reason: "REMOTE TRACKING GATE: Branch '" + branch + "' has no remote tracking.\n" +
-          "WHY: Untracked branches are invisible on GitHub Mobile. The dev team monitors\n" +
-          "progress via push notifications — if your branch doesn't track a remote,\n" +
-          "nobody knows you're working.\n" +
-          "FIX: git push -u origin " + branch
-      };
+      tracking = "";
     }
-  } catch(e) {
-    // Not a git repo — don't block
+  }
+  if (!tracking) {
+    return {
+      decision: "block",
+      reason: "REMOTE TRACKING GATE: Branch '" + branch + "' has no remote tracking.\n" +
+        "WHY: Untracked branches are invisible on GitHub Mobile. The dev team monitors\n" +
+        "progress via push notifications — if your branch doesn't track a remote,\n" +
+        "nobody knows you're working.\n" +
+        "FIX: git push -u origin " + branch
+    };
   }
   return null;
 };

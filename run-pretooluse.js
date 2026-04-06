@@ -23,8 +23,8 @@ if (input && input.tool_input && typeof input.tool_input.path === "string") {
   input.tool_input.path = input.tool_input.path.replace(/\\/g, "/");
 }
 
-// WHY: 4 PreToolUse modules each spawn `git rev-parse --abbrev-ref HEAD` independently.
-// One shared call here saves ~80ms per tool invocation (3 redundant git spawns eliminated).
+// WHY: 4+ PreToolUse modules each spawn git commands independently.
+// Shared context saves ~110ms per tool invocation (branch + tracking in one place).
 try {
   var cp = require("child_process");
   var branch = cp.execSync("git rev-parse --abbrev-ref HEAD", {
@@ -33,6 +33,18 @@ try {
   if (branch) {
     if (!input._git) input._git = {};
     input._git.branch = branch;
+    // Check if branch tracks a remote (used by remote-tracking-gate, ~33ms savings)
+    if (branch !== "main" && branch !== "master") {
+      try {
+        input._git.tracking = cp.execSync("git config --get branch." + branch + ".remote", {
+          encoding: "utf-8", timeout: 3000, stdio: ["pipe", "pipe", "pipe"]
+        }).trim();
+      } catch (e) {
+        input._git.tracking = "";
+      }
+    } else {
+      input._git.tracking = "origin";
+    }
   }
 } catch (e) { /* not in a git repo — modules handle this gracefully */ }
 
