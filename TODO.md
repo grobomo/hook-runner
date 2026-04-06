@@ -398,9 +398,12 @@ See `specs/hook-integrity/` for full spec and tasks.
 ## Code Review (session 2026-04-05m)
 - [x] T317: Fix 2 remaining `.endsWith()` ES6 calls in load-modules.js → `indexOf()` for ES5 consistency
 
+## Release (session 2026-04-06a)
+- [x] T318: Version bump to 2.8.2 + CHANGELOG entry for --deep, --input, ES5 fixes, operator precedence bug
+
 ## Status
-- 244 tasks completed, 0 pending
-- Version: 2.8.1
+- 245 tasks completed, 0 pending
+- Version: 2.8.2
 - 76 modules across 5 workflows (2 active: shtd + customer-data-guard), 42 test suites
 - Health: 89 OK, 0 warnings, 0 failures
 - Analysis score: A (0 demerits)
@@ -458,6 +461,18 @@ WHY: Currently ~30 run-modules exist with no way to see the big picture — whic
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
+
+## Pending Integration
+- [ ] T094: Integrate hook-monitor — bundle as self-validation layer (verify wire protocol on edit, checksum registry, runtime health). See hook-monitor project TODO.
+
+## Pending (from vpn-monitor)
+- [ ] T319: Commit no-adhoc-commands module to repo catalog — schtasks/f5fpc blocked, points to install.py. Module exists in live hooks but not committed to repo.
+- [ ] T320: Add cross-project-todo-gate module to repo catalog — blocks writing cross-project TODO items into local TODO.md. Module created in live hooks 2026-04-06.
+
+## Pending (from ddei-email-security session 2026-04-06)
+- [ ] T321: Strengthen spec-gate — block edits to production code (e.g. share/) unless the current branch name maps to a spec task (NNN-TXXX pattern). Current gate only checks that *any* unchecked task exists, not that the edit relates to one. Claude jumped straight to editing variables.tf without creating a spec first.
+- [ ] T322: Fix cross-project work instructions in SHTD workflow — Claude tried to edit hook-runner code from ddei-email-security instead of writing TODOs + spawning new session. The cwd-drift-detector should catch this but Claude also needs clearer guidance in the SHTD block messages about the correct workflow (write TODOs in blocking project → context_reset.py → resume own work). Reference conversation: ~/.claude/projects/C--Users-joelg-Documents-ProjectsCL1--tmemu-lab-worker-labs-ridgeline-ddei-email-security/966d6036-f3d1-4d01-8cbd-62c7af671bf5.jsonl
+- [ ] T323: Add "spec before code" reminder to spec-gate block message — when blocking, the message should explicitly say "Write the spec FIRST, then create tasks, then code. Do not skip to implementation."
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
