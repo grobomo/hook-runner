@@ -698,6 +698,7 @@ function cmdHelp() {
   console.log("Commands:");
   console.log("  (none)          Full setup wizard (scan → report → backup → install)");
   console.log("  --report        Generate HTML hooks report (works without installing)");
+  console.log("  --analyze       Generate report with analysis (quality score, gaps, DRY, performance)");
   console.log("  --health        Verify runners, modules, and settings are correct");
   console.log("  --sync          Sync modules from GitHub per ~/.claude/hooks/modules.yaml");
   console.log("  --list          Show catalog vs installed modules with status");
@@ -1158,7 +1159,7 @@ function cmdSync(dryRun) {
   }
 }
 
-function cmdWizard(reportOnly, dryRun, openMode, autoYes) {
+function cmdWizard(reportOnly, dryRun, openMode, autoYes, analyzeMode) {
   console.log("[hook-runner] Setup Wizard");
   console.log("========================");
 
@@ -1180,7 +1181,7 @@ function cmdWizard(reportOnly, dryRun, openMode, autoYes) {
   // Step 2: Generate "before" report
   console.log("[2/5] Generating hooks report...");
   var beforeReport = path.join(REPORT_DIR, "hooks-report-before.html");
-  generateReport(scan, beforeReport, hookStats);
+  generateReport(scan, beforeReport, hookStats, { analyze: analyzeMode });
   console.log("  Report: " + beforeReport);
   if (openMode) openFile(beforeReport);
 
@@ -1587,8 +1588,10 @@ function main() {
 
   // Default: setup wizard (with --report and --install as sub-modes)
   var reportOnly = args.indexOf("--report") !== -1;
+  var analyzeMode = args.indexOf("--analyze") !== -1;
+  if (analyzeMode) reportOnly = true; // --analyze implies --report
   var autoYes = args.indexOf("--yes") !== -1 || args.indexOf("-y") !== -1;
-  cmdWizard(reportOnly, dryRun, openMode, autoYes);
+  cmdWizard(reportOnly, dryRun, openMode, autoYes, analyzeMode);
 }
 
 // ============================================================

@@ -383,14 +383,20 @@ See `specs/hook-integrity/` for full spec and tasks.
 - [x] T311: Fix hook-integrity-monitor rate limiter — in-memory var was always 0 (fresh process each invocation), replaced with file-based timestamp (~85ms savings per prompt when rate-limited) (#189)
 - [x] Version bump to 2.6.4 + CHANGELOG
 
+## Report & Consolidation (session 2026-04-05k)
+- [x] T312: Fix report expand/collapse for modules with WHY text (#190)
+- [x] T313: Consolidate 11 workflows → 5 (shtd absorbs code-quality, infra-safety, messaging-safety, self-improvement, session-management). 40 modules retagged. Version 2.7.0. (#191)
+- [x] T314: Add `--analyze` command — LLM-powered report analysis via `claude -p` (quality score, coverage gaps, DRY, perf, recommendations) (#192)
+- [ ] T315: Run analysis, implement fixes, run again, implement second round
+
 ## Status
-- 236 tasks completed, 0 pending
-- Version: 2.6.4 (released, live hooks synced)
-- 67 modules across 10 workflows, 41 test suites (272 module tests)
+- 239 tasks completed, 1 pending
+- Version: 2.7.0 (released, live hooks synced)
+- 67 modules across 5 workflows (2 active: shtd + customer-data-guard), 41 test suites
 - Health: 86 OK, 0 warnings, 0 failures
-- Performance: PreToolUse ~321ms/call (38 modules), SessionStart ~4s (8 modules)
+- Performance: PreToolUse ~316ms/call (38 modules), SessionStart ~4s (8 modules)
 - CI: GitHub Actions runs tests + secret-scan on push/PR (Linux + Windows) — badge in README
-- Workflow engine: workflow.js + workflow-gate.js + 10 built-in workflow templates
+- Workflow engine: workflow.js + workflow-gate.js + 5 workflow templates
 - CLI: setup, report, health, sync, stats, list, test, test-module, upgrade, uninstall, prune, version, help, perf, export, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live)
 - Hook integrity monitor: live since 2026-04-05, enforces workflow compliance + file integrity across all sessions
 
