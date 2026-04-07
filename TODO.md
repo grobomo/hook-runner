@@ -403,7 +403,7 @@ See `specs/hook-integrity/` for full spec and tasks.
 
 ## Status
 - 255 tasks completed, 0 pending
-- Version: 2.10.0
+- Version: 2.11.0
 - 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 43 test suites
 - Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
 - Scoring: Novice→Master levels, intervention tracking, full claude -p audit logging
