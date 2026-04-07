@@ -8,38 +8,7 @@ fail() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
 
 echo "=== hook-runner: spec-gate relaxed (T106) ==="
 
-# Write a Node.js helper that handles path conversion internally
-HELPER="$REPO_DIR/scripts/test/.spec-gate-helper.js"
-cat > "$HELPER" <<'JSEOF'
-// Usage: node .spec-gate-helper.js <project_dir> <target_file>
-// Exits 0 = passed (no block), 1 = blocked, 2 = error
-var path = require("path");
-var pdir = path.resolve(process.argv[2]);
-var tfile = path.resolve(process.argv[3]);
-var fs = require("fs");
-var modPath = path.resolve(__dirname, "..", "..", "modules", "PreToolUse", "spec-gate.js");
-if (!fs.existsSync(modPath)) {
-  process.stderr.write("ERROR: spec-gate.js not found at " + modPath);
-  process.exit(2);
-}
-
-process.env.CLAUDE_PROJECT_DIR = pdir;
-try {
-  var mod = require(modPath);
-  var result = mod({ tool_name: "Edit", tool_input: { file_path: tfile } });
-  if (result && result.decision === "block") {
-    process.stdout.write("BLOCKED: " + result.reason.split("\n")[0]);
-    process.exit(1);
-  } else {
-    process.stdout.write("PASSED");
-    process.exit(0);
-  }
-} catch(e) {
-  process.stderr.write("ERROR: " + e.message);
-  process.exit(2);
-}
-JSEOF
-
+MODULE="$REPO_DIR/modules/PreToolUse/spec-gate.js"
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
@@ -52,11 +21,7 @@ init_git() {
   GIT_DIR="$d/.git" GIT_WORK_TREE="$d" git commit -q --no-gpg-sign -m "init" 2>/dev/null || true
 }
 
-run_gate() {
-  node "$HELPER" "$1" "$2" 2>/dev/null || true
-}
-
-# 1. Project with only TODO.md containing unchecked tasks — should pass
+# 1. Project with only TODO.md containing unchecked tasks
 PROJ1="$TMPDIR/proj-todo-only"
 mkdir -p "$PROJ1/src"
 git init -q "$PROJ1"
@@ -68,14 +33,7 @@ EOF
 echo "x" > "$PROJ1/src/app.js"
 init_git "$PROJ1"
 
-OUTPUT=$(run_gate "$PROJ1" "$PROJ1/src/app.js")
-if echo "$OUTPUT" | grep -q "PASSED"; then
-  pass "TODO.md with unchecked tasks allows edits"
-else
-  fail "TODO.md with unchecked tasks should allow edits: $OUTPUT"
-fi
-
-# 2. Project with only TODO.md but all tasks checked — should block
+# 2. Project with only TODO.md but all tasks checked
 PROJ2="$TMPDIR/proj-todo-done"
 mkdir -p "$PROJ2/src"
 git init -q "$PROJ2"
@@ -87,28 +45,14 @@ EOF
 echo "x" > "$PROJ2/src/app.js"
 init_git "$PROJ2"
 
-OUTPUT=$(run_gate "$PROJ2" "$PROJ2/src/app.js")
-if echo "$OUTPUT" | grep -q "BLOCKED"; then
-  pass "TODO.md with all tasks checked blocks edits"
-else
-  fail "TODO.md with all tasks checked should block: $OUTPUT"
-fi
-
-# 3. Project with no specs/ and no TODO.md — should block
+# 3. Project with no specs/ and no TODO.md
 PROJ3="$TMPDIR/proj-empty"
 mkdir -p "$PROJ3/src"
 git init -q "$PROJ3"
 echo "x" > "$PROJ3/src/app.js"
 init_git "$PROJ3"
 
-OUTPUT=$(run_gate "$PROJ3" "$PROJ3/src/app.js")
-if echo "$OUTPUT" | grep -q "BLOCKED"; then
-  pass "No tasks.md and no TODO.md blocks edits"
-else
-  fail "No task sources should block: $OUTPUT"
-fi
-
-# 4. Project with specs/*/tasks.md + spec.md (original behavior still works)
+# 4. Project with specs/*/tasks.md + spec.md
 PROJ4="$TMPDIR/proj-specs"
 mkdir -p "$PROJ4/specs/feat1" "$PROJ4/src"
 git init -q "$PROJ4"
@@ -119,26 +63,11 @@ EOF
 echo "x" > "$PROJ4/src/app.js"
 init_git "$PROJ4"
 
-OUTPUT=$(run_gate "$PROJ4" "$PROJ4/src/app.js")
-if echo "$OUTPUT" | grep -q "PASSED"; then
-  pass "specs/*/tasks.md still works as task source"
-else
-  fail "specs/*/tasks.md should still work: $OUTPUT"
-fi
-
-# 5. Block message mentions TODO.md as alternative
-OUTPUT=$(run_gate "$PROJ3" "$PROJ3/src/app.js")
-if echo "$OUTPUT" | grep -q "TODO.md"; then
-  pass "Block message mentions TODO.md as alternative"
-else
-  fail "Block message should mention TODO.md: $OUTPUT"
-fi
-
-# 6. Mixed: specs all checked but TODO.md has unchecked — should pass on feature branch
-# T340: On main with specs/, TODO.md alone requires a feature branch for traceability
+# 6. Mixed: specs all checked + TODO.md unchecked (needs feature branch for T340)
 PROJ6="$TMPDIR/proj-mixed"
 mkdir -p "$PROJ6/specs/feat1" "$PROJ6/src"
 git init -q "$PROJ6"
+echo "# Spec" > "$PROJ6/specs/feat1/spec.md"
 cat > "$PROJ6/specs/feat1/tasks.md" <<'EOF'
 - [x] T001: Done
 EOF
@@ -147,23 +76,75 @@ cat > "$PROJ6/TODO.md" <<'EOF'
 EOF
 echo "x" > "$PROJ6/src/app.js"
 init_git "$PROJ6"
-# Create a feature branch so T340 allows the edit
+# Create feature branch for test 6
 GIT_DIR="$PROJ6/.git" GIT_WORK_TREE="$PROJ6" git checkout -b 100-T099-new-work 2>/dev/null
 
-OUTPUT=$(run_gate "$PROJ6" "$PROJ6/src/app.js")
-if echo "$OUTPUT" | grep -q "PASSED"; then
-  pass "Mixed: checked specs + unchecked TODO.md allows edits (feature branch)"
-else
-  fail "Mixed sources should pass on feature branch: $OUTPUT"
-fi
+# Run tests 1-6 in ONE node process to avoid Windows process-spawning hangs
+RESULTS=$(node -e "
+  var modPath = process.argv[1];
+  var dirs = JSON.parse(process.argv[2]);
+  var results = [];
 
-# 7. T340: On main with specs/, TODO.md alone requires feature branch
+  function test(dir, file) {
+    delete require.cache[require.resolve(modPath)];
+    process.env.CLAUDE_PROJECT_DIR = dir;
+    try {
+      var mod = require(modPath);
+      var r = mod({ tool_name: 'Edit', tool_input: { file_path: file } });
+      return r && r.decision === 'block' ? 'BLOCKED: ' + r.reason.split('\n')[0] : 'PASSED';
+    } catch(e) { return 'ERROR: ' + e.message; }
+  }
+
+  results.push(test(dirs.p1, dirs.p1 + '/src/app.js'));  // 0: TODO unchecked
+  results.push(test(dirs.p2, dirs.p2 + '/src/app.js'));  // 1: TODO all checked
+  results.push(test(dirs.p3, dirs.p3 + '/src/app.js'));  // 2: no TODO, no specs
+  results.push(test(dirs.p4, dirs.p4 + '/src/app.js'));  // 3: specs/tasks.md
+  results.push(test(dirs.p3, dirs.p3 + '/src/app.js'));  // 4: block mentions TODO.md
+  results.push(test(dirs.p6, dirs.p6 + '/src/app.js'));  // 5: mixed on feature branch
+
+  console.log(JSON.stringify(results));
+" "$MODULE" "{\"p1\":\"$PROJ1\",\"p2\":\"$PROJ2\",\"p3\":\"$PROJ3\",\"p4\":\"$PROJ4\",\"p6\":\"$PROJ6\"}" 2>/dev/null)
+
+R() { echo "$RESULTS" | node -e "var r=JSON.parse(require('fs').readFileSync(0,'utf-8'));process.stdout.write(r[$1]||'ERROR')"; }
+
+V=$(R 0)
+if echo "$V" | grep -q "PASSED"; then pass "TODO.md with unchecked tasks allows edits"
+else fail "TODO.md with unchecked tasks should allow edits: $V"; fi
+
+V=$(R 1)
+if echo "$V" | grep -q "BLOCKED"; then pass "TODO.md with all tasks checked blocks edits"
+else fail "TODO.md with all tasks checked should block: $V"; fi
+
+V=$(R 2)
+if echo "$V" | grep -q "BLOCKED"; then pass "No tasks.md and no TODO.md blocks edits"
+else fail "No task sources should block: $V"; fi
+
+V=$(R 3)
+if echo "$V" | grep -q "PASSED"; then pass "specs/*/tasks.md still works as task source"
+else fail "specs/*/tasks.md should still work: $V"; fi
+
+V=$(R 4)
+if echo "$V" | grep -q "TODO.md"; then pass "Block message mentions TODO.md as alternative"
+else fail "Block message should mention TODO.md: $V"; fi
+
+V=$(R 5)
+if echo "$V" | grep -q "PASSED"; then pass "Mixed: checked specs + unchecked TODO.md allows edits (feature branch)"
+else fail "Mixed sources should pass on feature branch: $V"; fi
+
+# 7. T340: Switch to main — separate node call (needs git checkout first)
 GIT_DIR="$PROJ6/.git" GIT_WORK_TREE="$PROJ6" git checkout main 2>/dev/null
-OUTPUT=$(run_gate "$PROJ6" "$PROJ6/src/app.js")
-if echo "$OUTPUT" | grep -q "BLOCKED.*feature branch"; then
+RESULT7=$(node -e "
+  var modPath = process.argv[1], dir = process.argv[2];
+  delete require.cache[require.resolve(modPath)];
+  process.env.CLAUDE_PROJECT_DIR = dir;
+  var mod = require(modPath);
+  var r = mod({ tool_name: 'Edit', tool_input: { file_path: dir + '/src/app.js' } });
+  process.stdout.write(r && r.decision === 'block' ? 'BLOCKED: ' + r.reason.split('\n')[0] : 'PASSED');
+" "$MODULE" "$PROJ6" 2>/dev/null)
+if echo "$RESULT7" | grep -q "BLOCKED.*feature branch"; then
   pass "T340: main + specs/ + TODO.md blocks (requires feature branch)"
 else
-  fail "T340: should block on main with specs: $OUTPUT"
+  fail "T340: should block on main with specs: $RESULT7"
 fi
 
 echo ""
