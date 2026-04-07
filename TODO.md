@@ -522,12 +522,12 @@ What was done:
 - Next: version bump for T361, marketplace sync, code review pass
 
 ## Code Review & Cleanup
-- [ ] T362: Code review pass — update CLAUDE.md (stale self-reflection architecture, test counts), DRY brain URL parsing in self-reflection.js, marketplace sync to v2.15.0
+- [x] T362: Code review pass — update CLAUDE.md (stale self-reflection architecture, test counts), DRY brain URL parsing in self-reflection.js, fix url.parse deprecation, marketplace sync to v2.15.0 (PR #230)
 
 ## Status
-- 285 tasks completed, 1 pending
+- 286 tasks completed, 0 pending
 - Version: 2.15.0
-- Marketplace: claude-code-skills synced to v2.14.3 (needs commit+push from that project)
+- Marketplace: claude-code-skills synced to v2.15.0 (needs commit+push from that project)
 - CI: ALL GREEN (Linux + Windows)
 - 77 modules across 5 workflows (2 active: shtd + customer-data-guard), 47 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
