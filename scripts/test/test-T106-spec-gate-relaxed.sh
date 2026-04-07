@@ -80,9 +80,10 @@ init_git "$PROJ6"
 GIT_DIR="$PROJ6/.git" GIT_WORK_TREE="$PROJ6" git checkout -b 100-T099-new-work 2>/dev/null
 
 # Run tests 1-6 in ONE node process to avoid Windows process-spawning hangs
+# Pass paths as separate argv (MSYS2 auto-translates /tmp -> real Windows path)
 RESULTS=$(node -e "
   var modPath = process.argv[1];
-  var dirs = JSON.parse(process.argv[2]);
+  var dirs = process.argv.slice(2);
   var results = [];
 
   function test(dir, file) {
@@ -95,15 +96,15 @@ RESULTS=$(node -e "
     } catch(e) { return 'ERROR: ' + e.message; }
   }
 
-  results.push(test(dirs.p1, dirs.p1 + '/src/app.js'));  // 0: TODO unchecked
-  results.push(test(dirs.p2, dirs.p2 + '/src/app.js'));  // 1: TODO all checked
-  results.push(test(dirs.p3, dirs.p3 + '/src/app.js'));  // 2: no TODO, no specs
-  results.push(test(dirs.p4, dirs.p4 + '/src/app.js'));  // 3: specs/tasks.md
-  results.push(test(dirs.p3, dirs.p3 + '/src/app.js'));  // 4: block mentions TODO.md
-  results.push(test(dirs.p6, dirs.p6 + '/src/app.js'));  // 5: mixed on feature branch
+  results.push(test(dirs[0], dirs[0] + '/src/app.js'));  // 0: TODO unchecked
+  results.push(test(dirs[1], dirs[1] + '/src/app.js'));  // 1: TODO all checked
+  results.push(test(dirs[2], dirs[2] + '/src/app.js'));  // 2: no TODO, no specs
+  results.push(test(dirs[3], dirs[3] + '/src/app.js'));  // 3: specs/tasks.md
+  results.push(test(dirs[2], dirs[2] + '/src/app.js'));  // 4: block mentions TODO.md
+  results.push(test(dirs[4], dirs[4] + '/src/app.js'));  // 5: mixed on feature branch
 
   console.log(JSON.stringify(results));
-" "$MODULE" "{\"p1\":\"$PROJ1\",\"p2\":\"$PROJ2\",\"p3\":\"$PROJ3\",\"p4\":\"$PROJ4\",\"p6\":\"$PROJ6\"}" 2>/dev/null)
+" "$MODULE" "$PROJ1" "$PROJ2" "$PROJ3" "$PROJ4" "$PROJ6" 2>/dev/null)
 
 R() { echo "$RESULTS" | node -e "var r=JSON.parse(require('fs').readFileSync(0,'utf-8'));process.stdout.write(r[$1]||'ERROR')"; }
 
