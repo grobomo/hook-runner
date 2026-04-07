@@ -8,6 +8,9 @@ fail() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
 
 echo "=== hook-runner: hook-editing-gate (T118) ==="
 
+# Skip claude -p peer review in tests
+export HOOK_RUNNER_TEST=1
+
 MODULE="$REPO_DIR/modules/PreToolUse/hook-editing-gate.js"
 # Use $HOME for portable test paths
 HOOKS_DIR="$HOME/.claude/hooks"
