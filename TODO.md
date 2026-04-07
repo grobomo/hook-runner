@@ -398,10 +398,13 @@ See `specs/hook-integrity/` for full spec and tasks.
 ## Code Review (session 2026-04-05m)
 - [x] T317: Fix 2 remaining `.endsWith()` ES6 calls in load-modules.js → `indexOf()` for ES5 consistency
 
+## Release (session 2026-04-06a)
+- [x] T318: Version bump to 2.8.2 + CHANGELOG entry for --deep, --input, ES5 fixes, operator precedence bug
+
 ## Status
-- 244 tasks completed, 0 pending
-- Version: 2.8.1
-- 76 modules across 5 workflows (2 active: shtd + customer-data-guard), 42 test suites
+- 251 tasks completed, 1 pending
+- Version: 2.8.2
+- 78 modules across 5 workflows (2 active: shtd + customer-data-guard), 43 test suites
 - Health: 89 OK, 0 warnings, 0 failures
 - Analysis score: A (0 demerits)
 - Performance: PreToolUse ~296ms/call (45 modules), SessionStart ~400ms (7 modules, debounced)
@@ -458,6 +461,17 @@ WHY: Currently ~30 run-modules exist with no way to see the big picture — whic
 
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
+
+## Pending Integration
+- [ ] T094: Integrate hook-monitor — bundle as self-validation layer (verify wire protocol on edit, checksum registry, runtime health). See hook-monitor project TODO.
+
+## Catalog Sync & Spec-Gate Strengthening (session 2026-04-06b)
+- [x] T319: Sync no-adhoc-commands module to catalog (Azure/terraform/azcopy/RDP blocks from live)
+- [x] T320: Add cross-project-todo-gate module to catalog + fix hardcoded prefixes → dynamic discovery
+- [x] T321: Strengthen spec-gate — extract TXXX from branch, verify specific task is unchecked (not just any task)
+- [x] T322: Add cross-project guidance to all spec-gate block messages
+- [x] T323: Add "Write the spec FIRST" reminder to all spec-gate block messages
+- [x] T324: Self-reflection system — self-reflection.js (Stop, async, claude -p) + reflection-gate.js (PreToolUse). LLM reviews gate decisions at natural pauses, blocks if unresolved issues found.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog

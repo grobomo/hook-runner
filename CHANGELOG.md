@@ -2,6 +2,16 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.8.2] — 2026-04-06
+
+### Added
+- **`--analyze --deep`** — runs LLM analysis via `claude -p` (5 min timeout) for deeper semantic insights (coverage gaps, DRY overlap, consolidation recommendations). Saves prompt to `~/.claude/reports/analysis-prompt.txt` for manual re-run.
+- **`--analyze --input <file>`** — loads pre-computed LLM analysis JSON and merges with local heuristics. LLM takes priority for qualitative categories; performance entries are merged.
+
+### Fixed
+- **Operator precedence bug in healthCheck** — `!subFiles[si].slice(-3) === ".js"` always evaluated to `false`. Fixed to `subFiles[si].slice(-3) !== ".js"`. Project-scoped modules in subdirs were silently skipped during health validation.
+- **ES5 consistency** — replaced remaining `.endsWith()`/`.startsWith()` in setup.js (14), workflow.js (7), workflow-cli.js (8) with `.slice()`/`.indexOf()`/`.charAt()`
+
 ## [2.8.1] — 2026-04-05
 
 ### Fixed
