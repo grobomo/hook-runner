@@ -113,14 +113,24 @@ function buildPrompt(entries, gitCtx, taskCtx) {
   if (blocks.length > 0) prompt += "\nBLOCKED ACTIONS:\n" + blocks.join("\n") + "\n";
   if (passes.length > 0) prompt += "\nPASSED GATE CHECKS (first 10):\n" + passes.slice(0, 10).join("\n") + "\n";
 
-  prompt += "\nANALYZE:\n";
+  prompt += "\nANALYZE (be critical, not charitable):\n";
   prompt += "1. Were the edits appropriate for the current branch and task context?\n";
   prompt += "2. Did any edits slip through that should have been blocked? (e.g., editing code for task T321 while on a T319 branch)\n";
   prompt += "3. Were any blocks incorrect (false positives)?\n";
   prompt += "4. Any workflow violations? (editing production code without a spec, cross-project drift, etc.)\n";
+  prompt += "5. DISMISSED IMPROVEMENTS: Were there obvious improvements, security fixes, or code quality\n";
+  prompt += "   issues that should have been addressed but were rationalized away ('good enough for now',\n";
+  prompt += "   'we can do that later', 'over-engineering')? If something was identified as improvable\n";
+  prompt += "   but not acted on, that's a medium-severity issue. The standard is: if you see it, fix it\n";
+  prompt += "   or write a TODO. Never dismiss and move on.\n";
+  prompt += "6. MISSED TODOS: Were there any improvements, follow-ups, or hardening opportunities that\n";
+  prompt += "   should have been written as TODO items but weren't? Generate them.\n";
   prompt += "\nRESPOND IN JSON ONLY — no markdown, no explanation outside the JSON:\n";
-  prompt += '{"issues": [{"severity": "high|medium|low", "description": "what went wrong", "fix": "what to do about it"}], "verdict": "clean|needs-attention|workflow-violation"}\n';
-  prompt += 'If everything looks correct, return: {"issues": [], "verdict": "clean"}\n';
+  prompt += '{"issues": [{"severity": "high|medium|low", "description": "what went wrong", "fix": "what to do about it"}], ';
+  prompt += '"todos": [{"id": "T???", "description": "what should be done"}], ';
+  prompt += '"verdict": "clean|needs-attention|workflow-violation"}\n';
+  prompt += "The todos array is for improvements/follow-ups that should be added to TODO.md.\n";
+  prompt += 'If everything looks correct: {"issues": [], "todos": [], "verdict": "clean"}\n';
 
   return prompt;
 }
@@ -171,10 +181,53 @@ function writeReflection(result, gitCtx) {
       branch: gitCtx.branch || "unknown",
       verdict: result.verdict || "unknown",
       issues: result.issues || [],
+      todos: result.todos || [],
       resolved: false
     };
     fs.appendFileSync(REFLECTION_PATH, JSON.stringify(entry) + "\n");
   } catch (e) {}
+}
+
+// Auto-append TODOs to the project's TODO.md
+// This is the "motivation" mechanism — the reflection system doesn't just
+// observe, it generates actionable work. Without this, dismissed improvements
+// vanish. With it, every improvement opportunity becomes a tracked task.
+function appendTodos(todos) {
+  var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
+  if (!projectDir || !todos || todos.length === 0) return;
+
+  var todoPath = path.join(projectDir, "TODO.md");
+  try {
+    var content = fs.existsSync(todoPath)
+      ? fs.readFileSync(todoPath, "utf-8") : "";
+
+    // Find the highest existing task number
+    var maxNum = 0;
+    var matches = content.match(/T(\d+)/g) || [];
+    for (var i = 0; i < matches.length; i++) {
+      var num = parseInt(matches[i].substring(1), 10);
+      if (num > maxNum) maxNum = num;
+    }
+
+    // Build new TODO lines
+    var newLines = "\n## Self-Reflection TODOs (auto-generated " + new Date().toISOString().split("T")[0] + ")\n";
+    for (var j = 0; j < todos.length; j++) {
+      var todo = todos[j];
+      var taskNum = maxNum + j + 1;
+      var id = todo.id && todo.id !== "T???" ? todo.id : "T" + taskNum;
+      newLines += "- [ ] " + id + ": " + (todo.description || "no description") + "\n";
+    }
+
+    // Append before Architecture Notes if that section exists, else at end
+    var archIdx = content.indexOf("## Architecture Notes");
+    if (archIdx >= 0) {
+      content = content.substring(0, archIdx) + newLines + "\n" + content.substring(archIdx);
+    } else {
+      content += newLines;
+    }
+
+    fs.writeFileSync(todoPath, content);
+  } catch (e) { /* best effort */ }
 }
 
 module.exports = async function(input) {
@@ -197,6 +250,11 @@ module.exports = async function(input) {
 
   writeReflection(result, gitCtx);
 
+  // Auto-append any TODOs the reflection identified
+  if (result.todos && result.todos.length > 0) {
+    appendTodos(result.todos);
+  }
+
   if (result.verdict === "clean") return null;
 
   // If issues found, surface them
@@ -207,14 +265,22 @@ module.exports = async function(input) {
     if (issue.fix) issueText += "    FIX: " + issue.fix + "\n";
   }
 
-  if (issueText) {
+  var todoText = "";
+  if (result.todos && result.todos.length > 0) {
+    todoText = "\nAUTO-GENERATED TODOs (written to TODO.md):\n";
+    for (var ti = 0; ti < result.todos.length; ti++) {
+      todoText += "  - " + (result.todos[ti].description || "") + "\n";
+    }
+  }
+
+  if (issueText || todoText) {
     return {
       decision: "block",
       reason: "SELF-REFLECTION: Issues detected in recent work.\n" +
         "Verdict: " + result.verdict + "\n" +
-        issueText +
-        "\nReview and address these before continuing. The reflection log is at:\n" +
-        REFLECTION_PATH
+        issueText + todoText +
+        "\nAddress the issues above. TODOs have been auto-written to TODO.md.\n" +
+        "Reflection log: " + REFLECTION_PATH
     };
   }
 

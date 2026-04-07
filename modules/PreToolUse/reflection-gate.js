@@ -26,11 +26,13 @@ module.exports = function(input) {
   if (!targetFile) return null;
 
   // Allow non-production files through
+  // NOTE: self-reflection.jsonl is NOT exempted — Claude must fix the actual
+  // issue, not edit the log to unblock itself. The reflection loop will
+  // re-analyze and clear the issue when the fix is genuinely done.
   var allowPatterns = [
     /TODO\.md$/, /SESSION_STATE\.md$/, /CLAUDE\.md$/,
     /\.claude\//, /\/specs\//, /\/hooks\//, /\/rules\//,
-    /\.gitignore$/, /package\.json$/,
-    /self-reflection\.jsonl$/
+    /\.gitignore$/, /package\.json$/
   ];
   for (var i = 0; i < allowPatterns.length; i++) {
     if (allowPatterns[i].test(targetFile)) return null;

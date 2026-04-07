@@ -402,9 +402,10 @@ See `specs/hook-integrity/` for full spec and tasks.
 - [x] T318: Version bump to 2.8.2 + CHANGELOG entry for --deep, --input, ES5 fixes, operator precedence bug
 
 ## Status
-- 251 tasks completed, 1 pending
-- Version: 2.8.2
+- 252 tasks completed, 0 pending
+- Version: 2.9.0
 - 78 modules across 5 workflows (2 active: shtd + customer-data-guard), 43 test suites
+- Self-reflection system live (self-reflection.js + reflection-gate.js)
 - Health: 89 OK, 0 warnings, 0 failures
 - Analysis score: A (0 demerits)
 - Performance: PreToolUse ~296ms/call (45 modules), SessionStart ~400ms (7 modules, debounced)
