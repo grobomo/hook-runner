@@ -463,6 +463,11 @@ WHY: Currently ~30 run-modules exist with no way to see the big picture — whic
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
 
+## Self-Reflection Scoring System (session 2026-04-06c)
+- [ ] T326: Gamified reflection scoring — points for clean reflections, autonomy streaks, TODO follow-through. Penalties for user corrections, dismissed improvements, workflow violations. Levels (Novice→Master) control reflection frequency. Score persists across sessions via reflection-score.json, injected at SessionStart.
+- [ ] T327: User intervention tracking — analyze hook-log for correction prompts ("no", "stop", "wrong"), interrupts, autonomous stretches. Score rewards autonomy, penalizes babysitting.
+- [ ] T328: Full claude -p logging — every Stop runs LLM analysis, all prompts + responses + timing logged to reflection-claude-log.jsonl for audit and tuning.
+
 ## Superseded
 - [x] T094: ~~Integrate hook-monitor~~ — superseded by hook-integrity system (T298-T304) + self-reflection (T324). No hook-monitor project exists.
 
