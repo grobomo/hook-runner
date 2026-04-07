@@ -2,6 +2,17 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.14.2] — 2026-04-07
+
+### Fixed
+- **workflow-summary.js** — defensive try/catch around `findWorkflows()`/`readState()` prevents crash when run outside a project context (fixes module validation test failure).
+- **T114 test cleanup** — hardened YAML cleanup with `git show HEAD` fallback to prevent temp module name corruption in `no-local-docker.yml`.
+
+### Changed
+- **git branch detection** — `spec-gate.js`, `branch-pr-gate.js`, `enforcement-gate.js` now read `.git/HEAD` directly instead of spawning `git rev-parse` (faster on Windows, avoids timeout under CI load).
+- **run-modules sync** — added 32 missing modules to `run-modules/` that existed in catalog but were never tracked.
+- Removed unused `child_process` require from `spec-gate.js`, `branch-pr-gate.js`.
+
 ## [2.14.1] — 2026-04-07
 
 ### Fixed
