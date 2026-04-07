@@ -57,7 +57,7 @@ To undo everything: `node setup.js --uninstall --confirm`
 
 ## Workflows
 
-Workflows are the primary abstraction. Instead of managing 30+ individual modules, you enable a workflow and its modules activate automatically.
+Workflows are the primary abstraction. Instead of managing 80+ individual modules, you enable a workflow and its modules activate automatically.
 
 ```bash
 node setup.js --workflow list              # see available workflows
@@ -71,16 +71,11 @@ node setup.js --workflow query Edit        # which workflows affect Edit?
 
 | Workflow | Modules | What it enforces |
 |----------|---------|-----------------|
-| `shtd` | 16 | Spec → tasks → branch → test → implement → PR. The full development pipeline. |
-| `session-management` | 12 | Auto-continue, context injection, health checks, backups, terminal title, workflow summary. |
-| `code-quality` | 10 | Prevents hardcoded paths, fragile heuristics, missed test coverage, stale docs. |
-| `infra-safety` | 10 | No ad-hoc commands, required tags, env var checks, config audit. |
-| `self-improvement` | 6 | Detect instructions, interrupts, and troubleshooting patterns; enforce durable rules. |
-| `messaging-safety` | 1 | Blocks outbound messages (Teams, email) unless target is explicitly authorized. |
+| `shtd` | 69 | Spec-Hook-Test-Driven — the full development pipeline. Enforces spec → branch → test → implement → PR, plus code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement. |
+| `customer-data-guard` | 3 | Read-only incident response — blocks env changes, data exfil, and V1 modifications. |
+| `dispatcher-worker` | 3 | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
 | `no-local-docker` | 1 | Blocks local Docker commands, forces remote infrastructure. |
 | `cross-project-reset` | 1 | Blocks cross-project file access, forces proper project switching. |
-| `customer-data-guard` | 3 | Read-only incident response — blocks env changes, data exfil, and V1 modifications. |
-| `dispatcher-worker` | 1 | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
 
 ### Workflow State Machine
 
@@ -271,6 +266,8 @@ node setup.js --workflow sync-live     # copy to live hooks
 # Monitoring
 node setup.js --stats                  # text summary of hook activity
 node setup.js --perf                   # module timing analysis
+node setup.js --integrity [--json]     # verify live modules match repo
+node setup.js --report --analyze       # heuristic quality analysis
 node setup.js --prune [N]             # prune log entries older than N days
 
 # Development
@@ -361,6 +358,7 @@ Full catalog in `modules/` directory:
 |--------|-------------|
 | `commit-msg-check` | Blocks WIP/fixup commits and long first lines |
 | `crlf-detector` | Warns when Write/Edit produces CRLF in shell scripts, YAML, Python |
+| `disk-space-detect` | Detects disk space errors in tool output, activates alert mode |
 | `hook-autocommit` | Auto-commits hook module edits |
 | `rule-hygiene` | Validates rule files are single-topic, under 20 lines |
 | `settings-audit-log` | Records config modifications to audit log |
@@ -401,8 +399,6 @@ Full catalog in `modules/` directory:
 | Module | Description |
 |--------|-------------|
 | `backup-check` | Warns if config backup is stale |
-| `config-sync` | Auto-syncs ~/.claude config to git remote |
-| `hook-integrity-check` | Verifies live modules match repo, auto-repairs drift, checks workflow compliance |
 | `load-instructions` | Injects working instructions at session start |
 | `load-lessons` | Injects recent self-analysis lessons |
 | `project-health` | Runs health check, warns about issues |
