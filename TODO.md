@@ -542,6 +542,21 @@ TOP PRIORITY — self-reflection scope enforcement + future architecture:
 - [x] T344: Reflection-score adds FRUSTRATION_DETECTED (-15) and RAPID_INTERRUPT_CLUSTER (-20) penalties from frustration-log.jsonl
 - [x] T345: Archived frustration-detector.js — approach was fundamentally flawed (blocking on UPS). Future frustration detection must use flag files read by PostToolUse/Stop modules instead.
 
+## Session 2026-04-07 Handoff
+What was done:
+- T341-T345: Banned all UserPromptSubmit modules via hook-editing-gate (PR #207, merged)
+- Self-reflection: removed hasEdits guard, added constraint-rejection + wrong-tool analysis, frustration scoring
+- Live hooks synced
+
+Remaining from this session's discussion:
+- [x] T346: Moved frustration detection into UPS runner itself (no modules). Runner logs prompt preview to hook-log + detects frustration patterns → frustration-log.jsonl. Self-reflection reads both at Stop. Never blocks.
+- [x] T347: Self-reflection buildPrompt handles no-edit sessions — shows "NO FILES EDITED" warning so claude -p analysis flags unproductive sessions.
+- [ ] T348: Marketplace sync for v2.11.1 (T341-T345 changes)
+- [ ] T338: spec-gate.js regression (pre-existing, still open)
+- [ ] T339: Hook modification elevation/auditing (pre-existing, still open)
+- [ ] T340: TODO.md fallback in spec-gate too permissive (pre-existing, still open)
+- [ ] T337: Session isolation for hook state files (pre-existing, still open)
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type

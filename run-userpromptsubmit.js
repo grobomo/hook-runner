@@ -1,14 +1,25 @@
 #!/usr/bin/env node
 "use strict";
-// hook-runner UserPromptSubmit — loads global + project-scoped modules
-// UserPromptSubmit hooks fire after user sends a prompt, before Claude processes it.
-// Can block (reject prompt) or return modified prompt text.
-// Supports both sync and async modules (async awaited with 4s timeout)
+// hook-runner UserPromptSubmit — prompt logging and frustration detection.
+//
+// WHY modules are banned here: Any module that returns {decision:"block"} on
+// UserPromptSubmit locks the user out of their session entirely — they cannot
+// send any message to Claude to fix it. The frustration-detector incident
+// (2026-04-07) proved this. hook-editing-gate enforces the ban.
+//
+// This runner does TWO things directly (no modules):
+// 1. Logs the prompt preview to hook-log.jsonl (replaces prompt-logger module)
+// 2. Detects frustration patterns and writes to frustration-log.jsonl
+//    (replaces frustration-detector module — but NEVER blocks)
+//
+// Self-reflection (Stop hook) reads both logs for analysis.
 var fs = require("fs");
 var path = require("path");
-var loadModules = require("./load-modules");
+var os = require("os");
 var hookLog = require("./hook-log");
-var runAsync = require("./run-async");
+
+var HOOKS_DIR = path.join(os.homedir(), ".claude", "hooks");
+var FRUSTRATION_LOG = path.join(HOOKS_DIR, "frustration-log.jsonl");
 
 var input;
 try {
@@ -17,25 +28,59 @@ try {
   process.exit(0);
 }
 
-var ctx = hookLog.extractContext("UserPromptSubmit", input);
-var modules = loadModules(path.join(__dirname, "run-modules", "UserPromptSubmit"));
+// Extract user message
+var prompt = "";
+if (input && input.message && typeof input.message === "string") {
+  prompt = input.message;
+} else if (input && input.prompt && typeof input.prompt === "string") {
+  prompt = input.prompt;
+}
 
-runAsync.runModules(modules, input,
-  function handleResult(modName, result, err, ms) {
-    if (err) {
-      hookLog.logHook("UserPromptSubmit", modName, "error", Object.assign({}, ctx, { reason: err.message, ms: ms }));
-      process.stderr.write("hook-runner UserPromptSubmit " + modName + " error: " + err.message + "\n");
-      return false;
+// 1. Log prompt preview to hook-log (replaces prompt-logger module)
+var ctx = hookLog.extractContext("UserPromptSubmit", input);
+ctx.reason = prompt.substring(0, 200);
+hookLog.logHook("UserPromptSubmit", "runner", "pass", ctx);
+
+// 2. Frustration detection — pattern match only, NEVER block
+if (prompt.length >= 5) {
+  var PATTERNS = [
+    { re: /\bi will not repeat\b/i, cat: "repeated-instruction" },
+    { re: /\bi already (said|told|stated|explained|mentioned)\b/i, cat: "repeated-instruction" },
+    { re: /\bas i (said|stated|told|already)\b/i, cat: "repeated-instruction" },
+    { re: /\bhow many times\b/i, cat: "repeated-instruction" },
+    { re: /\bfor the (last|third|fourth|fifth) time\b/i, cat: "repeated-instruction" },
+    { re: /\bread (my|the) (message|prompt|instruction)\b/i, cat: "repeated-instruction" },
+    { re: /\bmake it work\b/i, cat: "constraint-rejected" },
+    { re: /\bstop (arguing|pushing back|telling me)\b/i, cat: "constraint-rejected" },
+    { re: /\bdon'?t tell me (it'?s |it is )?(not possible|impossible|can'?t)\b/i, cat: "constraint-rejected" },
+    { re: /\bfigure it out\b/i, cat: "constraint-rejected" },
+    { re: /\bresearch (online|the web|internet)\b/i, cat: "wrong-tool" },
+    { re: /\buse (web ?search|the internet|google)\b/i, cat: "wrong-tool" },
+    { re: /\bdon'?t (grep|search local)\b/i, cat: "wrong-tool" },
+    { re: /\bthat'?s not what i (asked|said|meant|wanted)\b/i, cat: "meta-frustration" },
+    { re: /\byou'?re not listening\b/i, cat: "meta-frustration" }
+  ];
+
+  var matched = null;
+  for (var i = 0; i < PATTERNS.length; i++) {
+    if (PATTERNS[i].re.test(prompt)) {
+      matched = PATTERNS[i];
+      break;
     }
-    if (result && result.decision) {
-      hookLog.logHook("UserPromptSubmit", modName, result.decision, Object.assign({}, ctx, { reason: result.reason, ms: ms }));
-      process.stdout.write(JSON.stringify(result));
-      process.exit(0);
-    }
-    hookLog.logHook("UserPromptSubmit", modName, "pass", Object.assign({}, ctx, { ms: ms }));
-    return false;
-  },
-  function handleDone() {
-    // No output = allow
   }
-);
+
+  if (matched) {
+    try {
+      var entry = {
+        ts: new Date().toISOString(),
+        project: ctx.project || "unknown",
+        category: matched.cat,
+        preview: prompt.substring(0, 200)
+      };
+      fs.appendFileSync(FRUSTRATION_LOG, JSON.stringify(entry) + "\n");
+    } catch (e) { /* best effort */ }
+  }
+}
+
+// NEVER output anything — no blocking, no modifying the prompt
+process.exit(0);
