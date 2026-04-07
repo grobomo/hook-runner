@@ -543,12 +543,12 @@ What was done:
 - [x] T370: Validate pid input in _is-pid-running.js — defense-in-depth against command injection (PR #239)
 
 ## Release
-- [ ] T371: Version bump to 2.15.2 + CHANGELOG for T369-T370 + marketplace sync
+- [x] T371: Version bump to 2.15.2 + CHANGELOG for T369-T370 + marketplace sync (PR #240)
 
 ## Status
-- 294 tasks completed, 1 pending
-- Version: 2.15.1
-- Marketplace: claude-code-skills synced to v2.15.1
+- 295 tasks completed, 0 pending
+- Version: 2.15.2
+- Marketplace: claude-code-skills synced to v2.15.2 (files copied, needs commit+push from that project)
 - CI: ALL GREEN (Linux + Windows)
 - 84 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
