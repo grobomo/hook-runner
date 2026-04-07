@@ -408,6 +408,13 @@ See `specs/hook-integrity/` for full spec and tasks.
 - Live hooks updated, all tests pass (14/14 gate, 8/8 task-id, 6/6 relaxed)
 - [x] T349: Version bump to 2.13.0 for T338-T339
 
+## Session 2026-04-07c
+- Verified T338-T339 already merged (PR #210). Closed duplicate PR #212.
+- Pushed test reliability fix to main (82f3998)
+- Cleaned up stale branch 210-T338-T339-spec-gate-bash-hook-lock
+- Next: T340 (spec-gate TODO.md fallback too permissive)
+- Known issue: T106 spec-gate-relaxed test hangs intermittently on Windows Git Bash due to rapid process spawning. Not a code bug — need batch mode in test helper to reduce node invocations.
+
 ## Status
 - 266 tasks completed, 2 pending (T340, T331)
 - Version: 2.13.1
