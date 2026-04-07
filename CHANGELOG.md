@@ -2,6 +2,19 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.9.0] — 2026-04-06
+
+### Added
+- **Self-reflection system** — LLM-powered introspection for hook-runner itself. `self-reflection.js` (Stop, async) calls `claude -p` to review recent gate decisions, checking if edits were appropriate for the current branch/task context. `reflection-gate.js` (PreToolUse) blocks production code edits if unresolved high/medium severity issues exist. Together they form a feedback loop: hooks watch Claude → self-reflection watches hooks → reflection-gate enforces corrections.
+- **Spec-gate task ID enforcement (T321)** — if branch name contains TXXX pattern, verifies that specific task is unchecked in TODO.md or specs/*/tasks.md. Previously only checked that *any* task existed, allowing edits for unrelated tasks.
+- **Cross-project guidance (T322)** — all spec-gate block messages now include instructions for cross-project workflow (write TODOs in other project → context_reset.py → resume).
+- **"Spec before code" reminder (T323)** — all spec-gate block messages explicitly say "Write the spec FIRST, then create tasks, then code."
+- **cross-project-todo-gate** — new PreToolUse module, blocks writing cross-project TODO items into local TODO.md.
+- **no-adhoc-commands** — synced from live with Azure/terraform/azcopy/RDP blocks.
+
+### Fixed
+- **cross-project-todo-gate** — replaced hardcoded project prefixes (`_grobomo/`, `_tmemu/`) with dynamic directory discovery under PROJECTS_ROOT.
+
 ## [2.8.2] — 2026-04-06
 
 ### Added
