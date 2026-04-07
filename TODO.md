@@ -503,9 +503,10 @@ What was done:
 - All 8 remaining remote branches deleted (4 squash-merged, 4 already pruned)
 - Pulled PR #217 (T353: test safety guards, v2.14.3)
 - Live hooks synced (94 files), health 99 OK
+- [x] T354: Fix module return types — 8 modules returned bare strings instead of {decision:"block",reason:"..."} objects. Blocks were silently ignored. Fixed: claude-p-pattern, hook-editing-gate, no-fragile-heuristics, no-passive-rules, task-completion-gate, troubleshoot-detector, settings-change-gate (→ null)
 
 ## Status
-- 275 tasks completed, 1 pending (T331 brain integration — cross-project)
+- 276 tasks completed, 1 pending (T331 brain integration — cross-project)
 - Version: 2.14.3
 - Marketplace: claude-code-skills synced to v2.14.3 (needs commit+push from that project)
 - CI: ALL GREEN (Linux + Windows)
