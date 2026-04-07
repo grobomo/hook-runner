@@ -74,6 +74,7 @@ modules:
   - no-hardcoded-paths
   - preserve-iterated-content
   - root-cause-gate
+  - no-rules-gate
   - rule-hygiene
   - test-coverage-check
   - update-stale-docs
@@ -105,6 +106,7 @@ modules:
   - reflection-gate
   - reflection-score
   - reflection-score-inject
+  - session-brain-analysis
   # Session lifecycle (was: session-management)
   - auto-continue
   - backup-check
