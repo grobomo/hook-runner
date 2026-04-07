@@ -485,12 +485,12 @@ What was done:
 - Security review: all execSync calls sanitized, no injection vectors found
 - Code review: no remaining ES6 string methods in core JS files
 
-IMPORTANT for next session:
-- Git state may be messy: stash from failed gh pr merge, branch 215-T352-sync-and-fixes may exist
-- Run: `rm -f .git/index.lock && git stash drop && git checkout main && git pull --ff-only`
-- The hooks keep reverting ES5 fixes in workflow.js (trimEnd→trimStart back to ES6). Need to check why.
-- PR #215 was created on GitHub — check if merged or needs merging
-- System processes were overwhelmed — kill orphan bash/git/node via cmd.exe if sluggish
+## Session 2026-04-07n
+- Recovered from stuck shell (orphan test processes blocking bash)
+- T114 test hardened: cleanup moved to trap EXIT, setup.js pre-test sweep of leftover artifacts
+- workflow-cli.js add-module YAML edge cases fixed (empty array, empty key forms)
+- All key tests pass: T114 (8/8), T106 spec-gate (7/7), module-sync (10/10), async (13/13)
+- spec-gate.js getGitBranch reads .git/HEAD directly (no child_process spawn, no MSYS2 path issues)
 
 ## Status
 - 274 tasks completed, 1 pending (T331 brain integration — cross-project)
