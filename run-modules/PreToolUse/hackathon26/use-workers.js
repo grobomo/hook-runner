@@ -12,7 +12,7 @@ module.exports = function(input) {
   if (!projectDir) return null;
 
   // Only enforce in hackathon26 project
-  if (!projectDir.endsWith("/hackathon26")) return null;
+  if (projectDir.slice(-13) !== "/hackathon26") return null;
 
   // --- Edit/Write gate ---
   if (tool === "Write" || tool === "Edit") {

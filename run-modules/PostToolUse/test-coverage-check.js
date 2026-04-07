@@ -22,8 +22,8 @@ module.exports = function(input) {
   var dirName = path.dirname(filePath);
 
   // Skip if the file itself is a test file — no need to remind
-  var isTestFile = TEST_PREFIXES.some(function(p) { return basename.startsWith(p); }) ||
-    TEST_SUFFIXES.some(function(s) { return basename.endsWith(s); }) ||
+  var isTestFile = TEST_PREFIXES.some(function(p) { return basename.indexOf(p) === 0; }) ||
+    TEST_SUFFIXES.some(function(s) { return basename.slice(-s.length) === s; }) ||
     TEST_DIRS.some(function(d) { return filePath.replace(/\\/g, "/").indexOf("/" + d + "/") !== -1; });
 
   if (isTestFile) return null;
@@ -60,8 +60,8 @@ module.exports = function(input) {
       var sib = siblings[si];
       if (sib === basename) continue;
       var sibLower = sib.toLowerCase();
-      if ((sibLower.startsWith("test-" + nameNoExt.toLowerCase()) ||
-           sibLower.startsWith("test_" + nameNoExt.toLowerCase()) ||
+      if ((sibLower.indexOf("test-" + nameNoExt.toLowerCase()) === 0 ||
+           sibLower.indexOf("test_" + nameNoExt.toLowerCase()) === 0 ||
            sibLower === nameNoExt.toLowerCase() + ".test.js" ||
            sibLower === nameNoExt.toLowerCase() + ".test.ts" ||
            sibLower === nameNoExt.toLowerCase() + ".spec.js" ||

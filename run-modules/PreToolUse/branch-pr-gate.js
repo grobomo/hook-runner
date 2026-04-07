@@ -128,7 +128,7 @@ module.exports = function(input) {
       /\.gitignore$/, /scripts\/test\//, /\.json$/,
     ];
     var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
-    if (home && norm.startsWith(home + "/.claude/")) return null;
+    if (home && norm.indexOf(home + "/.claude/") === 0) return null;
     for (var i = 0; i < allowPatterns.length; i++) {
       if (allowPatterns[i].test(norm)) return null;
     }

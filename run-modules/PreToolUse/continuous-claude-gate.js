@@ -29,7 +29,7 @@ module.exports = function(input) {
 
   // Allow user home config (not a project)
   var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
-  if (home && normalTarget.replace(/\\/g, "/").startsWith(home + "/.claude/")) return null;
+  if (home && normalTarget.replace(/\\/g, "/").indexOf(home + "/.claude/") === 0) return null;
 
   // Allow bootstrap/config/planning files — these are pre-implementation.
   // You need to be able to CREATE specs and scaffolding before they can gate you.

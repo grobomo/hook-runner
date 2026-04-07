@@ -19,7 +19,7 @@ module.exports = function(input) {
   // Allow editing ~/.claude/ (user config, not a project)
   var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
   var normalTarget = targetFile.replace(/\\/g, "/");
-  if (home && normalTarget.startsWith(home + "/.claude/")) return null;
+  if (home && normalTarget.indexOf(home + "/.claude/") === 0) return null;
 
   // Find project dir
   var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
