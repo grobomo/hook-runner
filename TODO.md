@@ -431,15 +431,19 @@ See `specs/hook-integrity/` for full spec and tasks.
 - Marketplace files copied to claude-code-skills/plugins/hook-runner/ (needs commit+push from that project)
 - CI: T094 now passes, runners now passes (15/15). Remaining crashes are timeout-related (modules test loads 81+ modules in CI).
 
+## Session 2026-04-07f
+- Fixed T106 test: replaced JSON-embedded paths with argv (MSYS2 auto-translates argv but not embedded strings)
+- Root cause: `path.resolve('/tmp/...')` on Windows → `C:\tmp\...` (wrong); MSYS2 argv translation → `C:/Users/.../Temp/...` (correct)
+- All 7 T106 tests pass reliably now
+
 ## Next session priorities
-1. Verify CI passes after T106 fix push (67dfa52 on main)
-2. If CI still fails: investigate hook-integrity + modules test failures (1 fail each)
-3. Marketplace sync: commit+push from claude-code-skills project
-4. DRY code review pass on modules/ directory
-5. Clean up stale branches (210-T338-T339, 211-T337, 212-T350, 213-T340, 214-T350)
+1. Marketplace sync: commit+push from claude-code-skills project
+2. Clean up stale branches (210-T338-T339, 211-T337, 212-T350, 213-T340)
+3. DRY code review pass on modules/ directory
+4. Verify CI passes
 
 ## Status
-- 270 tasks completed, 1 pending (T331 brain integration — cross-project)
+- 271 tasks completed, 1 pending (T331 brain integration — cross-project)
 - Version: 2.14.0
 - 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 46 test suites
 - Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
