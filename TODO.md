@@ -436,15 +436,21 @@ See `specs/hook-integrity/` for full spec and tasks.
 - Root cause: `path.resolve('/tmp/...')` on Windows → `C:\tmp\...` (wrong); MSYS2 argv translation → `C:/Users/.../Temp/...` (correct)
 - All 7 T106 tests pass reliably now
 
+## Session 2026-04-07g
+- Marketplace synced to v2.14.0 (pushed to grobomo/claude-code-skills)
+- git pull/push hanging — multiple concurrent sessions competing for git locks + credential manager. Kill all bash/git/node processes and retry in fresh session.
+- T351 merged: reflection-score export fix + ES5 cleanup in run-modules
+
 ## Next session priorities
-1. Marketplace sync: commit+push from claude-code-skills project
-2. Clean up stale branches (210-T338-T339, 211-T337, 212-T350, 213-T340)
-3. DRY code review pass on modules/ directory
-4. Verify CI passes
+1. Clean up stale branches (210-T338-T339, 211-T337, 212-T350, 213-T340, 214-T351)
+2. DRY code review pass on modules/ directory
+3. Verify CI passes — may need to fix timeout issues in modules/hook-integrity test suites
+4. Prune old hook-log entries if growing large
 
 ## Status
-- 271 tasks completed, 1 pending (T331 brain integration — cross-project)
+- 272 tasks completed, 1 pending (T331 brain integration — cross-project)
 - Version: 2.14.0
+- Marketplace: claude-code-skills synced to v2.14.0
 - 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 46 test suites
 - Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
 - Scoring: Novice→Master levels, intervention tracking, full claude -p audit logging
