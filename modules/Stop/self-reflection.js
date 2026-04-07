@@ -125,13 +125,15 @@ function buildPrompt(entries, gitCtx, taskCtx) {
   return prompt;
 }
 
-// Call claude -p for LLM analysis
+// Call claude -p for LLM analysis — pipe prompt via stdin to avoid shell escaping issues
 function callClaude(prompt) {
   try {
-    var result = cp.execSync(
-      'claude -p --output-format json "' + prompt.replace(/"/g, '\\"').replace(/\n/g, '\\n') + '"',
-      { encoding: "utf-8", timeout: CLAUDE_TIMEOUT, stdio: ["pipe", "pipe", "pipe"] }
-    );
+    var result = cp.execSync("claude -p --output-format json", {
+      input: prompt,
+      encoding: "utf-8",
+      timeout: CLAUDE_TIMEOUT,
+      stdio: ["pipe", "pipe", "pipe"]
+    });
     return result.trim();
   } catch (e) {
     return "";

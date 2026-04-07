@@ -462,8 +462,8 @@ WHY: Currently ~30 run-modules exist with no way to see the big picture — whic
 ## Moved
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
 
-## Pending Integration
-- [ ] T094: Integrate hook-monitor — bundle as self-validation layer (verify wire protocol on edit, checksum registry, runtime health). See hook-monitor project TODO.
+## Superseded
+- [x] T094: ~~Integrate hook-monitor~~ — superseded by hook-integrity system (T298-T304) + self-reflection (T324). No hook-monitor project exists.
 
 ## Catalog Sync & Spec-Gate Strengthening (session 2026-04-06b)
 - [x] T319: Sync no-adhoc-commands module to catalog (Azure/terraform/azcopy/RDP blocks from live)
