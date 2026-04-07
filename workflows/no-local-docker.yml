@@ -10,4 +10,4 @@ steps:
       require_files: []
 
 modules:
-  - test-tmp-mod-569784- block-local-docker
+  - block-local-docker

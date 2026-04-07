@@ -86,12 +86,14 @@ RESULTS=$(node -e "
   var dirs = process.argv.slice(2);
   var results = [];
 
-  function test(dir, file) {
+  function test(dir, file, branch) {
     delete require.cache[require.resolve(modPath)];
     process.env.CLAUDE_PROJECT_DIR = dir;
     try {
       var mod = require(modPath);
-      var r = mod({ tool_name: 'Edit', tool_input: { file_path: file } });
+      var input = { tool_name: 'Edit', tool_input: { file_path: file } };
+      if (branch) input._git = { branch: branch };
+      var r = mod(input);
       return r && r.decision === 'block' ? 'BLOCKED: ' + r.reason.split('\n')[0] : 'PASSED';
     } catch(e) { return 'ERROR: ' + e.message; }
   }
@@ -101,7 +103,7 @@ RESULTS=$(node -e "
   results.push(test(dirs[2], dirs[2] + '/src/app.js'));  // 2: no TODO, no specs
   results.push(test(dirs[3], dirs[3] + '/src/app.js'));  // 3: specs/tasks.md
   results.push(test(dirs[2], dirs[2] + '/src/app.js'));  // 4: block mentions TODO.md
-  results.push(test(dirs[4], dirs[4] + '/src/app.js'));  // 5: mixed on feature branch
+  results.push(test(dirs[4], dirs[4] + '/src/app.js', '100-T099-new-work'));  // 5: mixed on feature branch
 
   console.log(JSON.stringify(results));
 " "$MODULE" "$PROJ1" "$PROJ2" "$PROJ3" "$PROJ4" "$PROJ6" 2>/dev/null)
@@ -132,14 +134,14 @@ V=$(R 5)
 if echo "$V" | grep -q "PASSED"; then pass "Mixed: checked specs + unchecked TODO.md allows edits (feature branch)"
 else fail "Mixed sources should pass on feature branch: $V"; fi
 
-# 7. T340: Switch to main — separate node call (needs git checkout first)
-GIT_DIR="$PROJ6/.git" GIT_WORK_TREE="$PROJ6" git checkout main 2>/dev/null
+# 7. T340: On main with specs/, TODO.md alone requires feature branch
+# Pass branch='main' via _git to avoid git timeout issues under load
 RESULT7=$(node -e "
   var modPath = process.argv[1], dir = process.argv[2];
   delete require.cache[require.resolve(modPath)];
   process.env.CLAUDE_PROJECT_DIR = dir;
   var mod = require(modPath);
-  var r = mod({ tool_name: 'Edit', tool_input: { file_path: dir + '/src/app.js' } });
+  var r = mod({ tool_name: 'Edit', tool_input: { file_path: dir + '/src/app.js' }, _git: { branch: 'main' } });
   process.stdout.write(r && r.decision === 'block' ? 'BLOCKED: ' + r.reason.split('\n')[0] : 'PASSED');
 " "$MODULE" "$PROJ6" 2>/dev/null)
 if echo "$RESULT7" | grep -q "BLOCKED.*feature branch"; then
