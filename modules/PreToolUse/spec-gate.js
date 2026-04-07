@@ -395,8 +395,31 @@ module.exports = function(input) {
     anyFullChain = true;
   }
 
-  // TODO.md with unchecked tasks counts as a valid chain
-  if (hasTodoUnchecked) anyFullChain = true;
+  // T340: TODO.md with unchecked tasks counts as a valid chain, BUT:
+  // On main/master in projects WITH specs/, require a feature branch.
+  // TODO.md alone is too permissive — any open task allows editing any file.
+  // Feature branches have T321 enforcement (task ID must be unchecked).
+  var isMainBranch = !branch || branch === "main" || branch === "master" || branch === "HEAD";
+  var hasSpecsDir = specEntries.length > 0;
+  if (hasTodoUnchecked) {
+    if (isMainBranch && hasSpecsDir) {
+      // Mature project on main — require feature branch for traceability
+      return {
+        decision: "block",
+        reason: "SPEC GATE: On main branch — create a feature branch for your task.\n" +
+          "WHY: TODO.md has open tasks, but editing on main without a feature branch\n" +
+          "means changes can't be traced to a specific task. This project has specs/,\n" +
+          "so every change should be on a branch like: 213-T340-fix-spec-gate\n" +
+          "FIX: git checkout -b <number>-<task>-<description>\n" +
+          "  e.g.: git checkout -b 213-T340-spec-gate-todo-fallback\n" +
+          "  The branch name must include TXXX matching an unchecked task." +
+          SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
+          "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
+      };
+    }
+    // Simple project (no specs/) — TODO.md is sufficient
+    anyFullChain = true;
+  }
 
   if (isTestFile && anyFullChain) return null;
 
