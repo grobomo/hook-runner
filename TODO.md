@@ -494,9 +494,9 @@ User correction pattern observed:
 - Self-reflection does NOT implement the fix — it writes the TODO and moves on.
 
 TOP PRIORITY — self-reflection scope enforcement + future architecture:
-- [ ] T330: Reflection-gate: when issues exist, allow edits to hook-runner modules (self-repair) + TODO.md/specs. Block all other production code. Self-reflection can fix its own system but delegates everything else via TODOs.
+- [x] T330: Reflection-gate: when issues exist, allow edits to hook-runner modules (self-repair) + TODO.md/specs. Block all other production code. Self-reflection can fix its own system but delegates everything else via TODOs.
 - [ ] T331: Migrate self-reflection LLM analysis to unified-brain plugin. Current: self-reflection.js calls claude -p directly (expensive, no memory, no cross-session context). Target: self-reflection.js becomes a thin bridge — sends hook-log events to brain service, brain does LLM analysis with three-tier memory (hot events → session summaries → global patterns), returns analysis results. Hook-runner stays the ego (enforcement), brain becomes the thinker (analysis + memory). When done: remove callClaude()/parseResponse()/buildPrompt() from self-reflection.js, replace with brain API call. See unified-brain TODO.md T053-T055 for the brain-side work.
-- [ ] T332: Until T331, add lightweight session summary compaction — at Stop, append a one-line JSON summary to reflection-sessions.jsonl (files edited, issues found, score delta, corrections). Inject last 3 summaries into claude -p prompt for short-term memory.
+- [x] T332: Until T331, add lightweight session summary compaction — at Stop, append a one-line JSON summary to reflection-sessions.jsonl (files edited, issues found, score delta, corrections). Inject last 3 summaries into claude -p prompt for short-term memory.
 
 What to do next:
 1. ~~Run full test suite~~ — done, 3 suites failing (hook-integrity decodeProjectDir, module-sync, modules timeout)
