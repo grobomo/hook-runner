@@ -545,8 +545,11 @@ What was done:
 ## Release
 - [x] T371: Version bump to 2.15.2 + CHANGELOG for T369-T370 + marketplace sync (PR #240)
 
+## Docs
+- [ ] T372: Fix CLAUDE.md push workflow — add modules/workflows sync with correct cp syntax (avoid nesting bug)
+
 ## Status
-- 295 tasks completed, 0 pending
+- 295 tasks completed, 1 pending
 - Version: 2.15.2
 - Marketplace: claude-code-skills synced to v2.15.2 (files copied, needs commit+push from that project)
 - CI: ALL GREEN (Linux + Windows)
