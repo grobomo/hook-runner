@@ -404,6 +404,7 @@ Full catalog in `modules/` directory:
 | `project-health` | Runs health check, warns about issues |
 | `reflection-score-inject` | Injects reflection score/level/streak into session context |
 | `session-cleanup` | Sweeps orphaned session-scoped temp files from crashed sessions |
+| `session-collision-detector` | Warns if another Claude Code session is active on the same project |
 | `terminal-title` | Sets terminal title to project folder name |
 | `workflow-summary` | Injects active workflow summary |
 

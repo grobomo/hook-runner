@@ -63,6 +63,24 @@ module.exports = function() {
         }
       }
     }
+    // T351: Also clean session-lock files from collision detector
+    // Pattern: .claude-session-lock-<hash>-<pid>
+    var LOCK_PREFIX = ".claude-session-lock-";
+    for (var k = 0; k < files.length; k++) {
+      var lf = files[k];
+      if (lf.indexOf(LOCK_PREFIX) !== 0) continue;
+      // Extract PID from end of filename (after last dash)
+      var lastDash = lf.lastIndexOf("-");
+      if (lastDash <= LOCK_PREFIX.length) continue;
+      var lockPidStr = lf.substring(lastDash + 1);
+      var lockPid = parseInt(lockPidStr, 10);
+      if (!isNaN(lockPid) && lockPid > 0 && lockPid !== process.ppid && !isPidRunning(lockPid)) {
+        try {
+          fs.unlinkSync(path.join(TMP, lf));
+          cleaned++;
+        } catch (e) { /* skip */ }
+      }
+    }
   } catch (e) { /* tmpdir read failed */ }
 
   return null; // SessionStart modules should not block

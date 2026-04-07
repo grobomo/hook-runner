@@ -641,6 +641,8 @@ TOP PRIORITY — self-reflection scope enforcement + future architecture:
 
 - [x] T340: TODO.md fallback tightened — on main branch in projects with specs/ (mature projects), spec-gate now requires a feature branch instead of allowing blanket edits via TODO.md. Simple projects (no specs/) still use TODO.md directly. Feature branches enforce task ID matching via T321. 3 tests pass.
 
+- [ ] T351: Session collision detector — SessionStart module that detects multiple Claude Code sessions on the same project. Context-reset spawns new tabs that work simultaneously, causing branch conflicts, index.lock contention, and parallel commits. Module writes a session lock file per project+PID, checks for other active sessions on SessionStart, and warns loudly. Belt: hook-based detection here. Suspenders: system-monitor T027 for process-level detection.
+
 ## UserPromptSubmit Safety & Self-Reflection Improvements (session 2026-04-07)
 - [x] T341: hook-editing-gate blocks ALL UserPromptSubmit module creation. Any bug in a UPS module locks the user out with no recovery. Learned from frustration-detector incident (2026-04-07): module blocked every user prompt, making it impossible to fix. All UPS functionality must live in PreToolUse/PostToolUse/Stop instead.
 - [x] T342: Self-reflection removes hasEdits guard — sessions with user frustration/corrections but no edits now get reflected on (previously the worst sessions were skipped entirely)
