@@ -566,12 +566,12 @@ What was done:
 - Report.js and setup.js synced to live hooks
 
 ## Release
-- [ ] T375: Version bump to 2.15.3 + CHANGELOG for T374 + marketplace sync
+- [x] T375: Version bump to 2.15.3 + CHANGELOG for T374 + marketplace sync (PR #244)
 
 ## Status
-- 298 tasks completed, 1 pending
-- Version: 2.15.2
-- Marketplace: claude-code-skills synced to v2.15.2
+- 299 tasks completed, 0 pending
+- Version: 2.15.3
+- Marketplace: claude-code-skills synced to v2.15.3
 - CI: ALL GREEN (Linux + Windows)
 - 84 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
