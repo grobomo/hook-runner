@@ -402,7 +402,7 @@ See `specs/hook-integrity/` for full spec and tasks.
 - [x] T318: Version bump to 2.8.2 + CHANGELOG entry for --deep, --input, ES5 fixes, operator precedence bug
 
 ## Status
-- 255 tasks completed, 0 pending
+- 261 tasks completed (T330-T336), 1 pending (T331 brain integration — cross-project)
 - Version: 2.11.0
 - 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 43 test suites
 - Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
@@ -498,14 +498,15 @@ TOP PRIORITY — self-reflection scope enforcement + future architecture:
 - [ ] T331: Migrate self-reflection LLM analysis to unified-brain plugin. Current: self-reflection.js calls claude -p directly (expensive, no memory, no cross-session context). Target: self-reflection.js becomes a thin bridge — sends hook-log events to brain service, brain does LLM analysis with three-tier memory (hot events → session summaries → global patterns), returns analysis results. Hook-runner stays the ego (enforcement), brain becomes the thinker (analysis + memory). When done: remove callClaude()/parseResponse()/buildPrompt() from self-reflection.js, replace with brain API call. See unified-brain TODO.md T053-T055 for the brain-side work.
 - [x] T332: Until T331, add lightweight session summary compaction — at Stop, append a one-line JSON summary to reflection-sessions.jsonl (files edited, issues found, score delta, corrections). Inject last 3 summaries into claude -p prompt for short-term memory.
 
-What to do next:
-1. ~~Run full test suite~~ — done, 3 suites failing (hook-integrity decodeProjectDir, module-sync, modules timeout)
-2. ~~nested-claude gate FP on gh_auto~~ — fixed: skip git/gh_auto commands in no-nested-claude.js
-3. ~~DRY self-reflection.js parseResponse~~ — fixed: callClaude returns {raw, parsed}
-4. ~~claude -p cost~~ — fixed: skip reflection when no Edit/Write calls in recent entries
-5. Test the reflection-score-inject SessionStart module actually works (check if score shows up on context reset)
-6. Marketplace sync needed for v2.10.0
-7. Fix 3 failing test suites (hook-integrity decodeProjectDir, module-sync catalog load, modules timeout)
+## Session 2026-04-06d
+- [x] T330: Reflection-gate scope enforcement (self-repair for hook-runner modules only)
+- [x] T332: Session summary compaction (reflection-sessions.jsonl + inject into prompt)
+- [x] T333: Version bump to 2.11.0 + CHANGELOG
+- [x] T334: Fix 3 failing test suites (decodeProjectDir _prefix, module-sync utility exports, test paths)
+- [x] T335: Unproductive loop detection in self-reflection (failed commands, retry patterns, manual patching)
+- [x] T336: Marketplace sync v2.11.0
+- Also fixed: nested-claude gate FP on gh_auto, DRY parseResponse, skip claude -p on no-edit stops
+- Verified: reflection-score-inject works (score 2846, Master level)
 
 ## Superseded
 - [x] T094: ~~Integrate hook-monitor~~ — superseded by hook-integrity system (T298-T304) + self-reflection (T324). No hook-monitor project exists.
