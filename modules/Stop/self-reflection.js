@@ -109,6 +109,74 @@ function getRecentSummaries(count) {
   } catch (e) { return []; }
 }
 
+// Scan user prompts for repeated instructions (same directive given multiple times)
+// Returns array of {keyword, count, samples} for instructions seen 2+ times
+var PROMPT_LOG_PATH = path.join(HOOKS_DIR, "prompt-log.jsonl");
+function getRepeatedInstructions() {
+  try {
+    if (!fs.existsSync(PROMPT_LOG_PATH)) return [];
+    var content = fs.readFileSync(PROMPT_LOG_PATH, "utf-8").trim();
+    if (!content) return [];
+    var lines = content.split("\n");
+
+    // Extract instruction-like prompts (imperative: "never", "always", "block", "don't", "stop using")
+    var INSTRUCTION_PATTERNS = [
+      /\bnever\b/i, /\balways\b/i, /\bblock\b/i, /\bdon'?t\b/i, /\bstop using\b/i,
+      /\bneed a hook\b/i, /\bonly hook/i, /\bonly modules?\b/i, /\bnot rules\b/i,
+      /\bno rules\b/i, /\benforce\b/i, /\brequire\b/i, /\bmust\b/i
+    ];
+
+    var instructionPrompts = [];
+    for (var i = 0; i < lines.length; i++) {
+      try {
+        var entry = JSON.parse(lines[i]);
+        var preview = (entry.preview || "").toLowerCase();
+        // Skip short or system-like prompts
+        if (preview.length < 15) continue;
+        // Check if it matches instruction patterns
+        for (var p = 0; p < INSTRUCTION_PATTERNS.length; p++) {
+          if (INSTRUCTION_PATTERNS[p].test(preview)) {
+            instructionPrompts.push({ ts: entry.ts, text: entry.preview, project: entry.project });
+            break;
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (instructionPrompts.length < 2) return [];
+
+    // Simple keyword extraction: split into 3-grams, find repeats
+    var ngrams = {};
+    for (var j = 0; j < instructionPrompts.length; j++) {
+      var words = instructionPrompts[j].text.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/);
+      var seenInPrompt = {};
+      for (var w = 0; w < words.length - 2; w++) {
+        var gram = words[w] + " " + words[w + 1] + " " + words[w + 2];
+        // Skip filler n-grams
+        if (gram.length < 8) continue;
+        if (seenInPrompt[gram]) continue;
+        seenInPrompt[gram] = true;
+        if (!ngrams[gram]) ngrams[gram] = { count: 0, samples: [] };
+        ngrams[gram].count++;
+        if (ngrams[gram].samples.length < 3) {
+          ngrams[gram].samples.push(instructionPrompts[j].text.substring(0, 100));
+        }
+      }
+    }
+
+    // Return n-grams seen 2+ times, sorted by count desc
+    var repeated = [];
+    var keys = Object.keys(ngrams);
+    for (var k = 0; k < keys.length; k++) {
+      if (ngrams[keys[k]].count >= 2) {
+        repeated.push({ keyword: keys[k], count: ngrams[keys[k]].count, samples: ngrams[keys[k]].samples });
+      }
+    }
+    repeated.sort(function(a, b) { return b.count - a.count; });
+    return repeated.slice(0, 10); // top 10 repeated instruction patterns
+  } catch (e) { return []; }
+}
+
 // Write one-line session summary after each reflection
 function writeSessionSummary(result, gitCtx, editedFiles, scoreSummary) {
   try {
@@ -190,6 +258,18 @@ function buildPrompt(entries, gitCtx, taskCtx) {
         (s.issues_found || 0) + " issues, score " + (s.score_total || "?") +
         " (" + (s.level || "?") + ")\n";
     }
+  }
+
+  // Inject repeated user instructions — the user hates repeating themselves
+  var repeatedInstructions = getRepeatedInstructions();
+  if (repeatedInstructions.length > 0) {
+    prompt += "\nREPEATED USER INSTRUCTIONS (user gave these directives multiple times — THIS IS A PROBLEM):\n";
+    for (var ri = 0; ri < repeatedInstructions.length; ri++) {
+      var rep = repeatedInstructions[ri];
+      prompt += "  [" + rep.count + "x] \"" + rep.keyword + "\" — samples: " + rep.samples[0] + "\n";
+    }
+    prompt += "If any of these are not yet enforced by a hook module, flag as HIGH severity.\n";
+    prompt += "The user should NEVER have to repeat an instruction — each one should become a permanent gate.\n";
   }
 
   prompt += "\nRECENT EDITS (files modified):\n" + uniqueEdits.join("\n") + "\n";
