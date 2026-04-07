@@ -22,8 +22,8 @@
 - Test: verify two tabs don't interfere with each other's flags
 
 ## T340: Task-scoped TODO.md fallback
-- Add task declaration mechanism (write current task ID to .system-monitor/active-task.json)
-- spec-gate reads active task and only allows edits plausibly related to it
-- On main branch with no declared task: block all code edits
-- Self-reflection updates active task based on conversation context
-- Test: verify editing unrelated files is blocked when on main with a declared task
+- [x] On main branch in projects WITH specs/, require a feature branch (TODO.md alone too permissive)
+- [x] Projects without specs/ keep the simple TODO.md fallback (backwards compatible)
+- [x] Feature branches have T321 enforcement (task ID must match unchecked task)
+- [x] Test: T106 test 7 — main + specs + TODO.md blocks, feature branch passes
+- ~~Add task declaration mechanism~~ — simplified: feature branch requirement is sufficient

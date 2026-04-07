@@ -53,7 +53,7 @@ init_git() {
 }
 
 run_gate() {
-  node "$HELPER" "$1" "$2" 2>&1 || true
+  node "$HELPER" "$1" "$2" 2>/dev/null || true
 }
 
 # 1. Project with only TODO.md containing unchecked tasks — should pass
@@ -66,6 +66,7 @@ cat > "$PROJ1/TODO.md" <<'EOF'
 - [ ] T002: Fix bug Y
 EOF
 echo "x" > "$PROJ1/src/app.js"
+init_git "$PROJ1"
 
 OUTPUT=$(run_gate "$PROJ1" "$PROJ1/src/app.js")
 if echo "$OUTPUT" | grep -q "PASSED"; then
@@ -84,6 +85,7 @@ cat > "$PROJ2/TODO.md" <<'EOF'
 - [x] T002: Fix bug Y
 EOF
 echo "x" > "$PROJ2/src/app.js"
+init_git "$PROJ2"
 
 OUTPUT=$(run_gate "$PROJ2" "$PROJ2/src/app.js")
 if echo "$OUTPUT" | grep -q "BLOCKED"; then
@@ -97,6 +99,7 @@ PROJ3="$TMPDIR/proj-empty"
 mkdir -p "$PROJ3/src"
 git init -q "$PROJ3"
 echo "x" > "$PROJ3/src/app.js"
+init_git "$PROJ3"
 
 OUTPUT=$(run_gate "$PROJ3" "$PROJ3/src/app.js")
 if echo "$OUTPUT" | grep -q "BLOCKED"; then
@@ -131,7 +134,8 @@ else
   fail "Block message should mention TODO.md: $OUTPUT"
 fi
 
-# 6. Mixed: specs all checked but TODO.md has unchecked — should pass
+# 6. Mixed: specs all checked but TODO.md has unchecked — should pass on feature branch
+# T340: On main with specs/, TODO.md alone requires a feature branch for traceability
 PROJ6="$TMPDIR/proj-mixed"
 mkdir -p "$PROJ6/specs/feat1" "$PROJ6/src"
 git init -q "$PROJ6"
@@ -143,12 +147,23 @@ cat > "$PROJ6/TODO.md" <<'EOF'
 EOF
 echo "x" > "$PROJ6/src/app.js"
 init_git "$PROJ6"
+# Create a feature branch so T340 allows the edit
+GIT_DIR="$PROJ6/.git" GIT_WORK_TREE="$PROJ6" git checkout -b 100-T099-new-work 2>/dev/null
 
 OUTPUT=$(run_gate "$PROJ6" "$PROJ6/src/app.js")
 if echo "$OUTPUT" | grep -q "PASSED"; then
-  pass "Mixed: checked specs + unchecked TODO.md allows edits"
+  pass "Mixed: checked specs + unchecked TODO.md allows edits (feature branch)"
 else
-  fail "Mixed sources should pass if any has unchecked tasks: $OUTPUT"
+  fail "Mixed sources should pass on feature branch: $OUTPUT"
+fi
+
+# 7. T340: On main with specs/, TODO.md alone requires feature branch
+GIT_DIR="$PROJ6/.git" GIT_WORK_TREE="$PROJ6" git checkout main 2>/dev/null
+OUTPUT=$(run_gate "$PROJ6" "$PROJ6/src/app.js")
+if echo "$OUTPUT" | grep -q "BLOCKED.*feature branch"; then
+  pass "T340: main + specs/ + TODO.md blocks (requires feature branch)"
+else
+  fail "T340: should block on main with specs: $OUTPUT"
 fi
 
 echo ""
