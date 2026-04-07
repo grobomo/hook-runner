@@ -513,8 +513,8 @@ What was done:
 - [ ] T359: npm package publish — enable `npx grobomo/hook-runner` for zero-clone install
 
 ## Status
-- 279 tasks completed, 1 pending (T331 brain integration — cross-project)
-- Version: 2.14.3
+- 280 tasks completed, 1 pending (T331 brain integration — cross-project)
+- Version: 2.14.5
 - Marketplace: claude-code-skills synced to v2.14.3 (needs commit+push from that project)
 - CI: ALL GREEN (Linux + Windows)
 - 77 modules across 5 workflows (2 active: shtd + customer-data-guard), 47 test suites
