@@ -536,8 +536,11 @@ What was done:
 - [x] T367: Rewrite README — individual-first framing, no settings.json suggestions, portability value prop (PR #236, closes #194)
 - [x] T368: Marketplace README sync — TODO written in claude-code-skills/TODO.md as T002 (cross-project, PR #236)
 
+## YAML Sync
+- [ ] T369: Add session-collision-detector to shtd.yml modules list (audit shows 71 actual vs 70 in YAML)
+
 ## Status
-- 292 tasks completed, 0 pending
+- 292 tasks completed, 1 pending
 - Version: 2.15.1
 - Marketplace: claude-code-skills synced to v2.15.1
 - CI: ALL GREEN (Linux + Windows)
