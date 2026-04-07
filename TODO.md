@@ -546,12 +546,12 @@ What was done:
 - [x] T371: Version bump to 2.15.2 + CHANGELOG for T369-T370 + marketplace sync (PR #240)
 
 ## Docs
-- [ ] T372: Fix CLAUDE.md push workflow — add modules/workflows sync with correct cp syntax (avoid nesting bug)
+- [x] T372: Fix CLAUDE.md push workflow — add modules/workflows sync with correct cp syntax (avoid nesting bug) (PR #241)
 
 ## Status
-- 295 tasks completed, 1 pending
+- 296 tasks completed, 0 pending
 - Version: 2.15.2
-- Marketplace: claude-code-skills synced to v2.15.2 (files copied, needs commit+push from that project)
+- Marketplace: claude-code-skills synced to v2.15.2
 - CI: ALL GREEN (Linux + Windows)
 - 84 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
