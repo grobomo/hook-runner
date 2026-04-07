@@ -28,7 +28,6 @@
 // - Feature branch PRs into main when spec is complete
 var fs = require("fs");
 var path = require("path");
-var cp = require("child_process");
 
 // Read-only bash commands that are always allowed (no task branch needed)
 var READ_ONLY_PATTERNS = [
@@ -99,9 +98,11 @@ function validateBranchName(name) {
 
 function getBranch() {
   try {
-    return cp.execSync("git rev-parse --abbrev-ref HEAD", {
-      encoding: "utf-8", timeout: 5000
-    }).trim();
+    // Read .git/HEAD directly — avoids spawning git (slow on Windows, can timeout)
+    var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
+    var head = fs.readFileSync(path.join(projectDir, ".git", "HEAD"), "utf-8").trim();
+    if (head.indexOf("ref: refs/heads/") === 0) return head.slice(16);
+    return "HEAD";
   } catch(e) { return ""; }
 }
 

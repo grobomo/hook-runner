@@ -25,7 +25,10 @@ module.exports = function(input) {
   var branch = (input._git && input._git.branch) || "";
   if (!branch) {
     try {
-      branch = cp.execSync("git rev-parse --abbrev-ref HEAD", { encoding: "utf-8", timeout: 5000 }).trim();
+      // Read .git/HEAD directly — avoids spawning git (slow on Windows)
+      var projectDir0 = (process.env.CLAUDE_PROJECT_DIR || process.cwd()).replace(/\\/g, "/");
+      var headContent = fs.readFileSync(path.join(projectDir0, ".git", "HEAD"), "utf-8").trim();
+      branch = headContent.indexOf("ref: refs/heads/") === 0 ? headContent.slice(16) : "";
     } catch(e) { return null; }
   }
 

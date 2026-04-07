@@ -82,9 +82,9 @@ module.exports = function(input) {
     // Push current branch (not hardcoded main — repo may be on a different branch)
     var branch = "";
     try {
-      branch = cp.execSync("git rev-parse --abbrev-ref HEAD", {
-        cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"]
-      }).trim();
+      // Read .git/HEAD directly — avoids spawning git (slow on Windows)
+      var headContent = fs.readFileSync(path.join(claudeDir, ".git", "HEAD"), "utf-8").trim();
+      branch = headContent.indexOf("ref: refs/heads/") === 0 ? headContent.slice(16) : "";
     } catch (e) { branch = "main"; }
     if (!/^[a-zA-Z0-9._\-\/]+$/.test(branch)) branch = "main";
 
