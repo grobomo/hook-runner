@@ -85,6 +85,7 @@ modules:
   - disk-space-guard
   - force-push-gate
   - env-var-check
+  - session-cleanup
   - hook-autocommit
   - no-adhoc-commands
   - cross-project-todo-gate
@@ -94,6 +95,7 @@ modules:
   - settings-hooks-gate
   # Messaging safety (was: messaging-safety)
   - messaging-safety-gate
+  - share-is-generic
   # Self-improvement (was: self-improvement)
   - instruction-to-hook-gate
   - instruction-detector
