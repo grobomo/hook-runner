@@ -66,14 +66,17 @@ function parseLogLines(lines, stats, maxSamples) {
 
     var key = entry.event + "/" + entry.module;
     if (!stats[key]) {
-      stats[key] = { total: 0, pass: 0, block: 0, error: 0, text: 0, deny: 0, msTotal: 0, msCount: 0, msMax: 0, samples: [] };
+      stats[key] = { total: 0, pass: 0, block: 0, error: 0, text: 0, deny: 0, msTotal: 0, msCount: 0, msMax: 0, samples: [], firstTs: "", lastTs: "", lastBlockTs: "" };
     }
     var s = stats[key];
     s.total++;
+    var ts = entry.ts || "";
+    if (ts && (!s.firstTs || ts < s.firstTs)) s.firstTs = ts;
+    if (ts && ts > s.lastTs) s.lastTs = ts;
     var r = entry.result || "pass";
     if (r === "pass") s.pass++;
-    else if (r === "block") s.block++;
-    else if (r === "deny") { s.block++; s.deny++; }
+    else if (r === "block") { s.block++; if (ts > s.lastBlockTs) s.lastBlockTs = ts; }
+    else if (r === "deny") { s.block++; s.deny++; if (ts > s.lastBlockTs) s.lastBlockTs = ts; }
     else if (r === "error") s.error++;
     else if (r === "text") s.text++;
 

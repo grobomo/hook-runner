@@ -548,8 +548,11 @@ What was done:
 ## Docs
 - [x] T372: Fix CLAUDE.md push workflow — add modules/workflows sync with correct cp syntax (avoid nesting bug) (PR #241)
 
+## Module Review Dashboard (T373)
+- [ ] T373: Add "Module Review" tab to HTML report — sortable table with: module name, event, workflow, WHY summary, block count, total calls, block rate, avg ms, last-blocked date, verdict (active/preventive/stale/dead). Enables periodic review by sorting on last-blocked or verdict.
+
 ## Status
-- 296 tasks completed, 0 pending
+- 296 tasks completed, 1 pending
 - Version: 2.15.2
 - Marketplace: claude-code-skills synced to v2.15.2
 - CI: ALL GREEN (Linux + Windows)
