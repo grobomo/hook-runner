@@ -539,8 +539,11 @@ What was done:
 ## YAML Sync
 - [x] T369: Add session-collision-detector to shtd.yml modules list + fix T094 test helper exclusion (PR #238)
 
+## Security Hardening
+- [ ] T370: Validate pid input in _is-pid-running.js — defense-in-depth against command injection
+
 ## Status
-- 293 tasks completed, 0 pending
+- 293 tasks completed, 1 pending
 - Version: 2.15.1
 - Marketplace: claude-code-skills synced to v2.15.1
 - CI: ALL GREEN (Linux + Windows)
