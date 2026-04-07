@@ -20,7 +20,7 @@ Modular hook runner for Claude Code. Workflows group modules into enforceable pi
 - `modules/` — distributable module catalog organized by event type
 - `workflows/` — built-in workflow definitions (YAML)
 - `specs/` — feature specs with tasks and checkpoints
-- `scripts/test/` — test scripts (40 suites, 532 tests)
+- `scripts/test/` — test scripts (49 suites)
 - `package.json` — npm package (enables `npx grobomo/hook-runner`)
 
 ## Testing
@@ -66,8 +66,7 @@ node setup.js --help         # show all commands
 - The `hook-editing-gate` module enforces these rules at edit time (including the UPS no-block rule).
 
 ## Self-Reflection Architecture
-- **Current (interim)**: `self-reflection.js` (Stop module) calls `claude -p` directly for LLM analysis. No memory across sessions. Expensive.
-- **Target (T331)**: self-reflection becomes a thin bridge to unified-brain service. Brain handles LLM analysis with three-tier memory (hot events → session summaries → global patterns). Self-reflection just sends events and reads back results.
+- **Brain bridge (T331)**: `self-reflection.js` (Stop module) tries unified-brain `/ask` endpoint first (fast, has three-tier memory). Falls back to direct LLM call when brain is unavailable. `BRAIN_URL` env var configurable (default `http://localhost:8790`).
 - **Scope rule**: self-reflection can self-repair hook-runner modules. For everything else, it only writes TODOs. reflection-gate.js enforces this — allows edits to `run-modules/` and `hook-runner/modules/`, blocks other production code when issues exist.
 - **Scoring**: reflection-score.json persists across sessions, injected at SessionStart. Levels (Novice→Master) based on clean reflections, autonomy streaks, user corrections.
 

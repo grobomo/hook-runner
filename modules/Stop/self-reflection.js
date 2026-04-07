@@ -14,13 +14,15 @@ var os = require("os");
 var cp = require("child_process");
 
 var http = require("http");
-var url = require("url");
 
 var HOOKS_DIR = path.join(os.homedir(), ".claude", "hooks");
 var LOG_PATH = path.join(HOOKS_DIR, "hook-log.jsonl");
 var REFLECTION_PATH = path.join(HOOKS_DIR, "self-reflection.jsonl");
 var SESSIONS_PATH = path.join(HOOKS_DIR, "reflection-sessions.jsonl");
 var BRAIN_URL = process.env.BRAIN_URL || "http://localhost:8790";
+var _brainParsed = new URL(BRAIN_URL);
+var BRAIN_HOST = _brainParsed.hostname || "localhost";
+var BRAIN_PORT = parseInt(_brainParsed.port, 10) || 8790;
 var CLAUDE_LOG_PATH = path.join(HOOKS_DIR, "reflection-claude-log.jsonl");
 var MAX_ENTRIES = 50; // last N hook-log entries to analyze
 var CLAUDE_TIMEOUT = 60000; // 60s for claude -p (runs every Stop, needs room)
@@ -404,10 +406,9 @@ var _brainAvailable = null;
 function isBrainAvailable() {
   if (_brainAvailable !== null) return Promise.resolve(_brainAvailable);
   return new Promise(function(resolve) {
-    var parsed = url.parse(BRAIN_URL);
     var req = http.get({
-      hostname: parsed.hostname,
-      port: parsed.port || 8790,
+      hostname: BRAIN_HOST,
+      port: BRAIN_PORT,
       path: "/healthz",
       timeout: 2000
     }, function(res) {
@@ -430,7 +431,6 @@ function isBrainAvailable() {
 function callBrain(prompt) {
   return new Promise(function(resolve) {
     var startMs = Date.now();
-    var parsed = url.parse(BRAIN_URL);
     var payload = JSON.stringify({
       question: prompt,
       source: "hook-runner",
@@ -439,8 +439,8 @@ function callBrain(prompt) {
       metadata: { type: "reflection", project: path.basename(process.env.CLAUDE_PROJECT_DIR || "unknown") }
     });
     var req = http.request({
-      hostname: parsed.hostname,
-      port: parsed.port || 8790,
+      hostname: BRAIN_HOST,
+      port: BRAIN_PORT,
       path: "/ask",
       method: "POST",
       headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload) },

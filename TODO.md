@@ -521,8 +521,11 @@ What was done:
 - system-monitor T027: TODO added for process-level Claude tab detection
 - Next: version bump for T361, marketplace sync, code review pass
 
+## Code Review & Cleanup
+- [ ] T362: Code review pass — update CLAUDE.md (stale self-reflection architecture, test counts), DRY brain URL parsing in self-reflection.js, marketplace sync to v2.15.0
+
 ## Status
-- 285 tasks completed, 0 pending
+- 285 tasks completed, 1 pending
 - Version: 2.15.0
 - Marketplace: claude-code-skills synced to v2.14.3 (needs commit+push from that project)
 - CI: ALL GREEN (Linux + Windows)
