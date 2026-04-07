@@ -17,6 +17,7 @@ var cp = require("child_process");
 var HOOKS_DIR = path.join(os.homedir(), ".claude", "hooks");
 var LOG_PATH = path.join(HOOKS_DIR, "hook-log.jsonl");
 var REFLECTION_PATH = path.join(HOOKS_DIR, "self-reflection.jsonl");
+var SESSIONS_PATH = path.join(HOOKS_DIR, "reflection-sessions.jsonl");
 var CLAUDE_LOG_PATH = path.join(HOOKS_DIR, "reflection-claude-log.jsonl");
 var MAX_ENTRIES = 50; // last N hook-log entries to analyze
 var CLAUDE_TIMEOUT = 60000; // 60s for claude -p (runs every Stop, needs room)
@@ -92,6 +93,42 @@ function getTaskContext() {
   } catch (e) { return ""; }
 }
 
+// Read last N session summaries for short-term memory (interim until brain T331)
+function getRecentSummaries(count) {
+  try {
+    if (!fs.existsSync(SESSIONS_PATH)) return [];
+    var content = fs.readFileSync(SESSIONS_PATH, "utf-8").trim();
+    if (!content) return [];
+    var lines = content.split("\n");
+    var start = Math.max(0, lines.length - count);
+    var summaries = [];
+    for (var i = start; i < lines.length; i++) {
+      try { summaries.push(JSON.parse(lines[i])); } catch (e) {}
+    }
+    return summaries;
+  } catch (e) { return []; }
+}
+
+// Write one-line session summary after each reflection
+function writeSessionSummary(result, gitCtx, editedFiles, scoreSummary) {
+  try {
+    var entry = {
+      ts: new Date().toISOString(),
+      project: gitCtx.project || "unknown",
+      branch: gitCtx.branch || "unknown",
+      verdict: result.verdict || "unknown",
+      files_edited: editedFiles.length,
+      files: editedFiles.slice(0, 10), // cap at 10 for brevity
+      issues_found: (result.issues || []).length,
+      todos_generated: (result.todos || []).length,
+      score_delta: scoreSummary ? scoreSummary.delta : 0,
+      score_total: scoreSummary ? scoreSummary.total : null,
+      level: scoreSummary ? scoreSummary.level : null
+    };
+    fs.appendFileSync(SESSIONS_PATH, JSON.stringify(entry) + "\n");
+  } catch (e) { /* best effort */ }
+}
+
 // Build the reflection prompt
 function buildPrompt(entries, gitCtx, taskCtx) {
   // Summarize recent edits and gate decisions
@@ -118,7 +155,10 @@ function buildPrompt(entries, gitCtx, taskCtx) {
     if (!seen[edits[j]]) { uniqueEdits.push(edits[j]); seen[edits[j]] = true; }
   }
 
-  if (uniqueEdits.length === 0) return ""; // Nothing to reflect on
+  if (uniqueEdits.length === 0) return { prompt: "", editedFiles: [] };
+
+  // Get last 3 session summaries for short-term memory
+  var recentSessions = getRecentSummaries(3);
 
   var prompt = "You are a self-reflection module for a hook-runner system that enforces development workflows.\n\n";
   prompt += "YOUR ROLE: You are an OBSERVER ONLY. You analyze what happened and write TODOs.\n";
@@ -129,6 +169,19 @@ function buildPrompt(entries, gitCtx, taskCtx) {
   prompt += "- Project: " + (gitCtx.project || "unknown") + "\n";
   prompt += "- Branch: " + (gitCtx.branch || "unknown") + "\n";
   if (taskCtx) prompt += "- Unchecked tasks:\n" + taskCtx + "\n";
+
+  // Inject recent session history for cross-session awareness
+  if (recentSessions.length > 0) {
+    prompt += "\nRECENT SESSION HISTORY (last " + recentSessions.length + " reflections):\n";
+    for (var si = 0; si < recentSessions.length; si++) {
+      var s = recentSessions[si];
+      prompt += "  [" + (s.ts || "?") + "] " + (s.project || "?") + "/" + (s.branch || "?") +
+        " — " + (s.verdict || "?") + ", " + (s.files_edited || 0) + " files, " +
+        (s.issues_found || 0) + " issues, score " + (s.score_total || "?") +
+        " (" + (s.level || "?") + ")\n";
+    }
+  }
+
   prompt += "\nRECENT EDITS (files modified):\n" + uniqueEdits.join("\n") + "\n";
   if (blocks.length > 0) prompt += "\nBLOCKED ACTIONS:\n" + blocks.join("\n") + "\n";
   if (passes.length > 0) prompt += "\nPASSED GATE CHECKS (first 10):\n" + passes.slice(0, 10).join("\n") + "\n";
@@ -152,7 +205,7 @@ function buildPrompt(entries, gitCtx, taskCtx) {
   prompt += "The todos array is for improvements/follow-ups that should be added to TODO.md.\n";
   prompt += 'If everything looks correct: {"issues": [], "todos": [], "verdict": "clean"}\n';
 
-  return prompt;
+  return { prompt: prompt, editedFiles: uniqueEdits };
 }
 
 // Call claude -p for LLM analysis — pipe prompt via stdin, log everything
@@ -275,10 +328,10 @@ module.exports = async function(input) {
 
   var gitCtx = getGitContext();
   var taskCtx = getTaskContext();
-  var prompt = buildPrompt(entries, gitCtx, taskCtx);
-  if (!prompt) return null;
+  var built = buildPrompt(entries, gitCtx, taskCtx);
+  if (!built.prompt) return null;
 
-  var claudeResult = callClaude(prompt);
+  var claudeResult = callClaude(built.prompt);
   var result = claudeResult.parsed;
 
   if (!result) return null;
@@ -297,6 +350,9 @@ module.exports = async function(input) {
       scoreSummary = reflectionScore.updateScore(result);
     } catch (e) {}
   }
+
+  // Write session summary for short-term memory (interim until brain T331)
+  writeSessionSummary(result, gitCtx, built.editedFiles, scoreSummary);
 
   if (result.verdict === "clean") {
     // Even clean reflections report score changes (streak bonuses, TODO completions)
