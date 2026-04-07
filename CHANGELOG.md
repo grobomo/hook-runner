@@ -2,6 +2,17 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.14.3] — 2026-04-07
+
+### Added
+- **HOOK_RUNNER_TEST guard** — 6 Stop modules (chat-export, config-sync, drift-review, push-unpushed, self-reflection, session-brain-analysis) skip expensive operations when `HOOK_RUNNER_TEST=1` is set, preventing network/git/claude-p calls during test validation.
+- **Per-module test timeout** — individual module load/call tests in `test-modules.sh` now have a 10s safety timeout.
+
+### Fixed
+- **drift-review.js** — added missing `// WORKFLOW: shtd` tag, fixed return type from bare string to `{text: status}` object.
+- **self-reflection.js** — detached HEAD now returns `"HEAD"` instead of empty string.
+- **Test suite timeout** — increased per-suite timeout from 120s to 360s for Windows CI stability.
+
 ## [2.14.2] — 2026-04-07
 
 ### Fixed
