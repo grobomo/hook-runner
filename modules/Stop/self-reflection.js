@@ -131,10 +131,12 @@ function writeSessionSummary(result, gitCtx, editedFiles, scoreSummary) {
 
 // Build the reflection prompt
 function buildPrompt(entries, gitCtx, taskCtx) {
-  // Summarize recent edits and gate decisions
+  // Summarize recent edits, gate decisions, and failed commands
   var edits = [];
   var blocks = [];
   var passes = [];
+  var failedCmds = [];
+  var bashCmds = [];
   for (var i = 0; i < entries.length; i++) {
     var e = entries[i];
     if (e.event === "PreToolUse" && e.result === "block") {
@@ -145,6 +147,14 @@ function buildPrompt(entries, gitCtx, taskCtx) {
     }
     if ((e.tool === "Edit" || e.tool === "Write") && e.file) {
       edits.push(e.file);
+    }
+    // Track Bash commands for loop detection
+    if (e.tool === "Bash") {
+      var cmd = (e.command || "").substring(0, 80);
+      if (cmd) bashCmds.push(cmd);
+      if (e.exit_code && e.exit_code !== 0) {
+        failedCmds.push(cmd + " (exit " + e.exit_code + ")");
+      }
     }
   }
 
@@ -185,6 +195,7 @@ function buildPrompt(entries, gitCtx, taskCtx) {
   prompt += "\nRECENT EDITS (files modified):\n" + uniqueEdits.join("\n") + "\n";
   if (blocks.length > 0) prompt += "\nBLOCKED ACTIONS:\n" + blocks.join("\n") + "\n";
   if (passes.length > 0) prompt += "\nPASSED GATE CHECKS (first 10):\n" + passes.slice(0, 10).join("\n") + "\n";
+  if (failedCmds.length > 0) prompt += "\nFAILED COMMANDS:\n" + failedCmds.join("\n") + "\n";
 
   prompt += "\nANALYZE (be critical, not charitable):\n";
   prompt += "1. Were the edits appropriate for the current branch and task context?\n";
@@ -198,6 +209,14 @@ function buildPrompt(entries, gitCtx, taskCtx) {
   prompt += "   or write a TODO. Never dismiss and move on.\n";
   prompt += "6. MISSED TODOS: Were there any improvements, follow-ups, or hardening opportunities that\n";
   prompt += "   should have been written as TODO items but weren't? Generate them.\n";
+  prompt += "7. UNPRODUCTIVE LOOPS: Look for patterns that waste the user's time:\n";
+  prompt += "   - Multiple failed attempts at the same operation (cherry-pick, merge, rebase conflicts)\n";
+  prompt += "   - 'Wait for X to fail then retry' patterns instead of fixing root cause\n";
+  prompt += "   - Manual patching of each failure instead of building automation\n";
+  prompt += "   - Struggling with infrastructure (zips, deploys, uploads) instead of doing actual work\n";
+  prompt += "   - Repeated git branch gymnastics (abort, switch, delete, recreate)\n";
+  prompt += "   If you see 3+ failed commands or retries of the same operation, flag it as high severity.\n";
+  prompt += "   The fix is always: stop looping, identify root cause, automate.\n";
   prompt += "\nRESPOND IN JSON ONLY — no markdown, no explanation outside the JSON:\n";
   prompt += '{"issues": [{"severity": "high|medium|low", "description": "what went wrong", "fix": "what to do about it"}], ';
   prompt += '"todos": [{"id": "T???", "description": "what should be done"}], ';
