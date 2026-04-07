@@ -493,6 +493,11 @@ User correction pattern observed:
   "T???: Add pre-edit SHTD verification — check .workflow-state.json exists in target project before allowing production code edits"
 - Self-reflection does NOT implement the fix — it writes the TODO and moves on.
 
+TOP PRIORITY — self-reflection scope enforcement + future architecture:
+- [ ] T330: Reflection-gate: when issues exist, allow edits to hook-runner modules (self-repair) + TODO.md/specs. Block all other production code. Self-reflection can fix its own system but delegates everything else via TODOs.
+- [ ] T331: Migrate self-reflection to a channel adapter plugin for the brain service (THINKER). Hook-runner stays the ego (enforcement), brain service becomes the persistent memory + LLM analysis layer. Self-reflection.js becomes a thin bridge that sends events to the brain and reads back analysis results. This gives persistent three-tier memory, cross-session context, and shared LLM infrastructure for free.
+- [ ] T332: Until T331, add lightweight session summary compaction — at Stop, append a one-line JSON summary to reflection-sessions.jsonl (files edited, issues found, score delta, corrections). Inject last 3 summaries into claude -p prompt for short-term memory.
+
 What to do next:
 1. Run full test suite (`node setup.js --test`) — the new modules (reflection-score, reflection-score-inject) need module validation tests
 2. The nested-claude gate false-positives on `gh_auto` commands containing "claude" in the path — investigate and fix
