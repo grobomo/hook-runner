@@ -67,9 +67,9 @@ function getGitContext() {
   var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
   if (!projectDir) return {};
   try {
-    // Read .git/HEAD directly — avoids spawning git (slow on Windows)
-    var headContent = fs.readFileSync(path.join(projectDir, ".git", "HEAD"), "utf-8").trim();
-    var branch = headContent.indexOf("ref: refs/heads/") === 0 ? headContent.slice(16) : "HEAD";
+    var branch = cp.execSync("git rev-parse --abbrev-ref HEAD", {
+      cwd: projectDir, encoding: "utf-8", timeout: 3000
+    }).trim();
     return { branch: branch, project: path.basename(projectDir) };
   } catch (e) { return { project: path.basename(projectDir) }; }
 }

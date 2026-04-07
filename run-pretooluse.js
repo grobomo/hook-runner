@@ -27,9 +27,10 @@ if (input && input.tool_input && typeof input.tool_input.path === "string") {
 // Shared context saves ~110ms per tool invocation (branch + tracking in one place).
 try {
   var cp = require("child_process");
-  var branch = cp.execSync("git rev-parse --abbrev-ref HEAD", {
-    encoding: "utf-8", timeout: 3000, stdio: ["pipe", "pipe", "pipe"]
-  }).trim();
+  // Read .git/HEAD directly — avoids spawning git (~40ms savings on Windows)
+  var projectDir = (process.env.CLAUDE_PROJECT_DIR || "").replace(/\\/g, "/");
+  var gitHead = fs.readFileSync(path.join(projectDir, ".git", "HEAD"), "utf-8").trim();
+  var branch = gitHead.indexOf("ref: refs/heads/") === 0 ? gitHead.slice(16) : "";
   if (branch) {
     if (!input._git) input._git = {};
     input._git.branch = branch;

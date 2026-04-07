@@ -13,7 +13,6 @@
 // Allows: config, specs, planning, rules, hooks, TODO.md, SESSION_STATE.md, test files
 var fs = require("fs");
 var path = require("path");
-var cp = require("child_process");
 
 // T079: Auto-activate SHTD workflow state when shtd is enabled but no state exists
 function autoActivateShtd(projectDir) {
@@ -39,9 +38,11 @@ function autoActivateShtd(projectDir) {
 
 function getGitBranch(gitRoot) {
   try {
-    return cp.execSync("git rev-parse --abbrev-ref HEAD", {
-      cwd: gitRoot, encoding: "utf-8", timeout: 3000
-    }).trim();
+    // Read .git/HEAD directly — avoids spawning git (slow on Windows, can timeout)
+    var head = fs.readFileSync(path.join(gitRoot, ".git", "HEAD"), "utf-8").trim();
+    // "ref: refs/heads/main" → "main", detached HEAD → "HEAD"
+    if (head.indexOf("ref: refs/heads/") === 0) return head.slice(16);
+    return "HEAD";
   } catch (e) { return ""; }
 }
 

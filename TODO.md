@@ -470,13 +470,11 @@ See `specs/hook-integrity/` for full spec and tasks.
 - Cleaned leftover test artifacts (.worker-loop-helper.js, .spec-gate-helper.js, test-tmp-mod-570324.js)
 - Synced spec-gate.js to live hooks
 
-## Next actions (for next session)
-1. Sync marketplace to v2.14.1 (commit+push from claude-code-skills)
-2. Code review: scan modules/ for DRY opportunities, dead code, or missing tests
-3. T331 (cross-project): When unified-brain is ready, migrate self-reflection LLM calls
+## Fixes & Sync
+- [ ] T352: Fix workflow-summary.js mock crash + sync 32 missing modules to run-modules/ + harden T114 test cleanup
 
 ## Status
-- 273 tasks completed, 1 pending (T331 brain integration — cross-project)
+- 274 tasks completed, 1 pending (T331 brain integration — cross-project)
 - Version: 2.14.1
 - Marketplace: claude-code-skills synced to v2.14.0 (needs 2.14.1 sync)
 - CI: ALL GREEN (Linux + Windows)
