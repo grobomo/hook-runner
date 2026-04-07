@@ -401,10 +401,17 @@ See `specs/hook-integrity/` for full spec and tasks.
 ## Release (session 2026-04-06a)
 - [x] T318: Version bump to 2.8.2 + CHANGELOG entry for --deep, --input, ES5 fixes, operator precedence bug
 
+## Session 2026-04-07b
+- [x] T348: Version bump to 2.12.0 + CHANGELOG + marketplace sync (PR #209)
+- [x] T338: spec-gate Bash gating restored — default-deny (PR #210)
+- [x] T339: hook-editing-gate project-locked + self-edit protection + audit log (PR #210)
+- Live hooks updated, all tests pass (14/14 gate, 8/8 task-id, 6/6 relaxed)
+- [x] T349: Version bump to 2.13.0 for T338-T339
+
 ## Status
-- 261 tasks completed (T330-T336), 1 pending (T331 brain integration — cross-project)
-- Version: 2.12.0
-- 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 43 test suites
+- 265 tasks completed, 3 pending (T337, T340, T331)
+- Version: 2.13.0
+- 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 45 test suites
 - Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
 - Scoring: Novice→Master levels, intervention tracking, full claude -p audit logging
 - Health: 89 OK, 0 warnings, 0 failures

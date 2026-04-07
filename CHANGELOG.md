@@ -2,6 +2,16 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.13.0] — 2026-04-07
+
+### Added
+- **spec-gate Bash gating** (T338) — default-deny for Bash commands. Only allowlisted read-only commands (git, ls, cat, grep, etc.) pass without spec chain. Everything else requires spec → tasks → unchecked items.
+- **Hook editing project lock** (T339) — only hook-runner project sessions can edit hook infrastructure. Other projects get hard block.
+- **Bootstrap self-edit protection** (T339) — editing `hook-editing-gate.js` itself always blocked. Must be edited manually.
+- **Static weakening detection** (T339) — flags modules claiming to enforce but never blocking, bare `return null` replacements.
+- **Hook audit trail** (T339) — all edit attempts logged to `~/.system-monitor/hook-audit.jsonl`.
+- **Test suites** — `test-T338-spec-gate-bash.sh`, `test-T339-hook-lock.sh`, expanded `test-T118` (10→14 tests).
+
 ## [2.12.0] — 2026-04-07
 
 ### Added
