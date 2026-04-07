@@ -636,6 +636,113 @@ function renderAnalysisHtml(analysisJson) {
   return h.join("\n");
 }
 
+/**
+ * Classify a module's health verdict based on its stats.
+ * @returns {string} "active"|"preventive"|"stale"|"dead"|"new"
+ */
+function classifyVerdict(stats, isSessionOrStop) {
+  if (!stats || stats.total === 0) return "dead";
+  // Modules with <50 calls haven't had enough exposure
+  if (stats.total < 50) return "new";
+  // Has blocked at least once
+  if (stats.block > 0) {
+    // Check if last block was >30 days ago
+    if (stats.lastBlockTs) {
+      var daysSinceBlock = (Date.now() - new Date(stats.lastBlockTs).getTime()) / 86400000;
+      if (daysSinceBlock > 30) return "stale";
+    }
+    return "active";
+  }
+  // Many calls, zero blocks — preventive deterrent (or monitoring-only for PostToolUse/SessionStart/Stop)
+  if (isSessionOrStop) return "active"; // SessionStart/Stop modules don't block
+  return "preventive";
+}
+
+/**
+ * Render the Module Review sortable table.
+ * @param {object} eventModules - { eventName: [module objects] }
+ * @param {object} hookStats - per-module stats from hook-log
+ * @returns {string} HTML block
+ */
+function renderReviewTable(eventModules, hookStats) {
+  var rows = [];
+  var events = Object.keys(eventModules);
+  for (var ei = 0; ei < events.length; ei++) {
+    var evt = events[ei];
+    var mods = eventModules[evt];
+    for (var mi = 0; mi < mods.length; mi++) {
+      var mod = mods[mi];
+      if (mod.archived) continue;
+      if (mod.name.charAt(0) === "_") continue; // skip helper files
+      var statsKey = evt + "/" + mod.name.replace(/\.js$/, "");
+      var s = hookStats[statsKey] || null;
+      var isSessionOrStop = evt === "SessionStart" || evt === "Stop" || evt === "UserPromptSubmit";
+      var verdict = classifyVerdict(s, isSessionOrStop);
+      rows.push({
+        name: mod.name.replace(/\.js$/, ""),
+        event: evt,
+        workflow: mod.workflow || "",
+        why: mod.why || "",
+        blocks: s ? s.block : 0,
+        total: s ? s.total : 0,
+        rate: s && s.total > 0 ? ((s.block / s.total) * 100).toFixed(1) : "0.0",
+        avgMs: s && s.msCount > 0 ? Math.round(s.msTotal / s.msCount) : 0,
+        lastBlock: s ? (s.lastBlockTs || "") : "",
+        verdict: verdict
+      });
+    }
+  }
+
+  var h = [];
+  h.push('<div class="review-section">');
+  h.push('<h2>Module Review</h2>');
+  h.push('<div class="review-subtitle">Click column headers to sort. Verdicts: ');
+  h.push('<span class="verdict-active">active</span> blocks regularly, ');
+  h.push('<span class="verdict-preventive">preventive</span> deters without blocking, ');
+  h.push('<span class="verdict-stale">stale</span> no blocks in 30+ days, ');
+  h.push('<span class="verdict-dead">dead</span> zero calls, ');
+  h.push('<span class="verdict-new">new</span> &lt;50 calls');
+  h.push('</div>');
+  h.push('<table class="review-table" id="reviewTable">');
+  h.push('<thead><tr>');
+  var cols = [
+    { key: "name", label: "Module" },
+    { key: "event", label: "Event" },
+    { key: "workflow", label: "Workflow" },
+    { key: "why", label: "WHY" },
+    { key: "blocks", label: "Blocks" },
+    { key: "total", label: "Calls" },
+    { key: "rate", label: "Block %" },
+    { key: "avgMs", label: "Avg ms" },
+    { key: "lastBlock", label: "Last Block" },
+    { key: "verdict", label: "Verdict" }
+  ];
+  for (var ci = 0; ci < cols.length; ci++) {
+    h.push('<th data-col="' + cols[ci].key + '" onclick="sortReviewTable(\'' + cols[ci].key + '\')">' + cols[ci].label + ' <span class="sort-arrow">&#9650;</span></th>');
+  }
+  h.push('</tr></thead><tbody>');
+
+  for (var ri = 0; ri < rows.length; ri++) {
+    var r = rows[ri];
+    var lastBlockDisplay = r.lastBlock ? r.lastBlock.substring(0, 10) : "-";
+    h.push('<tr data-name="' + escHtml(r.name) + '" data-event="' + escHtml(r.event) + '" data-workflow="' + escHtml(r.workflow) + '" data-why="' + escHtml(r.why) + '" data-blocks="' + r.blocks + '" data-total="' + r.total + '" data-rate="' + r.rate + '" data-avgms="' + r.avgMs + '" data-lastblock="' + escHtml(r.lastBlock) + '" data-verdict="' + r.verdict + '">');
+    h.push('<td class="col-name" title="' + escHtml(r.name) + '">' + escHtml(r.name) + '</td>');
+    h.push('<td><span class="' + (EVENT_BADGES[r.event] || "") + '" style="font-size:.7rem;padding:.1rem .4rem;border-radius:3px">' + escHtml(r.event) + '</span></td>');
+    h.push('<td>' + (r.workflow ? '<span class="wf-badge wf-' + escHtml(r.workflow) + ' wf-default">' + escHtml(r.workflow) + '</span>' : '-') + '</td>');
+    h.push('<td class="col-why" title="' + escHtml(r.why) + '">' + escHtml(r.why || "-") + '</td>');
+    h.push('<td class="col-num">' + r.blocks + '</td>');
+    h.push('<td class="col-num">' + r.total + '</td>');
+    h.push('<td class="col-num">' + r.rate + '%</td>');
+    h.push('<td class="col-num">' + r.avgMs + '</td>');
+    h.push('<td class="col-num">' + lastBlockDisplay + '</td>');
+    h.push('<td><span class="verdict-' + r.verdict + '">' + r.verdict + '</span></td>');
+    h.push('</tr>');
+  }
+
+  h.push('</tbody></table></div>');
+  return h.join("\n");
+}
+
 function generateReport(scan, outputPath, hookStats, options) {
   hookStats = hookStats || {};
   options = options || {};
@@ -884,6 +991,25 @@ function generateReport(scan, outputPath, hookStats, options) {
   h.push('.code-block pre{font-family:"Cascadia Code","Fira Code",monospace;font-size:.8rem;color:#c9d1d9;white-space:pre;tab-size:2}');
   h.push('.code-block .ln{color:#484f58;display:inline-block;width:2.5rem;text-align:right;margin-right:1rem;user-select:none}');
   h.push('.footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid #21262d;color:#484f58;font-size:.8rem;text-align:center}');
+  // Module Review table
+  h.push('.review-section{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:1.5rem;margin-bottom:2rem}');
+  h.push('.review-section h2{color:#c9d1d9;font-size:1.1rem;margin:0 0 .5rem}');
+  h.push('.review-subtitle{color:#8b949e;font-size:.8rem;margin-bottom:1rem}');
+  h.push('.review-table{width:100%;border-collapse:collapse;font-size:.8rem}');
+  h.push('.review-table th{text-align:left;padding:.5rem .6rem;border-bottom:2px solid #30363d;color:#8b949e;cursor:pointer;user-select:none;white-space:nowrap;font-weight:600}');
+  h.push('.review-table th:hover{color:#58a6ff}');
+  h.push('.review-table th .sort-arrow{color:#484f58;margin-left:.2rem;font-size:.7rem}');
+  h.push('.review-table th .sort-arrow.active{color:#58a6ff}');
+  h.push('.review-table td{padding:.4rem .6rem;border-bottom:1px solid #21262d;color:#c9d1d9;vertical-align:top}');
+  h.push('.review-table tr:hover{background:#161b22}');
+  h.push('.review-table .col-name{font-weight:600;max-width:18ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}');
+  h.push('.review-table .col-why{color:#8b949e;max-width:30ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}');
+  h.push('.review-table .col-num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}');
+  h.push('.verdict-active{color:#3fb950;background:#23863622;padding:.15rem .4rem;border-radius:3px;font-size:.7rem;font-weight:600}');
+  h.push('.verdict-preventive{color:#d29922;background:#9e6a0322;padding:.15rem .4rem;border-radius:3px;font-size:.7rem;font-weight:600}');
+  h.push('.verdict-stale{color:#8b949e;background:#30363d;padding:.15rem .4rem;border-radius:3px;font-size:.7rem;font-weight:600}');
+  h.push('.verdict-dead{color:#f85149;background:#f8514922;padding:.15rem .4rem;border-radius:3px;font-size:.7rem;font-weight:600}');
+  h.push('.verdict-new{color:#58a6ff;background:#1f6feb22;padding:.15rem .4rem;border-radius:3px;font-size:.7rem;font-weight:600}');
   h.push('</style></head><body>');
 
   h.push('<h1>Claude Code Hooks Report</h1>');
@@ -1053,6 +1179,9 @@ function generateReport(scan, outputPath, hookStats, options) {
     h.push('</div></div>');
   }
   h.push('</div></div>');
+
+  // Module Review table
+  h.push(renderReviewTable(eventModules, hookStats));
 
   // Toolbar: search + expand/collapse
   h.push('<div class="toolbar">');
@@ -1319,6 +1448,27 @@ function generateReport(scan, outputPath, hookStats, options) {
   // Expand all / collapse all
   h.push('function expandAll(){document.querySelectorAll(".event-section").forEach(function(sec){var hdr=sec.querySelector(".event-header");var body=sec.querySelector(".event-body");if(body&&!body.classList.contains("open")){body.classList.add("open");hdr.querySelector(".chevron").classList.add("open");hdr.classList.remove("collapsed")}})}');
   h.push('function collapseAll(){document.querySelectorAll(".event-section").forEach(function(sec){var hdr=sec.querySelector(".event-header");var body=sec.querySelector(".event-body");if(body&&body.classList.contains("open")){body.classList.remove("open");hdr.querySelector(".chevron").classList.remove("open");hdr.classList.add("collapsed")}})}');
+  // Module Review table sort
+  h.push('var _reviewSortCol="verdict",_reviewSortAsc=true;');
+  h.push('function sortReviewTable(col){');
+  h.push('  var table=document.getElementById("reviewTable");if(!table)return;');
+  h.push('  var tbody=table.querySelector("tbody");var rows=Array.from(tbody.querySelectorAll("tr"));');
+  h.push('  if(_reviewSortCol===col){_reviewSortAsc=!_reviewSortAsc}else{_reviewSortCol=col;_reviewSortAsc=true}');
+  h.push('  var numCols=["blocks","total","rate","avgms"];');
+  h.push('  var verdictOrder={dead:0,stale:1,preventive:2,"new":3,active:4};');
+  h.push('  rows.sort(function(a,b){');
+  h.push('    var av=a.getAttribute("data-"+col)||"",bv=b.getAttribute("data-"+col)||"";');
+  h.push('    var cmp=0;');
+  h.push('    if(col==="verdict"){cmp=(verdictOrder[av]||0)-(verdictOrder[bv]||0)}');
+  h.push('    else if(numCols.indexOf(col)!==-1){cmp=parseFloat(av)-parseFloat(bv)}');
+  h.push('    else{cmp=av.localeCompare(bv)}');
+  h.push('    return _reviewSortAsc?cmp:-cmp;');
+  h.push('  });');
+  h.push('  for(var i=0;i<rows.length;i++)tbody.appendChild(rows[i]);');
+  h.push('  table.querySelectorAll("th .sort-arrow").forEach(function(a){a.classList.remove("active");a.innerHTML="&#9650;"});');
+  h.push('  var th=table.querySelector("th[data-col=\\""+col+"\\"]");');
+  h.push('  if(th){var arrow=th.querySelector(".sort-arrow");arrow.classList.add("active");arrow.innerHTML=_reviewSortAsc?"&#9650;":"&#9660;"}');
+  h.push('}');
   h.push('</script>');
   h.push('</body></html>');
 
