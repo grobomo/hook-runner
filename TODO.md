@@ -552,7 +552,7 @@ What was done:
 - [x] T373: Add Module Review dashboard to HTML report — sortable table with verdicts (active/preventive/stale/dead/new), last-blocked dates, block rates, latency. Extended parseLogLines with timestamp tracking. (PR #242)
 
 ## Spec-Gate Fix
-- [ ] T374: Fix spec-gate false-positive fuzzy matching — when branch has taskId (TXXX), prefer exact task ID lookup over fuzzy word matching. Prevents "review" in branch matching specs/code-review-cleanup/.
+- [x] T374: Fix spec-gate false-positive fuzzy matching — when branch has taskId (TXXX), prefer exact task ID lookup over fuzzy word matching. Prevents "review" in branch matching specs/code-review-cleanup/. (PR #243)
 
 ## Session 2026-04-07p
 - T369: shtd.yml sync — added session-collision-detector + T094 test helper exclusion (PR #238)
@@ -566,7 +566,7 @@ What was done:
 - Report.js and setup.js synced to live hooks
 
 ## Status
-- 297 tasks completed, 0 pending
+- 298 tasks completed, 0 pending
 - Version: 2.15.2
 - Marketplace: claude-code-skills synced to v2.15.2
 - CI: ALL GREEN (Linux + Windows)
