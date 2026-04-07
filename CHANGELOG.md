@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.15.3] — 2026-04-07
+
+### Fixed
+- **Spec-gate false-positive fuzzy matching** (T374) — when branch has a task ID (TXXX), exact task ID lookup now takes priority over fuzzy word matching. Previously, branch `242-T373-module-review-tab` would match `specs/code-review-cleanup/` via "review" and block with "all tasks done" even though T373 was a valid open task in a different spec. 2 new tests.
+
 ## [2.15.2] — 2026-04-07
 
 ### Fixed
