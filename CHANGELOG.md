@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.15.2] — 2026-04-07
+
+### Fixed
+- **shtd.yml sync** (T369) — added `session-collision-detector` to shtd.yml modules list (audit showed 71 actual vs 70 in YAML). Fixed T094 test to skip underscore-prefixed helper files.
+- **pid validation** (T370) — defense-in-depth: `_is-pid-running.js` now validates pid is a positive integer before interpolating into `tasklist` command. Prevents injection if called with unsanitized input.
+
 ## [2.15.1] — 2026-04-07
 
 ### Fixed
