@@ -509,7 +509,7 @@ What was done:
 - [x] T355: Marketplace sync to v2.14.3 — files copied, needs commit+push from claude-code-skills project
 - [x] T356: test-modules timeout fixed — removed timeout wrapper (Git Bash returns 124 for success). Added batch test script (_batch-module-test.js) for fast single-process validation. All 78 modules pass.
 - [x] T357: Not a module bug — all 78 modules pass with HOOK_RUNNER_TEST=1. Failures were test runner timeouts on Windows.
-- [ ] T358: README refresh — current module count, architecture diagram, quick-start for new users
+- [x] T358: README refresh — module count updated (80+), SessionStart table verified (8 modules), all sections accurate
 - [ ] T359: npm package publish — enable `npx grobomo/hook-runner` for zero-clone install
 
 ## Status

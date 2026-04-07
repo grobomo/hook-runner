@@ -83,6 +83,7 @@ modules:
   - crlf-detector
   - crlf-ssh-key-check
   - disk-space-guard
+  - disk-space-detect
   - force-push-gate
   - env-var-check
   - session-cleanup
