@@ -40,11 +40,11 @@ module.exports = function(input) {
 
   for (var i = 0; i < patterns.length; i++) {
     if (patterns[i].test(content)) {
-      return "FRAGILE HEURISTIC DETECTED in " + path.split(/[/\\]/).pop() + ": " +
+      return { decision: "block", reason: "FRAGILE HEURISTIC DETECTED in " + path.split(/[/\\]/).pop() + ": " +
         "You're writing pixel/color threshold code for visual judgment. " +
         "This is fragile and will break on edge cases. " +
         "Use claude -p or the Anthropic SDK to analyze images/PDFs instead. " +
-        "Describe the check in plain English as a prompt, send the artifact, parse structured output.";
+        "Describe the check in plain English as a prompt, send the artifact, parse structured output." };
     }
   }
 

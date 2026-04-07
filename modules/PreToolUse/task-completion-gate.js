@@ -57,7 +57,7 @@ module.exports = function(input) {
 
   if (missingPR.length === 0) return null;
 
-  return "TASK COMPLETION GATE: Cannot mark task complete without a verified PR.\n\n" +
+  return { decision: "block", reason: "TASK COMPLETION GATE: Cannot mark task complete without a verified PR.\n\n" +
     "Lines missing PR reference:\n  " + missingPR.join("\n  ") + "\n\n" +
     "MANDATORY WORKFLOW:\n" +
     "  1. speckit.specify/plan/tasks → specs/<feature>/tasks.md\n" +
@@ -66,5 +66,5 @@ module.exports = function(input) {
     "  4. Verify each PR (tests pass, E2E if applicable)\n" +
     "  5. THEN mark [x] with '(PR #N)' on the line\n" +
     "  6. Feature branch merges to main after all tasks verified\n\n" +
-    "Add '(PR #N)' to each completed task. If no PR exists, create one first.";
+    "Add '(PR #N)' to each completed task. If no PR exists, create one first." };
 };

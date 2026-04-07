@@ -78,12 +78,12 @@ module.exports = function(input) {
   state.lastPrompted = Date.now();
   saveState(state);
 
-  return "TROUBLESHOOTING CYCLE DETECTED: " + recentFailures + " failed attempts before success.\n" +
+  return { decision: "block", reason: "TROUBLESHOOTING CYCLE DETECTED: " + recentFailures + " failed attempts before success.\n" +
     "Failed commands:\n  " + failedCmds + "\n" +
     "Successful command: " + cmd.substring(0, 200) + "\n\n" +
     "You just learned something the hard way. To prevent repeating this:\n" +
     "1) Create a PreToolUse hook module that catches the bad pattern and suggests the good one\n" +
     "2) Commit it to hook-runner so it persists across sessions\n" +
     "3) If this pattern exists in another project already, you should have checked there FIRST\n\n" +
-    "Do this NOW before moving on.";
+    "Do this NOW before moving on." };
 };
