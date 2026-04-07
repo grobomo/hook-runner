@@ -386,6 +386,7 @@ Full catalog in `modules/` directory:
 | `mark-turn-complete` | Writes turn marker for interrupt detection |
 | `never-give-up` | Blocks "impossible" — forces research first |
 | `push-unpushed` | Blocks stop with unpushed commits |
+| `reflection-score` | Gamified scoring system — tracks autonomy, corrections, streaks |
 | `self-reflection` | LLM-powered review of recent gate decisions (async, calls claude -p) |
 | `test-before-done` | Reminds to run e2e tests before done |
 
@@ -403,6 +404,7 @@ Full catalog in `modules/` directory:
 | `load-instructions` | Injects working instructions at session start |
 | `load-lessons` | Injects recent self-analysis lessons |
 | `project-health` | Runs health check, warns about issues |
+| `reflection-score-inject` | Injects reflection score/level/streak into session context |
 | `terminal-title` | Sets terminal title to project folder name |
 | `workflow-summary` | Injects active workflow summary |
 

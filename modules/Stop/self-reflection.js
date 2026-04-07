@@ -12,23 +12,34 @@ var cp = require("child_process");
 var HOOKS_DIR = path.join(os.homedir(), ".claude", "hooks");
 var LOG_PATH = path.join(HOOKS_DIR, "hook-log.jsonl");
 var REFLECTION_PATH = path.join(HOOKS_DIR, "self-reflection.jsonl");
-var RATE_LIMIT_PATH = path.join(HOOKS_DIR, ".reflection-last-run");
-var MIN_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes between reflections
+var CLAUDE_LOG_PATH = path.join(HOOKS_DIR, "reflection-claude-log.jsonl");
 var MAX_ENTRIES = 50; // last N hook-log entries to analyze
-var CLAUDE_TIMEOUT = 30000; // 30s for claude -p
+var CLAUDE_TIMEOUT = 60000; // 60s for claude -p (runs every Stop, needs room)
 
-// Rate limit: skip if ran recently
-function shouldSkip() {
-  try {
-    var lastRun = fs.readFileSync(RATE_LIMIT_PATH, "utf-8").trim();
-    var elapsed = Date.now() - new Date(lastRun).getTime();
-    if (elapsed < MIN_INTERVAL_MS) return true;
-  } catch (e) { /* no file = never ran */ }
-  return false;
+// Load scoring system
+var reflectionScore;
+try {
+  reflectionScore = require("./reflection-score");
+} catch (e) {
+  reflectionScore = null;
 }
 
-function markRun() {
-  try { fs.writeFileSync(RATE_LIMIT_PATH, new Date().toISOString()); } catch (e) {}
+// Log all claude -p activity: prompt, raw response, parsed result, timing
+function logClaudeCall(prompt, rawResponse, parsed, durationMs, error) {
+  try {
+    var entry = {
+      ts: new Date().toISOString(),
+      project: path.basename(process.env.CLAUDE_PROJECT_DIR || "unknown"),
+      prompt_length: prompt ? prompt.length : 0,
+      prompt_preview: prompt ? prompt.substring(0, 300) : "",
+      raw_length: rawResponse ? rawResponse.length : 0,
+      raw_preview: rawResponse ? rawResponse.substring(0, 500) : "",
+      parsed: parsed,
+      duration_ms: durationMs,
+      error: error || null
+    };
+    fs.appendFileSync(CLAUDE_LOG_PATH, JSON.stringify(entry) + "\n");
+  } catch (e) { /* never let logging break the hook */ }
 }
 
 // Read recent hook-log entries
@@ -135,8 +146,9 @@ function buildPrompt(entries, gitCtx, taskCtx) {
   return prompt;
 }
 
-// Call claude -p for LLM analysis — pipe prompt via stdin to avoid shell escaping issues
+// Call claude -p for LLM analysis — pipe prompt via stdin, log everything
 function callClaude(prompt) {
+  var startMs = Date.now();
   try {
     var result = cp.execSync("claude -p --output-format json", {
       input: prompt,
@@ -144,8 +156,14 @@ function callClaude(prompt) {
       timeout: CLAUDE_TIMEOUT,
       stdio: ["pipe", "pipe", "pipe"]
     });
-    return result.trim();
+    var raw = result.trim();
+    var durationMs = Date.now() - startMs;
+    var parsed = parseResponse(raw);
+    logClaudeCall(prompt, raw, parsed, durationMs, null);
+    return raw;
   } catch (e) {
+    var errDuration = Date.now() - startMs;
+    logClaudeCall(prompt, "", null, errDuration, e.message);
     return "";
   }
 }
@@ -231,10 +249,8 @@ function appendTodos(todos) {
 }
 
 module.exports = async function(input) {
-  // Only reflect at natural pause points
-  if (shouldSkip()) return null;
-  markRun();
-
+  // Run on every Stop — claude -p analysis is always logged.
+  // No rate limiting: the user wants every pause to be a checkpoint.
   var entries = getRecentEntries();
   if (entries.length === 0) return null;
 
@@ -255,7 +271,28 @@ module.exports = async function(input) {
     appendTodos(result.todos);
   }
 
-  if (result.verdict === "clean") return null;
+  // Update score — this is the feedback signal that persists across sessions
+  var scoreSummary = null;
+  if (reflectionScore) {
+    try {
+      scoreSummary = reflectionScore.updateScore(result);
+    } catch (e) {}
+  }
+
+  if (result.verdict === "clean") {
+    // Even clean reflections report score changes (streak bonuses, TODO completions)
+    if (scoreSummary && scoreSummary.delta > 0) {
+      return {
+        decision: "block",
+        reason: "SELF-REFLECTION: Clean session. Score: " + scoreSummary.total +
+          " (" + scoreSummary.level + ")" +
+          (scoreSummary.levelChange ? " " + scoreSummary.levelChange : "") +
+          " | Streak: " + scoreSummary.streak +
+          "\n" + scoreSummary.reasons.join("; ")
+      };
+    }
+    return null;
+  }
 
   // If issues found, surface them
   var issueText = "";
@@ -274,11 +311,17 @@ module.exports = async function(input) {
   }
 
   if (issueText || todoText) {
+    var scoreLine = "";
+    if (scoreSummary) {
+      scoreLine = "\nScore: " + scoreSummary.total + " (" + scoreSummary.level + ")" +
+        (scoreSummary.levelChange ? " " + scoreSummary.levelChange : "") +
+        " | Delta: " + (scoreSummary.delta >= 0 ? "+" : "") + scoreSummary.delta + "\n";
+    }
     return {
       decision: "block",
       reason: "SELF-REFLECTION: Issues detected in recent work.\n" +
         "Verdict: " + result.verdict + "\n" +
-        issueText + todoText +
+        scoreLine + issueText + todoText +
         "\nAddress the issues above. TODOs have been auto-written to TODO.md.\n" +
         "Reflection log: " + REFLECTION_PATH
     };

@@ -100,9 +100,11 @@ modules:
   - troubleshoot-detector
   - no-passive-rules
   - prompt-logger
-  # Self-reflection (LLM-powered introspection)
+  # Self-reflection (LLM-powered introspection + gamified scoring)
   - self-reflection
   - reflection-gate
+  - reflection-score
+  - reflection-score-inject
   # Session lifecycle (was: session-management)
   - auto-continue
   - backup-check
