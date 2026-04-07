@@ -103,6 +103,48 @@ else
   fail "small edits should pass: $OUTPUT"
 fi
 
+# 8. ANY UserPromptSubmit module is FORBIDDEN (even safe ones)
+BLOCK_UPS='// WORKFLOW: shtd
+// WHY: Detect frustration
+"use strict";
+module.exports = function(input) {
+  return { decision: "block", reason: "frustrated" };
+};'
+OUTPUT=$(run_gate "Write" "$HOOKS_DIR/run-modules/UserPromptSubmit/bad-blocker.js" "$BLOCK_UPS")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "UserPromptSubmit module with block decision is forbidden"
+else
+  fail "UPS block should be forbidden: $OUTPUT"
+fi
+
+# 9. Even a safe UserPromptSubmit module (returns null) is forbidden
+SAFE_UPS='// WORKFLOW: shtd
+// WHY: Log prompts for audit
+"use strict";
+module.exports = function(input) {
+  return null;
+};'
+OUTPUT=$(run_gate "Write" "$HOOKS_DIR/run-modules/UserPromptSubmit/safe-logger.js" "$SAFE_UPS")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "UserPromptSubmit module returning null is also forbidden"
+else
+  fail "ALL UPS modules should be forbidden: $OUTPUT"
+fi
+
+# 10. PreToolUse module with block decision still allowed (only UPS is forbidden)
+BLOCK_PTU='// WORKFLOW: shtd
+// WHY: Gate something
+"use strict";
+module.exports = function(input) {
+  return { decision: "block", reason: "not allowed" };
+};'
+OUTPUT=$(run_gate "Write" "$HOOKS_DIR/run-modules/PreToolUse/ok-blocker.js" "$BLOCK_PTU")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "PreToolUse module with block decision still allowed"
+else
+  fail "PTU block should be allowed: $OUTPUT"
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ] || exit 1

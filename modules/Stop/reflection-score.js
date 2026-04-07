@@ -28,7 +28,9 @@ var POINTS = {
   // Intervention tracking — the ultimate metric of autonomy
   AUTONOMOUS_STRETCH: 3,       // per 10 tool calls with zero user prompts
   USER_CORRECTION: -5,         // "no", "stop", "wrong", "don't" = I messed up
-  USER_INTERRUPT: -2           // user interrupted mid-response
+  USER_INTERRUPT: -2,          // user interrupted mid-response
+  FRUSTRATION_DETECTED: -15,   // frustration-detector fired — user is repeating themselves
+  RAPID_INTERRUPT_CLUSTER: -20 // 3+ interrupts in 2 min — fundamental approach failure
 };
 
 // Levels: cumulative score thresholds
@@ -254,6 +256,39 @@ function calculateDelta(reflection, score) {
     delta += intPts;
     reasons.push(intPts + " user interrupts (" + interventions.interrupts + "x)");
   }
+
+  // Frustration detection — check frustration-log.jsonl for recent events
+  var frustrationLogPath = path.join(HOOKS_DIR, "frustration-log.jsonl");
+  try {
+    if (fs.existsSync(frustrationLogPath)) {
+      var fContent = fs.readFileSync(frustrationLogPath, "utf-8").trim();
+      if (fContent) {
+        var fLines = fContent.split("\n");
+        var tenMinAgo = Date.now() - 600000;
+        var frustrationCount = 0;
+        var hasRapidCluster = false;
+        for (var fIdx = Math.max(0, fLines.length - 20); fIdx < fLines.length; fIdx++) {
+          try {
+            var fEntry = JSON.parse(fLines[fIdx]);
+            if (lastTs && fEntry.ts < lastTs) continue; // skip already-scored
+            if (new Date(fEntry.ts).getTime() > tenMinAgo) {
+              frustrationCount++;
+              if (fEntry.interrupts >= 3) hasRapidCluster = true;
+            }
+          } catch (fe) {}
+        }
+        if (frustrationCount > 0) {
+          var frusPts = POINTS.FRUSTRATION_DETECTED * frustrationCount;
+          delta += frusPts;
+          reasons.push(frusPts + " frustration events (" + frustrationCount + "x — user had to repeat themselves)");
+        }
+        if (hasRapidCluster) {
+          delta += POINTS.RAPID_INTERRUPT_CLUSTER;
+          reasons.push(POINTS.RAPID_INTERRUPT_CLUSTER + " rapid interrupt cluster (3+ in 2min — fundamental approach failure)");
+        }
+      }
+    }
+  } catch (e) {}
 
   return { delta: delta, reasons: reasons };
 }

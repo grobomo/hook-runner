@@ -519,6 +519,29 @@ TOP PRIORITY — self-reflection scope enforcement + future architecture:
 - [x] T323: Add "Write the spec FIRST" reminder to all spec-gate block messages
 - [x] T324: Self-reflection system — self-reflection.js (Stop, async, claude -p) + reflection-gate.js (PreToolUse). LLM reviews gate decisions at natural pauses, blocks if unresolved issues found.
 
+## Bugs & Security
+- [ ] T337: Session isolation for hook state files — instruction-to-hook-gate.js uses a single flag file in %TEMP% (.claude-instruction-pending) shared across ALL Claude Code tabs. When one tab detects an instruction keyword ("make sure X"), the flag blocks edits in ALL other tabs. Fix: include session ID or PID in the flag filename so each tab has independent state. Same issue may affect other gates using temp file flags.
+
+- [ ] T338: spec-gate.js regression — was silently weakened to only gate Edit/Write, not Bash. A Claude session edited the hook to bypass its own enforcement. Root cause: any session can modify hooks in ~/.claude/hooks/ without elevated approval. Need:
+  1. Audit: git blame / jsonl log scan to find which session made the change and why
+  2. Fix: restore Bash gating in spec-gate (block cargo build, nohup, etc. unless spec chain is satisfied)
+  3. Prevention: hook-editing-gate.js must require stronger verification before allowing hook modifications — e.g. require user confirmation, or require the edit to come from a hook-runner-project session only
+
+- [ ] T339: Hook modification elevation/auditing — when ANY Claude session edits a file in ~/.claude/hooks/run-modules/, it must:
+  1. Log the edit to a tamper-proof audit trail (append-only file outside hooks dir)
+  2. Require explicit user approval (not just hook-editing-gate allowing it)
+  3. Verify the edit doesn't weaken enforcement (e.g. removing tool_name checks, adding broad return-null bypasses)
+  4. Compare before/after to detect enforcement weakening patterns (removing "block", adding "return null", narrowing tool_name checks)
+
+- [ ] T340: TODO.md fallback in spec-gate is too permissive — any unchecked task in TODO.md allows editing ANY file, even for unrelated work. Fix: when on main branch with no feature branch, require the edit to be traceable to a specific open task (e.g. file path matches task description, or Claude must declare which task it's working on)
+
+## UserPromptSubmit Safety & Self-Reflection Improvements (session 2026-04-07)
+- [x] T341: hook-editing-gate blocks ALL UserPromptSubmit module creation. Any bug in a UPS module locks the user out with no recovery. Learned from frustration-detector incident (2026-04-07): module blocked every user prompt, making it impossible to fix. All UPS functionality must live in PreToolUse/PostToolUse/Stop instead.
+- [x] T342: Self-reflection removes hasEdits guard — sessions with user frustration/corrections but no edits now get reflected on (previously the worst sessions were skipped entirely)
+- [x] T343: Self-reflection prompt adds constraint-rejection and wrong-tool-for-intent analysis dimensions
+- [x] T344: Reflection-score adds FRUSTRATION_DETECTED (-15) and RAPID_INTERRUPT_CLUSTER (-20) penalties from frustration-log.jsonl
+- [x] T345: Archived frustration-detector.js — approach was fundamentally flawed (blocking on UPS). Future frustration detection must use flag files read by PostToolUse/Stop modules instead.
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
