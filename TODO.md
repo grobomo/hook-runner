@@ -522,7 +522,7 @@ What was done:
 - Next: version bump for T361, marketplace sync, code review pass
 
 ## Status
-- 284 tasks completed, 1 pending (T331e version bump)
+- 285 tasks completed, 0 pending
 - Version: 2.15.0
 - Marketplace: claude-code-skills synced to v2.14.3 (needs commit+push from that project)
 - CI: ALL GREEN (Linux + Windows)
@@ -617,7 +617,7 @@ User correction pattern observed:
 
 TOP PRIORITY — self-reflection scope enforcement + future architecture:
 - [x] T330: Reflection-gate: when issues exist, allow edits to hook-runner modules (self-repair) + TODO.md/specs. Block all other production code. Self-reflection can fix its own system but delegates everything else via TODOs.
-- [ ] T331: Brain bridge — self-reflection tries unified-brain /ask endpoint first, falls back to direct LLM call. Analysis source logged for observability. BRAIN_URL configurable. 8 tests. (PR #227)
+- [x] T331: Brain bridge — self-reflection tries unified-brain /ask endpoint first, falls back to direct LLM call. Analysis source logged for observability. BRAIN_URL configurable. 8 tests. (PR #227, #228, #229)
 - [x] T332: Until T331, add lightweight session summary compaction — at Stop, append a one-line JSON summary to reflection-sessions.jsonl (files edited, issues found, score delta, corrections). Inject last 3 summaries into claude -p prompt for short-term memory.
 
 ## Session 2026-04-06d
