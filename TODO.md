@@ -532,8 +532,12 @@ What was done:
 - [x] T365: Clean up 5 stale local branches (PR #234)
 - [x] T366: Code review pass — fixed stale counts, verified 84 modules pass contract, 8 runners match live (PR #234)
 
+## Docs Rewrite (Issue #194)
+- [ ] T367: Rewrite README — fix framing: workflows are for individuals (not teams), hook-runner replaces settings.json (never suggest direct edits), workflows = enable/disable groups + portability
+- [ ] T368: Sync updated README to marketplace (claude-code-skills)
+
 ## Status
-- 290 tasks completed, 0 pending
+- 290 tasks completed, 2 pending
 - Version: 2.15.1
 - Marketplace: claude-code-skills synced to v2.15.1
 - CI: ALL GREEN (Linux + Windows)

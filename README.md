@@ -8,21 +8,19 @@ Modular hook system for Claude Code. Enforce workflows, block mistakes, inject c
 
 Claude Code [hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) let you run scripts at key moments: before a tool runs, after it runs, when a session starts, when it stops. hook-runner turns this into a **module system** — drop a `.js` file in a folder and it runs automatically.
 
-On top of modules, **workflows** group related modules into enforceable pipelines. Enable a workflow and its modules activate together. Disable it and they all go silent. This is how you scale from one person's preferences to a team's engineering standards.
+On top of modules, **workflows** group related modules into enforceable pipelines. Enable a workflow and its modules activate together. Disable it and they all go silent. This gives you a single place to organize all your hook behavior — no more hunting through `settings.json` entries.
 
 ## Why hook-runner?
 
-Claude Code hooks are powerful but raw: you write shell commands in `settings.json`, they run on every invocation, and there's no structure. This works for one person with three hooks. It doesn't work when you have 30+ enforcement rules, some that only apply in certain contexts, and teammates who need the same guardrails.
+Claude Code hooks are powerful but raw: you write shell commands in `settings.json`, they run on every invocation, and there's no structure. This works with three hooks. It doesn't work when you have 30+ enforcement rules, some that only apply in certain contexts, and you need to turn groups on and off.
 
-hook-runner solves three problems:
+hook-runner replaces direct `settings.json` editing. After install, you never touch `settings.json` for hooks again — hook-runner owns all five events and routes to your modules automatically.
 
-**1. Modules over shell commands.** Each rule is a `.js` file that receives structured input (tool name, file path, command) and returns a decision. No string parsing, no fragile regexes against `settings.json` entries. Modules are testable, documented, and version-controlled.
+**1. Modules over shell commands.** Each rule is a `.js` file that receives structured input (tool name, file path, command) and returns a decision. Modules are testable, documented, and version-controlled. Drop a file in a folder and it runs — remove it and it stops.
 
-**2. Workflows over individual modules.** You don't think "I need to enable spec-gate, branch-gate, test-checkpoint-gate, and worker-loop." You think "I want the SHTD development pipeline." Workflows group related modules so you enable one name and get a complete enforcement regime.
+**2. Workflows over individual modules.** You don't think "I need to enable spec-gate, branch-gate, test-checkpoint-gate, and worker-loop." You think "I want the SHTD development pipeline." Workflows group related modules so you enable one name and get a complete enforcement regime. Disable it and they all go silent. This is how you manage 80+ modules without losing track.
 
-**3. When to use which.** Use a **raw hook** (in `settings.json`) for one-off scripts that don't need to coordinate with anything — a notification sound on completion, a logging call. Use a **module** when the rule should be testable, has a `// WHY:` story behind it, and belongs to a category of enforcement. Use a **workflow** when multiple modules work together to enforce a process — a development pipeline, a safety regime, a deployment checklist.
-
-The progression is: raw hooks for experiments, modules for durable rules, workflows for team-wide standards.
+**3. Portability.** Export your module config as YAML (`--export`), sync it to another machine (`--sync`), or share a workflow definition. Workflows also make it easy to switch contexts — enable `customer-data-guard` during incident response, disable it after.
 
 ## Integrating with other Claude Code tools
 
