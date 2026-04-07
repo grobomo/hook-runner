@@ -12,6 +12,9 @@ fail() { echo "  FAIL: $1"; FAIL=$((FAIL + 1)); }
 
 echo "=== hook-runner: module validation tests ==="
 
+# Signal modules to skip expensive operations (claude -p, network calls)
+export HOOK_RUNNER_TEST=1
+
 # Mock inputs per event type
 PRETOOLUSE_INPUT='{"tool_name":"Bash","tool_input":{"command":"echo hello"}}'
 POSTTOOLUSE_INPUT='{"tool_name":"Edit","tool_input":{"file_path":"/tmp/test.js","old_string":"a","new_string":"b"}}'
@@ -60,8 +63,8 @@ for event_dir in "$REPO_DIR"/modules/*/; do
 
     echo "[$evt/$mod_label] load, call, headers"
 
-    # Test 1: exports a function
-    if node -e "var m = require('$mod_win_path'); if (typeof m !== 'function') { process.exit(1); }" 2>/dev/null; then
+    # Test 1: exports a function (10s timeout as safety net)
+    if timeout 10 node -e "var m = require('$mod_win_path'); if (typeof m !== 'function') { process.exit(1); }" 2>/dev/null; then
       pass "$evt/$mod_label exports function"
     else
       fail "$evt/$mod_label does not export function"
@@ -69,7 +72,7 @@ for event_dir in "$REPO_DIR"/modules/*/; do
     fi
 
     # Test 2: calling with mock input doesn't crash (returns null, object, or Promise)
-    RESULT=$(node -e "
+    RESULT=$(timeout 10 node -e "
       var m = require('$mod_win_path');
       try {
         var r = m($mock_input);

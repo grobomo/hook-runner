@@ -6,6 +6,7 @@
 var cp = require("child_process");
 
 module.exports = function(input) {
+  if (process.env.HOOK_RUNNER_TEST) return null;
   try {
     var branch = cp.execSync("git branch --show-current", { cwd: process.cwd(), encoding: "utf-8" }).trim();
     if (!branch || branch === "main" || branch === "master") return null;

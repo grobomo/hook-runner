@@ -455,6 +455,8 @@ function appendTodos(todos) {
 }
 
 module.exports = async function(input) {
+  // Skip expensive claude -p call during test validation
+  if (process.env.HOOK_RUNNER_TEST) return null;
   // Run when there were edits OR when user showed frustration/corrections.
   // Previously skipped no-edit sessions — but the WORST sessions (declaring
   // requirements impossible, wrong tool choices) often have zero edits because

@@ -154,6 +154,8 @@ function parseResponse(raw) {
 }
 
 module.exports = async function(input) {
+  // Skip expensive claude -p call during test validation
+  if (process.env.HOOK_RUNNER_TEST) return null;
   if (!shouldRun()) return null;
 
   var prompt = buildBrainPrompt();

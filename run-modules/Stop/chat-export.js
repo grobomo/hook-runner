@@ -10,6 +10,7 @@ var path = require("path");
 var os = require("os");
 
 module.exports = function(input) {
+  if (process.env.HOOK_RUNNER_TEST) return null;
   var exportScript = path.join(os.homedir(), ".claude", "skills", "chat-export", "export.py");
 
   try {

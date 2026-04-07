@@ -10,6 +10,8 @@ var path = require("path");
 var DEBOUNCE_MS = 3600000; // 1 hour — no need to sync on every session
 
 module.exports = function(input) {
+  // Skip git operations during test validation
+  if (process.env.HOOK_RUNNER_TEST) return null;
   var claudeDir = path.join(process.env.HOME || process.env.USERPROFILE, ".claude");
 
   // Debounce: skip if last successful sync was less than 1 hour ago

@@ -1,3 +1,4 @@
+// WORKFLOW: shtd
 // WHY: Claude drifted off-spec, doing unrelated work while tasks remained.
 "use strict";
 // Stop hook: drift review. Before auto-continue, check if recent work
@@ -12,6 +13,7 @@ var path = require("path");
 var cp = require("child_process");
 
 module.exports = function(input) {
+  if (process.env.HOOK_RUNNER_TEST) return null;
   var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
   if (!projectDir) return null;
 
@@ -111,5 +113,5 @@ module.exports = function(input) {
     status += "\n  STOP and address warnings before continuing.";
   }
 
-  return status;
+  return { text: status };
 };

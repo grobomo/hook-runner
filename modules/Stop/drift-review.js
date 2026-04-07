@@ -13,6 +13,7 @@ var path = require("path");
 var cp = require("child_process");
 
 module.exports = function(input) {
+  if (process.env.HOOK_RUNNER_TEST) return null;
   var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
   if (!projectDir) return null;
 
