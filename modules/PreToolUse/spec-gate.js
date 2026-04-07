@@ -68,9 +68,10 @@ function branchFeatureWords(branch) {
 }
 
 // T321: Check if a specific task ID is unchecked in a tasks.md or TODO.md content string
+// T363: Also matches subtasks — branch T331 matches unchecked T331a, T331b, etc.
 function isTaskUnchecked(content, taskId) {
-  // Match "- [ ] T319" or "- [ ] T319:" patterns
-  var pattern = new RegExp("- \\[ \\] " + taskId + "[:\\s]");
+  // Match "- [ ] T319" or "- [ ] T319:" or "- [ ] T319a" (subtask)
+  var pattern = new RegExp("- \\[ \\] " + taskId + "[a-z]?[:\\s]");
   return pattern.test(content);
 }
 
