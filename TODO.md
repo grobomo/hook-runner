@@ -464,17 +464,20 @@ See `specs/hook-integrity/` for full spec and tasks.
 - Hardened T114 test cleanup: added git show HEAD fallback if git checkout fails
 - Pushed both fixes to main
 
-## Next actions (for next session)
-1. Check CI status — both fixes pushed, should resolve T097 failure
-2. Sync marketplace to v2.14.1
-3. Delete untracked file: `rm scripts/test/.worker-loop-helper.js`
-4. Code review: scan modules/ for DRY opportunities, dead code, or missing tests
-5. T331 (cross-project): When unified-brain is ready, migrate self-reflection LLM calls
+## Session 2026-04-07l
+- CI green: both Linux and Windows pass after T106 conflict fix + hook-integrity CI compat
+- Root cause of T106 flaky test: git timeout (3s) under load → branch returns empty → T340 treats as main. Fixed by passing `_git.branch` in test input (matches production runner behavior).
+- Cleaned leftover test artifacts (.worker-loop-helper.js, .spec-gate-helper.js, test-tmp-mod-570324.js)
+- Synced spec-gate.js to live hooks
+
+## Fixes & Sync
+- [ ] T352: Fix workflow-summary.js mock crash + sync 32 missing modules to run-modules/ + harden T114 test cleanup
 
 ## Status
-- 273 tasks completed, 1 pending (T331 brain integration — cross-project)
+- 274 tasks completed, 1 pending (T331 brain integration — cross-project)
 - Version: 2.14.1
 - Marketplace: claude-code-skills synced to v2.14.0 (needs 2.14.1 sync)
+- CI: ALL GREEN (Linux + Windows)
 - 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 46 test suites
 - Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
 - Scoring: Novice→Master levels, intervention tracking, full claude -p audit logging

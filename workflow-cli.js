@@ -111,7 +111,9 @@ function cmdWorkflow(args) {
       if (s.status === "completed") marker = "OK";
       else if (step.id === current) marker = ">>";
       var status = s.status || "pending";
-      console.log(marker + " " + step.id.padEnd(20) + status.padEnd(14) + step.name);
+      var col1 = step.id + Array(Math.max(0, 20 - step.id.length) + 1).join(" ");
+      var col2 = status + Array(Math.max(0, 14 - status.length) + 1).join(" ");
+      console.log(marker + " " + col1 + col2 + step.name);
     }
     return;
   }

@@ -54,9 +54,9 @@ module.exports = function(input) {
   try {
     var branch = (input._git && input._git.branch) || "";
     if (!branch) {
-      branch = child_process.execSync("git rev-parse --abbrev-ref HEAD", {
-        cwd: gitRoot, encoding: "utf-8", timeout: 5000
-      }).trim();
+      // Read .git/HEAD directly — avoids spawning git (slow on Windows, can timeout)
+      var headContent = fs.readFileSync(path.join(gitRoot, ".git", "HEAD"), "utf-8").trim();
+      branch = headContent.indexOf("ref: refs/heads/") === 0 ? headContent.slice(16) : "HEAD";
     }
     if (branch === "main" || branch === "master") {
       var status = child_process.execSync("git status --porcelain", {

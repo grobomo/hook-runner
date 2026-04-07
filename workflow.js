@@ -27,11 +27,11 @@ function parseYaml(text) {
 
   while (i < lines.length) {
     var line = lines[i];
-    var trimmed = line.trimEnd();
+    var trimmed = line.replace(/\s+$/, "");
 
     if (!trimmed || trimmed.charAt(0) === "#") { i++; continue; }
 
-    var indent = line.length - line.trimStart().length;
+    var indent = line.length - line.replace(/^\s+/, "").length;
 
     // Top-level scalar: "key: value"
     if (indent === 0 && trimmed.charAt(0) !== "-") {
@@ -51,8 +51,8 @@ function parseYaml(text) {
     }
 
     // Array item: "  - id: value" or "  - value"
-    if (trimmed.indexOf("- ") === 0 || (indent > 0 && trimmed.trimStart().indexOf("- ") === 0)) {
-      var content = trimmed.trimStart().slice(2).trim();
+    if (trimmed.indexOf("- ") === 0 || (indent > 0 && trimmed.replace(/^\s+/, "").indexOf("- ") === 0)) {
+      var content = trimmed.replace(/^\s+/, "").slice(2).trim();
       var kvMatch = content.match(/^(\w+):\s*(.*)/);
       if (kvMatch) {
         currentObj = {};
@@ -65,7 +65,7 @@ function parseYaml(text) {
     }
 
     // Nested key under array item
-    if (indent > 0 && currentObj && trimmed.trimStart().charAt(0) !== "-") {
+    if (indent > 0 && currentObj && trimmed.replace(/^\s+/, "").charAt(0) !== "-") {
       var nested = trimmed.trim();
       var kvMatch2 = nested.match(/^(\w+):\s*(.*)/);
       if (kvMatch2) {
@@ -78,9 +78,9 @@ function parseYaml(text) {
           var subBaseIndent = -1;
           while (i < lines.length) {
             var subLine = lines[i];
-            var subTrimmed = subLine.trimEnd();
+            var subTrimmed = subLine.replace(/\s+$/, "");
             if (!subTrimmed) { i++; continue; }
-            var subIndent = subLine.length - subLine.trimStart().length;
+            var subIndent = subLine.length - subLine.replace(/^\s+/, "").length;
             if (subBaseIndent === -1) subBaseIndent = subIndent;
             if (subIndent < subBaseIndent) break;
             var subKv = subTrimmed.trim().match(/^(\w+):\s*(.*)/);
