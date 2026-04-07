@@ -522,13 +522,13 @@ What was done:
 - Next: version bump for T361, marketplace sync, code review pass
 
 ## Status
-- 284 tasks completed, 1 pending (T331 brain integration — cross-project)
-- Version: 2.14.6
+- 284 tasks completed, 1 pending (T331e version bump)
+- Version: 2.15.0
 - Marketplace: claude-code-skills synced to v2.14.3 (needs commit+push from that project)
 - CI: ALL GREEN (Linux + Windows)
 - 77 modules across 5 workflows (2 active: shtd + customer-data-guard), 47 test suites
-- Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
-- Scoring: Novice→Master levels, intervention tracking, full claude -p audit logging
+- Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
+- Scoring: Novice→Master levels, intervention tracking, full audit logging
 - Health: 99 OK, 0 warnings, 0 failures
 - Analysis score: A (0 demerits)
 - Performance: PreToolUse ~913ms/call (45 modules, ~16ms avg each), SessionStart ~400ms (7 modules, debounced)
@@ -617,7 +617,7 @@ User correction pattern observed:
 
 TOP PRIORITY — self-reflection scope enforcement + future architecture:
 - [x] T330: Reflection-gate: when issues exist, allow edits to hook-runner modules (self-repair) + TODO.md/specs. Block all other production code. Self-reflection can fix its own system but delegates everything else via TODOs.
-- [ ] T331: Migrate self-reflection LLM analysis to unified-brain plugin. Current: self-reflection.js calls claude -p directly (expensive, no memory, no cross-session context). Target: self-reflection.js becomes a thin bridge — sends hook-log events to brain service, brain does LLM analysis with three-tier memory (hot events → session summaries → global patterns), returns analysis results. Hook-runner stays the ego (enforcement), brain becomes the thinker (analysis + memory). When done: remove callClaude()/parseResponse()/buildPrompt() from self-reflection.js, replace with brain API call. See unified-brain TODO.md T053-T055 for the brain-side work.
+- [ ] T331: Brain bridge — self-reflection tries unified-brain /ask endpoint first, falls back to direct LLM call. Analysis source logged for observability. BRAIN_URL configurable. 8 tests. (PR #227)
 - [x] T332: Until T331, add lightweight session summary compaction — at Stop, append a one-line JSON summary to reflection-sessions.jsonl (files edited, issues found, score delta, corrections). Inject last 3 summaries into claude -p prompt for short-term memory.
 
 ## Session 2026-04-06d
