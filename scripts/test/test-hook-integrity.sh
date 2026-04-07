@@ -85,8 +85,8 @@ var setup = require(process.argv[2]);
 var fn = setup._decodeProjectDir;
 if (!fn) { process.stdout.write("NO_EXPORT"); process.exit(0); }
 var tests = [
-  ["C--Users-joelg-Documents-ProjectsCL1-hook-runner", "hook-runner"],
-  ["C--Users-joelg-Documents-ProjectsCL1-rone-teams-poller", "rone-teams-poller"],
+  ["C--Users-joelg-Documents-ProjectsCL1--grobomo-hook-runner", "hook-runner"],
+  ["C--Users-joelg-Documents-ProjectsCL1--grobomo-unified-brain", "unified-brain"],
 ];
 var pass = 0;
 for (var i = 0; i < tests.length; i++) {
