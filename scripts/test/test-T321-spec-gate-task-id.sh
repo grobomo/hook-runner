@@ -172,6 +172,58 @@ else
   fail "No-tasks block should include both messages: $(echo "$OUTPUT" | head -3)"
 fi
 
+# --- T363: Subtask detection ---
+
+# 9. Branch T331 with T331 checked but T331e unchecked in specs — should pass
+PROJ9="$TMPDIR/proj-t363-1"
+mkdir -p "$PROJ9/specs/brain-bridge" "$PROJ9/src"
+git init -q "$PROJ9"
+cat > "$PROJ9/TODO.md" <<'EOF'
+- [x] T331: Brain bridge complete (PR #227)
+EOF
+cat > "$PROJ9/specs/brain-bridge/spec.md" <<'EOF'
+# Brain bridge spec
+EOF
+cat > "$PROJ9/specs/brain-bridge/tasks.md" <<'EOF'
+- [x] T331a: Add callBrain function (PR #227)
+- [x] T331b: Add health check (PR #227)
+- [ ] T331e: Version bump and CHANGELOG
+EOF
+echo "x" > "$PROJ9/src/app.js"
+(cd "$PROJ9" && git add -A && git commit -q -m "init") || true
+
+OUTPUT=$(run_gate "$PROJ9" "$PROJ9/src/app.js" "228-T331-version-bump")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "T363: Branch T331 with T331e unchecked in specs allows edits"
+else
+  fail "T363: Branch T331 with unchecked subtask T331e should allow: $OUTPUT"
+fi
+
+# 10. Branch T331 with ALL subtasks checked — should block
+PROJ10="$TMPDIR/proj-t363-2"
+mkdir -p "$PROJ10/specs/brain-bridge" "$PROJ10/src"
+git init -q "$PROJ10"
+cat > "$PROJ10/TODO.md" <<'EOF'
+- [x] T331: Brain bridge complete (PR #227)
+EOF
+cat > "$PROJ10/specs/brain-bridge/spec.md" <<'EOF'
+# Brain bridge spec
+EOF
+cat > "$PROJ10/specs/brain-bridge/tasks.md" <<'EOF'
+- [x] T331a: Add callBrain function (PR #227)
+- [x] T331b: Add health check (PR #227)
+- [x] T331e: Version bump and CHANGELOG (PR #228)
+EOF
+echo "x" > "$PROJ10/src/app.js"
+(cd "$PROJ10" && git add -A && git commit -q -m "init") || true
+
+OUTPUT=$(run_gate "$PROJ10" "$PROJ10/src/app.js" "228-T331-version-bump")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "T363: Branch T331 with all subtasks checked blocks edits"
+else
+  fail "T363: Branch T331 with all subtasks checked should block: $OUTPUT"
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ] || exit 1

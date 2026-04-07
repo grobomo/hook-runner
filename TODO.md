@@ -524,8 +524,11 @@ What was done:
 ## Code Review & Cleanup
 - [x] T362: Code review pass — update CLAUDE.md (stale self-reflection architecture, test counts), DRY brain URL parsing in self-reflection.js, fix url.parse deprecation, marketplace sync to v2.15.0 (PR #230)
 
+## Spec-Gate Improvements
+- [ ] T363: Spec-gate subtask detection — when branch references T331, also check for unchecked T331a-T331z subtasks in specs/*/tasks.md. Fixes false-positive blocks when parent task is done but subtasks remain.
+
 ## Status
-- 286 tasks completed, 0 pending
+- 286 tasks completed, 1 pending
 - Version: 2.15.0
 - Marketplace: claude-code-skills synced to v2.15.0 (needs commit+push from that project)
 - CI: ALL GREEN (Linux + Windows)
