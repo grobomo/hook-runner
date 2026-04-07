@@ -403,7 +403,7 @@ See `specs/hook-integrity/` for full spec and tasks.
 
 ## Status
 - 261 tasks completed (T330-T336), 1 pending (T331 brain integration — cross-project)
-- Version: 2.11.0
+- Version: 2.12.0
 - 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 43 test suites
 - Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
 - Scoring: Novice→Master levels, intervention tracking, full claude -p audit logging
@@ -551,11 +551,8 @@ What was done:
 Remaining from this session's discussion:
 - [x] T346: Moved frustration detection into UPS runner itself (no modules). Runner logs prompt preview to hook-log + detects frustration patterns → frustration-log.jsonl. Self-reflection reads both at Stop. Never blocks.
 - [x] T347: Self-reflection buildPrompt handles no-edit sessions — shows "NO FILES EDITED" warning so claude -p analysis flags unproductive sessions.
-- [ ] T348: Marketplace sync for v2.11.1 (T341-T345 changes)
-- [ ] T338: spec-gate.js regression (pre-existing, still open)
-- [ ] T339: Hook modification elevation/auditing (pre-existing, still open)
-- [ ] T340: TODO.md fallback in spec-gate too permissive (pre-existing, still open)
-- [ ] T337: Session isolation for hook state files (pre-existing, still open)
+- [x] T348: Version bump to 2.12.0 + CHANGELOG + marketplace sync (T341-T347: UPS ban, frustration detection in runner, self-reflection improvements)
+- Duplicate T refs removed — see Bugs & Security section above for T337-T340
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
