@@ -415,10 +415,18 @@ See `specs/hook-integrity/` for full spec and tasks.
 - Next: T340 (spec-gate TODO.md fallback too permissive)
 - Known issue: T106 spec-gate-relaxed test hangs intermittently on Windows Git Bash due to rapid process spawning. Not a code bug — need batch mode in test helper to reduce node invocations.
 
+## Session 2026-04-07d
+- T337 merged (PR #211): session isolation for hook state files
+- T340 merged (PR #213): spec-gate TODO.md fallback tightened (feature branch required on main with specs/)
+- T350: test reliability fixes, README module docs, version 2.14.0
+- Live hooks synced (94 files), gh auth switched back to default
+- CI has pre-existing failures in: T094 (README module count drift), hook-integrity/modules/runners (suite timeout crashes). Not caused by our changes — pass locally.
+- Next session: code review, DRY pass, marketplace sync, fix CI flaky tests
+
 ## Status
-- 267 tasks completed, 1 pending (T331 brain integration — cross-project)
-- Version: 2.13.1
-- 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 45 test suites
+- 270 tasks completed, 1 pending (T331 brain integration — cross-project)
+- Version: 2.14.0
+- 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 46 test suites
 - Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
 - Scoring: Novice→Master levels, intervention tracking, full claude -p audit logging
 - Health: 89 OK, 0 warnings, 0 failures

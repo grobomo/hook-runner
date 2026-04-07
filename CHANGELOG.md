@@ -2,6 +2,17 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.14.0] — 2026-04-07
+
+### Changed
+- **spec-gate TODO.md fallback tightened** (T340) — on main branch in mature projects (with `specs/`), spec-gate now requires a feature branch instead of allowing blanket edits via any unchecked TODO task. Simple projects still use TODO.md directly.
+
+### Added
+- **Test suite** — `test-T340-todo-fallback.sh` (3 tests).
+
+### Fixed
+- **README** — added missing `no-rules-gate` module to documentation.
+
 ## [2.13.1] — 2026-04-07
 
 ### Fixed
