@@ -4,6 +4,8 @@
 var cp = require("child_process");
 
 module.exports = function isPidRunning(pid) {
+  pid = Number(pid);
+  if (isNaN(pid) || pid <= 0 || pid !== Math.floor(pid)) return false;
   try {
     if (process.platform === "win32") {
       var out = cp.execSync("tasklist /FI \"PID eq " + pid + "\" /NH", {
