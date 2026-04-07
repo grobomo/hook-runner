@@ -402,10 +402,11 @@ See `specs/hook-integrity/` for full spec and tasks.
 - [x] T318: Version bump to 2.8.2 + CHANGELOG entry for --deep, --input, ES5 fixes, operator precedence bug
 
 ## Status
-- 252 tasks completed, 0 pending
-- Version: 2.9.0
-- 78 modules across 5 workflows (2 active: shtd + customer-data-guard), 43 test suites
-- Self-reflection system live (self-reflection.js + reflection-gate.js)
+- 255 tasks completed, 0 pending
+- Version: 2.10.0
+- 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 43 test suites
+- Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
+- Scoring: Novice→Master levels, intervention tracking, full claude -p audit logging
 - Health: 89 OK, 0 warnings, 0 failures
 - Analysis score: A (0 demerits)
 - Performance: PreToolUse ~296ms/call (45 modules), SessionStart ~400ms (7 modules, debounced)
@@ -464,9 +465,12 @@ WHY: Currently ~30 run-modules exist with no way to see the big picture — whic
 - T026: Moved to chat-export/TODO.md (out of scope for hook-runner)
 
 ## Self-Reflection Scoring System (session 2026-04-06c)
-- [ ] T326: Gamified reflection scoring — points for clean reflections, autonomy streaks, TODO follow-through. Penalties for user corrections, dismissed improvements, workflow violations. Levels (Novice→Master) control reflection frequency. Score persists across sessions via reflection-score.json, injected at SessionStart.
-- [ ] T327: User intervention tracking — analyze hook-log for correction prompts ("no", "stop", "wrong"), interrupts, autonomous stretches. Score rewards autonomy, penalizes babysitting.
-- [ ] T328: Full claude -p logging — every Stop runs LLM analysis, all prompts + responses + timing logged to reflection-claude-log.jsonl for audit and tuning.
+- [x] T326: Gamified reflection scoring — points for clean reflections, autonomy streaks, TODO follow-through. Penalties for user corrections, dismissed improvements, workflow violations. Levels (Novice→Master) control reflection frequency. Score persists across sessions via reflection-score.json, injected at SessionStart.
+- [x] T327: User intervention tracking — analyze hook-log for correction prompts ("no", "stop", "wrong"), interrupts, autonomous stretches. Score rewards autonomy, penalizes babysitting.
+- [x] T328: Full claude -p logging — every Stop runs LLM analysis, all prompts + responses + timing logged to reflection-claude-log.jsonl for audit and tuning.
+
+## Release
+- [ ] T329: Version bump to 2.10.0 + CHANGELOG
 
 ## Superseded
 - [x] T094: ~~Integrate hook-monitor~~ — superseded by hook-integrity system (T298-T304) + self-reflection (T324). No hook-monitor project exists.

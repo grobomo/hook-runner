@@ -2,6 +2,20 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.10.0] — 2026-04-06
+
+### Added
+- **Gamified reflection scoring** (`reflection-score.js`) — points for clean reflections (+10), autonomous stretches (+3/10 tool calls), TODO follow-through (+5). Penalties for user corrections (-5), dismissed improvements (-3), workflow violations (-10). Levels: Novice → Apprentice → Journeyman → Expert → Master.
+- **Intervention tracking** — analyzes hook-log for user correction patterns ("no", "stop", "wrong"), interrupts, and autonomous stretches. The ultimate autonomy metric: how much user time are you saving vs wasting?
+- **Full claude -p audit logging** (`reflection-claude-log.jsonl`) — every Stop runs LLM analysis. All prompts, raw responses, parsed results, and timing logged for audit and tuning.
+- **Score injection at SessionStart** (`reflection-score-inject.js`) — every new session sees its score, level, streak, and the WHY behind the system.
+- **Self-reflection prompt improvements** — now checks for dismissed improvements ("good enough for now") and missed TODOs. Auto-writes discovered TODOs to TODO.md.
+- **Motivation loop** — the WHY is baked into the score file: "This score measures how well you protect the user's time."
+
+### Fixed
+- **Reflection-gate loophole** — removed `self-reflection.jsonl` from allow list. Claude can no longer edit the reflection log to unblock itself.
+- **Self-reflection always runs** — removed rate limiting from claude -p calls. Every Stop is a checkpoint.
+
 ## [2.9.0] — 2026-04-06
 
 ### Added
