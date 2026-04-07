@@ -397,10 +397,23 @@ function cmdWorkflow(args) {
       var content = fs.readFileSync(wfPath2, "utf-8");
       if (content.indexOf("  - " + addModName) === -1) {
         // Add module to modules list
-        content = content.replace(/^modules:\s*\[?\]?/m, "modules:\n  - " + addModName);
         if (content.indexOf("modules:") === -1) {
+          // No modules: key at all — append one
           content += "\nmodules:\n  - " + addModName + "\n";
-        } else if (content.indexOf("  - " + addModName) === -1) {
+        } else if (/^modules:\s*\[\s*\]\s*$/m.test(content)) {
+          // Empty array form: modules: []
+          content = content.replace(/^modules:\s*\[\s*\]\s*$/m, "modules:\n  - " + addModName);
+        } else if (/^modules:\s*$/m.test(content)) {
+          // Empty key form: modules: (nothing after colon on same line, no entries follow)
+          var hasEntries = /^modules:\s*\n\s+-/m.test(content);
+          if (!hasEntries) {
+            content = content.replace(/^modules:\s*$/m, "modules:\n  - " + addModName);
+          } else {
+            // Has existing entries — append after last one
+            content = content.replace(/(modules:.*\n(?:\s+-\s+\S+\n)*)/m, "$1  - " + addModName + "\n");
+          }
+        } else {
+          // modules: with inline or existing entries — append after last entry
           content = content.replace(/(modules:.*\n(?:\s+-\s+\S+\n)*)/m, "$1  - " + addModName + "\n");
         }
         fs.writeFileSync(wfPath2, content);
