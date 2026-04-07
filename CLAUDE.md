@@ -74,5 +74,16 @@ node setup.js --help         # show all commands
 This is a grobomo repo. Before pushing:
 1. `gh auth switch --user grobomo`
 2. Push
-3. Sync to marketplace: `cp setup.js report.js load-modules.js workflow.js workflow-cli.js ../claude-code-skills/plugins/hook-runner/`
+3. Sync to marketplace:
+   ```bash
+   DEST=../claude-code-skills/plugins/hook-runner
+   # Core files
+   cp setup.js report.js load-modules.js workflow.js workflow-cli.js hook-log.js run-async.js constants.js package.json CHANGELOG.md README.md CLAUDE.md "$DEST/"
+   # Modules — use /* to copy contents INTO existing dir (not nested modules/modules/)
+   for evt in PreToolUse PostToolUse SessionStart Stop UserPromptSubmit; do
+     cp modules/$evt/*.js "$DEST/modules/$evt/" 2>/dev/null
+   done
+   # Workflows
+   cp workflows/*.yml "$DEST/workflows/"
+   ```
 4. Switch back to default account
