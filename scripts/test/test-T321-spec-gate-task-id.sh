@@ -224,6 +224,59 @@ else
   fail "T363: Branch T331 with all subtasks checked should block: $OUTPUT"
 fi
 
+# --- T374: Task ID match takes priority over fuzzy word matching ---
+
+# 11. Branch T373 with "review" in name + unrelated specs/code-review-cleanup (all done)
+#     T373 is unchecked in specs/module-review/tasks.md — should pass (not match code-review-cleanup)
+PROJ11="$TMPDIR/proj-t374-1"
+mkdir -p "$PROJ11/specs/code-review-cleanup" "$PROJ11/specs/module-review" "$PROJ11/src"
+git init -q "$PROJ11"
+cat > "$PROJ11/specs/code-review-cleanup/spec.md" <<'EOF'
+# Code review cleanup spec
+EOF
+cat > "$PROJ11/specs/code-review-cleanup/tasks.md" <<'EOF'
+- [x] T362: Code review pass — all done
+EOF
+cat > "$PROJ11/specs/module-review/spec.md" <<'EOF'
+# Module review dashboard spec
+EOF
+cat > "$PROJ11/specs/module-review/tasks.md" <<'EOF'
+- [ ] T373: Add Module Review dashboard to HTML report
+EOF
+echo "x" > "$PROJ11/src/report.js"
+(cd "$PROJ11" && git add -A && git commit -q -m "init") || true
+
+OUTPUT=$(run_gate "$PROJ11" "$PROJ11/src/report.js" "242-T373-module-review-tab")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "T374: Task ID in spec takes priority over fuzzy 'review' match"
+else
+  fail "T374: Branch T373 should use specs/module-review (not code-review-cleanup): $OUTPUT"
+fi
+
+# 12. Branch T375 with "review" in name + T375 only in TODO.md (not in any spec)
+#     specs/code-review-cleanup has all tasks done — should still pass via TODO.md
+PROJ12="$TMPDIR/proj-t374-2"
+mkdir -p "$PROJ12/specs/code-review-cleanup" "$PROJ12/src"
+git init -q "$PROJ12"
+cat > "$PROJ12/TODO.md" <<'EOF'
+- [ ] T375: Review the deployment process
+EOF
+cat > "$PROJ12/specs/code-review-cleanup/spec.md" <<'EOF'
+# Code review cleanup spec
+EOF
+cat > "$PROJ12/specs/code-review-cleanup/tasks.md" <<'EOF'
+- [x] T362: Code review pass — all done
+EOF
+echo "x" > "$PROJ12/src/deploy.js"
+(cd "$PROJ12" && git add -A && git commit -q -m "init") || true
+
+OUTPUT=$(run_gate "$PROJ12" "$PROJ12/src/deploy.js" "243-T375-review-deploy")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "T374: Task ID in TODO.md skips fuzzy spec matching"
+else
+  fail "T374: Branch T375 (in TODO.md) should skip fuzzy match on code-review-cleanup: $OUTPUT"
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ] || exit 1
