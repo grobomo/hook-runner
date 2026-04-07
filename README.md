@@ -331,6 +331,7 @@ Full catalog in `modules/` directory:
 | `reflection-gate` | Blocks edits if self-reflection found unresolved issues |
 | `no-hardcoded-paths` | Blocks hardcoded absolute paths in code |
 | `no-passive-rules` | Blocks .md rules when a hook module is better |
+| `no-rules-gate` | Blocks creation of ~/.claude/rules/ files (use hook modules instead) |
 | `pr-per-task-gate` | Requires task ID in PR titles |
 | `preserve-iterated-content` | Warns on full-file rewrites of iterated files |
 | `remote-tracking-gate` | Blocks edits if branch not pushed to remote |
@@ -388,6 +389,7 @@ Full catalog in `modules/` directory:
 | `push-unpushed` | Blocks stop with unpushed commits |
 | `reflection-score` | Gamified scoring system — tracks autonomy, corrections, streaks |
 | `self-reflection` | LLM-powered review of recent gate decisions (async, calls claude -p) |
+| `session-brain-analysis` | Sends session summary to unified-brain for cross-session analysis |
 | `test-before-done` | Reminds to run e2e tests before done |
 
 #### Project-Scoped Stop
@@ -405,6 +407,7 @@ Full catalog in `modules/` directory:
 | `load-lessons` | Injects recent self-analysis lessons |
 | `project-health` | Runs health check, warns about issues |
 | `reflection-score-inject` | Injects reflection score/level/streak into session context |
+| `session-cleanup` | Sweeps orphaned session-scoped temp files from crashed sessions |
 | `terminal-title` | Sets terminal title to project folder name |
 | `workflow-summary` | Injects active workflow summary |
 

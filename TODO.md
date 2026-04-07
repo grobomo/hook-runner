@@ -408,8 +408,15 @@ See `specs/hook-integrity/` for full spec and tasks.
 - Live hooks updated, all tests pass (14/14 gate, 8/8 task-id, 6/6 relaxed)
 - [x] T349: Version bump to 2.13.0 for T338-T339
 
+## Session 2026-04-07c
+- Verified T338-T339 already merged (PR #210). Closed duplicate PR #212.
+- Pushed test reliability fix to main (82f3998)
+- Cleaned up stale branch 210-T338-T339-spec-gate-bash-hook-lock
+- Next: T340 (spec-gate TODO.md fallback too permissive)
+- Known issue: T106 spec-gate-relaxed test hangs intermittently on Windows Git Bash due to rapid process spawning. Not a code bug — need batch mode in test helper to reduce node invocations.
+
 ## Status
-- 266 tasks completed, 2 pending (T340, T331)
+- 267 tasks completed, 1 pending (T331 brain integration — cross-project)
 - Version: 2.13.1
 - 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 45 test suites
 - Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
@@ -533,7 +540,7 @@ TOP PRIORITY — self-reflection scope enforcement + future architecture:
 
 - [x] T339: Hook editing project-locked to hook-runner — only sessions with CLAUDE_PROJECT_DIR containing "hook-runner" can edit hook infrastructure (modules, runners, core files, settings.json). Self-edit of hook-editing-gate.js always blocked (bootstrap protection). Static weakening detection. All edit attempts logged to ~/.system-monitor/hook-audit.jsonl. Tests: 14 pass.
 
-- [ ] T340: TODO.md fallback in spec-gate is too permissive — any unchecked task in TODO.md allows editing ANY file, even for unrelated work. Fix: when on main branch with no feature branch, require the edit to be traceable to a specific open task (e.g. file path matches task description, or Claude must declare which task it's working on)
+- [x] T340: TODO.md fallback tightened — on main branch in projects with specs/ (mature projects), spec-gate now requires a feature branch instead of allowing blanket edits via TODO.md. Simple projects (no specs/) still use TODO.md directly. Feature branches enforce task ID matching via T321. 3 tests pass.
 
 ## UserPromptSubmit Safety & Self-Reflection Improvements (session 2026-04-07)
 - [x] T341: hook-editing-gate blocks ALL UserPromptSubmit module creation. Any bug in a UPS module locks the user out with no recovery. Learned from frustration-detector incident (2026-04-07): module blocked every user prompt, making it impossible to fix. All UPS functionality must live in PreToolUse/PostToolUse/Stop instead.
