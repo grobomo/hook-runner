@@ -2,6 +2,13 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.14.5] — 2026-04-07
+
+### Added
+- **Session collision detector** (T351) — SessionStart module warns when multiple Claude Code sessions are active on the same project. Writes lock file per project+PID, detects active sessions, warns with PIDs and branches. Prevents context-reset tab proliferation chaos.
+- **Session cleanup** updated to sweep stale session-lock files from crashed sessions.
+- **Test suite** — `test-T351-session-collision.sh` (8 tests).
+
 ## [2.14.4] — 2026-04-07
 
 ### Fixed
