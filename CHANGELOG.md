@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.14.4] — 2026-04-07
+
+### Fixed
+- **README.md** — updated workflow table (10 → 5 workflows with accurate module counts after T313 consolidation), added `--integrity` and `--report --analyze` to CLI reference, removed stale SessionStart modules.
+
 ## [2.14.3] — 2026-04-07
 
 ### Added
