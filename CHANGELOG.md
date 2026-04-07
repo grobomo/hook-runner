@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.14.6] — 2026-04-07
+
+### Changed
+- **DRY** (T361) — extracted shared `isPidRunning` into `_is-pid-running.js` helper. Underscore prefix convention: `_helper.js` files are utilities skipped by `load-modules.js` and `test-modules.sh`.
+
 ## [2.14.5] — 2026-04-07
 
 ### Added
