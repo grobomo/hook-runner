@@ -4,20 +4,23 @@
 // reviews recent gate decisions at natural pause points and flags issues for
 // self-correction. Like the human ego reviewing its own actions.
 //
-// ARCHITECTURE: Currently calls claude -p directly (interim). Target: unified-brain
-// plugin handles all LLM analysis + three-tier memory. This module becomes a thin
-// bridge — sends events to brain, reads back analysis. See T331 in TODO.md.
-// When brain integration lands, remove callClaude() and replace with brain API call.
+// ARCHITECTURE: Thin bridge to unified-brain service (T331). Tries brain /ask endpoint
+// first (fast, has memory). Falls back to claude -p when brain is unavailable.
+// Brain URL configurable via BRAIN_URL env var (default http://localhost:8790).
 "use strict";
 var fs = require("fs");
 var path = require("path");
 var os = require("os");
 var cp = require("child_process");
 
+var http = require("http");
+var url = require("url");
+
 var HOOKS_DIR = path.join(os.homedir(), ".claude", "hooks");
 var LOG_PATH = path.join(HOOKS_DIR, "hook-log.jsonl");
 var REFLECTION_PATH = path.join(HOOKS_DIR, "self-reflection.jsonl");
 var SESSIONS_PATH = path.join(HOOKS_DIR, "reflection-sessions.jsonl");
+var BRAIN_URL = process.env.BRAIN_URL || "http://localhost:8790";
 var CLAUDE_LOG_PATH = path.join(HOOKS_DIR, "reflection-claude-log.jsonl");
 var MAX_ENTRIES = 50; // last N hook-log entries to analyze
 var CLAUDE_TIMEOUT = 60000; // 60s for claude -p (runs every Stop, needs room)
@@ -396,6 +399,110 @@ function parseResponse(raw) {
   }
 }
 
+// Check if brain service is available (cached per module invocation)
+var _brainAvailable = null;
+function isBrainAvailable() {
+  if (_brainAvailable !== null) return Promise.resolve(_brainAvailable);
+  return new Promise(function(resolve) {
+    var parsed = url.parse(BRAIN_URL);
+    var req = http.get({
+      hostname: parsed.hostname,
+      port: parsed.port || 8790,
+      path: "/healthz",
+      timeout: 2000
+    }, function(res) {
+      var data = "";
+      res.on("data", function(chunk) { data += chunk; });
+      res.on("end", function() {
+        try {
+          var health = JSON.parse(data);
+          _brainAvailable = health.status === "ok";
+        } catch (e) { _brainAvailable = false; }
+        resolve(_brainAvailable);
+      });
+    });
+    req.on("error", function() { _brainAvailable = false; resolve(false); });
+    req.on("timeout", function() { req.destroy(); _brainAvailable = false; resolve(false); });
+  });
+}
+
+// Call brain /ask endpoint for LLM analysis
+function callBrain(prompt) {
+  return new Promise(function(resolve) {
+    var startMs = Date.now();
+    var parsed = url.parse(BRAIN_URL);
+    var payload = JSON.stringify({
+      question: prompt,
+      source: "hook-runner",
+      channel: "self-reflection",
+      author: "self-reflection-module",
+      metadata: { type: "reflection", project: path.basename(process.env.CLAUDE_PROJECT_DIR || "unknown") }
+    });
+    var req = http.request({
+      hostname: parsed.hostname,
+      port: parsed.port || 8790,
+      path: "/ask",
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload) },
+      timeout: 30000
+    }, function(res) {
+      var data = "";
+      res.on("data", function(chunk) { data += chunk; });
+      res.on("end", function() {
+        var durationMs = Date.now() - startMs;
+        try {
+          var response = JSON.parse(data);
+          // Brain /ask returns {action, content, reason}
+          // content holds the brain's analysis — parse it as reflection JSON
+          var content = response.content || "";
+          var result = null;
+          try {
+            // Try parsing content directly as JSON
+            var cleaned = content.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+            result = JSON.parse(cleaned);
+          } catch (pe) {
+            // If content isn't valid JSON, wrap it
+            result = { issues: [], todos: [], verdict: "clean", brain_raw: content };
+          }
+          logClaudeCall("[BRAIN] " + prompt.substring(0, 200), data, result, durationMs, null);
+          resolve({ raw: data, parsed: result, source: "brain" });
+        } catch (e) {
+          logClaudeCall("[BRAIN] " + prompt.substring(0, 200), data, null, durationMs, e.message);
+          resolve({ raw: data, parsed: null, source: "brain" });
+        }
+      });
+    });
+    req.on("error", function(e) {
+      var errDuration = Date.now() - startMs;
+      logClaudeCall("[BRAIN] " + prompt.substring(0, 200), "", null, errDuration, e.message);
+      resolve({ raw: "", parsed: null, source: "brain" });
+    });
+    req.on("timeout", function() {
+      req.destroy();
+      var errDuration = Date.now() - startMs;
+      logClaudeCall("[BRAIN] " + prompt.substring(0, 200), "", null, errDuration, "timeout");
+      resolve({ raw: "", parsed: null, source: "brain" });
+    });
+    req.write(payload);
+    req.end();
+  });
+}
+
+// Analyze via brain (preferred) or claude -p (fallback)
+// Returns { raw, parsed, source: "brain"|"claude-p" }
+async function analyze(prompt) {
+  var brainUp = await isBrainAvailable();
+  if (brainUp) {
+    var brainResult = await callBrain(prompt);
+    if (brainResult.parsed) return brainResult;
+    // Brain returned but couldn't parse — fall through to claude -p
+  }
+  // Fallback to claude -p
+  var claudeResult = callClaude(prompt);
+  claudeResult.source = "claude-p";
+  return claudeResult;
+}
+
 // Write reflection result
 function writeReflection(result, gitCtx) {
   try {
@@ -406,6 +513,7 @@ function writeReflection(result, gitCtx) {
       verdict: result.verdict || "unknown",
       issues: result.issues || [],
       todos: result.todos || [],
+      source: result._source || "unknown",
       resolved: false
     };
     fs.appendFileSync(REFLECTION_PATH, JSON.stringify(entry) + "\n");
@@ -512,11 +620,14 @@ module.exports = async function(input) {
   var built = buildPrompt(entries, gitCtx, taskCtx);
   if (!built.prompt) return null;
 
-  var claudeResult = callClaude(built.prompt);
-  var result = claudeResult.parsed;
+  var analysisResult = await analyze(built.prompt);
+  var result = analysisResult.parsed;
+  var analysisSource = analysisResult.source || "unknown";
 
   if (!result) return null;
 
+  // Tag reflection with analysis source for observability
+  result._source = analysisSource;
   writeReflection(result, gitCtx);
 
   // Auto-append any TODOs the reflection identified
@@ -532,7 +643,7 @@ module.exports = async function(input) {
     } catch (e) {}
   }
 
-  // Write session summary for short-term memory (interim until brain T331)
+  // Write session summary for short-term memory
   writeSessionSummary(result, gitCtx, built.editedFiles, scoreSummary);
 
   if (result.verdict === "clean") {
@@ -540,7 +651,7 @@ module.exports = async function(input) {
     if (scoreSummary && scoreSummary.delta > 0) {
       return {
         decision: "block",
-        reason: "SELF-REFLECTION: Clean session. Score: " + scoreSummary.total +
+        reason: "SELF-REFLECTION [" + analysisSource + "]: Clean session. Score: " + scoreSummary.total +
           " (" + scoreSummary.level + ")" +
           (scoreSummary.levelChange ? " " + scoreSummary.levelChange : "") +
           " | Streak: " + scoreSummary.streak +
@@ -575,7 +686,7 @@ module.exports = async function(input) {
     }
     return {
       decision: "block",
-      reason: "SELF-REFLECTION: Issues detected in recent work.\n" +
+      reason: "SELF-REFLECTION [" + analysisSource + "]: Issues detected in recent work.\n" +
         "Verdict: " + result.verdict + "\n" +
         scoreLine + issueText + todoText +
         "\nAddress the issues above. TODOs have been auto-written to TODO.md.\n" +
