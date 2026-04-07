@@ -2,6 +2,18 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.11.0] — 2026-04-06
+
+### Added
+- **Session summary compaction** (`reflection-sessions.jsonl`) — one-line JSON summary after each reflection (files edited, issues found, score delta). Last 3 summaries injected into `claude -p` prompt for cross-session awareness. Interim short-term memory until brain integration (T331).
+- **Reflection-gate scope enforcement** (T330) — replaced broad `/hooks/` allow with specific hook-runner module paths. Self-reflection can self-repair its own modules (`run-modules/`, `hook-runner/modules/`, runners, workflow files) but delegates everything else via TODOs.
+- **Self-Reflection Architecture section** in CLAUDE.md — documents interim (direct `claude -p`) vs target (brain plugin) architecture.
+
+### Fixed
+- **DRY self-reflection** — `callClaude()` returns `{raw, parsed}`, removing duplicate `parseResponse()` call.
+- **Cost optimization** — skip `claude -p` when no Edit/Write in recent hook-log entries (read-only/Bash-only stops).
+- **Nested-claude gate FP** — `no-nested-claude.js` now skips `git`/`gh_auto` commands (path strings containing "claude" triggered false positives).
+
 ## [2.10.0] — 2026-04-06
 
 ### Added
