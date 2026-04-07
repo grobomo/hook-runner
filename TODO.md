@@ -537,10 +537,10 @@ What was done:
 - [x] T368: Marketplace README sync — TODO written in claude-code-skills/TODO.md as T002 (cross-project, PR #236)
 
 ## YAML Sync
-- [ ] T369: Add session-collision-detector to shtd.yml modules list (audit shows 71 actual vs 70 in YAML)
+- [x] T369: Add session-collision-detector to shtd.yml modules list + fix T094 test helper exclusion (PR #238)
 
 ## Status
-- 292 tasks completed, 1 pending
+- 293 tasks completed, 0 pending
 - Version: 2.15.1
 - Marketplace: claude-code-skills synced to v2.15.1
 - CI: ALL GREEN (Linux + Windows)
