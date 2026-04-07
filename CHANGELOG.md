@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.15.1] — 2026-04-07
+
+### Fixed
+- **Spec-gate subtask detection** (T363) — when a branch references T331, the gate now also checks for unchecked subtasks (T331a-T331z) in `specs/*/tasks.md`. Previously, marking the parent task `[x]` would block all further pushes on that branch even with open subtasks. 2 new tests.
+- **DRY** (T362) — replaced deprecated `url.parse()` with `new URL()` in self-reflection.js, extracted brain host/port to module-level constants.
+
 ## [2.15.0] — 2026-04-07
 
 ### Added
