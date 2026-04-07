@@ -9,5 +9,6 @@ archive/
 SESSION_STATE.md
 .test-tmp-*
 .test-debug-*
+.spec-gate-helper.js
 .workflow-state.json
 workflow-config.json

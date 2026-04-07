@@ -16,7 +16,12 @@ cat > "$HELPER" <<'JSEOF'
 var path = require("path");
 var pdir = path.resolve(process.argv[2]);
 var tfile = path.resolve(process.argv[3]);
-var modPath = path.join(__dirname, "..", "..", "modules", "PreToolUse", "spec-gate.js");
+var fs = require("fs");
+var modPath = path.resolve(__dirname, "..", "..", "modules", "PreToolUse", "spec-gate.js");
+if (!fs.existsSync(modPath)) {
+  process.stderr.write("ERROR: spec-gate.js not found at " + modPath);
+  process.exit(2);
+}
 
 process.env.CLAUDE_PROJECT_DIR = pdir;
 try {
@@ -36,7 +41,11 @@ try {
 JSEOF
 
 TMPDIR="$(mktemp -d)"
-trap 'rm -rf "$TMPDIR" "$HELPER"' EXIT
+trap 'rm -rf "$TMPDIR"' EXIT
+
+init_git() {
+  (cd "$1" && git config user.email "test@test" && git config user.name "test" && git add -A && git commit -q -m "init" 2>/dev/null) || true
+}
 
 run_gate() {
   node "$HELPER" "$1" "$2" 2>&1 || true
@@ -100,8 +109,7 @@ cat > "$PROJ4/specs/feat1/tasks.md" <<'EOF'
 - [ ] T001: Build it
 EOF
 echo "x" > "$PROJ4/src/app.js"
-# Need at least one commit for git rev-parse HEAD to work
-(cd "$PROJ4" && git add -A && git commit -q -m "init" 2>/dev/null) || true
+init_git "$PROJ4"
 
 OUTPUT=$(run_gate "$PROJ4" "$PROJ4/src/app.js")
 if echo "$OUTPUT" | grep -q "PASSED"; then
@@ -129,6 +137,7 @@ cat > "$PROJ6/TODO.md" <<'EOF'
 - [ ] T099: New work in TODO
 EOF
 echo "x" > "$PROJ6/src/app.js"
+init_git "$PROJ6"
 
 OUTPUT=$(run_gate "$PROJ6" "$PROJ6/src/app.js")
 if echo "$OUTPUT" | grep -q "PASSED"; then
