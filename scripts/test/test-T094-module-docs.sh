@@ -23,7 +23,7 @@ DOC_RESULT=$(node -e "
     var dir = path.join('$REPO_DIR/modules', evt);
     try {
       fs.readdirSync(dir).forEach(function(f) {
-        if (f.indexOf('.js') !== -1 && f !== 'archive') mods.push(f.replace('.js',''));
+        if (f.indexOf('.js') !== -1 && f !== 'archive' && f.charAt(0) !== '_') mods.push(f.replace('.js',''));
         var sub = path.join(dir, f);
         try {
           if (fs.statSync(sub).isDirectory() && f !== 'archive' && f.indexOf('_') !== 0) {
