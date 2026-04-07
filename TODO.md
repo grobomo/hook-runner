@@ -528,12 +528,12 @@ What was done:
 - [x] T363: Spec-gate subtask detection — when branch references T331, also check for unchecked T331a-T331z subtasks in specs/*/tasks.md. Fixes false-positive blocks when parent task is done but subtasks remain. (PR #232, #233)
 
 ## Housekeeping
-- [ ] T364: Marketplace commit+push — claude-code-skills v2.15.1 sync (done, pending PR)
-- [ ] T365: Clean up 5 stale local branches (done, pending PR)
-- [ ] T366: Code review pass — fix stale counts in TODO/CLAUDE.md, verify runners match repo
+- [x] T364: Marketplace commit+push — claude-code-skills synced to v2.15.1, 36 files (PR #234)
+- [x] T365: Clean up 5 stale local branches (PR #234)
+- [x] T366: Code review pass — fixed stale counts, verified 84 modules pass contract, 8 runners match live (PR #234)
 
 ## Status
-- 287 tasks completed, 3 pending
+- 290 tasks completed, 0 pending
 - Version: 2.15.1
 - Marketplace: claude-code-skills synced to v2.15.1
 - CI: ALL GREEN (Linux + Windows)
