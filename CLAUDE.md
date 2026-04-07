@@ -64,6 +64,12 @@ node setup.js --help         # show all commands
 - **Modules** must have `// WORKFLOW: name` tag and `// WHY:` comment.
 - The `hook-editing-gate` module enforces these rules at edit time.
 
+## Self-Reflection Architecture
+- **Current (interim)**: `self-reflection.js` (Stop module) calls `claude -p` directly for LLM analysis. No memory across sessions. Expensive.
+- **Target (T331)**: self-reflection becomes a thin bridge to unified-brain service. Brain handles LLM analysis with three-tier memory (hot events → session summaries → global patterns). Self-reflection just sends events and reads back results.
+- **Scope rule**: self-reflection can self-repair hook-runner modules. For everything else, it only writes TODOs. reflection-gate.js enforces this — allows edits to `run-modules/` and `hook-runner/modules/`, blocks other production code when issues exist.
+- **Scoring**: reflection-score.json persists across sessions, injected at SessionStart. Levels (Novice→Master) based on clean reflections, autonomy streaks, user corrections.
+
 ## Push Workflow
 This is a grobomo repo. Before pushing:
 1. `gh auth switch --user grobomo`

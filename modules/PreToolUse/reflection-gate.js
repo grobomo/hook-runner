@@ -29,10 +29,23 @@ module.exports = function(input) {
   // NOTE: self-reflection.jsonl is NOT exempted — Claude must fix the actual
   // issue, not edit the log to unblock itself. The reflection loop will
   // re-analyze and clear the issue when the fix is genuinely done.
+  //
+  // Self-repair: reflection CAN fix hook-runner modules (its own system) but
+  // delegates everything else via TODOs. The /run-modules/ and hook-runner
+  // modules/ patterns enable this. General /hooks/ is NOT allowed — only the
+  // specific module directories where self-reflection lives.
   var allowPatterns = [
     /TODO\.md$/, /SESSION_STATE\.md$/, /CLAUDE\.md$/,
-    /\.claude\//, /\/specs\//, /\/hooks\//, /\/rules\//,
-    /\.gitignore$/, /package\.json$/
+    /\.claude\//, /\/specs\//, /\/rules\//,
+    /\.gitignore$/, /package\.json$/,
+    /\/run-modules\//, // live hook modules (self-repair)
+    /hook-runner\/modules\//, // hook-runner catalog (self-repair)
+    /hook-runner\/load-modules\.js$/, // module loader
+    /hook-runner\/run-async\.js$/, // async runner
+    /hook-runner\/run-[a-z]+\.js$/, // event runners
+    /hook-runner\/hook-log\.js$/, // logger
+    /hook-runner\/workflow\.js$/, // workflow engine
+    /hook-runner\/workflow-cli\.js$/ // workflow CLI
   ];
   for (var i = 0; i < allowPatterns.length; i++) {
     if (allowPatterns[i].test(targetFile)) return null;

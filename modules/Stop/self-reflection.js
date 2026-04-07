@@ -1,8 +1,13 @@
 // WORKFLOW: shtd
 // WHY: Hook-runner gates made wrong decisions (T321: branch T319 allowed edits
-// for T321 work). Regex gates can't catch semantic mismatches. This module calls
-// claude -p at natural pause points to review recent gate decisions and flag
-// issues for self-correction. Like the human ego reviewing its own actions.
+// for T321 work). Regex gates can't catch semantic mismatches. This module
+// reviews recent gate decisions at natural pause points and flags issues for
+// self-correction. Like the human ego reviewing its own actions.
+//
+// ARCHITECTURE: Currently calls claude -p directly (interim). Target: unified-brain
+// plugin handles all LLM analysis + three-tier memory. This module becomes a thin
+// bridge — sends events to brain, reads back analysis. See T331 in TODO.md.
+// When brain integration lands, remove callClaude() and replace with brain API call.
 "use strict";
 var fs = require("fs");
 var path = require("path");
@@ -151,6 +156,7 @@ function buildPrompt(entries, gitCtx, taskCtx) {
 }
 
 // Call claude -p for LLM analysis — pipe prompt via stdin, log everything
+// Returns { raw, parsed } so callers don't need to re-parse
 function callClaude(prompt) {
   var startMs = Date.now();
   try {
@@ -164,11 +170,11 @@ function callClaude(prompt) {
     var durationMs = Date.now() - startMs;
     var parsed = parseResponse(raw);
     logClaudeCall(prompt, raw, parsed, durationMs, null);
-    return raw;
+    return { raw: raw, parsed: parsed };
   } catch (e) {
     var errDuration = Date.now() - startMs;
     logClaudeCall(prompt, "", null, errDuration, e.message);
-    return "";
+    return { raw: "", parsed: null };
   }
 }
 
@@ -253,18 +259,27 @@ function appendTodos(todos) {
 }
 
 module.exports = async function(input) {
-  // Run on every Stop — claude -p analysis is always logged.
-  // No rate limiting: the user wants every pause to be a checkpoint.
+  // Only run when there were actual Edit/Write calls — no edits means nothing
+  // to reflect on. This saves claude -p costs on read-only or Bash-only stops.
   var entries = getRecentEntries();
   if (entries.length === 0) return null;
+
+  var hasEdits = false;
+  for (var ei = 0; ei < entries.length; ei++) {
+    if (entries[ei].tool === "Edit" || entries[ei].tool === "Write") {
+      hasEdits = true;
+      break;
+    }
+  }
+  if (!hasEdits) return null;
 
   var gitCtx = getGitContext();
   var taskCtx = getTaskContext();
   var prompt = buildPrompt(entries, gitCtx, taskCtx);
   if (!prompt) return null;
 
-  var raw = callClaude(prompt);
-  var result = parseResponse(raw);
+  var claudeResult = callClaude(prompt);
+  var result = claudeResult.parsed;
 
   if (!result) return null;
 
