@@ -409,8 +409,8 @@ See `specs/hook-integrity/` for full spec and tasks.
 - [x] T349: Version bump to 2.13.0 for T338-T339
 
 ## Status
-- 265 tasks completed, 3 pending (T337, T340, T331)
-- Version: 2.13.0
+- 266 tasks completed, 2 pending (T340, T331)
+- Version: 2.13.1
 - 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 45 test suites
 - Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
 - Scoring: Novice→Master levels, intervention tracking, full claude -p audit logging
@@ -527,7 +527,7 @@ TOP PRIORITY — self-reflection scope enforcement + future architecture:
 - [x] T324: Self-reflection system — self-reflection.js (Stop, async, claude -p) + reflection-gate.js (PreToolUse). LLM reviews gate decisions at natural pauses, blocks if unresolved issues found.
 
 ## Bugs & Security
-- [ ] T337: Session isolation for hook state files — instruction-to-hook-gate.js uses a single flag file in %TEMP% (.claude-instruction-pending) shared across ALL Claude Code tabs. When one tab detects an instruction keyword ("make sure X"), the flag blocks edits in ALL other tabs. Fix: include session ID or PID in the flag filename so each tab has independent state. Same issue may affect other gates using temp file flags.
+- [x] T337: Session isolation for hook state files — all temp flag files now include `process.ppid` in filename. 5 modules updated (instruction-detector, instruction-to-hook-gate, interrupt-detector, mark-turn-complete, troubleshoot-detector). Session-cleanup SessionStart module sweeps orphaned files. 8 tests pass.
 
 - [x] T338: spec-gate Bash gating restored — default-deny: only allowlisted read-only commands (git, ls, cat, grep, etc.) pass through. Everything else (cp, mv, cargo, npm, node, python, etc.) requires spec chain satisfied. Closes the gap that let rogue sessions bypass SHTD.
 

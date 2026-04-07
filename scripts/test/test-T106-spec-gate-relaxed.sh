@@ -44,7 +44,12 @@ TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 init_git() {
-  (cd "$1" && git config user.email "test@test" && git config user.name "test" && git add -A && git commit -q -m "init" 2>/dev/null) || true
+  # Use GIT_DIR/GIT_WORK_TREE instead of cd — avoids hangs in Git Bash on Windows
+  local d="$1"
+  GIT_DIR="$d/.git" GIT_WORK_TREE="$d" git config user.email "test@test"
+  GIT_DIR="$d/.git" GIT_WORK_TREE="$d" git config user.name "test"
+  GIT_DIR="$d/.git" GIT_WORK_TREE="$d" git add -A
+  GIT_DIR="$d/.git" GIT_WORK_TREE="$d" git commit -q --no-gpg-sign -m "init" 2>/dev/null || true
 }
 
 run_gate() {
