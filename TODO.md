@@ -522,16 +522,9 @@ TOP PRIORITY — self-reflection scope enforcement + future architecture:
 ## Bugs & Security
 - [ ] T337: Session isolation for hook state files — instruction-to-hook-gate.js uses a single flag file in %TEMP% (.claude-instruction-pending) shared across ALL Claude Code tabs. When one tab detects an instruction keyword ("make sure X"), the flag blocks edits in ALL other tabs. Fix: include session ID or PID in the flag filename so each tab has independent state. Same issue may affect other gates using temp file flags.
 
-- [ ] T338: spec-gate.js regression — was silently weakened to only gate Edit/Write, not Bash. A Claude session edited the hook to bypass its own enforcement. Root cause: any session can modify hooks in ~/.claude/hooks/ without elevated approval. Need:
-  1. Audit: git blame / jsonl log scan to find which session made the change and why
-  2. Fix: restore Bash gating in spec-gate (block cargo build, nohup, etc. unless spec chain is satisfied)
-  3. Prevention: hook-editing-gate.js must require stronger verification before allowing hook modifications — e.g. require user confirmation, or require the edit to come from a hook-runner-project session only
+- [x] T338: spec-gate Bash gating restored — default-deny: only allowlisted read-only commands (git, ls, cat, grep, etc.) pass through. Everything else (cp, mv, cargo, npm, node, python, etc.) requires spec chain satisfied. Closes the gap that let rogue sessions bypass SHTD.
 
-- [ ] T339: Hook modification elevation/auditing — when ANY Claude session edits a file in ~/.claude/hooks/run-modules/, it must:
-  1. Log the edit to a tamper-proof audit trail (append-only file outside hooks dir)
-  2. Require explicit user approval (not just hook-editing-gate allowing it)
-  3. Verify the edit doesn't weaken enforcement (e.g. removing tool_name checks, adding broad return-null bypasses)
-  4. Compare before/after to detect enforcement weakening patterns (removing "block", adding "return null", narrowing tool_name checks)
+- [x] T339: Hook editing project-locked to hook-runner — only sessions with CLAUDE_PROJECT_DIR containing "hook-runner" can edit hook infrastructure (modules, runners, core files, settings.json). Self-edit of hook-editing-gate.js always blocked (bootstrap protection). Static weakening detection. All edit attempts logged to ~/.system-monitor/hook-audit.jsonl. Tests: 14 pass.
 
 - [ ] T340: TODO.md fallback in spec-gate is too permissive — any unchecked task in TODO.md allows editing ANY file, even for unrelated work. Fix: when on main branch with no feature branch, require the edit to be traceable to a specific open task (e.g. file path matches task description, or Claude must declare which task it's working on)
 

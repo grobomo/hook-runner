@@ -22,7 +22,31 @@ run_gate() {
   else
     input="{\"file_path\":\"$file_path\",\"new_string\":$(echo "$content" | node -e "process.stdout.write(JSON.stringify(require('fs').readFileSync(0,'utf-8')))")}"
   fi
-  node -e "
+  # T339: Set CLAUDE_PROJECT_DIR to hook-runner so project lock allows edits
+  CLAUDE_PROJECT_DIR="$REPO_DIR" node -e "
+    var mod = require('$MODULE');
+    var result = mod({ tool_name: '$tool', tool_input: JSON.parse(process.argv[1]) });
+    if (result && result.decision === 'block') {
+      process.stdout.write('BLOCKED: ' + result.reason.split('\n')[0]);
+      process.exit(1);
+    } else {
+      process.stdout.write('PASSED');
+    }
+  " "$input" 2>&1 || true
+}
+
+# T339: Run gate as a non-hook-runner project (should be blocked)
+run_gate_other() {
+  local tool="$1"
+  local file_path="$2"
+  local content="$3"
+  local input
+  if [ "$tool" = "Write" ]; then
+    input="{\"file_path\":\"$file_path\",\"content\":$(echo "$content" | node -e "process.stdout.write(JSON.stringify(require('fs').readFileSync(0,'utf-8')))")}"
+  else
+    input="{\"file_path\":\"$file_path\",\"new_string\":$(echo "$content" | node -e "process.stdout.write(JSON.stringify(require('fs').readFileSync(0,'utf-8')))")}"
+  fi
+  CLAUDE_PROJECT_DIR="/tmp/some-other-project" node -e "
     var mod = require('$MODULE');
     var result = mod({ tool_name: '$tool', tool_input: JSON.parse(process.argv[1]) });
     if (result && result.decision === 'block') {
@@ -94,11 +118,11 @@ else
   fail "exit(1) should pass: $OUTPUT"
 fi
 
-# 7. Small edits to modules pass (not full file writes)
-SMALL_EDIT='return null;'
+# 7. Small safe edits to modules pass (not full file writes)
+SMALL_EDIT='var x = 42;'
 OUTPUT=$(run_gate "Edit" "$HOOKS_DIR/run-modules/PreToolUse/some.js" "$SMALL_EDIT")
 if echo "$OUTPUT" | grep -q "PASSED"; then
-  pass "small edits pass (no WORKFLOW/WHY check)"
+  pass "small safe edits pass (no WORKFLOW/WHY check)"
 else
   fail "small edits should pass: $OUTPUT"
 fi
@@ -143,6 +167,39 @@ if echo "$OUTPUT" | grep -q "PASSED"; then
   pass "PreToolUse module with block decision still allowed"
 else
   fail "PTU block should be allowed: $OUTPUT"
+fi
+
+# 11. T339: Non-hook-runner project blocked from editing hook modules
+GOOD_RUNNER='if (result.decision === "block") { process.exit(1); }'
+OUTPUT=$(run_gate_other "Write" "$HOOKS_DIR/run-modules/PreToolUse/my-gate.js" "$GOOD_MODULE")
+if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
+  pass "non-hook-runner project blocked from editing hooks"
+else
+  fail "other project should be blocked: $OUTPUT"
+fi
+
+# 12. T339: Non-hook-runner project blocked from editing runners
+OUTPUT=$(run_gate_other "Edit" "$HOOKS_DIR/run-pretooluse.js" "$GOOD_RUNNER")
+if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
+  pass "non-hook-runner project blocked from editing runners"
+else
+  fail "other project should be blocked from runners: $OUTPUT"
+fi
+
+# 13. T339: Non-hook-runner project blocked from editing settings
+OUTPUT=$(run_gate_other "Edit" "$HOME/.claude/settings.json" 'hooks config change')
+if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
+  pass "non-hook-runner project blocked from editing settings.json"
+else
+  fail "other project should be blocked from settings: $OUTPUT"
+fi
+
+# 14. T339: Self-edit of hook-editing-gate.js always blocked (even from hook-runner)
+OUTPUT=$(run_gate "Edit" "$HOOKS_DIR/run-modules/PreToolUse/hook-editing-gate.js" "return null;")
+if echo "$OUTPUT" | grep -q "BLOCKED.*SELF-EDIT"; then
+  pass "self-edit of hook-editing-gate.js always blocked"
+else
+  fail "self-edit should be blocked: $OUTPUT"
 fi
 
 echo ""

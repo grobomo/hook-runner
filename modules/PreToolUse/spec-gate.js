@@ -107,45 +107,96 @@ var CROSS_PROJECT_HINT = "\nCROSS-PROJECT? If this file belongs to another proje
   "  2) Spawn a new session there: python context_reset.py --project-dir /path/to/project\n" +
   "  3) Resume your own work here";
 
+// T338: Bash commands that are read-only/exploration — always allowed
+var BASH_ALLOW_PATTERNS = [
+  /^\s*git\b/, /^\s*gh\b/, /^\s*gh_auto\b/,
+  /^\s*ls\b/, /^\s*dir\b/, /^\s*cat\b/, /^\s*head\b/, /^\s*tail\b/,
+  /^\s*grep\b/, /^\s*rg\b/, /^\s*find\b/, /^\s*fd\b/,
+  /^\s*wc\b/, /^\s*diff\b/, /^\s*echo\b/, /^\s*printf\b/,
+  /^\s*pwd\b/, /^\s*env\b/, /^\s*which\b/, /^\s*type\b/, /^\s*where\b/,
+  /^\s*file\b/, /^\s*stat\b/, /^\s*du\b/, /^\s*df\b/,
+  /^\s*cd\b/, /^\s*readlink\b/, /^\s*realpath\b/,
+  /^\s*jq\b/, /^\s*yq\b/, /^\s*sort\b/, /^\s*uniq\b/, /^\s*cut\b/, /^\s*tr\b/,
+  /^\s*test\b/, /^\s*\[\s/, /^\s*true\b/, /^\s*false\b/,
+  /^\s*date\b/, /^\s*hostname\b/, /^\s*whoami\b/, /^\s*id\b/,
+  /^\s*node\s+-e\b/, /^\s*node\s+--eval\b/, // quick evals (not running files)
+  /^\s*python\s+-c\b/, // quick evals
+  /^\s*bash\s+scripts\/test\//, // running existing test scripts
+  /^\s*node\s+setup\.js\s+--test/, // hook-runner tests
+];
+
+// T338: Default-deny. If a Bash command is NOT in the allowlist above,
+// it requires spec chain. This catches cp, mv, sed, tee, redirects,
+// build commands, deploy commands — everything that modifies state.
+
 module.exports = function(input) {
   var tool = input.tool_name;
-  if (tool !== "Edit" && tool !== "Write") return null;
+  var isBash = (tool === "Bash");
+  if (tool !== "Edit" && tool !== "Write" && !isBash) return null;
 
-  var targetFile = "";
-  try { targetFile = (typeof input.tool_input === "string" ? JSON.parse(input.tool_input) : input.tool_input || {}).file_path || ""; } catch(e) { targetFile = (input.tool_input || {}).file_path || ""; }
-  if (!targetFile) return null;
-  var norm = targetFile.replace(/\\/g, "/");
+  // For Bash: extract and check command
+  if (isBash) {
+    var bashInput = input.tool_input;
+    if (typeof bashInput === "string") { try { bashInput = JSON.parse(bashInput); } catch(e) { bashInput = {}; } }
+    var cmd = ((bashInput || {}).command || "").trim();
+    if (!cmd) return null;
 
-  // Allow bootstrap/config/planning files on any branch
-  // T080: Tightened — removed scripts/test/ blanket bypass and .json catch-all
-  var allowPatterns = [
-    /TODO\.md$/, /SESSION_STATE\.md$/, /CLAUDE\.md$/,
-    /\.claude\//, /\/specs\//, /\.planning\//, /\.specify\//,
-    /\.github\//, /\/hooks\//, /\/rules\//,
-    /\.gitignore$/,
-    // Specific config files only (not all .json)
-    /package\.json$/, /package-lock\.json$/, /tsconfig[^/]*\.json$/,
-    /\.eslintrc/, /\.prettierrc/, /jest\.config/, /vitest\.config/,
-  ];
-  for (var i = 0; i < allowPatterns.length; i++) {
-    if (allowPatterns[i].test(norm)) return null;
+    // Strip leading cd ... && or cd ... ; to get the real command
+    var realCmd = cmd.replace(/^(\s*cd\s+[^;&|]+\s*&&\s*)+/, "").trim();
+    // Also handle piped commands — check the first command in the pipeline
+    var firstCmd = realCmd.split("|")[0].trim();
+
+    // Check allowlist first
+    for (var bai = 0; bai < BASH_ALLOW_PATTERNS.length; bai++) {
+      if (BASH_ALLOW_PATTERNS[bai].test(firstCmd)) return null;
+    }
+
+    // Default-deny: not in allowlist → requires spec chain
+    // Falls through to spec chain check below
   }
 
-  // Allow test files — but only if at least one spec+tasks combo exists anywhere
-  // (prevents "write tests" from bypassing the need for a spec entirely)
-  var isTestFile = /[\/\\]tests?[\/\\]|scripts\/test\/|\.test\.[jt]s$|\.spec\.[jt]s$|_test\.py$|test_.*\.py$/.test(norm);
+  var targetFile = "";
+  if (!isBash) {
+    try { targetFile = (typeof input.tool_input === "string" ? JSON.parse(input.tool_input) : input.tool_input || {}).file_path || ""; } catch(e) { targetFile = (input.tool_input || {}).file_path || ""; }
+    if (!targetFile) return null;
+  }
+  var norm = isBash ? "" : targetFile.replace(/\\/g, "/");
 
-  // Allow user home config
-  var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
-  if (home && norm.indexOf(home + "/.claude/") === 0) return null;
+  // For Bash, skip file-based checks — go straight to spec chain verification
+  var isTestFile = false;
+  if (!isBash) {
+    // Allow bootstrap/config/planning files on any branch
+    // T080: Tightened — removed scripts/test/ blanket bypass and .json catch-all
+    var allowPatterns = [
+      /TODO\.md$/, /SESSION_STATE\.md$/, /CLAUDE\.md$/,
+      /\.claude\//, /\/specs\//, /\.planning\//, /\.specify\//,
+      /\.github\//, /\/hooks\//, /\/rules\//,
+      /\.gitignore$/,
+      // Specific config files only (not all .json)
+      /package\.json$/, /package-lock\.json$/, /tsconfig[^/]*\.json$/,
+      /\.eslintrc/, /\.prettierrc/, /jest\.config/, /vitest\.config/,
+    ];
+    for (var i = 0; i < allowPatterns.length; i++) {
+      if (allowPatterns[i].test(norm)) return null;
+    }
+
+    // Allow test files — but only if at least one spec+tasks combo exists anywhere
+    isTestFile = /[\/\\]tests?[\/\\]|scripts\/test\/|\.test\.[jt]s$|\.spec\.[jt]s$|_test\.py$|test_.*\.py$/.test(norm);
+
+    // Allow user home config
+    var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
+    if (home && norm.indexOf(home + "/.claude/") === 0) return null;
+  }
 
   // Find project root(s)
   var projectDir = (process.env.CLAUDE_PROJECT_DIR || "").replace(/\\/g, "/");
   var roots = [];
   if (projectDir) roots.push(projectDir);
 
-  var fileGitRoot = findGitRoot(path.dirname(targetFile));
-  if (fileGitRoot && roots.indexOf(fileGitRoot) === -1) roots.push(fileGitRoot);
+  if (!isBash && targetFile) {
+    var fileGitRoot = findGitRoot(path.dirname(targetFile));
+    if (fileGitRoot && roots.indexOf(fileGitRoot) === -1) roots.push(fileGitRoot);
+  }
   if (roots.length === 0) return null;
 
   // T079: Auto-activate SHTD workflow state
@@ -208,7 +259,7 @@ module.exports = function(input) {
           "already completed, doesn't exist, or isn't in a task file.\n" +
           "FIX: Add `- [ ] " + taskId + ": description` to TODO.md or specs/*/tasks.md" +
           SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
-          "Blocked: " + path.basename(targetFile)
+          "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
       };
     }
   }
@@ -275,7 +326,7 @@ module.exports = function(input) {
         "  3. /speckit.tasks — generate trackable tasks\n" +
         "  OR: Add `- [ ] TXXX: description` entries to TODO.md" +
         SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
-        "Blocked: " + path.basename(targetFile)
+        "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
     };
   }
 
@@ -301,7 +352,7 @@ module.exports = function(input) {
             "Your branch '" + branch + "' matches specs/" + bestMatch.dir + "/ but spec.md doesn't exist.\n" +
             "FIX: Create specs/" + bestMatch.dir + "/spec.md with /speckit.specify" +
             SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
-            "Blocked: " + path.basename(targetFile)
+            "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
         };
       }
       if (!bestMatch.hasTasks) {
@@ -311,7 +362,7 @@ module.exports = function(input) {
             "WHY: Spec exists but no tasks. The SHTD pipeline is: spec → tasks → code.\n" +
             "FIX: Create tasks with /speckit.tasks from specs/" + bestMatch.dir + "/spec.md" +
             SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
-            "Blocked: " + path.basename(targetFile)
+            "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
         };
       }
       if (!bestMatch.hasUnchecked) {
@@ -321,7 +372,7 @@ module.exports = function(input) {
             "WHY: No open tasks remain for this feature. Either add new tasks or start a new spec.\n" +
             "FIX: Add unchecked tasks to specs/" + bestMatch.dir + "/tasks.md or TODO.md" +
             SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
-            "Blocked: " + path.basename(targetFile)
+            "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
         };
       }
 
@@ -364,7 +415,7 @@ module.exports = function(input) {
         "FIX: Complete the chain: /speckit.specify → /speckit.plan → /speckit.tasks\n" +
         "  OR: Add `- [ ] TXXX: description` entries to TODO.md" +
         SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
-        "Blocked: " + path.basename(targetFile)
+        "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
     };
   }
 
