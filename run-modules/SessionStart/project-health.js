@@ -40,7 +40,7 @@ module.exports = function(input) {
         var subFiles;
         try { subFiles = fs.readdirSync(fPath); } catch(e) { continue; }
         for (var si = 0; si < subFiles.length; si++) {
-          if (subFiles[si].slice(-3) !== ".js") continue;
+          if (!subFiles[si].slice(-3) === ".js") continue;
           try {
             require(path.join(fPath, subFiles[si]));
           } catch(e) {

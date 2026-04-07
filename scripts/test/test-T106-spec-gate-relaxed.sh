@@ -80,7 +80,7 @@ init_git "$PROJ6"
 GIT_DIR="$PROJ6/.git" GIT_WORK_TREE="$PROJ6" git checkout -b 100-T099-new-work 2>/dev/null
 
 # Run tests 1-6 in ONE node process to avoid Windows process-spawning hangs
-# Pass paths as separate argv so MSYS2 auto-translates /tmp to real Windows path
+# Pass paths as separate argv (MSYS2 auto-translates /tmp -> real Windows path)
 RESULTS=$(node -e "
   var modPath = process.argv[1];
   var dirs = process.argv.slice(2);
