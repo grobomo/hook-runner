@@ -233,7 +233,8 @@ function buildPrompt(entries, gitCtx, taskCtx) {
     if (!seen[edits[j]]) { uniqueEdits.push(edits[j]); seen[edits[j]] = true; }
   }
 
-  if (uniqueEdits.length === 0) return { prompt: "", editedFiles: [] };
+  // Don't bail on no edits — frustration-only sessions still need reflection.
+  // The entry point already checks for hasEdits || hasInterrupts.
 
   // Get last 3 session summaries for short-term memory
   var recentSessions = getRecentSummaries(3);
@@ -272,7 +273,12 @@ function buildPrompt(entries, gitCtx, taskCtx) {
     prompt += "The user should NEVER have to repeat an instruction — each one should become a permanent gate.\n";
   }
 
-  prompt += "\nRECENT EDITS (files modified):\n" + uniqueEdits.join("\n") + "\n";
+  if (uniqueEdits.length > 0) {
+    prompt += "\nRECENT EDITS (files modified):\n" + uniqueEdits.join("\n") + "\n";
+  } else {
+    prompt += "\nNO FILES EDITED THIS SESSION. This may indicate the session was unproductive —\n";
+    prompt += "Claude may have argued with the user, used the wrong tools, or stopped without acting.\n";
+  }
   if (blocks.length > 0) prompt += "\nBLOCKED ACTIONS:\n" + blocks.join("\n") + "\n";
   if (passes.length > 0) prompt += "\nPASSED GATE CHECKS (first 10):\n" + passes.slice(0, 10).join("\n") + "\n";
   if (failedCmds.length > 0) prompt += "\nFAILED COMMANDS:\n" + failedCmds.join("\n") + "\n";
