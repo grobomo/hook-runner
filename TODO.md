@@ -451,10 +451,30 @@ See `specs/hook-integrity/` for full spec and tasks.
 - Resolved stash pop conflicts from previous session (TODO.md, project-health.js)
 - Fixed operator precedence bug in project-health.js: `!x.slice(-3) === ".js"` → `x.slice(-3) !== ".js"`
 
+## Session 2026-04-07j
+- Fixed hook-integrity test for CI (skip marker file check, remove fs.existsSync for decoded paths)
+- Verified all T338-T340 work merged and passing
+- Version bumped to 2.14.1 (T351: health check fix, ES5 cleanup, shtd.yml sync)
+- Pushed to main, live hooks synced, health 100 OK
+- One untracked file: scripts/test/.worker-loop-helper.js (leftover — safe to delete)
+
+## Session 2026-04-07k
+- Fixed T106 test (PR #214 merged): replaced JSON-embedded paths with argv for MSYS2 path translation
+- Fixed no-local-docker.yml contamination: temp module name `test-tmp-mod-569784-` was prepended to `block-local-docker`
+- Hardened T114 test cleanup: added git show HEAD fallback if git checkout fails
+- Pushed both fixes to main
+
+## Next actions (for next session)
+1. Check CI status — both fixes pushed, should resolve T097 failure
+2. Sync marketplace to v2.14.1
+3. Delete untracked file: `rm scripts/test/.worker-loop-helper.js`
+4. Code review: scan modules/ for DRY opportunities, dead code, or missing tests
+5. T331 (cross-project): When unified-brain is ready, migrate self-reflection LLM calls
+
 ## Status
 - 273 tasks completed, 1 pending (T331 brain integration — cross-project)
-- Version: 2.14.0
-- Marketplace: claude-code-skills synced to v2.14.0
+- Version: 2.14.1
+- Marketplace: claude-code-skills synced to v2.14.0 (needs 2.14.1 sync)
 - 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 46 test suites
 - Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
 - Scoring: Novice→Master levels, intervention tracking, full claude -p audit logging

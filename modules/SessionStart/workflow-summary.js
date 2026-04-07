@@ -32,7 +32,8 @@ module.exports = function(input) {
   if (enabled.length === 0) return null;
 
   // Load workflow definitions for descriptions and module counts
-  var workflows = wf.findWorkflows(projectDir);
+  var workflows;
+  try { workflows = wf.findWorkflows(projectDir); } catch(e) { workflows = []; }
   var wfMap = {};
   for (var w = 0; w < workflows.length; w++) wfMap[workflows[w].name] = workflows[w];
 
@@ -49,9 +50,11 @@ module.exports = function(input) {
   }
 
   // Check for active step-based workflow
-  var state = wf.readState(projectDir);
+  var state;
+  try { state = wf.readState(projectDir); } catch(e) {}
   if (state && state.workflow) {
-    var current = wf.currentStep(projectDir);
+    var current;
+    try { current = wf.currentStep(projectDir); } catch(e) {}
     lines.push("ACTIVE STEP WORKFLOW: " + state.workflow + " — current step: " + (current || "complete"));
   }
 

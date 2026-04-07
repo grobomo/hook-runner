@@ -44,9 +44,12 @@ check "live copy exists" '[ -f "$HOME/.claude/hooks/run-modules/PreToolUse/$TMPM
 # Cleanup: remove temp module from repo and live
 rm -f "$REPO_DIR/modules/PreToolUse/$TMPMOD.js"
 rm -f "$HOME/.claude/hooks/run-modules/PreToolUse/$TMPMOD.js"
-# Remove temp module from YAML (git checkout or manual sed)
-cd "$REPO_DIR" && git checkout -- workflows/no-local-docker.yml 2>/dev/null || \
-  sed -i "/$TMPMOD/d" "$REPO_DIR/workflows/no-local-docker.yml" 2>/dev/null || true
+# Remove temp module from YAML — always try both methods to prevent corruption
+GIT_DIR="$REPO_DIR/.git" GIT_WORK_TREE="$REPO_DIR" git checkout -- workflows/no-local-docker.yml 2>/dev/null || true
+# Belt-and-suspenders: verify YAML is clean, restore from git show if not
+if grep -q "test-tmp-mod" "$REPO_DIR/workflows/no-local-docker.yml" 2>/dev/null; then
+  GIT_DIR="$REPO_DIR/.git" GIT_WORK_TREE="$REPO_DIR" git show HEAD:workflows/no-local-docker.yml > "$REPO_DIR/workflows/no-local-docker.yml" 2>/dev/null || true
+fi
 
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
