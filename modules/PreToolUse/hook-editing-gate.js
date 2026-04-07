@@ -47,14 +47,14 @@ function detectWeakening(content, tool) {
     var hasBlock = /decision[\s]*:[\s]*['"]block['"]/.test(content);
     var nameSuggestsGate = /gate|enforce|block|prevent|forbid/i.test(content);
     if (!hasBlock && nameSuggestsGate) {
-      return "Module name/comments suggest enforcement but no block decisions found";
+      return { decision: "block", reason: "Module name/comments suggest enforcement but no block decisions found" };
     }
   }
   // Edit: catch bare "return null" replacing enforcement logic in gate modules
   if (tool === "Edit" && lineCount <= 2) {
     var trimmed = content.trim();
     if (/^\s*return\s+null;?\s*$/.test(trimmed)) {
-      return "Replacing enforcement logic with bare return null";
+      return { decision: "block", reason: "Replacing enforcement logic with bare return null" };
     }
   }
   return null;

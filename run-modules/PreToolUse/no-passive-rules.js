@@ -26,9 +26,9 @@ module.exports = function(input) {
   var home = (require("os").homedir() || "").replace(/\\/g, "/");
   if (!home || norm.indexOf(home + "/.claude/rules/") === -1) return null;
 
-  return "BLOCKED: Don't create passive .md rule files in ~/.claude/rules/. " +
+  return { decision: "block", reason: "BLOCKED: Don't create passive .md rule files in ~/.claude/rules/. " +
     "Persistent lessons must be ACTIVE hook modules in " +
     "~/.claude/hooks/run-modules/<Event>/*.js — they execute and enforce. " +
     "Rule files are passive and get ignored. " +
-    "If this is a project-specific rule, put it in the project's .claude/rules/ instead.";
+    "If this is a project-specific rule, put it in the project's .claude/rules/ instead." };
 };

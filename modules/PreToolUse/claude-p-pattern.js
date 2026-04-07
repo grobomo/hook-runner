@@ -33,7 +33,7 @@ module.exports = function(input) {
     if (/claude\s+-p\s+"[^"]+"\s*2?>&?1?$/.test(cmd)) bad.push("passing prompt as argument is unreliable");
 
     if (bad.length > 0) {
-      return "claude -p invocation issue: " + bad.join("; ") + CORRECT_PATTERN;
+      return { decision: "block", reason: "claude -p invocation issue: " + bad.join("; ") + CORRECT_PATTERN };
     }
     return null;
   }
@@ -60,21 +60,21 @@ module.exports = function(input) {
   // Anti-pattern: requiring ANTHROPIC_API_KEY (claude -p doesn't need it)
   if (/ANTHROPIC_API_KEY|os\.environ.*anthropic|api_key.*=.*os\./i.test(content)) {
     if (/not.*need|no.*key.*needed|same.*auth/i.test(content)) return null;
-    return "Don't check for ANTHROPIC_API_KEY. claude -p uses Claude Code's " +
-      "own auth — no API key needed." + CORRECT_PATTERN;
+    return { decision: "block", reason: "Don't check for ANTHROPIC_API_KEY. claude -p uses Claude Code's " +
+      "own auth — no API key needed." + CORRECT_PATTERN };
   }
 
   // Anti-pattern: base64-encoding images into prompts (too large, timeouts)
   if (/base64.*encode.*image|b64encode.*read|base64\.b64encode.*\.png/i.test(content)) {
-    return "Don't base64-encode images into claude -p prompts. They're too " +
+    return { decision: "block", reason: "Don't base64-encode images into claude -p prompts. They're too " +
       "large and cause timeouts. Include absolute file paths in the prompt " +
-      "and tell Claude to use its Read tool to view them." + CORRECT_PATTERN;
+      "and tell Claude to use its Read tool to view them." + CORRECT_PATTERN };
   }
 
   // Anti-pattern: importing anthropic SDK when claude -p would work
   if (/import anthropic|from anthropic import|anthropic\.Anthropic/i.test(content)) {
-    return "Don't use the Anthropic SDK when claude -p is available. " +
-      "claude -p is simpler (no API key, no SDK install)." + CORRECT_PATTERN;
+    return { decision: "block", reason: "Don't use the Anthropic SDK when claude -p is available. " +
+      "claude -p is simpler (no API key, no SDK install)." + CORRECT_PATTERN };
   }
 
   return null;

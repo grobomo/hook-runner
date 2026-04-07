@@ -15,8 +15,6 @@ module.exports = function(input) {
   }
   if (!isSettings) return null;
 
-  // Inject reminder — don't block
-  return "SETTINGS AUDIT: You are modifying " + filePath.split("/").slice(-2).join("/") +
-    ". State WHY this change is needed in your response so the audit log captures intent." +
-    " All changes to ~/.claude/ are logged to ~/.claude/audit/settings-changes.jsonl.";
+  // Non-blocking reminder — logged by settings-audit-log PostToolUse module
+  return null;
 };
