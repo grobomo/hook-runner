@@ -114,7 +114,7 @@ fi
 if node -e "
   var src = require('fs').readFileSync('$CONFIG_SYNC_WIN', 'utf-8');
   if (src.indexOf('git push origin main') !== -1) process.exit(1);
-  if (src.indexOf('rev-parse --abbrev-ref HEAD') === -1) process.exit(1);
+  if (src.indexOf('.git/HEAD') === -1 && src.indexOf('rev-parse --abbrev-ref HEAD') === -1) process.exit(1);
 " 2>/dev/null; then
   pass "config-sync pushes current branch (not hardcoded main)"
 else

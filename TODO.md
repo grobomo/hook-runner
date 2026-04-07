@@ -492,10 +492,20 @@ What was done:
 - All key tests pass: T114 (8/8), T106 spec-gate (7/7), module-sync (10/10), async (13/13)
 - spec-gate.js getGitBranch reads .git/HEAD directly (no child_process spawn, no MSYS2 path issues)
 
+## Session 2026-04-07o
+- Pruned 28 stale remote branches (all merged PRs)
+- Marketplace synced to v2.14.2 (18 files copied to claude-code-skills — needs commit+push from that project)
+- Health: 99 OK, 0 warnings, 0 failures
+- Workflow audit: 77 modules, all tagged, all matching YAML
+- ES5 audit: clean — no startsWith/endsWith/includes/trimStart/trimEnd/padStart/padEnd
+- Test suite timeout increased to 360s per suite (was 120s, insufficient for git-heavy suites on Windows)
+- test-module-behaviors.sh updated: accepts `.git/HEAD` pattern (not just `rev-parse`) for branch detection check
+- Remaining remote branches (8) need deletion — GitHub API had TLS timeout issues
+
 ## Status
 - 274 tasks completed, 1 pending (T331 brain integration — cross-project)
 - Version: 2.14.2
-- Marketplace: claude-code-skills synced to v2.14.0 (needs 2.14.2 sync)
+- Marketplace: claude-code-skills synced to v2.14.2 (needs commit+push from that project)
 - CI: ALL GREEN (Linux + Windows)
 - 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 46 test suites
 - Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
