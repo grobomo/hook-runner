@@ -5,4 +5,4 @@
 - [x] T351b: Add session-lock pattern to session-cleanup.js cleanup scan (PR #223)
 - [x] T351c: Copy to run-modules + sync to live hooks (PR #223)
 - [x] T351d: Test suite: collision detection, stale cleanup, no false positives (PR #223)
-- [ ] T351e: Version bump + push
+- [x] T351e: Version bump to 2.14.5 + push (PR #224)

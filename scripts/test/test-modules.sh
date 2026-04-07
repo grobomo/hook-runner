@@ -39,6 +39,8 @@ collect_modules() {
   local event="$2"
   shopt -s nullglob
   for mod_file in "$event_dir"*.js; do
+    # Skip helper files (prefixed with _) — not modules
+    case "$(basename "$mod_file")" in _*) continue;; esac
     echo "$event|$(basename "$mod_file")|$mod_file"
   done
   for sub_dir in "$event_dir"*/; do

@@ -510,10 +510,12 @@ What was done:
 - [x] T356: test-modules timeout fixed — removed timeout wrapper (Git Bash returns 124 for success). Added batch test script (_batch-module-test.js) for fast single-process validation. All 78 modules pass.
 - [x] T357: Not a module bug — all 78 modules pass with HOOK_RUNNER_TEST=1. Failures were test runner timeouts on Windows.
 - [x] T358: README refresh — module count updated (80+), SessionStart table verified (8 modules), all sections accurate
-- [ ] T359: npm package publish — enable `npx grobomo/hook-runner` for zero-clone install
+- [x] T359: N/A — `npx grobomo/hook-runner` already works via GitHub direct install. npm registry publish skipped (name `hook-runner` taken, would need `@grobomo/hook-runner` scoped package + npm org setup). GitHub install is the intended distribution path.
+
+- [ ] T361: DRY — extract shared `isPidRunning` helper from session-cleanup.js and session-collision-detector.js into `modules/SessionStart/is-pid-running.js`. Both modules duplicate the same 15-line function.
 
 ## Status
-- 280 tasks completed, 1 pending (T331 brain integration — cross-project)
+- 282 tasks completed, 2 pending (T331 brain integration, T361 DRY)
 - Version: 2.14.5
 - Marketplace: claude-code-skills synced to v2.14.3 (needs commit+push from that project)
 - CI: ALL GREEN (Linux + Windows)
@@ -641,7 +643,7 @@ TOP PRIORITY — self-reflection scope enforcement + future architecture:
 
 - [x] T340: TODO.md fallback tightened — on main branch in projects with specs/ (mature projects), spec-gate now requires a feature branch instead of allowing blanket edits via TODO.md. Simple projects (no specs/) still use TODO.md directly. Feature branches enforce task ID matching via T321. 3 tests pass.
 
-- [ ] T351: Session collision detector — SessionStart module that detects multiple Claude Code sessions on the same project. Context-reset spawns new tabs that work simultaneously, causing branch conflicts, index.lock contention, and parallel commits. Module writes a session lock file per project+PID, checks for other active sessions on SessionStart, and warns loudly. Belt: hook-based detection here. Suspenders: system-monitor T027 for process-level detection.
+- [x] T351: Session collision detector — SessionStart module detects multiple Claude Code sessions on same project. Lock file per project+PID, warns on collision. session-cleanup sweeps stale locks. 8 tests. (PR #223, #224)
 
 ## UserPromptSubmit Safety & Self-Reflection Improvements (session 2026-04-07)
 - [x] T341: hook-editing-gate blocks ALL UserPromptSubmit module creation. Any bug in a UPS module locks the user out with no recovery. Learned from frustration-detector incident (2026-04-07): module blocked every user prompt, making it impossible to fix. All UPS functionality must live in PreToolUse/PostToolUse/Stop instead.

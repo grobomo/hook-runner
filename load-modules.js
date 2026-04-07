@@ -158,7 +158,7 @@ module.exports = function loadModules(eventDir) {
   // 1. Global modules: top-level .js files
   var entries = fs.readdirSync(eventDir, { withFileTypes: true });
   var globalFiles = entries
-    .filter(function(e) { return e.isFile() && e.name.indexOf(".js") === e.name.length - 3; })
+    .filter(function(e) { return e.isFile() && e.name.indexOf(".js") === e.name.length - 3 && e.name.charAt(0) !== "_"; })
     .map(function(e) { return e.name; })
     .sort()
     .map(function(f) { return path.join(eventDir, f); });

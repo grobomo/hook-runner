@@ -9,6 +9,7 @@ var fs = require("fs");
 var path = require("path");
 var os = require("os");
 var cp = require("child_process");
+var isPidRunning = require("./_is-pid-running");
 
 var TMP = os.tmpdir();
 var PREFIX = ".claude-session-lock-";
@@ -16,24 +17,6 @@ var PREFIX = ".claude-session-lock-";
 // Hash project dir to a safe filename component
 function hashDir(dir) {
   return dir.replace(/[^a-zA-Z0-9]/g, "-").replace(/-+/g, "-").substring(0, 80);
-}
-
-function isPidRunning(pid) {
-  try {
-    if (process.platform === "win32") {
-      var out = cp.execSync("tasklist /FI \"PID eq " + pid + "\" /NH", {
-        encoding: "utf-8",
-        timeout: 3000,
-        stdio: ["pipe", "pipe", "pipe"]
-      });
-      return out.indexOf("" + pid) !== -1;
-    } else {
-      process.kill(pid, 0);
-      return true;
-    }
-  } catch (e) {
-    return false;
-  }
 }
 
 module.exports = function() {
