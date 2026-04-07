@@ -527,17 +527,22 @@ What was done:
 ## Spec-Gate Improvements
 - [x] T363: Spec-gate subtask detection — when branch references T331, also check for unchecked T331a-T331z subtasks in specs/*/tasks.md. Fixes false-positive blocks when parent task is done but subtasks remain. (PR #232, #233)
 
+## Housekeeping
+- [ ] T364: Marketplace commit+push — claude-code-skills v2.15.1 sync (done, pending PR)
+- [ ] T365: Clean up 5 stale local branches (done, pending PR)
+- [ ] T366: Code review pass — fix stale counts in TODO/CLAUDE.md, verify runners match repo
+
 ## Status
-- 287 tasks completed, 0 pending
+- 287 tasks completed, 3 pending
 - Version: 2.15.1
-- Marketplace: claude-code-skills synced to v2.15.0 (needs commit+push from that project)
+- Marketplace: claude-code-skills synced to v2.15.1
 - CI: ALL GREEN (Linux + Windows)
-- 77 modules across 5 workflows (2 active: shtd + customer-data-guard), 47 test suites
+- 84 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
 - Scoring: Novice→Master levels, intervention tracking, full audit logging
-- Health: 99 OK, 0 warnings, 0 failures
+- Health: 101 OK, 0 warnings, 0 failures
 - Analysis score: A (0 demerits)
-- Performance: PreToolUse ~913ms/call (45 modules, ~16ms avg each), SessionStart ~400ms (7 modules, debounced)
+- Performance: PreToolUse ~913ms/call (47 modules, ~16ms avg each), SessionStart ~400ms (11 modules, debounced)
 - CI: GitHub Actions runs tests + secret-scan on push/PR (Linux + Windows) — badge in README
 - Workflow engine: workflow.js + workflow-gate.js + 5 workflow templates
 - CLI: setup, report, health, sync, stats, list, test, test-module, upgrade, uninstall, prune, version, help, perf, export, workflow (list/audit/query/enable/disable/start/status/complete/reset/create/add-module/sync-live)
