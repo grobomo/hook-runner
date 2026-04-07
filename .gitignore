@@ -6,6 +6,7 @@ archive/
 *.bak
 .DS_Store
 .test-results/
+.test-async-tmp/
 SESSION_STATE.md
 .test-tmp-*
 .test-debug-*
