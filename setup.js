@@ -1622,16 +1622,22 @@ function decodeProjectDir(encoded) {
   var accum = segments[0];
 
   for (var i = 1; i < segments.length; i++) {
-    // Empty segment means original had -- (dot-prefix like .claude)
+    // Empty segment means original had -- which encodes \. or \_ or other combos
+    // Try both dot-prefix and underscore-prefix, pick whichever exists on disk
     if (segments[i] === "") {
-      // Emit current accum as path component, next segment gets dot prefix
       if (accum) {
         current = path.join(current, accum);
       }
-      // Consume the next non-empty segment with a dot prefix
       if (i + 1 < segments.length) {
         i++;
-        accum = "." + segments[i];
+        // Try _prefix first (e.g. _grobomo), then .prefix (e.g. .claude)
+        var withUnderscore = path.join(current, "_" + segments[i]);
+        var withDot = path.join(current, "." + segments[i]);
+        if (fs.existsSync(withUnderscore)) {
+          accum = "_" + segments[i];
+        } else {
+          accum = "." + segments[i]; // default to dot-prefix
+        }
       } else {
         accum = "";
       }
