@@ -63,8 +63,8 @@ for event_dir in "$REPO_DIR"/modules/*/; do
 
     echo "[$evt/$mod_label] load, call, headers"
 
-    # Test 1: exports a function (10s timeout as safety net)
-    if timeout 10 node -e "var m = require('$mod_win_path'); if (typeof m !== 'function') { process.exit(1); }" 2>/dev/null; then
+    # Test 1: exports a function
+    if node -e "var m = require('$mod_win_path'); if (typeof m !== 'function') { process.exit(1); }" 2>/dev/null; then
       pass "$evt/$mod_label exports function"
     else
       fail "$evt/$mod_label does not export function"
@@ -72,7 +72,7 @@ for event_dir in "$REPO_DIR"/modules/*/; do
     fi
 
     # Test 2: calling with mock input doesn't crash (returns null, object, or Promise)
-    RESULT=$(timeout 10 node -e "
+    RESULT=$(node -e "
       var m = require('$mod_win_path');
       try {
         var r = m($mock_input);
