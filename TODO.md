@@ -481,6 +481,18 @@ What was done this session:
 - T329: Version bump to 2.10.0
 - All merged to main, synced to live hooks
 
+HIGH PRIORITY — self-reflection design rule:
+- Self-reflection NEVER implements fixes. It observes, analyzes, and writes TODOs.
+- It delegates work back to hook-runner (the ego) which executes via SHTD workflow.
+- Self-reflection is ephemeral and lightweight — an outside observer suggesting improvements.
+- The hook-runner system picks up auto-generated TODOs and implements them properly.
+
+User correction pattern observed:
+- User frequently corrects Claude for skipping SHTD in other projects (e.g. unified-brain)
+- Self-reflection should detect this pattern and write a TODO like:
+  "T???: Add pre-edit SHTD verification — check .workflow-state.json exists in target project before allowing production code edits"
+- Self-reflection does NOT implement the fix — it writes the TODO and moves on.
+
 What to do next:
 1. Run full test suite (`node setup.js --test`) — the new modules (reflection-score, reflection-score-inject) need module validation tests
 2. The nested-claude gate false-positives on `gh_auto` commands containing "claude" in the path — investigate and fix

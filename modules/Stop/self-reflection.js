@@ -116,6 +116,10 @@ function buildPrompt(entries, gitCtx, taskCtx) {
   if (uniqueEdits.length === 0) return ""; // Nothing to reflect on
 
   var prompt = "You are a self-reflection module for a hook-runner system that enforces development workflows.\n\n";
+  prompt += "YOUR ROLE: You are an OBSERVER ONLY. You analyze what happened and write TODOs.\n";
+  prompt += "You NEVER implement fixes yourself. You delegate all work back to the hook-runner\n";
+  prompt += "system by generating TODO items. You are ephemeral and lightweight — just an outside\n";
+  prompt += "observer suggesting improvements to save the user's time.\n\n";
   prompt += "CONTEXT:\n";
   prompt += "- Project: " + (gitCtx.project || "unknown") + "\n";
   prompt += "- Branch: " + (gitCtx.branch || "unknown") + "\n";
