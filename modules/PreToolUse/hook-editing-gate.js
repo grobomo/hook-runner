@@ -60,6 +60,21 @@ module.exports = function(input) {
         issues.push("Missing // WHY: comment — explain the real incident that caused this module");
       }
     }
+
+    // CRITICAL: UserPromptSubmit must have ZERO modules.
+    // Any bug in a UPS module locks the user out of their session entirely —
+    // they cannot send any message to Claude to fix the problem. There is no
+    // safe failure mode. The frustration-detector incident (2026-04-07) proved
+    // this: even a "helpful" module that returned block made the session unusable.
+    // Everything UPS modules tried to do can be done safer in PreToolUse,
+    // PostToolUse, or Stop hooks where blocking means "block one tool call"
+    // not "block the user's ability to communicate."
+    if (/UserPromptSubmit/.test(norm)) {
+      issues.push("UserPromptSubmit modules are FORBIDDEN. Any bug locks the user out " +
+        "of their session with no recovery path. Move this logic to PreToolUse " +
+        "(for gating), PostToolUse (for monitoring), or Stop (for reflection). " +
+        "See T341 in TODO.md for the full incident analysis.");
+    }
   }
 
   if (issues.length > 0) {

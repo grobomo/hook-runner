@@ -59,10 +59,11 @@ node setup.js --help         # show all commands
 ## Hook Design Rules
 - **PreToolUse** = behavioral enforcement (blocking). Gates that prevent bad actions.
 - **PostToolUse** = monitoring/reporting (non-blocking). Checks that warn or log.
+- **UserPromptSubmit** = **ZERO modules allowed.** Any bug in a UPS module locks the user out of their session entirely — they cannot send any message to fix it. All UPS functionality (logging, flagging, detection) must live in PreToolUse, PostToolUse, or Stop. The `hook-editing-gate` enforces this.
 - **Runners** must use `exit(1)` for blocks (not `exit(0)`) so the TUI shows the block.
 - **Runners** must write block messages to `stderr` for TUI visibility.
 - **Modules** must have `// WORKFLOW: name` tag and `// WHY:` comment.
-- The `hook-editing-gate` module enforces these rules at edit time.
+- The `hook-editing-gate` module enforces these rules at edit time (including the UPS no-block rule).
 
 ## Self-Reflection Architecture
 - **Current (interim)**: `self-reflection.js` (Stop module) calls `claude -p` directly for LLM analysis. No memory across sessions. Expensive.

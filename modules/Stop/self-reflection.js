@@ -277,6 +277,35 @@ function buildPrompt(entries, gitCtx, taskCtx) {
   if (passes.length > 0) prompt += "\nPASSED GATE CHECKS (first 10):\n" + passes.slice(0, 10).join("\n") + "\n";
   if (failedCmds.length > 0) prompt += "\nFAILED COMMANDS:\n" + failedCmds.join("\n") + "\n";
 
+  // Inject frustration log entries if any
+  try {
+    var fLogPath = path.join(HOOKS_DIR, "frustration-log.jsonl");
+    if (fs.existsSync(fLogPath)) {
+      var fLogContent = fs.readFileSync(fLogPath, "utf-8").trim();
+      if (fLogContent) {
+        var fLogLines = fLogContent.split("\n");
+        var recentFrustrations = [];
+        var tenMinAgo = Date.now() - 600000;
+        for (var fli = Math.max(0, fLogLines.length - 10); fli < fLogLines.length; fli++) {
+          try {
+            var flEntry = JSON.parse(fLogLines[fli]);
+            if (new Date(flEntry.ts).getTime() > tenMinAgo) {
+              recentFrustrations.push(flEntry);
+            }
+          } catch (fle) {}
+        }
+        if (recentFrustrations.length > 0) {
+          prompt += "\nFRUSTRATION EVENTS (detected this session — HIGH PRIORITY):\n";
+          for (var fri = 0; fri < recentFrustrations.length; fri++) {
+            var fr = recentFrustrations[fri];
+            prompt += "  [" + (fr.category || "?") + "] " + (fr.preview || "").substring(0, 150) + "\n";
+          }
+          prompt += "These are CONFIRMED user frustration signals. Each one is a high-severity issue.\n";
+        }
+      }
+    }
+  } catch (e) {}
+
   prompt += "\nANALYZE (be critical, not charitable):\n";
   prompt += "1. Were the edits appropriate for the current branch and task context?\n";
   prompt += "2. Did any edits slip through that should have been blocked? (e.g., editing code for task T321 while on a T319 branch)\n";
@@ -297,6 +326,15 @@ function buildPrompt(entries, gitCtx, taskCtx) {
   prompt += "   - Repeated git branch gymnastics (abort, switch, delete, recreate)\n";
   prompt += "   If you see 3+ failed commands or retries of the same operation, flag it as high severity.\n";
   prompt += "   The fix is always: stop looping, identify root cause, automate.\n";
+  prompt += "8. CONSTRAINT REJECTION: Did Claude declare any user requirement 'impossible', 'not feasible',\n";
+  prompt += "   or push back on a stated constraint? User requirements are CONSTRAINTS, not suggestions.\n";
+  prompt += "   When the user says 'air-gapped', 'offline', 'no internet' — that's the spec. The correct\n";
+  prompt += "   response is to research how others solved it, not to argue. Flag as HIGH severity.\n";
+  prompt += "9. WRONG TOOL FOR INTENT: Did Claude use the wrong tool for what the user asked?\n";
+  prompt += "   - User said 'research' or 'look up' → should use WebSearch, not Bash/grep\n";
+  prompt += "   - User said 'check online' → should use WebFetch/WebSearch, not Read\n";
+  prompt += "   - User asked for external info → should search the web, not grep local files\n";
+  prompt += "   If the user had to correct the tool choice, flag as HIGH severity.\n";
   prompt += "\nRESPOND IN JSON ONLY — no markdown, no explanation outside the JSON:\n";
   prompt += '{"issues": [{"severity": "high|medium|low", "description": "what went wrong", "fix": "what to do about it"}], ';
   prompt += '"todos": [{"id": "T???", "description": "what should be done"}], ';
@@ -411,19 +449,55 @@ function appendTodos(todos) {
 }
 
 module.exports = async function(input) {
-  // Only run when there were actual Edit/Write calls — no edits means nothing
-  // to reflect on. This saves claude -p costs on read-only or Bash-only stops.
+  // Run when there were edits OR when user showed frustration/corrections.
+  // Previously skipped no-edit sessions — but the WORST sessions (declaring
+  // requirements impossible, wrong tool choices) often have zero edits because
+  // nothing productive happened. Those need reflection most.
   var entries = getRecentEntries();
   if (entries.length === 0) return null;
 
   var hasEdits = false;
+  var hasInterrupts = false;
+  var interruptCount = 0;
   for (var ei = 0; ei < entries.length; ei++) {
     if (entries[ei].tool === "Edit" || entries[ei].tool === "Write") {
       hasEdits = true;
-      break;
+    }
+    if (entries[ei].event === "UserPromptSubmit") {
+      // Check for correction/frustration signals in logged prompts
+      var reason = (entries[ei].reason || "").toLowerCase();
+      var cmd = (entries[ei].cmd || "").toLowerCase();
+      var text = reason + " " + cmd;
+      if (/\b(no|stop|wrong|don't|interrupt|frustrated|repeat)\b/.test(text)) {
+        hasInterrupts = true;
+        interruptCount++;
+      }
     }
   }
-  if (!hasEdits) return null;
+
+  // Also check frustration log for recent detections
+  var frustrationLogPath = path.join(HOOKS_DIR, "frustration-log.jsonl");
+  try {
+    if (fs.existsSync(frustrationLogPath)) {
+      var fContent = fs.readFileSync(frustrationLogPath, "utf-8").trim();
+      if (fContent) {
+        var fLines = fContent.split("\n");
+        var fiveMinAgo = Date.now() - 300000;
+        for (var fi = Math.max(0, fLines.length - 10); fi < fLines.length; fi++) {
+          try {
+            var fEntry = JSON.parse(fLines[fi]);
+            if (new Date(fEntry.ts).getTime() > fiveMinAgo) {
+              hasInterrupts = true;
+              interruptCount++;
+            }
+          } catch (fe) {}
+        }
+      }
+    }
+  } catch (e) {}
+
+  // Skip only if no edits AND no frustration signals
+  if (!hasEdits && !hasInterrupts) return null;
 
   var gitCtx = getGitContext();
   var taskCtx = getTaskContext();
