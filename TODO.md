@@ -512,11 +512,18 @@ What was done:
 - [x] T358: README refresh — module count updated (80+), SessionStart table verified (8 modules), all sections accurate
 - [x] T359: N/A — `npx grobomo/hook-runner` already works via GitHub direct install. npm registry publish skipped (name `hook-runner` taken, would need `@grobomo/hook-runner` scoped package + npm org setup). GitHub install is the intended distribution path.
 
-- [ ] T361: DRY — extract shared `isPidRunning` helper from session-cleanup.js and session-collision-detector.js into `modules/SessionStart/is-pid-running.js`. Both modules duplicate the same 15-line function.
+- [x] T361: DRY — extracted shared `isPidRunning` into `_is-pid-running.js`. Underscore prefix convention for helpers. load-modules.js + test-modules.sh skip `_` files. (PR #225)
+
+## Session 2026-04-07h
+- T351: Session collision detector (PR #223, #224) — detects multiple Claude Code tabs on same project
+- T361: DRY isPidRunning helper (PR #225) — underscore prefix convention for non-module helpers
+- T359: Closed as N/A — GitHub direct install already works
+- system-monitor T027: TODO added for process-level Claude tab detection
+- Next: version bump for T361, marketplace sync, code review pass
 
 ## Status
-- 282 tasks completed, 2 pending (T331 brain integration, T361 DRY)
-- Version: 2.14.5
+- 284 tasks completed, 1 pending (T331 brain integration — cross-project)
+- Version: 2.14.6
 - Marketplace: claude-code-skills synced to v2.14.3 (needs commit+push from that project)
 - CI: ALL GREEN (Linux + Windows)
 - 77 modules across 5 workflows (2 active: shtd + customer-data-guard), 47 test suites
