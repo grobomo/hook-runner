@@ -2,6 +2,22 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.12.0] — 2026-04-07
+
+### Added
+- **UserPromptSubmit module ban** (T341) — `hook-editing-gate` now blocks ALL UserPromptSubmit module creation. Any bug in a UPS module locks the user out with no recovery path. All detection/logging must live in PreToolUse/PostToolUse/Stop.
+- **Frustration detection in UPS runner** (T346) — runner itself logs prompt previews to hook-log and detects frustration patterns (repeated phrases, escalation signals) → writes `frustration-log.jsonl`. No modules needed — runs in the runner process.
+- **Constraint-rejection analysis** (T343) — self-reflection prompt now asks "did Claude declare a requirement impossible?" to catch premature surrender.
+- **Wrong-tool-for-intent analysis** (T343) — self-reflection prompt checks if tool usage matched user's stated intent (e.g. grep local files when user said "research").
+- **Frustration scoring** (T344) — `FRUSTRATION_DETECTED` (-15) and `RAPID_INTERRUPT_CLUSTER` (-20) penalties in reflection-score from frustration-log.jsonl events.
+
+### Fixed
+- **Self-reflection hasEdits guard removed** (T342) — sessions with user frustration but no file edits were completely skipped. The worst sessions (all talk, no action) now get reflected on.
+- **No-edit session handling** (T347) — `buildPrompt()` shows "NO FILES EDITED" warning so `claude -p` analysis flags unproductive sessions.
+
+### Removed
+- **frustration-detector.js** (T345) — archived. UPS module approach was fundamentally flawed (blocking user prompts). Frustration detection moved to runner level.
+
 ## [2.11.0] — 2026-04-06
 
 ### Added
