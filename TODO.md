@@ -533,11 +533,11 @@ What was done:
 - [x] T366: Code review pass — fixed stale counts, verified 84 modules pass contract, 8 runners match live (PR #234)
 
 ## Docs Rewrite (Issue #194)
-- [ ] T367: Rewrite README — fix framing: workflows are for individuals (not teams), hook-runner replaces settings.json (never suggest direct edits), workflows = enable/disable groups + portability
-- [ ] T368: Sync updated README to marketplace (claude-code-skills)
+- [x] T367: Rewrite README — individual-first framing, no settings.json suggestions, portability value prop (PR #236, closes #194)
+- [x] T368: Marketplace README sync — TODO written in claude-code-skills/TODO.md as T002 (cross-project, PR #236)
 
 ## Status
-- 290 tasks completed, 2 pending
+- 292 tasks completed, 0 pending
 - Version: 2.15.1
 - Marketplace: claude-code-skills synced to v2.15.1
 - CI: ALL GREEN (Linux + Windows)
