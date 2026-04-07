@@ -36,9 +36,9 @@ for runner in run-pretooluse.js run-posttooluse.js run-stop.js run-sessionstart.
   fi
 done
 
-# Test 5: All runners require load-modules
+# Test 5: Runners require load-modules (except UPS which was redesigned in T341)
 echo "[5] Runners use load-modules.js"
-for runner in run-pretooluse.js run-posttooluse.js run-stop.js run-sessionstart.js run-userpromptsubmit.js; do
+for runner in run-pretooluse.js run-posttooluse.js run-stop.js run-sessionstart.js; do
   if grep -q 'require("./load-modules")' "$BASH_DIR/$runner"; then
     pass "$runner requires load-modules"
   else
