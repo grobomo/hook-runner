@@ -551,6 +551,20 @@ What was done:
 ## Module Review Dashboard (T373)
 - [x] T373: Add Module Review dashboard to HTML report — sortable table with verdicts (active/preventive/stale/dead/new), last-blocked dates, block rates, latency. Extended parseLogLines with timestamp tracking. (PR #242)
 
+## Spec-Gate Fix
+- [ ] T374: Fix spec-gate false-positive fuzzy matching — when branch has taskId (TXXX), prefer exact task ID lookup over fuzzy word matching. Prevents "review" in branch matching specs/code-review-cleanup/.
+
+## Session 2026-04-07p
+- T369: shtd.yml sync — added session-collision-detector + T094 test helper exclusion (PR #238)
+- T370: pid validation in _is-pid-running.js (PR #239)
+- T371: Version bump to 2.15.2 (PR #240)
+- T372: CLAUDE.md push workflow docs fix (PR #241)
+- T373: Module Review dashboard in HTML report — sortable table with verdicts (PR #242)
+- Marketplace synced to v2.15.2, fixed nesting bug (modules/modules/)
+- Stale branch 237-bookkeeping-docs-complete remains (squash-merged, needs -D, needs user approval)
+- Spec gate false positive: branch word "review" matches specs/code-review-cleanup/ — could improve matching to prefer task ID over fuzzy words
+- Report.js and setup.js synced to live hooks
+
 ## Status
 - 297 tasks completed, 0 pending
 - Version: 2.15.2

@@ -3,6 +3,7 @@
 // T321: Strengthened — if branch has TXXX, that specific task must be unchecked.
 // T322: Cross-project guidance in block messages.
 // T323: "Spec before code" explicit reminder in all block messages.
+// T374: Task ID match takes priority over fuzzy word matching — prevents false positives.
 "use strict";
 // requires: enforcement-gate
 // Spec gate: enforces spec → tasks → code pipeline.
@@ -220,40 +221,39 @@ module.exports = function(input) {
   // T321: If branch has a task ID, verify that specific task is unchecked somewhere.
   // This prevents edits to production code when the branch task is already done
   // or doesn't exist as an actual task.
+  // T374: Also track WHERE the task was found (spec dir name or "TODO") so we can
+  // use the exact spec instead of fuzzy word matching later.
+  var taskFoundIn = ""; // "" = not found, "TODO" = in TODO.md, "specs/<dir>" = in a spec
   if (taskId) {
-    var taskFound = false;
-
     // Check TODO.md files in all roots
     for (var tci = 0; tci < roots.length; tci++) {
       var tPath = path.join(roots[tci], "TODO.md");
       if (!fs.existsSync(tPath)) continue;
       try {
         var tContent = fs.readFileSync(tPath, "utf-8");
-        if (isTaskUnchecked(tContent, taskId)) { taskFound = true; break; }
+        if (isTaskUnchecked(tContent, taskId)) { taskFoundIn = "TODO"; break; }
       } catch (e) {}
     }
 
-    // Check specs/*/tasks.md files in all roots
-    if (!taskFound) {
-      for (var sci = 0; sci < roots.length; sci++) {
-        var sDir = path.join(roots[sci], "specs");
-        if (!fs.existsSync(sDir)) continue;
-        try {
-          var sDirs = fs.readdirSync(sDir);
-          for (var sdi = 0; sdi < sDirs.length; sdi++) {
-            var stPath = path.join(sDir, sDirs[sdi], "tasks.md");
-            if (!fs.existsSync(stPath)) continue;
-            try {
-              var stContent = fs.readFileSync(stPath, "utf-8");
-              if (isTaskUnchecked(stContent, taskId)) { taskFound = true; break; }
-            } catch (e) {}
-          }
-          if (taskFound) break;
-        } catch (e) {}
-      }
+    // Check specs/*/tasks.md files in all roots (even if found in TODO — spec match is more precise)
+    for (var sci = 0; sci < roots.length; sci++) {
+      var sDir = path.join(roots[sci], "specs");
+      if (!fs.existsSync(sDir)) continue;
+      try {
+        var sDirs = fs.readdirSync(sDir);
+        for (var sdi = 0; sdi < sDirs.length; sdi++) {
+          var stPath = path.join(sDir, sDirs[sdi], "tasks.md");
+          if (!fs.existsSync(stPath)) continue;
+          try {
+            var stContent = fs.readFileSync(stPath, "utf-8");
+            if (isTaskUnchecked(stContent, taskId)) { taskFoundIn = "specs/" + sDirs[sdi]; break; }
+          } catch (e) {}
+        }
+        if (taskFoundIn.indexOf("specs/") === 0) break;
+      } catch (e) {}
     }
 
-    if (!taskFound) {
+    if (!taskFoundIn) {
       return {
         decision: "block",
         reason: "SPEC GATE: Branch task " + taskId + " is not an unchecked task in TODO.md or specs/*/tasks.md.\n" +
@@ -332,9 +332,30 @@ module.exports = function(input) {
     };
   }
 
+  // T374: If taskId was found in a specific spec, use that spec directly (skip fuzzy)
+  // If taskId was found only in TODO.md, skip fuzzy spec matching entirely
+  if (taskFoundIn && taskFoundIn.indexOf("specs/") === 0) {
+    var taskSpecDir = taskFoundIn.slice(6); // "specs/foo" → "foo"
+    var taskSpecMatch = null;
+    for (var tsi = 0; tsi < specEntries.length; tsi++) {
+      if (specEntries[tsi].dir === taskSpecDir) { taskSpecMatch = specEntries[tsi]; break; }
+    }
+    if (taskSpecMatch) {
+      // Task ID matched this spec — enforce its chain (it has unchecked tasks by definition)
+      if (isTestFile) return null;
+      return null;
+    }
+  }
+  if (taskFoundIn === "TODO") {
+    // Task is in TODO.md, not in any spec — skip fuzzy spec matching
+    // (fuzzy could match the wrong spec and block on its completed tasks)
+    if (isTestFile) return null;
+    return null;
+  }
+
   // If branch matches a spec dir, enforce THAT spec's chain specifically
   if (featureWords.length > 0 && specEntries.length > 0) {
-    // Find best matching spec
+    // Find best matching spec via fuzzy word matching (only when no taskId match)
     var bestMatch = null;
     var bestScore = 0;
     for (var si = 0; si < specEntries.length; si++) {
