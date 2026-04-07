@@ -441,20 +441,21 @@ See `specs/hook-integrity/` for full spec and tasks.
 - git pull/push hanging — multiple concurrent sessions competing for git locks + credential manager. Kill all bash/git/node processes and retry in fresh session.
 - T351 merged: reflection-score export fix + ES5 cleanup in run-modules
 
-## Next session priorities
-1. Clean up stale branches (210-T338-T339, 211-T337, 212-T350, 213-T340, 214-T351)
-2. DRY code review pass on modules/ directory
-3. Verify CI passes — may need to fix timeout issues in modules/hook-integrity test suites
-4. Prune old hook-log entries if growing large
+## Session 2026-04-07h
+- Cleaned up 8 stale local branches (all PRs merged/closed)
+- Fixed reflection-score.js export: was plain object (health check fail), now function wrapper with utility methods as properties
+- Synced shtd.yml: added 2 missing modules (session-cleanup, share-is-generic) — audit now 69/69
+- Code review: ES5 consistency clean (no startsWith/endsWith/includes), all workflows match YAML
+- Health: 100 OK, 0 warnings, 0 failures (was 99 OK, 1 failure)
 
 ## Status
-- 272 tasks completed, 1 pending (T331 brain integration — cross-project)
+- 273 tasks completed, 1 pending (T331 brain integration — cross-project)
 - Version: 2.14.0
 - Marketplace: claude-code-skills synced to v2.14.0
 - 81 modules across 5 workflows (2 active: shtd + customer-data-guard), 46 test suites
 - Self-reflection system live: self-reflection + reflection-gate + reflection-score + score-inject
 - Scoring: Novice→Master levels, intervention tracking, full claude -p audit logging
-- Health: 89 OK, 0 warnings, 0 failures
+- Health: 100 OK, 0 warnings, 0 failures
 - Analysis score: A (0 demerits)
 - Performance: PreToolUse ~296ms/call (45 modules), SessionStart ~400ms (7 modules, debounced)
 - CI: GitHub Actions runs tests + secret-scan on push/PR (Linux + Windows) — badge in README
