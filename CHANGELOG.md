@@ -2,6 +2,15 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.14.1] — 2026-04-07
+
+### Fixed
+- **Health check** — utility modules (like `reflection-score.js`) that export objects instead of functions no longer reported as failures. Health check now accepts both function and object exports.
+- **`--test-module`** — utility modules skip invocation tests and display exported keys instead of crashing.
+- **`reflection-score.js`** — now exports as a function with utility methods as properties, satisfying both the module contract and its role as a shared library.
+- **ES5 consistency** — fixed remaining `.startsWith()`/`.endsWith()` calls in run-modules for ES5 compatibility.
+- **`shtd.yml`** — added 2 missing modules (`session-cleanup`, `share-is-generic`) to workflow definition. Audit now 69/69.
+
 ## [2.14.0] — 2026-04-07
 
 ### Changed
