@@ -2,6 +2,13 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.13.1] — 2026-04-07
+
+### Fixed
+- **Session isolation for hook state files** (T337) — temp flag files (`.claude-instruction-pending`, `.claude-turn-complete`, `.claude-bash-failures.json`, `.claude-self-analyze-cooldown`) now include `process.ppid` in filename. Different Claude Code tabs no longer interfere with each other's state.
+- **Session cleanup module** — `session-cleanup.js` (SessionStart) sweeps orphaned flag files from crashed sessions by checking if the PID in the filename is still running.
+- **Test suite** — `test-T337-session-isolation.sh` (8 tests: PID-scoped writes, cross-tab isolation, old-format ignored).
+
 ## [2.13.0] — 2026-04-07
 
 ### Added

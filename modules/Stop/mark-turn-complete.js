@@ -9,7 +9,8 @@ var fs = require("fs");
 var path = require("path");
 var os = require("os");
 
-var MARKER = path.join(os.tmpdir(), ".claude-turn-complete");
+// T337: Include parent PID in filename for session isolation across tabs
+var MARKER = path.join(os.tmpdir(), ".claude-turn-complete-" + process.ppid);
 
 module.exports = function(input) {
   try {

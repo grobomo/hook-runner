@@ -14,8 +14,9 @@ var path = require("path");
 var os = require("os");
 var cp = require("child_process");
 
-var MARKER = path.join(os.tmpdir(), ".claude-turn-complete");
-var COOLDOWN_FILE = path.join(os.tmpdir(), ".claude-self-analyze-cooldown");
+// T337: Include parent PID in filename for session isolation across tabs
+var MARKER = path.join(os.tmpdir(), ".claude-turn-complete-" + process.ppid);
+var COOLDOWN_FILE = path.join(os.tmpdir(), ".claude-self-analyze-cooldown-" + process.ppid);
 var COOLDOWN_MS = 60000; // Don't spam analysis — 1 min cooldown
 var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
 

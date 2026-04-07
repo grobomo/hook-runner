@@ -1,3 +1,4 @@
+// WORKFLOW: shtd
 // WHY: User interrupts are social cues that Claude did something wrong.
 // In real life, people correct you with raised eyebrows or "wait, no."
 // In TUI, the interrupt IS that signal. When detected, this spawns a
@@ -13,8 +14,9 @@ var path = require("path");
 var os = require("os");
 var cp = require("child_process");
 
-var MARKER = path.join(os.tmpdir(), ".claude-turn-complete");
-var COOLDOWN_FILE = path.join(os.tmpdir(), ".claude-self-analyze-cooldown");
+// T337: Include parent PID in filename for session isolation across tabs
+var MARKER = path.join(os.tmpdir(), ".claude-turn-complete-" + process.ppid);
+var COOLDOWN_FILE = path.join(os.tmpdir(), ".claude-self-analyze-cooldown-" + process.ppid);
 var COOLDOWN_MS = 60000; // Don't spam analysis — 1 min cooldown
 var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
 
@@ -31,16 +33,23 @@ function isInterrupt() {
 }
 
 function isFirstPrompt() {
-  // Check prompt log — if fewer than 2 entries in the last minute, this is
-  // likely the first prompt of the session, not an interrupt
+  // Check prompt log — if last entry is >5 min old, this is a new session
+  // Read only the tail of the file to avoid parsing the entire JSONL
   var logPath = path.join(home, ".claude/hooks/prompt-log.jsonl");
   try {
-    var content = fs.readFileSync(logPath, "utf-8");
-    var lines = content.trim().split("\n");
-    if (lines.length < 2) return true;
-    var last = JSON.parse(lines[lines.length - 1]);
+    var fd = fs.openSync(logPath, "r");
+    var stat = fs.fstatSync(fd);
+    if (stat.size < 10) { fs.closeSync(fd); return true; }
+    // Read last 512 bytes — enough for the last JSONL entry
+    var readSize = Math.min(512, stat.size);
+    var buf = Buffer.alloc(readSize);
+    fs.readSync(fd, buf, 0, readSize, stat.size - readSize);
+    fs.closeSync(fd);
+    var tail = buf.toString("utf-8");
+    var lines = tail.trim().split("\n");
+    var lastLine = lines[lines.length - 1];
+    var last = JSON.parse(lastLine);
     var age = Date.now() - new Date(last.ts).getTime();
-    // If last prompt was more than 5 minutes ago, this is a new session
     return age > 300000;
   } catch (e) {
     return true;
@@ -79,20 +88,29 @@ function spawnAnalysis(userPrompt) {
   }
 
   try {
+    // Write args to a temp JSON file — avoids quote escaping nightmares in VBS/cmd.
+    // The self-analyze-loop.js reads this file instead of process.argv.
+    var argsFile = path.join(os.tmpdir(), "claude-analyze-args-" + Date.now() + ".json");
+    fs.writeFileSync(argsFile, JSON.stringify({
+      projectDir: projectDir,
+      userCorrection: userPrompt.substring(0, 500)
+    }));
+
     if (process.platform === "win32") {
       // Use wscript.exe with a VBS wrapper to hide the window completely.
       // node.exe + detached + windowsHide still flashes a console.
       var vbs = path.join(os.tmpdir(), "claude-analyze.vbs");
-      var cmd = 'node "' + scriptPath.replace(/\//g, "\\") + '" "' +
-        projectDir.replace(/\//g, "\\") + '" "' +
-        userPrompt.substring(0, 300).replace(/"/g, '""') + '"';
+      var nodePath = scriptPath.replace(/\//g, "\\");
+      var argsPath = argsFile.replace(/\//g, "\\");
+      // Redirect stderr to log so VBS errors don't pop up silently
+      var errLog = path.join(home, ".claude/self-analysis-errors.log").replace(/\//g, "\\");
       fs.writeFileSync(vbs,
         'Set ws = CreateObject("WScript.Shell")\n' +
-        'ws.Run "cmd /c ' + cmd.replace(/"/g, '""') + '", 0, False\n');
+        'ws.Run "cmd /c node ""' + nodePath + '"" ""' + argsPath + '"" 2>>""' + errLog + '""", 0, False\n');
       cp.spawn("wscript.exe", [vbs], { detached: true, stdio: "ignore" }).unref();
     } else {
       cp.spawn("node", [
-        scriptPath, projectDir, userPrompt.substring(0, 500)
+        scriptPath, argsFile
       ], { detached: true, stdio: "ignore" }).unref();
     }
   } catch (e) {

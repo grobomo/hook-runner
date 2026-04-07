@@ -1,3 +1,4 @@
+// WORKFLOW: shtd
 // WHY: User directives were treated as one-time context instead of persistent rules.
 // UserPromptSubmit: detect instruction-like directives in user messages.
 // When user says "always", "never", "make sure", "from now on", "whenever",
@@ -7,7 +8,8 @@ var fs = require("fs");
 var path = require("path");
 var os = require("os");
 
-var FLAG_FILE = path.join(os.tmpdir(), ".claude-instruction-pending");
+// T337: Include parent PID in filename for session isolation across tabs
+var FLAG_FILE = path.join(os.tmpdir(), ".claude-instruction-pending-" + process.ppid);
 
 // Patterns that indicate the user is giving a persistent instruction
 var INSTRUCTION_PATTERNS = [

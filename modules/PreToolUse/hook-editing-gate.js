@@ -50,12 +50,12 @@ function detectWeakening(content, tool) {
       return "Module name/comments suggest enforcement but no block decisions found";
     }
   }
-  // Edit: replacing a substantial block with bare return null is suspicious
-  // But small edits like changing a single return are normal — only flag multi-line replacements
-  if (tool === "Edit" && lineCount <= 2 && lineCount >= 1) {
-    // Only flag if the old content being replaced was substantial (we can't know here,
-    // but a bare "return null;" replacing anything is suspicious in a gate context)
-    // Skip this check — too many false positives on legitimate small edits
+  // Edit: catch bare "return null" replacing enforcement logic in gate modules
+  if (tool === "Edit" && lineCount <= 2) {
+    var trimmed = content.trim();
+    if (/^\s*return\s+null;?\s*$/.test(trimmed)) {
+      return "Replacing enforcement logic with bare return null";
+    }
   }
   return null;
 }
@@ -121,8 +121,7 @@ module.exports = function(input) {
         "No session outside hook-runner can modify hook infrastructure.\n\n" +
         "Your project: " + (projectDir || "(unknown)") + "\n" +
         "Protected file: " + base + " (" + protectedType + ")\n\n" +
-        "TO MODIFY HOOKS: Start a Claude session in the hook-runner project:\n" +
-        "  cd ~/Documents/ProjectsCL1/_grobomo/hook-runner && claude\n" +
+        "TO MODIFY HOOKS: Start a Claude session in the hook-runner project.\n" +
         "Hook-runner has specs, tests, and guardrails for safe hook changes."
     };
   }

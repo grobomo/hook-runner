@@ -1,3 +1,4 @@
+// WORKFLOW: shtd
 // WHY: Claude tried 3 wrong ways to call claude -p before finding the right
 // pattern in an existing project. The troubleshooting cycle wasted time and
 // the lesson was almost lost. This module detects "fail-fail-succeed" patterns
@@ -8,7 +9,8 @@ var fs = require("fs");
 var path = require("path");
 var os = require("os");
 
-var STATE_FILE = path.join(os.tmpdir(), ".claude-bash-failures.json");
+// T337: Include parent PID in filename for session isolation across tabs
+var STATE_FILE = path.join(os.tmpdir(), ".claude-bash-failures-" + process.ppid + ".json");
 var FAIL_THRESHOLD = 2; // consecutive failures before a success triggers the prompt
 
 function loadState() {

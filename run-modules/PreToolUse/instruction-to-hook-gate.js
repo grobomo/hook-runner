@@ -1,4 +1,5 @@
-// WHY: User instructions ("always X") were forgotten next session. Must become hooks/rules.
+// WORKFLOW: shtd
+// WHY: User instructions ("always X") were forgotten next session. Must become hooks or SHTD workflows.
 "use strict";
 // PreToolUse: enforce that user instructions ("always X", "never Y") become hooks/rules.
 // Works with UserPromptSubmit/instruction-detector.js which sets a flag file.
@@ -16,7 +17,8 @@ var fs = require("fs");
 var path = require("path");
 var os = require("os");
 
-var FLAG_FILE = path.join(os.tmpdir(), ".claude-instruction-pending");
+// T337: Include parent PID in filename for session isolation across tabs
+var FLAG_FILE = path.join(os.tmpdir(), ".claude-instruction-pending-" + process.ppid);
 
 // Paths that count as "creating a hook or rule"
 var HOOK_RULE_PATHS = [
@@ -75,8 +77,9 @@ module.exports = function(input) {
       "(detected: " + (flag.pattern || "instruction keyword") + ") but you're editing " +
       "'" + path.basename(filePath) + "' instead of creating a hook or rule.\n\n" +
       "User said: \"" + (flag.preview || "").substring(0, 100) + "...\"\n\n" +
-      "FIX: Create a hook in ~/.claude/hooks/run-modules/<Event>/ or a rule in .claude/rules/ first.\n" +
+      "FIX: Create a hook in ~/.claude/hooks/run-modules/<Event>/ or an SHTD workflow.\n" +
       "Then the flag will clear and you can proceed with other edits.\n" +
-      "If the instruction is already covered by an existing hook/rule, edit that file to acknowledge it."
+      "If the instruction is already covered by an existing hook/workflow, edit that file to acknowledge it.\n" +
+      "NOTE: .claude/rules/ is deprecated — use hooks/run-modules or SHTD workflows instead."
   };
 };

@@ -104,7 +104,15 @@ else
   fail "safe edits should pass: $OUTPUT"
 fi
 
-# 6. Hook-runner project can edit modules (with quality checks passing)
+# 6. Bare "return null" edit blocked as enforcement weakening
+OUTPUT=$(run_gate "Edit" "$HOOKS_DIR/run-modules/PreToolUse/some-gate.js" "  return null;")
+if echo "$OUTPUT" | grep -q "BLOCKED.*weakening"; then
+  pass "bare return null edit blocked as enforcement weakening"
+else
+  fail "bare return null should be blocked: $OUTPUT"
+fi
+
+# 7. Hook-runner project can write modules (with quality checks passing)
 OUTPUT=$(run_gate "Write" "$HOOKS_DIR/run-modules/PreToolUse/new-gate.js" "$GOOD_MODULE")
 if echo "$OUTPUT" | grep -q "PASSED"; then
   pass "hook-runner project can edit modules"
@@ -112,7 +120,7 @@ else
   fail "hook-runner should be allowed: $OUTPUT"
 fi
 
-# 7. Core hook files protected from other projects
+# 8. Core hook files protected from other projects
 OUTPUT=$(run_gate_other "Edit" "$HOOKS_DIR/load-modules.js" "var x = 1;")
 if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
   pass "core hook files protected from other projects"
@@ -120,7 +128,7 @@ else
   fail "core files should be protected: $OUTPUT"
 fi
 
-# 8. Audit log is written (check .system-monitor/hook-audit.jsonl exists after gate calls)
+# 9. Audit log is written (check .system-monitor/hook-audit.jsonl exists after gate calls)
 AUDIT_LOG="$HOME/.system-monitor/hook-audit.jsonl"
 if [ -f "$AUDIT_LOG" ]; then
   LINES=$(wc -l < "$AUDIT_LOG")

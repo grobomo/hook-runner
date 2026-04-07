@@ -10,5 +10,6 @@ SESSION_STATE.md
 .test-tmp-*
 .test-debug-*
 .spec-gate-helper.js
+.spec-gate-t321-helper.js
 .workflow-state.json
 workflow-config.json

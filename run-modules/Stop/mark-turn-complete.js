@@ -1,3 +1,4 @@
+// WORKFLOW: shtd
 // WHY: Need to detect when the user interrupts Claude mid-response.
 // Interrupts are social cues that something went wrong — they should
 // trigger self-analysis. This module writes a marker file when Claude
@@ -8,7 +9,8 @@ var fs = require("fs");
 var path = require("path");
 var os = require("os");
 
-var MARKER = path.join(os.tmpdir(), ".claude-turn-complete");
+// T337: Include parent PID in filename for session isolation across tabs
+var MARKER = path.join(os.tmpdir(), ".claude-turn-complete-" + process.ppid);
 
 module.exports = function(input) {
   try {

@@ -17,7 +17,8 @@ var fs = require("fs");
 var path = require("path");
 var os = require("os");
 
-var FLAG_FILE = path.join(os.tmpdir(), ".claude-instruction-pending");
+// T337: Include parent PID in filename for session isolation across tabs
+var FLAG_FILE = path.join(os.tmpdir(), ".claude-instruction-pending-" + process.ppid);
 
 // Paths that count as "creating a hook or rule"
 var HOOK_RULE_PATHS = [
