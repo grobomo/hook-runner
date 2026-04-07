@@ -542,8 +542,11 @@ What was done:
 ## Security Hardening
 - [x] T370: Validate pid input in _is-pid-running.js — defense-in-depth against command injection (PR #239)
 
+## Release
+- [ ] T371: Version bump to 2.15.2 + CHANGELOG for T369-T370 + marketplace sync
+
 ## Status
-- 294 tasks completed, 0 pending
+- 294 tasks completed, 1 pending
 - Version: 2.15.1
 - Marketplace: claude-code-skills synced to v2.15.1
 - CI: ALL GREEN (Linux + Windows)
