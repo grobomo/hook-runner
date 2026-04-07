@@ -470,7 +470,24 @@ WHY: Currently ~30 run-modules exist with no way to see the big picture — whic
 - [x] T328: Full claude -p logging — every Stop runs LLM analysis, all prompts + responses + timing logged to reflection-claude-log.jsonl for audit and tuning.
 
 ## Release
-- [ ] T329: Version bump to 2.10.0 + CHANGELOG
+- [x] T329: Version bump to 2.10.0 + CHANGELOG
+
+## Session Handoff (2026-04-06c)
+What was done this session:
+- T319-T320: Synced no-adhoc-commands + cross-project-todo-gate to catalog
+- T321-T323: Strengthened spec-gate (branch task ID enforcement, cross-project guidance, spec-before-code)
+- T324: Self-reflection system (self-reflection.js + reflection-gate.js)
+- T326-T328: Gamified scoring (reflection-score.js), intervention tracking, full claude -p logging
+- T329: Version bump to 2.10.0
+- All merged to main, synced to live hooks
+
+What to do next:
+1. Run full test suite (`node setup.js --test`) — the new modules (reflection-score, reflection-score-inject) need module validation tests
+2. The nested-claude gate false-positives on `gh_auto` commands containing "claude" in the path — investigate and fix
+3. Code review: self-reflection.js has `parseResponse` called twice (once in callClaude, once after) — DRY this
+4. The Stop hook now runs claude -p on EVERY stop — this will be expensive. Monitor reflection-claude-log.jsonl for costs. Consider: only run if there were actual Edit/Write tool calls since last reflection
+5. Test the reflection-score-inject SessionStart module actually works (check if score shows up on context reset)
+6. Marketplace sync needed for v2.10.0
 
 ## Superseded
 - [x] T094: ~~Integrate hook-monitor~~ — superseded by hook-integrity system (T298-T304) + self-reflection (T324). No hook-monitor project exists.
