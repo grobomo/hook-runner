@@ -15,6 +15,17 @@ echo "=== hook-runner: workflow add-module ==="
 # Use a temp module name that won't conflict
 TMPMOD="test-tmp-mod-$$"
 
+# Cleanup function — runs on exit (success or failure) to prevent contamination
+cleanup_t114() {
+  rm -f "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" 2>/dev/null
+  rm -f "$HOME/.claude/hooks/run-modules/PreToolUse/$TMPMOD.js" 2>/dev/null
+  GIT_DIR="$REPO_DIR/.git" GIT_WORK_TREE="$REPO_DIR" git checkout -- workflows/no-local-docker.yml 2>/dev/null || true
+  if grep -q "test-tmp-mod" "$REPO_DIR/workflows/no-local-docker.yml" 2>/dev/null; then
+    GIT_DIR="$REPO_DIR/.git" GIT_WORK_TREE="$REPO_DIR" git show HEAD:workflows/no-local-docker.yml > "$REPO_DIR/workflows/no-local-docker.yml" 2>/dev/null || true
+  fi
+}
+trap cleanup_t114 EXIT
+
 ADD_OUT=$(cd "$REPO_DIR" && node setup.js --workflow add-module no-local-docker "$TMPMOD" 2>&1) || true
 check "add-module succeeds" 'echo "$ADD_OUT" | grep -qi "created"'
 
@@ -41,15 +52,7 @@ check "sync-live succeeds" 'echo "$SYNC_OUT" | grep -qi "synced"'
 # Live copy exists
 check "live copy exists" '[ -f "$HOME/.claude/hooks/run-modules/PreToolUse/$TMPMOD.js" ]'
 
-# Cleanup: remove temp module from repo and live
-rm -f "$REPO_DIR/modules/PreToolUse/$TMPMOD.js"
-rm -f "$HOME/.claude/hooks/run-modules/PreToolUse/$TMPMOD.js"
-# Remove temp module from YAML — always try both methods to prevent corruption
-GIT_DIR="$REPO_DIR/.git" GIT_WORK_TREE="$REPO_DIR" git checkout -- workflows/no-local-docker.yml 2>/dev/null || true
-# Belt-and-suspenders: verify YAML is clean, restore from git show if not
-if grep -q "test-tmp-mod" "$REPO_DIR/workflows/no-local-docker.yml" 2>/dev/null; then
-  GIT_DIR="$REPO_DIR/.git" GIT_WORK_TREE="$REPO_DIR" git show HEAD:workflows/no-local-docker.yml > "$REPO_DIR/workflows/no-local-docker.yml" 2>/dev/null || true
-fi
+# Cleanup handled by trap EXIT above
 
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="

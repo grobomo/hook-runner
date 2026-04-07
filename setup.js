@@ -1073,6 +1073,21 @@ function cmdTest() {
     console.log("  No test scripts found in " + testDir);
     process.exit(1);
   }
+  // Pre-test cleanup: remove any leftover test-tmp-mod-* artifacts from previous runs
+  var preCleanDirs = [path.join(REPO_DIR, "modules", "PreToolUse"), path.join(REPO_DIR, "modules", "PostToolUse")];
+  for (var pci = 0; pci < preCleanDirs.length; pci++) {
+    try {
+      var pcFiles = fs.readdirSync(preCleanDirs[pci]);
+      for (var pcf = 0; pcf < pcFiles.length; pcf++) {
+        if (pcFiles[pcf].indexOf("test-tmp-mod-") === 0) {
+          fs.unlinkSync(path.join(preCleanDirs[pci], pcFiles[pcf]));
+        }
+      }
+    } catch(e) {}
+  }
+  // Restore workflow YAML in case previous test left it dirty
+  try { cp.execSync("git checkout -- workflows/no-local-docker.yml", { cwd: REPO_DIR, stdio: "pipe" }); } catch(e) {}
+
   var totalPass = 0, totalFail = 0, suiteFail = 0, failedSuites = [];
   for (var ti = 0; ti < testFiles.length; ti++) {
     var testPath = path.join(testDir, testFiles[ti]);
