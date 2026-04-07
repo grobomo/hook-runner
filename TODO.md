@@ -568,8 +568,11 @@ What was done:
 ## Release
 - [x] T375: Version bump to 2.15.3 + CHANGELOG for T374 + marketplace sync (PR #244)
 
+## Stop Runner Fix
+- [ ] T376: Stop runner runs all modules before exiting — auto-continue blocks first, preventing all subsequent Stop modules from ever executing. Fix: collect first block result, run remaining modules, then exit with block.
+
 ## Status
-- 299 tasks completed, 0 pending
+- 299 tasks completed, 1 pending
 - Version: 2.15.3
 - Marketplace: claude-code-skills synced to v2.15.3
 - CI: ALL GREEN (Linux + Windows)
