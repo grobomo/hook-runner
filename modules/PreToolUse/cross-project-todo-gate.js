@@ -5,6 +5,7 @@
 // where they'll actually get picked up and executed. The cwd-drift-detector
 // already allows writing TODO.md to other projects — this gate ensures Claude
 // uses that path instead of dumping everything locally.
+var fs = require("fs");
 var path = require("path");
 var os = require("os");
 
@@ -82,20 +83,22 @@ module.exports = function(input) {
     // Extract the current project's folder name
     var currentName = path.basename(currentProject).toLowerCase();
 
-    // Find project path references like "in hook-runner" or "hook-runner/"
-    // Look for known project directory prefixes
-    var projectPrefixes = ["_grobomo/", "_tmemu/", "_shared/", "MCP/"];
-    for (var i = 0; i < projectPrefixes.length; i++) {
-      var prefix = projectPrefixes[i];
-      if (todoContent.indexOf(prefix) >= 0) {
-        // Check it's not referencing the current project
-        var currentInPrefix = prefix.toLowerCase() + currentName;
-        if (todoContent.toLowerCase().indexOf(currentInPrefix) < 0) {
-          issues.push("References path '" + prefix + "' (belongs in that project's TODO)");
+    // Dynamically discover sibling project directories under PROJECTS_ROOT
+    // instead of hardcoding prefixes. Looks for subdirectories that contain
+    // other projects (directories with TODO.md, .git, or package.json).
+    try {
+      var rootEntries = fs.readdirSync(PROJECTS_ROOT.replace(/\//g, path.sep));
+      for (var i = 0; i < rootEntries.length; i++) {
+        var entry = rootEntries[i];
+        if (entry.toLowerCase() === currentName) continue; // skip self
+        // Check if this entry appears as a path reference in the TODO content
+        var entrySlash = entry + "/";
+        if (todoContent.indexOf(entrySlash) >= 0 || todoContent.indexOf(entry + "\\") >= 0) {
+          issues.push("References path '" + entrySlash + "' (belongs in that project's TODO)");
           break;
         }
       }
-    }
+    } catch (e) { /* can't read PROJECTS_ROOT, skip this check */ }
 
     // Pattern 4: Phrases like "in hook-runner", "needs commit there", "done in <project>"
     var crossPhrases = [

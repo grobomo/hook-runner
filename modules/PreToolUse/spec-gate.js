@@ -1,13 +1,15 @@
 // WORKFLOW: shtd
 // WHY: Claude implemented features that nobody asked for, wasting hours.
-// The old gate only checked "any unchecked task exists" — it didn't enforce
-// the spec→tasks→code sequence. This rewrite enforces the full SHTD chain.
+// T321: Strengthened — if branch has TXXX, that specific task must be unchecked.
+// T322: Cross-project guidance in block messages.
+// T323: "Spec before code" explicit reminder in all block messages.
 "use strict";
 // requires: enforcement-gate
 // Spec gate: enforces spec → tasks → code pipeline.
 // 1. Code edits require a spec (specs/<feature>/spec.md) to exist
 // 2. That spec must have tasks (specs/<feature>/tasks.md) with unchecked items
-// 3. Feature is matched by git branch name or falls back to any spec with open tasks
+// 3. If branch has TXXX pattern, that specific task must be unchecked
+// 4. Feature is matched by git branch name or falls back to any spec with open tasks
 // Allows: config, specs, planning, rules, hooks, TODO.md, SESSION_STATE.md, test files
 var fs = require("fs");
 var path = require("path");
@@ -43,6 +45,15 @@ function getGitBranch(gitRoot) {
   } catch (e) { return ""; }
 }
 
+// T321: Extract task ID (TXXX) from branch name
+// e.g. "195-T319-T320-catalog-sync" → "T319" (first match)
+// e.g. "fix/T042-docs" → "T042"
+function branchTaskId(branch) {
+  if (!branch || branch === "main" || branch === "master" || branch === "HEAD") return "";
+  var m = branch.match(/T(\d+)/i);
+  return m ? "T" + m[1] : "";
+}
+
 // Extract feature keywords from branch name
 // e.g. "002-T007-validate-self-analysis" → ["validate", "self", "analysis"]
 // e.g. "fix/shtd-enforcement" → ["shtd", "enforcement"]
@@ -53,6 +64,13 @@ function branchFeatureWords(branch) {
     .replace(/^\d+-T\d+-/i, "")
     .replace(/^T\d+-/i, "");
   return cleaned.split(/[-_\/]/).filter(function(w) { return w.length > 2; }).map(function(w) { return w.toLowerCase(); });
+}
+
+// T321: Check if a specific task ID is unchecked in a tasks.md or TODO.md content string
+function isTaskUnchecked(content, taskId) {
+  // Match "- [ ] T319" or "- [ ] T319:" patterns
+  var pattern = new RegExp("- \\[ \\] " + taskId + "[:\\s]");
+  return pattern.test(content);
 }
 
 // Score how well a spec dir name matches branch feature words
@@ -81,6 +99,13 @@ function findGitRoot(startDir) {
   }
   return null;
 }
+
+// T322+T323: Common block message suffixes
+var SPEC_BEFORE_CODE = "\nREMINDER: Write the spec FIRST, then create tasks, then code. Do not skip to implementation.";
+var CROSS_PROJECT_HINT = "\nCROSS-PROJECT? If this file belongs to another project, do NOT edit it here.\n" +
+  "  1) Write TODO items in THAT project's TODO.md (cwd-drift-detector allows this)\n" +
+  "  2) Spawn a new session there: python context_reset.py --project-dir /path/to/project\n" +
+  "  3) Resume your own work here";
 
 module.exports = function(input) {
   var tool = input.tool_name;
@@ -137,6 +162,56 @@ module.exports = function(input) {
     }
   }
   var featureWords = branchFeatureWords(branch);
+  var taskId = branchTaskId(branch); // T321: e.g. "T319"
+
+  // T321: If branch has a task ID, verify that specific task is unchecked somewhere.
+  // This prevents edits to production code when the branch task is already done
+  // or doesn't exist as an actual task.
+  if (taskId) {
+    var taskFound = false;
+
+    // Check TODO.md files in all roots
+    for (var tci = 0; tci < roots.length; tci++) {
+      var tPath = path.join(roots[tci], "TODO.md");
+      if (!fs.existsSync(tPath)) continue;
+      try {
+        var tContent = fs.readFileSync(tPath, "utf-8");
+        if (isTaskUnchecked(tContent, taskId)) { taskFound = true; break; }
+      } catch (e) {}
+    }
+
+    // Check specs/*/tasks.md files in all roots
+    if (!taskFound) {
+      for (var sci = 0; sci < roots.length; sci++) {
+        var sDir = path.join(roots[sci], "specs");
+        if (!fs.existsSync(sDir)) continue;
+        try {
+          var sDirs = fs.readdirSync(sDir);
+          for (var sdi = 0; sdi < sDirs.length; sdi++) {
+            var stPath = path.join(sDir, sDirs[sdi], "tasks.md");
+            if (!fs.existsSync(stPath)) continue;
+            try {
+              var stContent = fs.readFileSync(stPath, "utf-8");
+              if (isTaskUnchecked(stContent, taskId)) { taskFound = true; break; }
+            } catch (e) {}
+          }
+          if (taskFound) break;
+        } catch (e) {}
+      }
+    }
+
+    if (!taskFound) {
+      return {
+        decision: "block",
+        reason: "SPEC GATE: Branch task " + taskId + " is not an unchecked task in TODO.md or specs/*/tasks.md.\n" +
+          "WHY: Your branch '" + branch + "' references " + taskId + " but that task is either\n" +
+          "already completed, doesn't exist, or isn't in a task file.\n" +
+          "FIX: Add `- [ ] " + taskId + ": description` to TODO.md or specs/*/tasks.md" +
+          SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
+          "Blocked: " + path.basename(targetFile)
+      };
+    }
+  }
 
   // Scan all spec directories across roots
   // Collect: { dir, hasSpec, hasTasks, hasUnchecked, matchScore }
@@ -198,7 +273,8 @@ module.exports = function(input) {
         "  1. /speckit.specify — define what and why\n" +
         "  2. /speckit.plan — design the approach\n" +
         "  3. /speckit.tasks — generate trackable tasks\n" +
-        "  OR: Add `- [ ] TXXX: description` entries to TODO.md\n" +
+        "  OR: Add `- [ ] TXXX: description` entries to TODO.md" +
+        SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
         "Blocked: " + path.basename(targetFile)
     };
   }
@@ -223,7 +299,8 @@ module.exports = function(input) {
           reason: "SPEC GATE: specs/" + bestMatch.dir + "/spec.md missing.\n" +
             "WHY: The SHTD pipeline requires spec FIRST, then tasks, then code.\n" +
             "Your branch '" + branch + "' matches specs/" + bestMatch.dir + "/ but spec.md doesn't exist.\n" +
-            "FIX: Create specs/" + bestMatch.dir + "/spec.md with /speckit.specify\n" +
+            "FIX: Create specs/" + bestMatch.dir + "/spec.md with /speckit.specify" +
+            SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
             "Blocked: " + path.basename(targetFile)
         };
       }
@@ -232,7 +309,8 @@ module.exports = function(input) {
           decision: "block",
           reason: "SPEC GATE: specs/" + bestMatch.dir + "/tasks.md missing.\n" +
             "WHY: Spec exists but no tasks. The SHTD pipeline is: spec → tasks → code.\n" +
-            "FIX: Create tasks with /speckit.tasks from specs/" + bestMatch.dir + "/spec.md\n" +
+            "FIX: Create tasks with /speckit.tasks from specs/" + bestMatch.dir + "/spec.md" +
+            SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
             "Blocked: " + path.basename(targetFile)
         };
       }
@@ -241,7 +319,8 @@ module.exports = function(input) {
           decision: "block",
           reason: "SPEC GATE: All tasks in specs/" + bestMatch.dir + "/tasks.md are checked off.\n" +
             "WHY: No open tasks remain for this feature. Either add new tasks or start a new spec.\n" +
-            "FIX: Add unchecked tasks to specs/" + bestMatch.dir + "/tasks.md or TODO.md\n" +
+            "FIX: Add unchecked tasks to specs/" + bestMatch.dir + "/tasks.md or TODO.md" +
+            SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
             "Blocked: " + path.basename(targetFile)
         };
       }
@@ -283,7 +362,8 @@ module.exports = function(input) {
         "WHY: Every change must map to a spec task so the dev team can track progress\n" +
         "through PRs. Undocumented work is invisible and can't be reviewed or monitored.\n" +
         "FIX: Complete the chain: /speckit.specify → /speckit.plan → /speckit.tasks\n" +
-        "  OR: Add `- [ ] TXXX: description` entries to TODO.md\n" +
+        "  OR: Add `- [ ] TXXX: description` entries to TODO.md" +
+        SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
         "Blocked: " + path.basename(targetFile)
     };
   }
