@@ -356,14 +356,18 @@ function formatSummary() {
   return summary;
 }
 
-module.exports = {
-  POINTS: POINTS,
-  LEVELS: LEVELS,
-  REFLECTION_INTERVALS: REFLECTION_INTERVALS,
-  readScore: readScore,
-  writeScore: writeScore,
-  getLevel: getLevel,
-  updateScore: updateScore,
-  formatSummary: formatSummary,
-  SCORE_PATH: SCORE_PATH
-};
+// Export as function (module contract) with utility methods as properties.
+// This is a shared library — the function itself is a no-op (returns null).
+// Other modules require() it for updateScore, formatSummary, etc.
+function reflectionScore() { return null; }
+reflectionScore.POINTS = POINTS;
+reflectionScore.LEVELS = LEVELS;
+reflectionScore.REFLECTION_INTERVALS = REFLECTION_INTERVALS;
+reflectionScore.readScore = readScore;
+reflectionScore.writeScore = writeScore;
+reflectionScore.getLevel = getLevel;
+reflectionScore.updateScore = updateScore;
+reflectionScore.formatSummary = formatSummary;
+reflectionScore.SCORE_PATH = SCORE_PATH;
+
+module.exports = reflectionScore;

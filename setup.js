@@ -1481,11 +1481,14 @@ function cmdTestModule(args) {
     console.error("  FAIL: could not load — " + e.message);
     process.exit(1);
   }
-  if (typeof mod !== "function") {
-    console.error("  FAIL: exports " + typeof mod + ", expected function");
+  if (typeof mod === "function") {
+    console.log("  Loaded: exports function");
+  } else if (typeof mod === "object" && mod !== null) {
+    console.log("  Loaded: exports object (utility module)");
+  } else {
+    console.error("  FAIL: exports " + typeof mod + ", expected function or object");
     process.exit(1);
   }
-  console.log("  Loaded: exports function");
 
   // Check headers
   var headerLines = fs.readFileSync(modPath, "utf-8").split("\n").slice(0, 5);
@@ -1517,6 +1520,12 @@ function cmdTestModule(args) {
     { label: "Bash: rm -rf", tool_name: "Bash", tool_input: { command: "rm -rf /tmp/stuff" } },
     { label: "Read file", tool_name: "Read", tool_input: { file_path: path.join(sampleBase, "README.md") } },
   ];
+
+  if (typeof mod !== "function") {
+    console.log("\n  Utility module — skipping invocation tests (not callable).");
+    console.log("  Exports: " + Object.keys(mod).join(", "));
+    return;
+  }
 
   var runAsync = require("./run-async");
   var passed = 0, blocked = 0, errors = 0;
