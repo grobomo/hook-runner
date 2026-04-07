@@ -2,6 +2,16 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.15.0] — 2026-04-07
+
+### Added
+- **Brain bridge** (T331) — self-reflection.js now tries unified-brain `/ask` endpoint first for LLM analysis (fast, has three-tier memory). Falls back to direct LLM subprocess when brain is unavailable. Analysis source (`brain` vs `claude-p`) logged in reflection output and session summaries.
+- `isBrainAvailable()` — health check with 2s timeout, cached per invocation.
+- `callBrain()` — POST `/ask` with structured reflection payload (question, source, channel, metadata).
+- `analyze()` — orchestrator: brain-first with automatic fallback.
+- `BRAIN_URL` env var for configuring brain endpoint (default `http://localhost:8790`).
+- **Test suite** — `test-T331-brain-bridge.sh` (8 tests: mock brain, fallback, payload validation).
+
 ## [2.14.6] — 2026-04-07
 
 ### Changed
