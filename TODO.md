@@ -584,12 +584,25 @@ What was done:
 - [ ] T382: Measure lesson effectiveness — track which lessons from self-analysis-lessons.jsonl get repeated (same pattern appears again). If a lesson appears 3+ times without being enforced by a gate, auto-escalate: generate a candidate hook-runner gate module and flag it for review.
 
 ## Release
-- [ ] T383: Version bump to 2.17.0 + CHANGELOG for T376-T381 + marketplace sync
+- [x] T383: Version bump to 2.17.0 + CHANGELOG for T376-T381 + marketplace sync (PR #251)
+
+## Session 2026-04-08
+- T374: Spec-gate false-positive fix — taskId priority over fuzzy matching (PR #243)
+- T375: Version bump to 2.15.3 (PR #244)
+- T376: Stop runner runs all modules before exiting (PR #245)
+- T377: Version bump to 2.16.0 (PR #246)
+- T378: PostToolUse runner runs all modules before exiting (PR #247)
+- T379: load-lessons.js self-reflection system description (PR #248)
+- T380: Bug report conflation criterion in self-reflection (PR #249)
+- T381: Corrective feedback capture (PR #250)
+- T383: Version bump to 2.17.0 + marketplace sync (PR #251)
+- Marketplace synced to v2.17.0
+- Live hooks synced (spec-gate, run-stop, run-posttooluse, load-lessons, self-reflection)
 
 ## Status
-- 305 tasks completed, 2 pending
-- Version: 2.16.0
-- Marketplace: claude-code-skills synced to v2.16.0
+- 306 tasks completed, 1 pending
+- Version: 2.17.0
+- Marketplace: claude-code-skills synced to v2.17.0
 - CI: ALL GREEN (Linux + Windows)
 - 84 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
