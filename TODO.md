@@ -574,8 +574,11 @@ What was done:
 ## Release
 - [x] T377: Version bump to 2.16.0 + CHANGELOG for T376 + marketplace sync (PR #246)
 
+## PostToolUse Runner Fix
+- [ ] T378: PostToolUse runner runs all modules before exiting — same pattern as T376 Stop fix. Consistent behavior for monitoring/reporting events.
+
 ## Status
-- 301 tasks completed, 0 pending
+- 301 tasks completed, 1 pending
 - Version: 2.16.0
 - Marketplace: claude-code-skills synced to v2.16.0
 - CI: ALL GREEN (Linux + Windows)

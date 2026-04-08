@@ -26,6 +26,10 @@ if (input && input.tool_input && typeof input.tool_input.path === "string") {
 var ctx = hookLog.extractContext("PostToolUse", input);
 var modules = loadModules(path.join(__dirname, "run-modules", "PostToolUse"));
 
+// T378: Run all modules before exiting (consistent with T376 Stop runner fix).
+// PostToolUse is monitoring/reporting — all modules should run even if one blocks.
+var firstResult = null;
+
 runAsync.runModules(modules, input,
   function handleResult(modName, result, err, ms) {
     if (err) {
@@ -36,13 +40,17 @@ runAsync.runModules(modules, input,
     if (result && result.decision) {
       hookLog.logHook("PostToolUse", modName, result.decision, Object.assign({}, ctx, { reason: result.reason, ms: ms }));
       process.stderr.write(result.reason + "\n");
-      process.stdout.write(JSON.stringify(result));
-      process.exit(1);
+      if (!firstResult) firstResult = result;
+      return false; // T378: continue running remaining modules
     }
     hookLog.logHook("PostToolUse", modName, "pass", Object.assign({}, ctx, { ms: ms }));
     return false;
   },
   function handleDone() {
+    if (firstResult) {
+      process.stdout.write(JSON.stringify(firstResult));
+      process.exit(1);
+    }
     // No output = allow
   }
 );
