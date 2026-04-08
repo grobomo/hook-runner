@@ -346,6 +346,12 @@ function buildPrompt(entries, gitCtx, taskCtx) {
   prompt += "   - User said 'check online' → should use WebFetch/WebSearch, not Read\n";
   prompt += "   - User asked for external info → should search the web, not grep local files\n";
   prompt += "   If the user had to correct the tool choice, flag as HIGH severity.\n";
+  prompt += "10. BUG REPORT CONFLATION: Did Claude bundle multiple user-reported problems into one fix?\n";
+  prompt += "   - Did Claude skip root cause investigation (jumped to code without reading logs or reproducing)?\n";
+  prompt += "   - Did the user have to point out the bug wasn't actually fixed?\n";
+  prompt += "   - Did Claude assume the first hypothesis was correct without verifying?\n";
+  prompt += "   Each user-reported bug deserves its own root cause analysis. If Claude combined unrelated\n";
+  prompt += "   issues or declared 'fixed' without testing, flag as HIGH severity.\n";
   prompt += "\nRESPOND IN JSON ONLY — no markdown, no explanation outside the JSON:\n";
   prompt += '{"issues": [{"severity": "high|medium|low", "description": "what went wrong", "fix": "what to do about it"}], ';
   prompt += '"todos": [{"id": "T???", "description": "what should be done"}], ';
