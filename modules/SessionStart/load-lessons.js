@@ -41,6 +41,19 @@ function checkBgErrors() {
 module.exports = function(input) {
   var parts = [];
   try {
+    // T379: Inject self-reflection system description so Claude understands
+    // how the feedback loop works and can participate in it.
+    parts.push(
+      "SELF-REFLECTION SYSTEM: You have a self-reflection system that runs at every Stop event.\n" +
+      "How it works: (1) self-reflection.js analyzes your session — gate decisions, edits, user corrections.\n" +
+      "(2) Lessons are extracted and stored in self-analysis-lessons.jsonl.\n" +
+      "(3) This module (load-lessons) injects those lessons at SessionStart so you learn from past sessions.\n" +
+      "(4) reflection-score.js tracks your score (clean reflections +points, corrections -points).\n" +
+      "YOUR ROLE: When you learn something this session (a mistake, a better pattern, a user correction),\n" +
+      "write it to self-analysis-lessons.jsonl as a JSONL line: {\"lesson\": \"...\", \"ts\": \"ISO\", \"session\": \"id\"}.\n" +
+      "Future sessions will see it. Do NOT reinvent the system — it already exists and runs automatically."
+    );
+
     // Check for background script errors
     var errors = checkBgErrors();
     if (errors) {
