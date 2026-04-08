@@ -526,6 +526,58 @@ function writeReflection(result, gitCtx) {
   } catch (e) {}
 }
 
+// T381: Extract corrective feedback from reflection results and persist as lessons.
+// When the LLM finds issues where the user had to correct Claude, extract the specific
+// lesson and write it to self-analysis-lessons.jsonl (immediate effect via load-lessons)
+// and corrective-feedback.jsonl (for future brain ingestion when /remember API exists).
+var CORRECTIVE_FEEDBACK_PATH = path.join(HOOKS_DIR, "corrective-feedback.jsonl");
+var LESSONS_FILE = path.join(HOOKS_DIR, "self-analysis-lessons.jsonl");
+
+function extractCorrectiveFeedback(result, gitCtx) {
+  if (!result || !result.issues || result.issues.length === 0) return;
+  var ts = new Date().toISOString();
+  var project = gitCtx.project || "unknown";
+
+  for (var i = 0; i < result.issues.length; i++) {
+    var issue = result.issues[i];
+    var desc = (issue.description || "").toLowerCase();
+    // Look for corrective feedback indicators
+    var isCorrective = issue.severity === "high" && (
+      /user.*correct|user.*point|user.*frustrat|user.*repeat|not.*fix|wrong.*tool|skip.*root.*cause|conflat|bundle.*bug/i.test(desc) ||
+      /constraint.*reject|declared.*impossible|pushed.*back/i.test(desc)
+    );
+    if (!isCorrective) continue;
+
+    var lesson = issue.fix || issue.description || "";
+    if (!lesson) continue;
+
+    // Write to corrective-feedback.jsonl (for future brain ingestion)
+    try {
+      var fbEntry = {
+        ts: ts,
+        project: project,
+        category: "corrective-feedback",
+        severity: issue.severity,
+        description: issue.description,
+        lesson: lesson,
+        source: "self-reflection"
+      };
+      fs.appendFileSync(CORRECTIVE_FEEDBACK_PATH, JSON.stringify(fbEntry) + "\n");
+    } catch (e) {}
+
+    // Write to self-analysis-lessons.jsonl (immediate effect next session)
+    try {
+      var lessonEntry = {
+        ts: ts,
+        lesson: "[CORRECTIVE] " + lesson,
+        source: "self-reflection-T381",
+        project: project
+      };
+      fs.appendFileSync(LESSONS_FILE, JSON.stringify(lessonEntry) + "\n");
+    } catch (e) {}
+  }
+}
+
 // Auto-append TODOs to the project's TODO.md
 // This is the "motivation" mechanism — the reflection system doesn't just
 // observe, it generates actionable work. Without this, dismissed improvements
@@ -635,6 +687,9 @@ module.exports = async function(input) {
   // Tag reflection with analysis source for observability
   result._source = analysisSource;
   writeReflection(result, gitCtx);
+
+  // T381: Extract corrective feedback and persist as lessons
+  extractCorrectiveFeedback(result, gitCtx);
 
   // Auto-append any TODOs the reflection identified
   if (result.todos && result.todos.length > 0) {
