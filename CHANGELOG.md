@@ -2,6 +2,16 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.17.0] — 2026-04-08
+
+### Added
+- **Self-reflection system description** (T379) — `load-lessons.js` now injects a description of how the self-reflection feedback loop works at SessionStart, so Claude participates instead of reinventing it.
+- **Bug report conflation criterion** (T380) — self-reflection analysis criterion #10 flags when Claude bundles multiple bugs, skips root cause investigation, or declares "fixed" without testing.
+- **Corrective feedback capture** (T381) — when self-reflection detects high-severity user corrections, extracts lessons and writes to `corrective-feedback.jsonl` + `self-analysis-lessons.jsonl` for immediate cross-session learning.
+
+### Fixed
+- **PostToolUse runner runs all modules** (T378) — same pattern as T376 Stop fix. All PostToolUse modules now execute even when one blocks early.
+
 ## [2.16.0] — 2026-04-08
 
 ### Fixed

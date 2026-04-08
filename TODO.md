@@ -583,8 +583,11 @@ What was done:
 - [x] T381: Corrective feedback capture — extracts lessons from high-severity issues and writes to corrective-feedback.jsonl + self-analysis-lessons.jsonl. Brain /remember pending — uses local files. (PR #250)
 - [ ] T382: Measure lesson effectiveness — track which lessons from self-analysis-lessons.jsonl get repeated (same pattern appears again). If a lesson appears 3+ times without being enforced by a gate, auto-escalate: generate a candidate hook-runner gate module and flag it for review.
 
+## Release
+- [ ] T383: Version bump to 2.17.0 + CHANGELOG for T376-T381 + marketplace sync
+
 ## Status
-- 305 tasks completed, 1 pending
+- 305 tasks completed, 2 pending
 - Version: 2.16.0
 - Marketplace: claude-code-skills synced to v2.16.0
 - CI: ALL GREEN (Linux + Windows)
