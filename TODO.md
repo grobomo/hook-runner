@@ -599,8 +599,11 @@ What was done:
 - Marketplace synced to v2.17.0
 - Live hooks synced (spec-gate, run-stop, run-posttooluse, load-lessons, self-reflection)
 
+## Spec-Gate Allowlist
+- [ ] T384: Allow session management scripts in spec-gate bash allowlist — python new-session and python session-reset are utilities, not production code. Currently blocked as state-changing commands.
+
 ## Status
-- 306 tasks completed, 1 pending
+- 306 tasks completed, 2 pending
 - Version: 2.17.0
 - Marketplace: claude-code-skills synced to v2.17.0
 - CI: ALL GREEN (Linux + Windows)

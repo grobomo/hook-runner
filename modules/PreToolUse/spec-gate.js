@@ -4,6 +4,7 @@
 // T322: Cross-project guidance in block messages.
 // T323: "Spec before code" explicit reminder in all block messages.
 // T374: Task ID match takes priority over fuzzy word matching — prevents false positives.
+// T384: Allowlist session management scripts (new_session.py, context_reset.py) and curl.
 "use strict";
 // requires: enforcement-gate
 // Spec gate: enforces spec → tasks → code pipeline.
@@ -126,6 +127,9 @@ var BASH_ALLOW_PATTERNS = [
   /^\s*python\s+-c\b/, // quick evals
   /^\s*bash\s+scripts\/test\//, // running existing test scripts
   /^\s*node\s+setup\.js\s+--test/, // hook-runner tests
+  /python\s+.*new.session\.py/, // T384: session management (launch new Claude tab)
+  /python\s+.*context.reset\.py/, // T384: session management (backward-compat alias)
+  /^\s*curl\s/, // HTTP requests (read-only, no local state change)
 ];
 
 // T338: Default-deny. If a Bash command is NOT in the allowlist above,

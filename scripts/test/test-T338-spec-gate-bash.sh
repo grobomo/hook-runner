@@ -163,6 +163,29 @@ else
   fail "cargo build should pass with open tasks: $OUTPUT"
 fi
 
+# --- T384: Session management scripts always allowed ---
+
+OUTPUT=$(run_bash_gate "$PROJ" "python ~/Documents/ProjectsCL1/_grobomo/context-reset/new_session.py --project-dir .")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "python new_session.py allowed (session management)"
+else
+  fail "python new_session.py should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "python ~/Documents/ProjectsCL1/_grobomo/context-reset/context_reset.py --project-dir .")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "python context_reset.py allowed (session management)"
+else
+  fail "python context_reset.py should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "curl -s http://localhost:8790/healthz")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "curl allowed (HTTP requests)"
+else
+  fail "curl should be allowed: $OUTPUT"
+fi
+
 # --- Piped commands check the first command ---
 
 OUTPUT=$(run_bash_gate "$PROJ" "jq '.name' package.json | head -1")
