@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.16.0] — 2026-04-08
+
+### Fixed
+- **Stop runner runs all modules** (T376) — `auto-continue` blocked first and `process.exit(0)` prevented all subsequent Stop modules (self-reflection, drift-review, mark-turn-complete, etc.) from ever executing. Now collects the first block result, continues running remaining modules, then outputs the block at the end. Minor version bump because this changes Stop event behavior.
+
 ## [2.15.3] — 2026-04-07
 
 ### Fixed
