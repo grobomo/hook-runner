@@ -572,12 +572,12 @@ What was done:
 - [x] T376: Stop runner runs all modules before exiting — auto-continue blocks first, preventing all subsequent Stop modules from ever executing. Fix: collect first block result, run remaining modules, then exit with block. (PR #245)
 
 ## Release
-- [ ] T377: Version bump to 2.16.0 + CHANGELOG for T376 + marketplace sync
+- [x] T377: Version bump to 2.16.0 + CHANGELOG for T376 + marketplace sync (PR #246)
 
 ## Status
-- 300 tasks completed, 1 pending
-- Version: 2.15.3
-- Marketplace: claude-code-skills synced to v2.15.3
+- 301 tasks completed, 0 pending
+- Version: 2.16.0
+- Marketplace: claude-code-skills synced to v2.16.0
 - CI: ALL GREEN (Linux + Windows)
 - 84 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
