@@ -97,6 +97,12 @@ modules:
   # Messaging safety (was: messaging-safety)
   - messaging-safety-gate
   - share-is-generic
+  # Hypothesis enforcement (ddei-email-security scoped)
+  - hypothesis-throttle
+  - hypothesis-failure-tracker
+  - report-review-gate
+  # Prose enforcement (global)
+  - no-prose-enforcement
   # Self-improvement (was: self-improvement)
   - instruction-to-hook-gate
   - instruction-detector
