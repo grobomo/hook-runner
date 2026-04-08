@@ -580,11 +580,11 @@ What was done:
 ## Self-Reflection System: Self-Advertising & Feedback Loop
 - [x] T379: load-lessons.js injects self-reflection system description at SessionStart — explains the feedback loop so Claude participates instead of reinventing it. (PR #248)
 - [x] T380: self-reflection.js buildPrompt — added bug report conflation criterion (#10). Flags bundling bugs, skipping root cause, declaring fixed without testing. (PR #249)
-- [ ] T381: Corrective feedback capture — when the user gives directional feedback ("why didn't you...", "that's not fixed", "you should have..."), the Stop self-reflection should extract the specific lesson AND write it to unified-brain with category "corrective-feedback" so the brain can surface it to future sessions across all projects.
+- [x] T381: Corrective feedback capture — extracts lessons from high-severity issues and writes to corrective-feedback.jsonl + self-analysis-lessons.jsonl. Brain /remember pending — uses local files. (PR #250)
 - [ ] T382: Measure lesson effectiveness — track which lessons from self-analysis-lessons.jsonl get repeated (same pattern appears again). If a lesson appears 3+ times without being enforced by a gate, auto-escalate: generate a candidate hook-runner gate module and flag it for review.
 
 ## Status
-- 304 tasks completed, 2 pending
+- 305 tasks completed, 1 pending
 - Version: 2.16.0
 - Marketplace: claude-code-skills synced to v2.16.0
 - CI: ALL GREEN (Linux + Windows)
