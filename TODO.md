@@ -600,10 +600,10 @@ What was done:
 - Live hooks synced (spec-gate, run-stop, run-posttooluse, load-lessons, self-reflection)
 
 ## Spec-Gate Allowlist
-- [ ] T384: Allow session management scripts in spec-gate bash allowlist — python new-session and python session-reset are utilities, not production code. Currently blocked as state-changing commands.
+- [x] T384: Allow session management scripts + curl in spec-gate bash allowlist. 3 new test cases. (PR #252)
 
 ## Status
-- 306 tasks completed, 2 pending
+- 307 tasks completed, 1 pending
 - Version: 2.17.0
 - Marketplace: claude-code-skills synced to v2.17.0
 - CI: ALL GREEN (Linux + Windows)
