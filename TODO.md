@@ -575,10 +575,16 @@ What was done:
 - [x] T377: Version bump to 2.16.0 + CHANGELOG for T376 + marketplace sync (PR #246)
 
 ## PostToolUse Runner Fix
-- [ ] T378: PostToolUse runner runs all modules before exiting — same pattern as T376 Stop fix. Consistent behavior for monitoring/reporting events.
+- [x] T378: PostToolUse runner runs all modules before exiting — same pattern as T376 Stop fix. Consistent behavior for monitoring/reporting events. (PR #247)
+
+## Self-Reflection System: Self-Advertising & Feedback Loop
+- [ ] T379: load-lessons.js should inject a brief system description at SessionStart — not just lessons, but "You have a self-reflection system. Here's what it does: [capture corrective feedback → store in brain → enforce via gates]. When you learn a lesson this session, write it to self-analysis-lessons.jsonl so future sessions see it." Without this, Claude reinvents the system from scratch every time.
+- [ ] T380: self-reflection.js buildPrompt needs a new analysis criterion: "BUG REPORT CONFLATION — did Claude bundle multiple user-reported problems into one fix? Did Claude skip root cause investigation for a bug (jumped to code without reading logs or reproducing)? If the user had to point out the bug wasn't fixed, HIGH severity."
+- [ ] T381: Corrective feedback capture — when the user gives directional feedback ("why didn't you...", "that's not fixed", "you should have..."), the Stop self-reflection should extract the specific lesson AND write it to unified-brain with category "corrective-feedback" so the brain can surface it to future sessions across all projects.
+- [ ] T382: Measure lesson effectiveness — track which lessons from self-analysis-lessons.jsonl get repeated (same pattern appears again). If a lesson appears 3+ times without being enforced by a gate, auto-escalate: generate a candidate hook-runner gate module and flag it for review.
 
 ## Status
-- 301 tasks completed, 1 pending
+- 302 tasks completed, 4 pending
 - Version: 2.16.0
 - Marketplace: claude-code-skills synced to v2.16.0
 - CI: ALL GREEN (Linux + Windows)
