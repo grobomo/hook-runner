@@ -2,6 +2,17 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.18.0] — 2026-04-09
+
+### Fixed
+- **run-hidden.js spawnSync** (T391a) — replaced async `spawn` with `spawnSync` to eliminate orphan processes. Async spawn left grandchildren (git, curl) alive after hook exit, causing Claude Code to run visible `taskkill /T /F` popups. spawnSync ensures the entire child tree is dead before returning.
+- **run-hidden.js missing from installer** (T391b) — added `run-hidden.js` to `RUNNER_FILES` in `constants.js` and `files` in `package.json`. Previously, `--install` and `--upgrade` never copied it.
+- **hook-editing-gate block message** (T391d) — now includes the actual `context_reset.py` launch command instead of a vague "start a session" instruction.
+
+### Added
+- **Runtime hook health monitor** (T390) — `run-hidden.js` logs every invocation to `hook-health.jsonl` (runner name, exit code, stdout/stderr sizes, duration, signal). New `hook-health-monitor` PostToolUse module checks recent entries for crashes, exit code mismatches, timeouts, and repeated failures. 14 tests.
+- **Output logging** (T391a) — hook stdout/stderr logged to `~/.system-monitor/hook-output.log` for debugging (CMD windows flash too fast to read).
+
 ## [2.17.0] — 2026-04-08
 
 ### Added

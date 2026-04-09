@@ -78,6 +78,9 @@ modules:
   - rule-hygiene
   - test-coverage-check
   - update-stale-docs
+  - hook-health-monitor
+  - hook-self-test
+  - pr-first-gate
   # Infrastructure safety (was: infra-safety)
   - aws-tagging-gate
   - crlf-detector

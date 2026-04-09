@@ -359,6 +359,7 @@ Full catalog in `modules/` directory:
 | `crlf-detector` | Warns when Write/Edit produces CRLF in shell scripts, YAML, Python |
 | `disk-space-detect` | Detects disk space errors in tool output, activates alert mode |
 | `hook-autocommit` | Auto-commits hook module edits |
+| `hook-health-monitor` | Detects hook crashes, exit code mismatches, timeouts, repeated failures |
 | `rule-hygiene` | Validates rule files are single-topic, under 20 lines |
 | `settings-audit-log` | Records config modifications to audit log |
 | `test-coverage-check` | Warns when source files modified without tests |
