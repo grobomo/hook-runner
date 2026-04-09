@@ -7,7 +7,15 @@
 
 module.exports = function(input) {
   if (input.tool_name !== "Bash") return null;
-  var cmd = (input.tool_input || {}).command || "";
+  var fullCmd = (input.tool_input || {}).command || "";
+
+  // T386: Strip heredoc bodies and quoted strings to avoid false positives.
+  // Heredocs (<<'EOF'...EOF, <<"EOF"...EOF, <<EOF...EOF) contain prose that
+  // mentions git commands but isn't executing them.
+  var cmd = fullCmd
+    .replace(/<<\s*['"]?(\w+)['"]?[\s\S]*?\n\1(\s|$)/g, " ")  // heredocs
+    .replace(/"[^"]*"/g, '""')   // double-quoted strings
+    .replace(/'[^']*'/g, "''");  // single-quoted strings
 
   // git reset --hard — destroys uncommitted changes
   if (/git\s+reset\s+--hard/.test(cmd)) {
