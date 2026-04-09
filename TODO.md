@@ -602,8 +602,13 @@ What was done:
 ## Spec-Gate Allowlist
 - [x] T384: Allow session management scripts + curl in spec-gate bash allowlist. 3 new test cases. (PR #252)
 
+## Hook Reliability Fixes
+- [ ] T385: Fix Stop runner exit code — uses exit(0) for blocks instead of exit(1), TUI silently ignores autocontinue instruction
+- [ ] T386: Fix git-destructive-guard gap — catches `git checkout .` but not `git checkout <file>`, allowing single-file discard
+- [ ] T387: Fix hook cmd.exe focus steal — hooks spawn visible cmd prompts on Windows, stealing focus from active tabs
+
 ## Status
-- 307 tasks completed, 1 pending
+- 307 tasks completed, 4 pending
 - Version: 2.17.0
 - Marketplace: claude-code-skills synced to v2.17.0
 - CI: ALL GREEN (Linux + Windows)
