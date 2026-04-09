@@ -74,14 +74,14 @@ module.exports = function(input) {
   var diff = "";
   try {
     diff = cp.execSync("git diff --stat HEAD 2>/dev/null || true", {
-      cwd: projectDir, encoding: "utf8", timeout: 5000
+      cwd: projectDir, encoding: "utf8", timeout: 5000, windowsHide: true
     }).trim();
   } catch (e) {}
 
   var uncommitted = "";
   try {
     uncommitted = cp.execSync("git status --porcelain 2>/dev/null || true", {
-      cwd: projectDir, encoding: "utf8", timeout: 5000
+      cwd: projectDir, encoding: "utf8", timeout: 5000, windowsHide: true
     }).trim();
   } catch (e) {}
 

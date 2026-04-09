@@ -43,7 +43,7 @@ module.exports = function(input) {
   // Also check target file's git root
   var gitRoot = "";
   try {
-    gitRoot = cp.execSync("git rev-parse --show-toplevel", { encoding: "utf-8", timeout: 5000 }).trim().replace(/\\/g, "/");
+    gitRoot = cp.execFileSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf-8", timeout: 5000, windowsHide: true }).trim().replace(/\\/g, "/");
     if (roots.indexOf(gitRoot) === -1) roots.push(gitRoot);
   } catch(e) {}
 
@@ -78,11 +78,12 @@ module.exports = function(input) {
 
   // Run the test
   try {
-    cp.execSync("bash " + JSON.stringify(testScript), {
+    cp.execFileSync("bash", [testScript], {
       encoding: "utf-8",
       timeout: 120000, // 2 min max
       cwd: projectDir,
-      stdio: ["pipe", "pipe", "pipe"]
+      stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true
     });
 
     // Test passed — write marker

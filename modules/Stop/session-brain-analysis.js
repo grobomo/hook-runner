@@ -168,7 +168,8 @@ module.exports = async function(input) {
       input: prompt,
       encoding: "utf-8",
       timeout: BRAIN_TIMEOUT,
-      stdio: ["pipe", "pipe", "pipe"]
+      stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true
     });
 
     var raw = result.trim();

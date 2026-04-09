@@ -61,10 +61,10 @@ module.exports = function() {
     // Write our own lock file
     var branch = "";
     try {
-      branch = cp.execSync("git branch --show-current", {
+      branch = cp.execFileSync("git", ["branch", "--show-current"], {
         cwd: projectDir,
         encoding: "utf-8",
-        timeout: 3000,
+        timeout: 3000, windowsHide: true,
         stdio: ["pipe", "pipe", "pipe"]
       }).trim();
     } catch (e) {}

@@ -371,7 +371,8 @@ function callClaude(prompt) {
       input: prompt,
       encoding: "utf-8",
       timeout: CLAUDE_TIMEOUT,
-      stdio: ["pipe", "pipe", "pipe"]
+      stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true
     });
     var raw = result.trim();
     var durationMs = Date.now() - startMs;

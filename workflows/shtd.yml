@@ -80,6 +80,7 @@ modules:
   - update-stale-docs
   - hook-health-monitor
   - hook-self-test
+  - windowless-spawn-gate
   - worktree-gate
   - pr-first-gate
   # Infrastructure safety (was: infra-safety)
