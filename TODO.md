@@ -624,8 +624,11 @@ See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evide
 ## Bookkeeping & CMD Popup Investigation
 - [x] T392: Sync live hooks + CMD popup monitor script + worktree-gate multi-session fix (PR #259)
 
+## Windowless Hook Execution (T393)
+- [ ] T393: Eliminate cmd.exe popups — hook commands use `$HOME` which forces shell expansion via cmd.exe. Fix: update setup.js to write fully-resolved paths in settings.json so Claude Code doesn't need cmd.exe shell wrapper.
+
 ## Status
-- 322 tasks completed, 0 pending
+- 322 tasks completed, 1 pending
 - Version: 2.18.1
 - Marketplace: claude-code-skills synced to v2.17.0 (needs sync to v2.18.1)
 - CI: ALL GREEN (Linux + Windows)
