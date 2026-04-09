@@ -89,6 +89,24 @@ R=$(CLAUDE_PROJECT_DIR="$PROJECT_DIR" \
   " 2>/dev/null) || true
 assert "no-path Bash passes" "pass" "$R"
 
+# Test: git branch creation in other project → block
+R=$(CLAUDE_PROJECT_DIR="$PROJECT_DIR" \
+  node -e "
+    var mod = require('./$MOD');
+    var r = mod({tool_name:'Bash',tool_input:{command:'cd $OTHER_PROJECT && git switch -c feat/new-branch'}});
+    console.log(r && r.decision === 'block' ? 'block' : 'pass');
+  " 2>/dev/null) || true
+assert "cross-project git branch creation blocks" "block" "$R"
+
+# Test: git checkout -b in other project → block
+R=$(CLAUDE_PROJECT_DIR="$PROJECT_DIR" \
+  node -e "
+    var mod = require('./$MOD');
+    var r = mod({tool_name:'Bash',tool_input:{command:'cd $OTHER_PROJECT && git checkout -b new-branch'}});
+    console.log(r && r.decision === 'block' ? 'block' : 'pass');
+  " 2>/dev/null) || true
+assert "cross-project git checkout -b blocks" "block" "$R"
+
 # Test: skills directory cross-access → block
 HOME_DIR="$(node -e "console.log(require('os').homedir().replace(/\\\\/g,'/'))")"
 R=$(run_mod Edit file_path "$HOME_DIR/.claude/skills/some-other-skill/SKILL.md")

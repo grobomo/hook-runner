@@ -73,7 +73,8 @@ module.exports = function(input) {
   // Same project — no drift
   if (targetProject === currentProject) return null;
 
-  // Allow reading/writing TODO.md or SESSION_STATE.md to other projects (needed for context-reset handoff)
+  // Allow writing TODO.md or SESSION_STATE.md to other projects (context-reset handoff)
+  // Read is also allowed for these files (checking task state before writing)
   if ((toolName === "Write" || toolName === "Edit" || toolName === "Read") && targetPath) {
     var basename = path.basename(targetPath);
     if (basename === "TODO.md" || basename === "SESSION_STATE.md") return null;
@@ -82,7 +83,16 @@ module.exports = function(input) {
   // Allow running context-reset.py (the spawn command itself)
   if (toolName === "Bash") {
     var cmd2 = toolInput.command || "";
-    if (cmd2.indexOf("context_reset.py") >= 0 || cmd2.indexOf("context-reset") >= 0) return null;
+    if (cmd2.indexOf("context_reset.py") >= 0) return null;
+    // Block git branch creation in other projects (substantive work, not handoff)
+    if (/\bgit\s+(switch\s+-c|checkout\s+-b|branch\s+\S)/.test(cmd2)) {
+      return {
+        decision: "block",
+        reason: "[cwd-drift] BLOCKED: Creating git branches in " + path.basename(targetProject) + " from another project.\n" +
+          "Branch creation is substantive work — do it from the correct project.\n" +
+          "Write tasks to " + targetProject + "/TODO.md, then spawn a new tab with context-reset."
+      };
+    }
   }
 
   // Drift detected — block and instruct to spawn new tab
