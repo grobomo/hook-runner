@@ -327,6 +327,7 @@ Full catalog in `modules/` directory:
 | `no-hardcoded-paths` | Blocks hardcoded absolute paths in code |
 | `no-passive-rules` | Blocks .md rules when a hook module is better |
 | `no-rules-gate` | Blocks creation of ~/.claude/rules/ files (use hook modules instead) |
+| `pr-first-gate` | Blocks spec/code edits on branches without an open PR |
 | `pr-per-task-gate` | Requires task ID in PR titles |
 | `preserve-iterated-content` | Warns on full-file rewrites of iterated files |
 | `remote-tracking-gate` | Blocks edits if branch not pushed to remote |
@@ -399,6 +400,7 @@ Full catalog in `modules/` directory:
 | `backup-check` | Warns if config backup is stale |
 | `load-instructions` | Injects working instructions at session start |
 | `load-lessons` | Injects recent self-analysis lessons |
+| `hook-self-test` | Validates runner exit codes and block processing at session start |
 | `project-health` | Runs health check, warns about issues |
 | `reflection-score-inject` | Injects reflection score/level/streak into session context |
 | `session-cleanup` | Sweeps orphaned session-scoped temp files from crashed sessions |
