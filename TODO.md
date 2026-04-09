@@ -618,7 +618,7 @@ See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evide
 - [x] T391c: Sync run-hidden.js to live hooks
 - [x] T391d: Update hook-editing-gate block message to include context-reset.py command
 - [x] T391e: Version bump to 2.18.0 + CHANGELOG
-- [ ] T391f: Tighten cwd-drift-detector — block specs/ file creation and git branch ops targeting other projects
+- [x] T391f: Tighten cwd-drift-detector — block git branch creation in other projects, narrow context-reset allowlist
 - [ ] T382: Measure lesson effectiveness — track repeated lessons, auto-escalate to gate candidates
 
 ## Status
