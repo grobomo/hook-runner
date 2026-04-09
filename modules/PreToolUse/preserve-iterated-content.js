@@ -29,9 +29,8 @@ module.exports = function(input) {
   // Check git history — rev-list --count is faster than log --oneline + line counting
   var dir = path.dirname(filePath);
   try {
-    var countStr = cp.execSync(
-      'git rev-list --count HEAD -- "' + path.basename(filePath) + '"',
-      { cwd: dir, encoding: "utf-8", timeout: 1500, stdio: ["pipe", "pipe", "pipe"] }
+    var countStr = cp.execFileSync("git", ["rev-list", "--count", "HEAD", "--", path.basename(filePath)],
+      { cwd: dir, encoding: "utf-8", timeout: 1500, stdio: ["pipe", "pipe", "pipe"], windowsHide: true }
     ).trim();
 
     var commitCount = parseInt(countStr, 10);

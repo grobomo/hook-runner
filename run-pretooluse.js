@@ -37,8 +37,8 @@ try {
     // Check if branch tracks a remote (used by remote-tracking-gate, ~33ms savings)
     if (branch !== "main" && branch !== "master") {
       try {
-        input._git.tracking = cp.execSync("git config --get branch." + branch + ".remote", {
-          encoding: "utf-8", timeout: 3000, stdio: ["pipe", "pipe", "pipe"]
+        input._git.tracking = cp.execFileSync("git", ["config", "--get", "branch." + branch + ".remote"], {
+          encoding: "utf-8", timeout: 3000, stdio: ["pipe", "pipe", "pipe"], windowsHide: true
         }).trim();
       } catch (e) {
         input._git.tracking = "";

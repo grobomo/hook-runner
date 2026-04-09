@@ -34,8 +34,8 @@ module.exports = function(input) {
   // Get staged diff
   var diff = "";
   try {
-    diff = cp.execSync("git diff --cached --diff-filter=ACMR", {
-      encoding: "utf-8", timeout: 10000, maxBuffer: 1024 * 1024
+    diff = cp.execFileSync("git", ["diff", "--cached", "--diff-filter=ACMR"], {
+      encoding: "utf-8", timeout: 10000, maxBuffer: 1024 * 1024, windowsHide: true
     });
   } catch(e) {
     return null; // can't get diff, don't block
