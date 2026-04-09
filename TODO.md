@@ -606,9 +606,11 @@ What was done:
 - [ ] T385: Fix Stop runner exit code — uses exit(0) for blocks instead of exit(1), TUI silently ignores autocontinue instruction
 - [ ] T386: Fix git-destructive-guard gap — catches `git checkout .` but not `git checkout <file>`, allowing single-file discard
 - [ ] T387: Fix hook cmd.exe focus steal — hooks spawn visible cmd prompts on Windows, stealing focus from active tabs
+- [ ] T388: Hook self-diagnostics — detect when hooks silently fail (exit 0 on block, missing modules, broken runners) so issues are caught automatically, not by user noticing
+- [ ] T389: PR-first workflow gate — enforce: receive task → create PR → spec → failing tests → implement → e2e → merge. Block spec/code work on branches without an open PR.
 
 ## Status
-- 307 tasks completed, 4 pending
+- 307 tasks completed, 6 pending
 - Version: 2.17.0
 - Marketplace: claude-code-skills synced to v2.17.0
 - CI: ALL GREEN (Linux + Windows)

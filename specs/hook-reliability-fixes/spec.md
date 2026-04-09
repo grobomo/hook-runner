@@ -27,9 +27,34 @@ Investigate how Claude Code spawns hook commands on Windows. Options:
 2. Use `setup.js` to generate platform-appropriate commands in settings.json
 3. Add a launcher script (e.g., `run-hidden.vbs`) that setup.js installs alongside runners
 
+### T388: Hook self-diagnostics
+The stop hook was broken (exit 0 on block = TUI ignores it) and Claude had no idea until the user noticed. There's no automated check that hooks are actually working. A SessionStart module should validate:
+1. All runners exit with correct codes (simulate a block, check exit code is 1)
+2. All expected modules are loadable (require doesn't throw)
+3. Runner stdout/stderr piping works (block JSON reaches stdout)
+4. Log recent hook invocations — if a Stop block module has 0 logged blocks over many sessions, something is wrong
+
+This catches silent failures early — at session start, not after the user notices broken behavior.
+
+### T389: PR-first workflow gate
+The current workflow allows spec and code work on branches without an open PR. The correct development flow is:
+1. Receive task
+2. Create PR (signals to dev team what you're working on)
+3. Analyze, write spec
+4. Write failing tests, implement until tests pass
+5. Run e2e integration tests
+6. Merge and close PR
+
+A PreToolUse module should block Edit/Write to spec files and source code when:
+- Current branch is not main
+- No open PR exists for the current branch on GitHub
+Exception: TODO.md and tasks.md edits are allowed (needed to create the task entries before the PR).
+
 ## Scope
 - `run-stop.js` — exit code fix
-- `modules/PreToolUse/git-destructive-guard.js` — regex expansion
-- `setup.js` or new launcher — hidden window wrapper for Windows
-- Tests for all three fixes
+- `modules/PreToolUse/git-destructive-guard.js` — regex expansion + heredoc stripping
+- `run-hidden.js` + `setup.js` — hidden window wrapper for Windows
+- `modules/SessionStart/hook-self-test.js` — runner validation at session start
+- `modules/PreToolUse/pr-first-gate.js` — block spec/code work without open PR
+- Tests for all five tasks
 - Sync to live hooks after verification
