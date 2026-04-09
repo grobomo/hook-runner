@@ -22,16 +22,25 @@ module.exports = function(input) {
     };
   }
 
-  // git checkout . or git restore . — discards all unstaged changes
-  if (/git\s+(checkout|restore)\s+\.\s*$/.test(cmd)) {
+  // T386: git checkout/restore — discards uncommitted changes to files
+  // Allow non-destructive forms: checkout -b (new branch), checkout <branch> (switch)
+  // Block: checkout . (all files), checkout <file> (single file), restore . / restore <file>
+  var checkoutMatch = cmd.match(/git\s+(checkout|restore)\s+(.*)/);
+  if (checkoutMatch) {
+    var subcmd = checkoutMatch[1];
+    var args = checkoutMatch[2].trim();
+    // Allow branch operations: checkout -b, checkout --orphan, checkout -
+    if (subcmd === "checkout" && /^(-b|--orphan|-t|--track|-)\s/.test(args)) return null;
+    // Allow checkout with no args (detached HEAD info) or bare branch name (no dots, no slashes with extensions)
+    // Heuristic: if args contain a dot or path separator, it's likely a file path
+    if (subcmd === "checkout" && args && !/[.\/\\]/.test(args) && !/^--\s/.test(args)) return null;
     return {
       decision: "block",
-      reason: "DESTRUCTIVE: This discards ALL unstaged changes in the working tree.\n" +
+      reason: "DESTRUCTIVE: `git " + subcmd + " " + args + "` discards uncommitted changes.\n" +
         "Alternatives:\n" +
         "  git stash                — save changes for later\n" +
-        "  git checkout <file>      — revert specific files only\n" +
-        "  git diff                 — review changes first\n" +
-        "If you truly need to discard all changes, ask the user first."
+        "  git diff <file>          — review changes first\n" +
+        "If you truly need to discard changes, ask the user first."
     };
   }
 

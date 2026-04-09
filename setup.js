@@ -394,25 +394,35 @@ function updateSettings(dryRun) {
 
   if (!settings.hooks) settings.hooks = {};
 
+  // T387: On Windows, use run-hidden.js wrapper to prevent console window focus steal.
+  // The wrapper re-spawns the runner with windowsHide:true, piping stdio through.
+  var isWin = process.platform === "win32";
+  function hookCmd(runner) {
+    if (isWin) {
+      return 'node "$HOME/.claude/hooks/run-hidden.js" ' + runner;
+    }
+    return 'node "$HOME/.claude/hooks/' + runner + '"';
+  }
+
   // Define the hook-runner settings.json entries
   var runnerConfig = {
     SessionStart: [
-      { hooks: [{ type: "command", command: 'node "$HOME/.claude/hooks/run-sessionstart.js"', timeout: 5 }] }
+      { hooks: [{ type: "command", command: hookCmd("run-sessionstart.js"), timeout: 5 }] }
     ],
     Stop: [
-      { hooks: [{ type: "command", command: 'node "$HOME/.claude/hooks/run-stop.js"', timeout: 5 }] }
+      { hooks: [{ type: "command", command: hookCmd("run-stop.js"), timeout: 5 }] }
     ],
     PreToolUse: [
-      { matcher: "Edit", hooks: [{ type: "command", command: 'node "$HOME/.claude/hooks/run-pretooluse.js"', timeout: 5 }] },
-      { matcher: "Write", hooks: [{ type: "command", command: 'node "$HOME/.claude/hooks/run-pretooluse.js"', timeout: 5 }] },
-      { matcher: "Bash", hooks: [{ type: "command", command: 'node "$HOME/.claude/hooks/run-pretooluse.js"', timeout: 5 }] }
+      { matcher: "Edit", hooks: [{ type: "command", command: hookCmd("run-pretooluse.js"), timeout: 5 }] },
+      { matcher: "Write", hooks: [{ type: "command", command: hookCmd("run-pretooluse.js"), timeout: 5 }] },
+      { matcher: "Bash", hooks: [{ type: "command", command: hookCmd("run-pretooluse.js"), timeout: 5 }] }
     ],
     PostToolUse: [
-      { matcher: "Write", hooks: [{ type: "command", command: 'node "$HOME/.claude/hooks/run-posttooluse.js"', timeout: 5 }] },
-      { matcher: "Edit", hooks: [{ type: "command", command: 'node "$HOME/.claude/hooks/run-posttooluse.js"', timeout: 5 }] }
+      { matcher: "Write", hooks: [{ type: "command", command: hookCmd("run-posttooluse.js"), timeout: 5 }] },
+      { matcher: "Edit", hooks: [{ type: "command", command: hookCmd("run-posttooluse.js"), timeout: 5 }] }
     ],
     UserPromptSubmit: [
-      { hooks: [{ type: "command", command: 'node "$HOME/.claude/hooks/run-userpromptsubmit.js"', timeout: 5 }] }
+      { hooks: [{ type: "command", command: hookCmd("run-userpromptsubmit.js"), timeout: 5 }] }
     ]
   };
 
