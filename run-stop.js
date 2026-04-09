@@ -43,7 +43,7 @@ runAsync.runModules(modules, input,
     // T376: Output collected block (if any) after all modules have run
     if (firstBlock) {
       process.stdout.write(JSON.stringify(firstBlock));
-      process.exit(0);
+      process.exit(1); // T385: must be exit(1) so TUI shows the block
     }
     // No block = allow stop
   }
