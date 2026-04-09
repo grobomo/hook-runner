@@ -8,12 +8,12 @@ var cp = require("child_process");
 module.exports = function(input) {
   if (process.env.HOOK_RUNNER_TEST) return null;
   try {
-    var branch = cp.execSync("git branch --show-current", { cwd: process.cwd(), encoding: "utf-8" }).trim();
+    var branch = cp.execFileSync("git", ["branch", "--show-current"], { cwd: process.cwd(), encoding: "utf-8", windowsHide: true }).trim();
     if (!branch || branch === "main" || branch === "master") return null;
 
     var remote = "";
     try {
-      remote = cp.execSync("git config --get branch." + branch + ".remote", { cwd: process.cwd(), encoding: "utf-8" }).trim();
+      remote = cp.execFileSync("git", ["config", "--get", "branch." + branch + ".remote"], { cwd: process.cwd(), encoding: "utf-8", windowsHide: true }).trim();
     } catch(e) { /* no tracking branch */ }
 
     if (!remote) {
@@ -23,7 +23,7 @@ module.exports = function(input) {
       };
     }
 
-    var unpushed = cp.execSync("git log " + remote + "/" + branch + "..HEAD --oneline 2>/dev/null", { cwd: process.cwd(), encoding: "utf-8" }).trim();
+    var unpushed = cp.execSync("git log " + remote + "/" + branch + "..HEAD --oneline 2>/dev/null", { cwd: process.cwd(), encoding: "utf-8", windowsHide: true }).trim();
     if (unpushed) {
       var count = unpushed.split("\n").length;
       return {

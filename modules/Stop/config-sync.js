@@ -23,8 +23,8 @@ module.exports = function(input) {
 
   // Only run if ~/.claude is a git repo
   try {
-    cp.execSync("git rev-parse --is-inside-work-tree", {
-      cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"]
+    cp.execFileSync("git", ["rev-parse", "--is-inside-work-tree"], {
+      cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], windowsHide: true
     });
   } catch (e) {
     return null; // not a git repo
@@ -33,8 +33,8 @@ module.exports = function(input) {
   // Check for uncommitted changes (tracked files only)
   var status = "";
   try {
-    status = cp.execSync("git status --porcelain", {
-      cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"]
+    status = cp.execFileSync("git", ["status", "--porcelain"], {
+      cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], windowsHide: true
     }).trim();
   } catch (e) {
     return null;
@@ -58,13 +58,13 @@ module.exports = function(input) {
 
   // Auto-commit and push
   try {
-    cp.execSync("git add -A", {
-      cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"]
+    cp.execFileSync("git", ["add", "-A"], {
+      cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], windowsHide: true
     });
 
     var msg = "auto-sync: " + count + " file(s) changed";
-    cp.execSync('git commit -m "' + msg + '"', {
-      cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"]
+    cp.execFileSync("git", ["commit", "-m", msg], {
+      cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], windowsHide: true
     });
 
     // WHY: Push uses whatever gh auth is active. If CLAUDE_CONFIG_GH_USER is set,
@@ -77,7 +77,7 @@ module.exports = function(input) {
 
     if (configUser) {
       cp.execSync("gh auth switch --user " + configUser + " 2>&1", {
-        encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 5000
+        encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 5000, windowsHide: true
       });
     }
 
@@ -93,13 +93,13 @@ module.exports = function(input) {
     try {
       cp.execSync("git push origin " + branch + " 2>&1", {
         cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"],
-        timeout: 15000
+        timeout: 15000, windowsHide: true
       });
     } finally {
       if (defaultUser) {
         try {
           cp.execSync("gh auth switch --user " + defaultUser + " 2>&1", {
-            encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 5000
+            encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 5000, windowsHide: true
           });
         } catch (e2) { /* ignore */ }
       }
@@ -112,7 +112,7 @@ module.exports = function(input) {
     if (defaultUser) {
       try {
         cp.execSync("gh auth switch --user " + defaultUser + " 2>&1", {
-          encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 5000
+          encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 5000, windowsHide: true
         });
       } catch (e2) { /* ignore */ }
     }

@@ -34,7 +34,7 @@ module.exports = function(input) {
   if (tracking === null) {
     // Fallback: runner didn't provide tracking info
     try {
-      tracking = cp.execSync("git config --get branch." + branch + ".remote", { cwd: process.cwd(), encoding: "utf-8" }).trim();
+      tracking = cp.execFileSync("git", ["config", "--get", "branch." + branch + ".remote"], { cwd: process.cwd(), encoding: "utf-8", windowsHide: true }).trim();
     } catch(e) {
       tracking = "";
     }

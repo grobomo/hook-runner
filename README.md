@@ -342,6 +342,7 @@ Full catalog in `modules/` directory:
 | `worker-loop` | Blocks PR creation until task's e2e test passes |
 | `workflow-compliance-gate` | Blocks if globally enforced workflow disabled at project level |
 | `workflow-gate` | Enforces step order in active workflows |
+| `windowless-spawn-gate` | Blocks module writes using execSync without windowsHide:true |
 | `worktree-gate` | Blocks feature branch edits unless session is in a git worktree |
 
 #### Project-Scoped PreToolUse

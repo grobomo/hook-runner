@@ -59,8 +59,8 @@ module.exports = function(input) {
       branch = headContent.indexOf("ref: refs/heads/") === 0 ? headContent.slice(16) : "HEAD";
     }
     if (branch === "main" || branch === "master") {
-      var status = child_process.execSync("git status --porcelain", {
-        cwd: gitRoot, encoding: "utf-8", timeout: 5000
+      var status = child_process.execFileSync("git", ["status", "--porcelain"], {
+        cwd: gitRoot, encoding: "utf-8", timeout: 5000, windowsHide: true
       }).trim();
       if (status.length > 0) {
         return {

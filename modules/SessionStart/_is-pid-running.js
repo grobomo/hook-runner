@@ -11,7 +11,8 @@ module.exports = function isPidRunning(pid) {
       var out = cp.execSync("tasklist /FI \"PID eq " + pid + "\" /NH", {
         encoding: "utf-8",
         timeout: 3000,
-        stdio: ["pipe", "pipe", "pipe"]
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true
       });
       return out.indexOf("" + pid) !== -1;
     } else {

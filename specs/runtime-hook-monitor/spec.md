@@ -3,43 +3,46 @@
 ## Problem
 When a hook silently fails (runner crashes, wrong path, exit code bug, timeout), nobody knows until a user notices broken behavior. The T385 exit(0) bug went undetected across multiple sessions — the stop hook appeared to work but the TUI silently discarded its output.
 
-Existing diagnostics (project-health.js, hook-self-test.js) only run at SessionStart. They check static properties (files exist, source code patterns). They don't observe runtime behavior: did the hook actually fire? Did it produce the expected result?
+Existing diagnostics (project-health.js, hook-self-test.js) only run at SessionStart **inside Claude**. They check static properties (files exist, source code patterns). They can't observe runtime behavior, and they can't catch problems when Claude itself is part of the failure chain.
+
+The PostToolUse hook-health-monitor.js (already implemented) runs inside Claude — but a hook can't reliably monitor hooks. If the system is broken, the monitor is broken too.
 
 ## Solution
-Two components that work together:
+Three components:
 
-### 1. run-hidden.js invocation log
-Every hook invocation already goes through run-hidden.js (T387). Add logging: after the child process exits, write one JSONL line to `~/.claude/hooks/hook-health.jsonl`:
+### 1. run-hidden.js invocation log (done)
+Every hook invocation goes through run-hidden.js. It logs to `~/.claude/hooks/hook-health.jsonl`:
 
 ```json
 {"ts":"2026-04-09T15:30:00Z","runner":"run-pretooluse.js","exit":1,"stdout":142,"stderr":0,"ms":45,"signal":null}
 ```
 
-Fields:
-- `ts` — ISO timestamp
-- `runner` — which runner was called
-- `exit` — child exit code
-- `stdout` — bytes written to stdout (block JSON size)
-- `stderr` — bytes written to stderr
-- `ms` — wall clock time
-- `signal` — if child was killed (SIGTERM, SIGKILL, etc.)
+### 2. PostToolUse hook-health-monitor.js (done)
+In-session anomaly detection. Best-effort — catches problems when hooks are partially working.
 
-### 2. PostToolUse hook-health-monitor.js
-After each tool call, reads the health log and checks for anomalies:
+### 3. Watchdog health log analysis (NEW)
+The watchdog (`watchdog.js`) already runs outside Claude as an OS scheduled task (every 10 minutes). It checks static config (workflows enabled, files exist). **Add runtime health analysis**: read `hook-health.jsonl` and check for:
 
-1. **Crash detection**: runner exited non-zero without writing block JSON to stdout. A legitimate block writes JSON + exits 1. A crash exits non-zero with no/invalid JSON.
-2. **Exit code mismatch**: stdout has valid `{"decision":"block",...}` JSON but exit code is 0. This is the T385 bug pattern.
-3. **Missing hooks**: reads settings.json to know which events have hooks configured. If the last N tool calls had no health log entries for a configured event, that hook isn't firing.
-4. **Timeout/signal**: runner was killed (signal != null) or took >4900ms (close to 5s hook timeout).
-5. **Repeated crashes**: same runner crashed 3+ times in last 10 entries — persistent problem.
+1. **Exit code mismatch**: any entry where stdout > 0 but exit = 0 for Stop/PostToolUse runners (block written, TUI ignores it)
+2. **Repeated crashes**: same runner has 3+ crash entries (exit != 0, stdout = 0) in recent window
+3. **Stop hook never blocking**: auto-continue.js is installed but 0 Stop blocks in last N entries — runner is broken or module isn't loading
+4. **Stale log**: hook-health.jsonl hasn't been written to in > 1 hour during business hours — hooks may not be firing at all
+5. **Timeout kills**: runners getting SIGTERM (approaching 5s hook timeout)
 
-The monitor is PostToolUse (non-blocking). It warns via stderr, never blocks.
+When anomalies are detected, the watchdog:
+- Writes `.watchdog-alert` flag (already read by project-health.js at next SessionStart)
+- Logs to `watchdog-log.jsonl`
+- Shows a Windows toast notification (new) so the user sees it immediately
+
+### 4. Install watchdog scheduled task
+The watchdog was never actually installed as a scheduled task. `watchdog.js --install` creates the task, but it was never run. Setup wizard should auto-install the watchdog. Verify it stays running.
 
 ## Log rotation
-hook-health.jsonl is append-only. The `--prune` command already handles hook-log.jsonl rotation. Add hook-health.jsonl to the same rotation (prune entries older than N days).
+hook-health.jsonl added to `--prune` rotation (same as hook-log.jsonl).
 
 ## Scope
-- `run-hidden.js` — add invocation logging
-- `modules/PostToolUse/hook-health-monitor.js` — anomaly detection
-- `scripts/test/test-hook-health-monitor.js` — test all 5 failure modes
-- `setup.js` — add hook-health.jsonl to prune rotation
+- `watchdog.js` — add `checkHealthLog()` function with 5 runtime checks
+- `watchdog.js` — add Windows toast notification on failure
+- `setup.js` — auto-install watchdog scheduled task during setup
+- `scripts/test/test-watchdog-health.js` — test all 5 health log checks
+- Verify scheduled task is running after install
