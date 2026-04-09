@@ -121,7 +121,8 @@ module.exports = function(input) {
         "No session outside hook-runner can modify hook infrastructure.\n\n" +
         "Your project: " + (projectDir || "(unknown)") + "\n" +
         "Protected file: " + base + " (" + protectedType + ")\n\n" +
-        "TO MODIFY HOOKS: Start a Claude session in the hook-runner project.\n" +
+        "TO MODIFY HOOKS: Run:\n" +
+        "  python ~/Documents/ProjectsCL1/context-reset/context_reset.py --project-dir ~/Documents/ProjectsCL1/_grobomo/hook-runner\n" +
         "Hook-runner has specs, tests, and guardrails for safe hook changes."
     };
   }

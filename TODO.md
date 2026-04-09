@@ -603,16 +603,28 @@ What was done:
 - [x] T384: Allow session management scripts + curl in spec-gate bash allowlist. 3 new test cases. (PR #252)
 
 ## Hook Reliability Fixes
-- [ ] T385: Fix Stop runner exit code — uses exit(0) for blocks instead of exit(1), TUI silently ignores autocontinue instruction
-- [ ] T386: Fix git-destructive-guard gap — catches `git checkout .` but not `git checkout <file>`, allowing single-file discard
-- [ ] T387: Fix hook cmd.exe focus steal — hooks spawn visible cmd prompts on Windows, stealing focus from active tabs
-- [ ] T388: Hook self-diagnostics — detect when hooks silently fail (exit 0 on block, missing modules, broken runners) so issues are caught automatically, not by user noticing
-- [ ] T389: PR-first workflow gate — enforce: receive task → create PR → spec → failing tests → implement → e2e → merge. Block spec/code work on branches without an open PR.
+- [x] T385: Fix Stop runner exit code — uses exit(0) for blocks instead of exit(1), TUI silently ignores autocontinue instruction (PR #254)
+- [x] T386: Fix git-destructive-guard gap — catches `git checkout .` but not `git checkout <file>`, allowing single-file discard (PR #254)
+- [x] T387: Fix hook cmd.exe focus steal — hooks spawn visible cmd prompts on Windows, stealing focus from active tabs (PR #254)
+- [x] T388: Hook self-diagnostics — detect when hooks silently fail (exit 0 on block, missing modules, broken runners) (PR #254)
+- [x] T389: PR-first workflow gate — enforce task → PR → spec → tests → code → merge (PR #254)
+- [x] T390: Runtime hook health monitor — run-hidden.js logs every invocation, PostToolUse module detects crashes, exit code mismatches, timeouts
+
+## Fix run-hidden.js + Gate Improvements (T391)
+See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evidence and parent-chain traces.
+
+- [x] T391a: Replace async spawn with spawnSync in run-hidden.js + output logging
+- [x] T391b: Add run-hidden.js to RUNNER_FILES in constants.js + package.json files
+- [x] T391c: Sync run-hidden.js to live hooks
+- [x] T391d: Update hook-editing-gate block message to include context-reset.py command
+- [x] T391e: Version bump to 2.18.0 + CHANGELOG
+- [ ] T391f: Tighten cwd-drift-detector — block specs/ file creation and git branch ops targeting other projects
+- [ ] T382: Measure lesson effectiveness — track repeated lessons, auto-escalate to gate candidates
 
 ## Status
-- 307 tasks completed, 6 pending
-- Version: 2.17.0
-- Marketplace: claude-code-skills synced to v2.17.0
+- 317 tasks completed, 2 pending
+- Version: 2.18.0
+- Marketplace: claude-code-skills synced to v2.17.0 (needs sync to v2.18.0)
 - CI: ALL GREEN (Linux + Windows)
 - 84 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject

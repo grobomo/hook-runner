@@ -7,7 +7,7 @@ var RUNNER_FILES = [
   "run-pretooluse.js", "run-posttooluse.js", "run-stop.js",
   "run-sessionstart.js", "run-userpromptsubmit.js",
   "load-modules.js", "hook-log.js", "run-async.js",
-  "workflow.js", "workflow-cli.js", "constants.js"
+  "workflow.js", "workflow-cli.js", "constants.js", "run-hidden.js"
 ];
 
 module.exports = { RUNNER_FILES: RUNNER_FILES };
