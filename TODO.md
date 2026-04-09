@@ -581,7 +581,7 @@ What was done:
 - [x] T379: load-lessons.js injects self-reflection system description at SessionStart — explains the feedback loop so Claude participates instead of reinventing it. (PR #248)
 - [x] T380: self-reflection.js buildPrompt — added bug report conflation criterion (#10). Flags bundling bugs, skipping root cause, declaring fixed without testing. (PR #249)
 - [x] T381: Corrective feedback capture — extracts lessons from high-severity issues and writes to corrective-feedback.jsonl + self-analysis-lessons.jsonl. Brain /remember pending — uses local files. (PR #250)
-- [ ] T382: Measure lesson effectiveness — track which lessons from self-analysis-lessons.jsonl get repeated (same pattern appears again). If a lesson appears 3+ times without being enforced by a gate, auto-escalate: generate a candidate hook-runner gate module and flag it for review.
+- [x] T382: Measure lesson effectiveness — lesson-effectiveness.js SessionStart module + worktree-gate.js PreToolUse module (PR #258)
 
 ## Release
 - [x] T383: Version bump to 2.17.0 + CHANGELOG for T376-T381 + marketplace sync (PR #251)
@@ -621,8 +621,11 @@ See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evide
 - [x] T391f: Tighten cwd-drift-detector — block git branch creation in other projects (PR #257)
 - [x] T382: Measure lesson effectiveness — lesson-effectiveness.js SessionStart module detects repeated patterns, writes escalations (11 tests)
 
+## Bookkeeping & CMD Popup Investigation
+- [ ] T392: Sync live hooks + investigate remaining CMD popups (Category B: claude.exe internal processes)
+
 ## Status
-- 319 tasks completed, 0 pending
+- 321 tasks completed, 1 pending
 - Version: 2.18.1
 - Marketplace: claude-code-skills synced to v2.17.0 (needs sync to v2.18.1)
 - CI: ALL GREEN (Linux + Windows)
