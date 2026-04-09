@@ -608,9 +608,22 @@ What was done:
 - [ ] T387: Fix hook cmd.exe focus steal — hooks spawn visible cmd prompts on Windows, stealing focus from active tabs
 - [ ] T388: Hook self-diagnostics — detect when hooks silently fail (exit 0 on block, missing modules, broken runners) so issues are caught automatically, not by user noticing
 - [ ] T389: PR-first workflow gate — enforce: receive task → create PR → spec → failing tests → implement → e2e → merge. Block spec/code work on branches without an open PR.
+- [ ] T390: Runtime hook health monitor — run-hidden.js logs every invocation, PostToolUse module detects hooks that didn't fire, crashes, exit code mismatches, and timeouts
+
+## Fix run-hidden.js + Gate Improvements (T391)
+See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evidence and parent-chain traces.
+Branch: 255-T390-fix-run-hidden (rename to 256-T391 when starting)
+
+- [ ] T391a: Replace async spawn with spawnSync in run-hidden.js — eliminates orphan processes that cause Claude Code to spawn visible `taskkill /T /F` popups
+- [ ] T391b: Add output logging to ~/.system-monitor/hook-output.log — CMD windows flash too fast to read, log stdout/stderr for debugging
+- [ ] T391c: Add run-hidden.js to RUNNER_FILES in constants.js (missing — setup.js --install never copies it)
+- [ ] T391d: Sync run-hidden.js to live hooks
+- [ ] T391e: Update hook-editing-gate block message to include context-reset.py launch command
+- [ ] T391f: Tighten cwd-drift-detector — block specs/ file creation and git branch ops targeting other projects (only allow TODO.md cross-project writes)
+- [ ] T391g: Version bump + CHANGELOG
 
 ## Status
-- 307 tasks completed, 6 pending
+- 307 tasks completed, 7 pending
 - Version: 2.17.0
 - Marketplace: claude-code-skills synced to v2.17.0
 - CI: ALL GREEN (Linux + Windows)
