@@ -394,12 +394,16 @@ function updateSettings(dryRun) {
 
   if (!settings.hooks) settings.hooks = {};
 
-  // T387: On Windows, use run-hidden.js wrapper to prevent console window focus steal.
-  // The wrapper re-spawns the runner with windowsHide:true, piping stdio through.
+  // T387/T393: On Windows, use run-hidden.js wrapper to prevent console window focus steal.
+  // T393: Use fully-resolved paths on Windows to avoid $HOME shell expansion which
+  // forces cmd.exe (visible popup). With resolved paths, Claude Code can spawn node
+  // directly without a shell wrapper.
   var isWin = process.platform === "win32";
   function hookCmd(runner) {
     if (isWin) {
-      return 'node "$HOME/.claude/hooks/run-hidden.js" ' + runner;
+      // Resolve path so no shell expansion ($HOME) is needed — avoids cmd.exe popup
+      var hooksDir = path.join(os.homedir(), ".claude", "hooks").replace(/\\/g, "/");
+      return 'node "' + hooksDir + '/run-hidden.js" ' + runner;
     }
     return 'node "$HOME/.claude/hooks/' + runner + '"';
   }
