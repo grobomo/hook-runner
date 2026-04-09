@@ -622,10 +622,10 @@ See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evide
 - [x] T382: Measure lesson effectiveness — lesson-effectiveness.js SessionStart module detects repeated patterns, writes escalations (11 tests)
 
 ## Bookkeeping & CMD Popup Investigation
-- [ ] T392: Sync live hooks + investigate remaining CMD popups (Category B: claude.exe internal processes)
+- [x] T392: Sync live hooks + CMD popup monitor script + worktree-gate multi-session fix (PR #259)
 
 ## Status
-- 321 tasks completed, 1 pending
+- 322 tasks completed, 0 pending
 - Version: 2.18.1
 - Marketplace: claude-code-skills synced to v2.17.0 (needs sync to v2.18.1)
 - CI: ALL GREEN (Linux + Windows)
