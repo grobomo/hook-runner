@@ -123,6 +123,99 @@ function checkModules(config) {
   return results;
 }
 
+// T390f: Runtime health log analysis — checks hook-health.jsonl for anomalies
+// that indicate hooks are silently failing at runtime
+function checkHealthLog() {
+  var results = [];
+  var healthLogPath = path.join(hooksDir, "hook-health.jsonl");
+
+  if (!fs.existsSync(healthLogPath)) {
+    // No health log = no runtime data yet (run-hidden.js not in use or fresh install)
+    return results;
+  }
+
+  var entries;
+  try {
+    var raw = fs.readFileSync(healthLogPath, "utf-8").trim();
+    if (!raw) return results;
+    var lines = raw.split("\n");
+    // Check last 50 entries
+    entries = lines.slice(-50).map(function(line) {
+      try { return JSON.parse(line); } catch(e) { return null; }
+    }).filter(Boolean);
+  } catch(e) { return results; }
+
+  if (entries.length === 0) return results;
+
+  // Check 1: Exit code mismatch — block JSON (stdout > 0) but exit 0 on Stop/PostToolUse
+  // PreToolUse legitimately uses exit(0) with block JSON
+  for (var i = 0; i < entries.length; i++) {
+    var e = entries[i];
+    if (e.exit === 0 && e.stdout > 0 && e.runner !== "run-pretooluse.js") {
+      results.push({
+        check: "health-exit-mismatch",
+        ok: false,
+        detail: e.runner + " wrote " + e.stdout + " bytes to stdout but exited 0 at " + e.ts + ". Block results silently ignored by TUI."
+      });
+      break; // One example is enough
+    }
+  }
+
+  // Check 2: Repeated crashes — same runner exits non-zero with no stdout 3+ times
+  var crashCounts = {};
+  for (var j = 0; j < entries.length; j++) {
+    var ej = entries[j];
+    if (ej.exit !== 0 && ej.exit !== null && ej.stdout === 0 && ej.stderr > 0) {
+      crashCounts[ej.runner] = (crashCounts[ej.runner] || 0) + 1;
+    }
+  }
+  var crashRunners = Object.keys(crashCounts);
+  for (var k = 0; k < crashRunners.length; k++) {
+    if (crashCounts[crashRunners[k]] >= 3) {
+      results.push({
+        check: "health-repeated-crash",
+        ok: false,
+        detail: crashRunners[k] + " crashed " + crashCounts[crashRunners[k]] + " times in last " + entries.length + " entries"
+      });
+    }
+  }
+
+  // Check 3: Stop hook never blocking — auto-continue installed but 0 stop blocks
+  var autoContPath = path.join(hooksDir, "run-modules", "Stop", "auto-continue.js");
+  if (fs.existsSync(autoContPath)) {
+    var stopEntries = entries.filter(function(e) { return e.runner === "run-stop.js"; });
+    if (stopEntries.length >= 5) {
+      var stopBlocks = stopEntries.filter(function(e) { return e.exit !== 0 && e.stdout > 0; });
+      if (stopBlocks.length === 0) {
+        results.push({
+          check: "health-stop-never-blocks",
+          ok: false,
+          detail: "auto-continue.js installed but 0 Stop blocks in " + stopEntries.length + " Stop events. Runner may be broken."
+        });
+      }
+    }
+  }
+
+  // Check 4: Timeout/signal kills
+  for (var si = 0; si < entries.length; si++) {
+    if (entries[si].signal) {
+      results.push({
+        check: "health-timeout-kill",
+        ok: false,
+        detail: entries[si].runner + " killed by " + entries[si].signal + " after " + entries[si].ms + "ms at " + entries[si].ts
+      });
+      break; // One example is enough
+    }
+  }
+
+  // If all checks passed, add a passing result
+  if (results.length === 0) {
+    results.push({ check: "health-log-ok", ok: true, detail: entries.length + " recent entries, no anomalies" });
+  }
+
+  return results;
+}
+
 function checkSettings() {
   var results = [];
   var settingsPath = path.join(process.env.HOME || process.env.USERPROFILE || "", ".claude", "settings.json");
@@ -216,6 +309,7 @@ function main() {
   allResults = allResults.concat(checkWorkflows(config));
   allResults = allResults.concat(checkRunners(config));
   allResults = allResults.concat(checkModules(config));
+  allResults = allResults.concat(checkHealthLog());
   // Only check settings if not using a custom hooks dir (CI/test mode)
   if (!getArg("--hooks-dir")) {
     allResults = allResults.concat(checkSettings());
