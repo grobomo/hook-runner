@@ -80,6 +80,7 @@ modules:
   - update-stale-docs
   - hook-health-monitor
   - hook-self-test
+  - worktree-gate
   - pr-first-gate
   # Infrastructure safety (was: infra-safety)
   - aws-tagging-gate
