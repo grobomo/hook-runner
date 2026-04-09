@@ -342,6 +342,7 @@ Full catalog in `modules/` directory:
 | `worker-loop` | Blocks PR creation until task's e2e test passes |
 | `workflow-compliance-gate` | Blocks if globally enforced workflow disabled at project level |
 | `workflow-gate` | Enforces step order in active workflows |
+| `worktree-gate` | Blocks feature branch edits unless session is in a git worktree |
 
 #### Project-Scoped PreToolUse
 | Module | Project | Description |
@@ -402,6 +403,7 @@ Full catalog in `modules/` directory:
 | `load-instructions` | Injects working instructions at session start |
 | `load-lessons` | Injects recent self-analysis lessons |
 | `hook-self-test` | Validates runner exit codes and block processing at session start |
+| `lesson-effectiveness` | Detects repeated self-analysis lessons, escalates to gate candidates |
 | `project-health` | Runs health check, warns about issues |
 | `reflection-score-inject` | Injects reflection score/level/streak into session context |
 | `session-cleanup` | Sweeps orphaned session-scoped temp files from crashed sessions |

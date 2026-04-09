@@ -80,6 +80,7 @@ modules:
   - update-stale-docs
   - hook-health-monitor
   - hook-self-test
+  - worktree-gate
   - pr-first-gate
   # Infrastructure safety (was: infra-safety)
   - aws-tagging-gate
@@ -113,6 +114,7 @@ modules:
   - reflection-score
   - reflection-score-inject
   - session-brain-analysis
+  - lesson-effectiveness
   # Session lifecycle (was: session-management)
   - auto-continue
   - backup-check
