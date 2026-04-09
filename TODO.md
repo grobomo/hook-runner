@@ -618,13 +618,13 @@ See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evide
 - [x] T391c: Sync run-hidden.js to live hooks
 - [x] T391d: Update hook-editing-gate block message to include context-reset.py command
 - [x] T391e: Version bump to 2.18.0 + CHANGELOG
-- [x] T391f: Tighten cwd-drift-detector — block git branch creation in other projects, narrow context-reset allowlist
-- [ ] T382: Measure lesson effectiveness — track repeated lessons, auto-escalate to gate candidates
+- [x] T391f: Tighten cwd-drift-detector — block git branch creation in other projects (PR #257)
+- [x] T382: Measure lesson effectiveness — lesson-effectiveness.js SessionStart module detects repeated patterns, writes escalations (11 tests)
 
 ## Status
-- 317 tasks completed, 2 pending
-- Version: 2.18.0
-- Marketplace: claude-code-skills synced to v2.17.0 (needs sync to v2.18.0)
+- 319 tasks completed, 0 pending
+- Version: 2.18.1
+- Marketplace: claude-code-skills synced to v2.17.0 (needs sync to v2.18.1)
 - CI: ALL GREEN (Linux + Windows)
 - 84 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject

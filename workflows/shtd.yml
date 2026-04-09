@@ -113,6 +113,7 @@ modules:
   - reflection-score
   - reflection-score-inject
   - session-brain-analysis
+  - lesson-effectiveness
   # Session lifecycle (was: session-management)
   - auto-continue
   - backup-check

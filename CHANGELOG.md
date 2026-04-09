@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.18.1] — 2026-04-09
+
+### Added
+- **Lesson effectiveness monitor** (T382) — `lesson-effectiveness` SessionStart module scans `self-analysis-lessons.jsonl` for repeated patterns (3+ similar lessons). Writes escalations to `lesson-escalations.jsonl` and warns at session start. 11 tests.
+- **cwd-drift-detector tightened** (T391f) — blocks `git switch -c`, `git checkout -b`, `git branch` when targeting another project. Narrowed context-reset allowlist. 2 new tests (12 total).
+
 ## [2.18.0] — 2026-04-09
 
 ### Fixed
