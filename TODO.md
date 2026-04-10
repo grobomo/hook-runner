@@ -635,18 +635,15 @@ See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evide
 ## Test Fixes
 - [x] T394: Fix batch module test — validate helper files (_is-pid-running.js) with correct contract instead of gate module contract (PR #264)
 
-## Pending
-- [ ] Marketplace sync needed (v2.19.0)
-
 ## Status
 - 328 tasks completed, 0 pending
 - Version: 2.19.0
-- Marketplace: claude-code-skills synced to v2.17.0 (needs sync to v2.19.0)
+- Marketplace: claude-code-skills synced to v2.19.0
 - CI: ALL GREEN (Linux + Windows)
-- 84 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
+- 86 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
 - Scoring: Novice→Master levels, intervention tracking, full audit logging
-- Health: 101 OK, 0 warnings, 0 failures
+- Health: 110 OK, 0 warnings, 0 failures
 - Analysis score: A (0 demerits)
 - Performance: PreToolUse ~913ms/call (47 modules, ~16ms avg each), SessionStart ~400ms (11 modules, debounced)
 - CI: GitHub Actions runs tests + secret-scan on push/PR (Linux + Windows) — badge in README
