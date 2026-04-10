@@ -30,60 +30,90 @@ if (!fs.existsSync(runnerPath)) {
   process.exit(0);
 }
 
-// Read all stdin synchronously (hook input JSON)
-var stdinData;
-try {
-  stdinData = fs.readFileSync(0); // fd 0 = stdin
-} catch (e) {
-  stdinData = Buffer.alloc(0);
-}
+// Read stdin and pass to runner via temp file.
+// WHY: fs.readFileSync(0) and spawnSync({input:...}) both block indefinitely
+// on Windows when stdin is a pipe. Writing to a temp file and having the
+// runner read HOOK_INPUT_FILE avoids the pipe deadlock entirely.
+var chunks = [];
+process.stdin.on("data", function(chunk) { chunks.push(chunk); });
+process.stdin.on("end", runChild);
+// Safety: if stdin never sends EOF, fire after 500ms
+var stdinTimer = setTimeout(function() {
+  process.stdin.removeAllListeners("data");
+  process.stdin.removeAllListeners("end");
+  runChild();
+}, 500);
 
-var startMs = Date.now();
-var result = cp.spawnSync(process.execPath, [runnerPath], {
-  input: stdinData,
-  windowsHide: true,
-  maxBuffer: 10 * 1024 * 1024,
-  timeout: 30000
-});
+var inputFile = null;
+function runChild() {
+  clearTimeout(stdinTimer);
+  var stdinData = Buffer.concat(chunks);
 
-// T390: Log invocation to hook-health.jsonl for runtime health monitoring
-var stdoutLen = result.stdout ? result.stdout.length : 0;
-var stderrLen = result.stderr ? result.stderr.length : 0;
-var ms = Date.now() - startMs;
-try {
-  var healthEntry = JSON.stringify({
-    ts: new Date().toISOString(),
-    runner: runnerName,
-    exit: result.status,
-    stdout: stdoutLen,
-    stderr: stderrLen,
-    ms: ms,
-    signal: result.signal || null
-  }) + "\n";
-  fs.appendFileSync(path.join(__dirname, "hook-health.jsonl"), healthEntry);
-} catch (e) {
-  // health logging is best-effort — never fail the hook
-}
+  // Write stdin data to temp file for the runner to read
+  try {
+    inputFile = path.join(os.tmpdir(), "hook-input-" + process.pid + ".json");
+    fs.writeFileSync(inputFile, stdinData);
+  } catch (e) {
+    inputFile = null;
+  }
 
-// Log output for debugging (CMD windows flash too fast to read)
-var logDir = path.join(os.homedir(), ".system-monitor");
-try {
-  if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
-  var logLine = new Date().toISOString() + " " + runnerName +
-    " exit=" + (result.status !== null ? result.status : "signal:" + result.signal) +
-    (result.stderr && stderrLen > 0 ? " stderr=" + result.stderr.toString("utf8").slice(0, 200).replace(/\n/g, "\\n") : "") +
-    "\n";
-  fs.appendFileSync(path.join(logDir, "hook-output.log"), logLine);
-} catch (e) {
-  // logging is best-effort — never fail the hook
-}
+  var env = {};
+  // Copy current env
+  var keys = Object.keys(process.env);
+  for (var i = 0; i < keys.length; i++) env[keys[i]] = process.env[keys[i]];
+  if (inputFile) env.HOOK_INPUT_FILE = inputFile;
 
-// Relay stdout/stderr to Claude Code
-if (result.stdout && result.stdout.length > 0) {
-  process.stdout.write(result.stdout);
-}
-if (result.stderr && result.stderr.length > 0) {
-  process.stderr.write(result.stderr);
-}
+  var startMs = Date.now();
+  var result = cp.spawnSync(process.execPath, [runnerPath], {
+    input: stdinData,
+    env: env,
+    windowsHide: true,
+    maxBuffer: 10 * 1024 * 1024,
+    timeout: 30000
+  });
 
-process.exit(result.status || 0);
+  // T390: Log invocation to hook-health.jsonl for runtime health monitoring
+  var stdoutLen = result.stdout ? result.stdout.length : 0;
+  var stderrLen = result.stderr ? result.stderr.length : 0;
+  var ms = Date.now() - startMs;
+  try {
+    var healthEntry = JSON.stringify({
+      ts: new Date().toISOString(),
+      runner: runnerName,
+      exit: result.status,
+      stdout: stdoutLen,
+      stderr: stderrLen,
+      ms: ms,
+      signal: result.signal || null
+    }) + "\n";
+    fs.appendFileSync(path.join(__dirname, "hook-health.jsonl"), healthEntry);
+  } catch (e) {
+    // health logging is best-effort — never fail the hook
+  }
+
+  // Log output for debugging (CMD windows flash too fast to read)
+  var logDir = path.join(os.homedir(), ".system-monitor");
+  try {
+    if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+    var logLine = new Date().toISOString() + " " + runnerName +
+      " exit=" + (result.status !== null ? result.status : "signal:" + result.signal) +
+      (result.stderr && stderrLen > 0 ? " stderr=" + result.stderr.toString("utf8").slice(0, 200).replace(/\n/g, "\\n") : "") +
+      "\n";
+    fs.appendFileSync(path.join(logDir, "hook-output.log"), logLine);
+  } catch (e) {
+    // logging is best-effort — never fail the hook
+  }
+
+  // Relay stdout/stderr to Claude Code
+  if (result.stdout && result.stdout.length > 0) {
+    process.stdout.write(result.stdout);
+  }
+  if (result.stderr && result.stderr.length > 0) {
+    process.stderr.write(result.stderr);
+  }
+
+  // Cleanup temp file
+  if (inputFile) try { fs.unlinkSync(inputFile); } catch(e) {}
+
+  process.exit(result.status || 0);
+}

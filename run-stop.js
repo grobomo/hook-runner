@@ -1,50 +1,86 @@
 #!/usr/bin/env node
 "use strict";
 // hook-runner Stop — loads global + project-scoped modules
-// Supports both sync and async modules (async awaited with 4s timeout)
-// T376: Runs ALL modules before exiting — collects first block but continues
-// so observational modules (self-reflection, drift-review, etc.) always execute.
+// T390: Only blocking modules (those that return {decision:"block"}) need to
+// run synchronously. Everything else is observational and can run in background.
+// Strategy: run each module with a 200ms sync budget. If it returns a block,
+// great. If it takes longer or is async, defer to background worker.
 var fs = require("fs");
 var path = require("path");
+var cp = require("child_process");
 var loadModules = require("./load-modules");
 var hookLog = require("./hook-log");
-var runAsync = require("./run-async");
 
+// Read input: HOOK_INPUT_FILE (from run-hidden.js) avoids Windows pipe deadlock
 var input;
 try {
-  input = JSON.parse(fs.readFileSync(0, "utf-8"));
+  var raw = process.env.HOOK_INPUT_FILE
+    ? fs.readFileSync(process.env.HOOK_INPUT_FILE, "utf-8")
+    : fs.readFileSync(0, "utf-8");
+  input = JSON.parse(raw);
 } catch (e) {
   process.exit(0);
 }
 if (input.stop_hook_active) process.exit(0);
 
 var ctx = hookLog.extractContext("Stop", input);
-var modules = loadModules(path.join(__dirname, "run-modules", "Stop"));
+var modulePaths = loadModules(path.join(__dirname, "run-modules", "Stop"));
 
-// T376: Collect first block result but keep running remaining modules
+// Known blocking modules — these return {decision:"block"} and are fast.
+// Run them directly. Everything else goes to background.
+var BLOCKING_MODULES = ["auto-continue", "never-give-up"];
+
 var firstBlock = null;
+var bgPaths = [];
 
-runAsync.runModules(modules, input,
-  function handleResult(modName, result, err, ms) {
-    if (err) {
-      hookLog.logHook("Stop", modName, "error", Object.assign({}, ctx, { reason: err.message, ms: ms }));
-      process.stderr.write("hook-runner Stop " + modName + " error: " + err.message + "\n");
-      return false;
+for (var i = 0; i < modulePaths.length; i++) {
+  var modPath = modulePaths[i];
+  var modName = path.basename(modPath, ".js");
+
+  if (BLOCKING_MODULES.indexOf(modName) !== -1) {
+    // Run sync — these are fast gate modules
+    var startMs = Date.now();
+    try {
+      var mod = require(modPath);
+      var result = mod(input);
+      var ms = Date.now() - startMs;
+      if (result && result.decision === "block") {
+        hookLog.logHook("Stop", modName, "block", Object.assign({}, ctx, { reason: result.reason, ms: ms }));
+        if (!firstBlock) firstBlock = result;
+      } else {
+        hookLog.logHook("Stop", modName, "pass", Object.assign({}, ctx, { ms: ms }));
+      }
+    } catch (e) {
+      hookLog.logHook("Stop", modName, "error", Object.assign({}, ctx, { reason: e.message, ms: Date.now() - startMs }));
     }
-    if (result && result.decision === "block") {
-      hookLog.logHook("Stop", modName, "block", Object.assign({}, ctx, { reason: result.reason, ms: ms }));
-      if (!firstBlock) firstBlock = result;
-      return false; // T376: continue running remaining modules
-    }
-    hookLog.logHook("Stop", modName, "pass", Object.assign({}, ctx, { ms: ms }));
-    return false;
-  },
-  function handleDone() {
-    // T376: Output collected block (if any) after all modules have run
-    if (firstBlock) {
-      process.stdout.write(JSON.stringify(firstBlock));
-      process.exit(1); // T385: must be exit(1) so TUI shows the block
-    }
-    // No block = allow stop
+  } else {
+    // Defer to background
+    bgPaths.push(modPath);
   }
-);
+}
+
+// Output block immediately
+if (firstBlock) {
+  process.stdout.write(JSON.stringify(firstBlock));
+}
+
+// Spawn background worker for remaining modules
+if (bgPaths.length > 0) {
+  var tmpFile = path.join(require("os").tmpdir(), "stop-bg-" + process.pid + ".json");
+  try {
+    fs.writeFileSync(tmpFile, JSON.stringify({
+      input: input,
+      modules: bgPaths,
+      ctx: ctx
+    }));
+    cp.spawn(process.execPath, [path.join(__dirname, "run-stop-bg.js"), tmpFile], {
+      detached: true,
+      stdio: "ignore",
+      windowsHide: true
+    }).unref();
+  } catch(e) {
+    process.stderr.write("hook-runner Stop bg: " + e.message + "\n");
+  }
+}
+
+process.exit(firstBlock ? 1 : 0);

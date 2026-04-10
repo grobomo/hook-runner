@@ -23,7 +23,10 @@ var FRUSTRATION_LOG = path.join(HOOKS_DIR, "frustration-log.jsonl");
 
 var input;
 try {
-  input = JSON.parse(fs.readFileSync(0, "utf-8"));
+  var raw = process.env.HOOK_INPUT_FILE
+    ? fs.readFileSync(process.env.HOOK_INPUT_FILE, "utf-8")
+    : fs.readFileSync(0, "utf-8");
+  input = JSON.parse(raw);
 } catch (e) {
   process.exit(0);
 }
