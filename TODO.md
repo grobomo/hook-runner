@@ -632,6 +632,9 @@ See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evide
 - [x] T390-wh: Watchdog health log analysis — checkHealthLog() in watchdog.js reads hook-health.jsonl, detects exit code mismatches, repeated crashes, stop-never-blocking, timeout kills. Watchdog scheduled task installed (HookRunnerWatchdog, every 10min).
 - [x] T390-whi: Added windowsHide:true to 3 remaining spawn calls (chat-export, interrupt-detector)
 
+## Test Fixes
+- [ ] T394: Fix batch module test — validate helper files (_is-pid-running.js) with correct contract instead of gate module contract
+
 ## Pending
 - [ ] PR for branch 262-T393-execfile-fix needs to be created/merged (contains T390 auto-continue fix + watchdog health + windowsHide + T393 resolved paths)
 - [ ] Marketplace sync needed (v2.19.0)
