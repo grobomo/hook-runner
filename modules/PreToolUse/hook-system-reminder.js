@@ -32,7 +32,7 @@ module.exports = function(input) {
       "  Modules:  ~/.claude/hooks/run-modules/<Event>/<name>.js\n" +
       "  Per-project: run-modules/PreToolUse/<project-name>/<name>.js\n" +
       "  Config:   ~/.claude/hooks/modules.yaml\n" +
-      "  Source:   ~/Documents/ProjectsCL1/_grobomo/hook-runner/\n\n" +
+      "  Source:   " + (process.env.CLAUDE_PROJECT_DIR || "hook-runner project") + "\n\n" +
       "NEVER CREATE:\n" +
       "  ~/.claude/rules/     — not a thing, not enforced, not read\n" +
       "  .claude/rules/       — same, doesn't work, stop trying\n\n" +

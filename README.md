@@ -327,6 +327,7 @@ Full catalog in `modules/` directory:
 | `no-hardcoded-paths` | Blocks hardcoded absolute paths in code |
 | `no-passive-rules` | Blocks .md rules when a hook module is better |
 | `no-rules-gate` | Blocks creation of ~/.claude/rules/ files (use hook modules instead) |
+| `hook-system-reminder` | Reminds Claude that enforcement is ONLY via hook-runner modules |
 | `pr-first-gate` | Blocks spec/code edits on branches without an open PR |
 | `pr-per-task-gate` | Requires task ID in PR titles |
 | `preserve-iterated-content` | Warns on full-file rewrites of iterated files |
@@ -351,6 +352,7 @@ Full catalog in `modules/` directory:
 | `no-customer-env-changes` | ep-incident-response | Blocks infrastructure changes during incident response |
 | `no-data-exfil` | ep-incident-response | Blocks data export/download during incident response |
 | `v1-read-only` | ep-incident-response | Blocks Vision One write operations during incident response |
+| `rdp-testbox-gate` | ddei-email-security | Reminds Claude of proven RDP pattern, separates user/Claude test servers |
 | `share-is-generic` | ddei-email-security | Domain-specific gate for email security project |
 | `use-workers` | hackathon26 | Forces delegation to fleet workers |
 
