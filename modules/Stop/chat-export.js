@@ -17,7 +17,8 @@ module.exports = function(input) {
     // Fire and forget — don't block the stop flow
     cp.spawn("python3", [exportScript], {
       detached: true,
-      stdio: "ignore"
+      stdio: "ignore",
+      windowsHide: true
     }).unref();
   } catch (e) {
     // Silent failure — export is best-effort
