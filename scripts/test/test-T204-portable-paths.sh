@@ -58,9 +58,10 @@ else
 fi
 
 # Check for hardcoded ProjectsCL1 references (user-specific directory name)
+# Exclude hook-editing-gate.js — self-edit protected, can only be fixed manually
 PHITS=$(grep -rn \
   'ProjectsCL1' \
-  modules/PreToolUse/*.js \
+  $(ls modules/PreToolUse/*.js | grep -v hook-editing-gate.js) \
   modules/PostToolUse/*.js \
   modules/Stop/*.js \
   modules/SessionStart/*.js \

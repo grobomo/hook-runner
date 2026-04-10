@@ -97,7 +97,7 @@ module.exports = function(input) {
       "CREATE WORKTREE:\n" +
       "  git worktree add " + worktreeDir + " " + branch + "\n\n" +
       "THEN: Open a new Claude tab in that directory:\n" +
-      "  python ~/Documents/ProjectsCL1/context-reset/context_reset.py --project-dir " + worktreeDir + "\n\n" +
+      "  python " + (process.env.CLAUDE_PROJECTS_ROOT || "~/projects") + "/context-reset/context_reset.py --project-dir " + worktreeDir + "\n\n" +
       "CLEANUP when done:\n" +
       "  git worktree remove " + worktreeDir
   };
