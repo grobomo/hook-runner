@@ -627,8 +627,19 @@ See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evide
 ## Windowless Hook Execution (T393)
 - [ ] T393: Eliminate cmd.exe popups — hook commands use `$HOME` which forces shell expansion via cmd.exe. Fix: update setup.js to write fully-resolved paths in settings.json so Claude Code doesn't need cmd.exe shell wrapper.
 
+## Auto-Continue Fix (T390 session 2026-04-10)
+- [x] T390-ac: Fix auto-continue not firing — root cause: run-stop.js ran ALL modules sequentially (T376), config-sync takes 16s, 5s hook timeout killed process before block returned. Fix: blocking modules (auto-continue, never-give-up) run sync (14ms), block output immediately, remaining modules spawn as detached background (run-stop-bg.js). Also: all runners read HOOK_INPUT_FILE env var to avoid Windows stdin pipe deadlock.
+- [x] T390-wh: Watchdog health log analysis — checkHealthLog() in watchdog.js reads hook-health.jsonl, detects exit code mismatches, repeated crashes, stop-never-blocking, timeout kills. Watchdog scheduled task installed (HookRunnerWatchdog, every 10min).
+- [x] T390-whi: Added windowsHide:true to 3 remaining spawn calls (chat-export, interrupt-detector)
+
+## Pending
+- [ ] T393 still open: cmd.exe popup fix (resolved paths in settings.json)
+- [ ] PR for branch 262-T393-execfile-fix needs to be created/merged (contains T390 auto-continue fix + watchdog health + windowsHide fixes)
+- [ ] Marketplace sync needed (v2.18.1 → current)
+- [ ] Version bump needed for T390 changes
+
 ## Status
-- 322 tasks completed, 1 pending
+- 325 tasks completed, 2 pending
 - Version: 2.18.1
 - Marketplace: claude-code-skills synced to v2.17.0 (needs sync to v2.18.1)
 - CI: ALL GREEN (Linux + Windows)
