@@ -641,7 +641,7 @@ See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evide
 - [x] T396: Fix rdp-testbox-gate false positive — regex `/\b(rdp)\b/` matches file paths containing "rdp" (e.g. `git status rdp-testbox-gate.js`). Should only block commands that CREATE or EXECUTE RDP connections, not read-only git commands referencing files with "rdp" in the name. (PR #267)
 - [x] T397: Create hook-system-reminder.js module properly — spec + 11 tests + catalog copy (PR #268)
 - [x] T398: Create rdp-testbox-gate.js module properly — spec + 15 tests (PR #269)
-- [ ] T399: Update hook-editing-gate block message — requires manual edit (self-edit protection)
+- [x] T399: Fix hardcoded paths in hook-system-reminder + worktree-gate, update README with new modules (PR #272). Hook-editing-gate block message update deferred (self-edit protection).
 - [x] T400: Fix cross-project write protection — moved cwd-drift-detector from disabled cross-project-reset workflow to shtd (PR #270)
 - [x] T401: Add run-modules/ to .gitignore — local hook copies aren't repo content (PR #271)
 - [x] T402: Verified deployed copies match catalog — all 3 modules match (hook-system-reminder, rdp-testbox-gate, cwd-drift-detector)
@@ -657,7 +657,7 @@ no test caught because tests only validated modules in isolation, not the full p
 - [x] T403c: Preflight check — runs at session start or on demand. Reports: X rules active, Y tested in last 24h, Z never fired. Flags dead rules. (PR #265)
 
 ## Status
-- 338 tasks completed, 1 pending (T399 requires manual edit)
+- 339 tasks completed, 0 pending
 - Version: 2.19.0
 - Marketplace: claude-code-skills synced to v2.19.0
 - CI: ALL GREEN (Linux + Windows)
