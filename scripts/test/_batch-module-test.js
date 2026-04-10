@@ -9,6 +9,22 @@ var events = fs.readdirSync(modsDir).filter(function(d) {
 });
 var failures = [], total = 0;
 
+// Helper files (underscore prefix) are utility modules, not gates.
+// They export functions but don't follow the gate contract (return null or {decision:"block"}).
+// Validate that they export a function and don't throw on basic input.
+function testHelper(event, name, filePath) {
+  total++;
+  try {
+    delete require.cache[require.resolve(filePath)];
+    var m = require(filePath);
+    if (typeof m !== "function") { failures.push(event + "/" + name + ": helper not a function"); return; }
+    // Call with a safe default arg — helpers typically take a single value (pid, path, etc.)
+    m(0);
+  } catch(e) {
+    failures.push(event + "/" + name + ": helper threw: " + e.message.split("\n")[0]);
+  }
+}
+
 function testModule(event, name, filePath) {
   total++;
   try {
@@ -45,7 +61,11 @@ for (var ei = 0; ei < events.length; ei++) {
         testModule(events[ei], files[fi] + "/" + subfiles[si], path.join(fp, subfiles[si]));
       }
     } else if (files[fi].slice(-3) === ".js") {
-      testModule(events[ei], files[fi], fp);
+      if (files[fi].charAt(0) === "_") {
+        testHelper(events[ei], files[fi], fp);
+      } else {
+        testModule(events[ei], files[fi], fp);
+      }
     }
   }
 }
