@@ -1,4 +1,4 @@
-// WORKFLOW: cross-project-reset
+// WORKFLOW: shtd
 // WHY: When working in project A, Claude drifts into project B's files (cd, edit, read).
 // Instead of working in-place, spawn a new tab via context-reset so both projects
 // get proper tracking, hooks, and TODO.md context.
