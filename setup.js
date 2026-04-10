@@ -732,6 +732,8 @@ function cmdHelp() {
   console.log("  --prune [N]     Prune log entries older than N days (default 7)");
   console.log("  --version, -v   Show version");
   console.log("  --integrity     Full integrity scan (file drift + workflow compliance)");
+  console.log("  --preflight     Enforcement status: active rules, never-fired gates, pipeline health");
+  console.log("  --manifest      Generate ENFORCEMENT.md from live modules + hook log");
   console.log("  --help, -h      Show this help");
   console.log("");
   console.log("Options:");
@@ -1626,6 +1628,22 @@ function main() {
   if (args.indexOf("--test-module") !== -1) return cmdTestModule(args);
   if (args.indexOf("--test") !== -1) return cmdTest();
   if (args.indexOf("--integrity") !== -1) return cmdIntegrity(args);
+  if (args.indexOf("--preflight") !== -1) {
+    var pfArgs = [path.join(__dirname, "preflight.js")];
+    if (args.indexOf("--test") !== -1) pfArgs.push("--test");
+    if (args.indexOf("--json") !== -1) pfArgs.push("--json");
+    var pfResult = require("child_process").spawnSync(process.execPath, pfArgs, {
+      stdio: "inherit", windowsHide: true
+    });
+    process.exit(pfResult.status || 0);
+  }
+  if (args.indexOf("--manifest") !== -1) {
+    var mfResult = require("child_process").spawnSync(process.execPath,
+      [path.join(__dirname, "generate-manifest.js")].concat(
+        args.indexOf("--json") !== -1 ? ["--json"] : []
+      ), { stdio: "inherit", windowsHide: true });
+    process.exit(mfResult.status || 0);
+  }
   if (args.indexOf("--health") !== -1) return cmdHealth();
   if (args.indexOf("--sync") !== -1) return cmdSync(dryRun);
 
