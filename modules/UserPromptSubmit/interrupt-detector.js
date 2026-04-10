@@ -107,11 +107,11 @@ function spawnAnalysis(userPrompt) {
       fs.writeFileSync(vbs,
         'Set ws = CreateObject("WScript.Shell")\n' +
         'ws.Run "cmd /c node ""' + nodePath + '"" ""' + argsPath + '"" 2>>""' + errLog + '""", 0, False\n');
-      cp.spawn("wscript.exe", [vbs], { detached: true, stdio: "ignore" }).unref();
+      cp.spawn("wscript.exe", [vbs], { detached: true, stdio: "ignore", windowsHide: true }).unref();
     } else {
       cp.spawn("node", [
         scriptPath, argsFile
-      ], { detached: true, stdio: "ignore" }).unref();
+      ], { detached: true, stdio: "ignore", windowsHide: true }).unref();
     }
   } catch (e) {
     // silent fail

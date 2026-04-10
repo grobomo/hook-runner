@@ -2,6 +2,19 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.19.0] — 2026-04-10
+
+### Fixed
+- **Auto-continue not firing** (T390-ac) — root cause: run-stop.js ran ALL modules sequentially (T376 change), but config-sync takes 16s and the 5s hook timeout killed the process before auto-continue's block result could return. Fix: blocking modules (auto-continue, never-give-up) run synchronously first (14ms), block output is emitted immediately, then remaining modules spawn as a detached background process (`run-stop-bg.js`). All runners now read `HOOK_INPUT_FILE` env var to avoid Windows stdin pipe deadlock.
+- **run-hidden.js stdin pipe deadlock** — replaced synchronous `readFileSync(0)` stdin with async read + 500ms timeout safety. Writes stdin data to temp file (`HOOK_INPUT_FILE`) so child runners avoid the Windows pipe deadlock entirely.
+
+### Added
+- **Watchdog health log analysis** (T390-wh) — `checkHealthLog()` in `watchdog.js` reads `hook-health.jsonl`, detects exit code mismatches, repeated crashes, stop-never-blocking anomalies, and timeout kills. Watchdog scheduled task installed (every 10min).
+- **windowless-spawn-gate** (T393) — PreToolUse module blocks `execSync`/`spawnSync` calls without `windowsHide: true` in hook module source code.
+- **run-stop-bg.js** — detached background runner for non-blocking Stop modules (config-sync, drift-review, self-reflection, etc.). Spawned by run-stop.js after emitting any block result.
+- **windowsHide on remaining spawn calls** (T390-whi) — added `windowsHide: true` to 3 remaining spawn calls in chat-export, interrupt-detector.
+- **Resolved paths in settings.json** (T393) — setup.js now writes fully-resolved `os.homedir()` paths on Windows instead of `$HOME`, eliminating the need for cmd.exe shell expansion.
+
 ## [2.18.1] — 2026-04-09
 
 ### Added

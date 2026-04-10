@@ -130,11 +130,11 @@ else
   fail "run-stop.js missing collect-first-block pattern"
 fi
 
-# 6. Verify run-stop.js outputs block in handleDone (not handleResult)
-if grep -q 'function handleDone' "$REPO_DIR/run-stop.js" && grep -A5 'function handleDone' "$REPO_DIR/run-stop.js" | grep -q 'firstBlock'; then
-  pass "run-stop.js outputs block in handleDone"
+# 6. Verify run-stop.js outputs block before background spawn (T390 architecture)
+if grep -q 'process.stdout.write(JSON.stringify(firstBlock))' "$REPO_DIR/run-stop.js" && grep -q 'process.exit(firstBlock' "$REPO_DIR/run-stop.js"; then
+  pass "run-stop.js outputs block immediately then exits"
 else
-  fail "run-stop.js should output block in handleDone"
+  fail "run-stop.js should output block immediately (not in handleDone)"
 fi
 
 echo ""
