@@ -635,8 +635,29 @@ See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evide
 ## Test Fixes
 - [x] T394: Fix batch module test — validate helper files (_is-pid-running.js) with correct contract instead of gate module contract (PR #264)
 
+## Pending (from ddei-email-security session 2026-04-10)
+
+- [ ] T395: Fix hook-editing-gate bypass — Claude used `cp` (Bash tool) to copy modules directly into ~/.claude/hooks/run-modules/, bypassing the Write/Edit gate. Add Bash command detection for cp/copy/mv targeting ~/.claude/hooks/.
+- [ ] T396: Fix rdp-testbox-gate false positive — regex `/\b(rdp)\b/` matches file paths containing "rdp" (e.g. `git status rdp-testbox-gate.js`). Should only block commands that CREATE or EXECUTE RDP connections, not read-only git commands referencing files with "rdp" in the name.
+- [ ] T397: Create hook-system-reminder.js module properly (global PreToolUse) — blocks Write/Edit to ~/.claude/ with reminder that ONLY hook-runner modules are used, NEVER .claude/rules/. Currently deployed to live but not through proper specs/tests.
+- [ ] T398: Create rdp-testbox-gate.js module properly (ddei-email-security PreToolUse) — reminds Claude of proven RDP pattern from start-e2e-test.sh (commit 21e5b3d), that ddei-testbox is user's personal server, ddei-tester is Claude's. Currently deployed to live but not through proper specs/tests.
+- [ ] T399: Update hook-editing-gate block message — add "write SESSION_STATE.md before running context-reset so you don't lose your current project session"
+- [ ] T400: Fix cross-project-todo-gate (or add new module) — Claude should be blocked from writing ANY file in another project except TODO.md. Currently Claude can write .js files to hook-runner source from a ddei session.
+- [ ] T401: Remove wrongly-placed source files from hook-runner repo (hook-system-reminder.js and ddei-email-security/rdp-testbox-gate.js were written without specs/tests/guardrails)
+- [ ] T402: Verify deployed copies in ~/.claude/hooks/run-modules/ match hook-runner source after proper creation of T397-T398
+
+## Enforcement Visibility (T403)
+WHY: 86 modules but user can't answer "what does this system actually enforce?"
+Modules grew reactively. No single source of truth for active rules, no proof they work,
+no way to know when they silently fail. User spent 2 days on auto-continue bug that
+no test caught because tests only validated modules in isolation, not the full pipeline.
+
+- [ ] T403a: Enforcement manifest — ENFORCEMENT.md listing every active rule in plain English (what it blocks, example trigger, example block message). Generated from live modules, not hand-written.
+- [ ] T403b: E2E pipeline tests — pipe real input through run-hidden.js → runner → modules, verify block/pass output. Tests the full pipeline including timeouts. Cover every rule in the manifest.
+- [ ] T403c: Preflight check — runs at session start or on demand. Reports: X rules active, Y tested in last 24h, Z never fired. Flags dead rules.
+
 ## Status
-- 328 tasks completed, 0 pending
+- 328 tasks completed, 11 pending
 - Version: 2.19.0
 - Marketplace: claude-code-skills synced to v2.19.0
 - CI: ALL GREEN (Linux + Windows)
