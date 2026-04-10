@@ -652,12 +652,12 @@ Modules grew reactively. No single source of truth for active rules, no proof th
 no way to know when they silently fail. User spent 2 days on auto-continue bug that
 no test caught because tests only validated modules in isolation, not the full pipeline.
 
-- [ ] T403a: Enforcement manifest — ENFORCEMENT.md listing every active rule in plain English (what it blocks, example trigger, example block message). Generated from live modules, not hand-written.
-- [ ] T403b: E2E pipeline tests — pipe real input through run-hidden.js → runner → modules, verify block/pass output. Tests the full pipeline including timeouts. Cover every rule in the manifest.
-- [ ] T403c: Preflight check — runs at session start or on demand. Reports: X rules active, Y tested in last 24h, Z never fired. Flags dead rules.
+- [x] T403a: Enforcement manifest — ENFORCEMENT.md listing every active rule in plain English (what it blocks, example trigger, example block message). Generated from live modules, not hand-written. (PR #265)
+- [x] T403b: E2E pipeline tests — pipe real input through run-hidden.js → runner → modules, verify block/pass output. Tests the full pipeline including timeouts. Cover every rule in the manifest. (PR #265)
+- [x] T403c: Preflight check — runs at session start or on demand. Reports: X rules active, Y tested in last 24h, Z never fired. Flags dead rules. (PR #265)
 
 ## Status
-- 328 tasks completed, 11 pending
+- 331 tasks completed, 8 pending
 - Version: 2.19.0
 - Marketplace: claude-code-skills synced to v2.19.0
 - CI: ALL GREEN (Linux + Windows)
