@@ -633,15 +633,13 @@ See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evide
 - [x] T390-whi: Added windowsHide:true to 3 remaining spawn calls (chat-export, interrupt-detector)
 
 ## Pending
-- [ ] T393 still open: cmd.exe popup fix (resolved paths in settings.json)
-- [ ] PR for branch 262-T393-execfile-fix needs to be created/merged (contains T390 auto-continue fix + watchdog health + windowsHide fixes)
-- [ ] Marketplace sync needed (v2.18.1 → current)
-- [ ] Version bump needed for T390 changes
+- [ ] PR for branch 262-T393-execfile-fix needs to be created/merged (contains T390 auto-continue fix + watchdog health + windowsHide + T393 resolved paths)
+- [ ] Marketplace sync needed (v2.19.0)
 
 ## Status
-- 325 tasks completed, 2 pending
-- Version: 2.18.1
-- Marketplace: claude-code-skills synced to v2.17.0 (needs sync to v2.18.1)
+- 326 tasks completed, 1 pending
+- Version: 2.19.0
+- Marketplace: claude-code-skills synced to v2.17.0 (needs sync to v2.19.0)
 - CI: ALL GREEN (Linux + Windows)
 - 84 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
