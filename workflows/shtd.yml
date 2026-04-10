@@ -95,6 +95,7 @@ modules:
   - hook-autocommit
   - no-adhoc-commands
   - cross-project-todo-gate
+  - cwd-drift-detector
   - no-focus-steal
   - settings-audit-log
   - settings-change-gate
