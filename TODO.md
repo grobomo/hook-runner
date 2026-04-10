@@ -625,7 +625,7 @@ See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evide
 - [x] T392: Sync live hooks + CMD popup monitor script + worktree-gate multi-session fix (PR #259)
 
 ## Windowless Hook Execution (T393)
-- [ ] T393: Eliminate cmd.exe popups — hook commands use `$HOME` which forces shell expansion via cmd.exe. Fix: update setup.js to write fully-resolved paths in settings.json so Claude Code doesn't need cmd.exe shell wrapper.
+- [x] T393: Eliminate cmd.exe popups — hook commands use `$HOME` which forces shell expansion via cmd.exe. Fix: update setup.js to write fully-resolved paths in settings.json so Claude Code doesn't need cmd.exe shell wrapper. (PR #263)
 
 ## Auto-Continue Fix (T390 session 2026-04-10)
 - [x] T390-ac: Fix auto-continue not firing — root cause: run-stop.js ran ALL modules sequentially (T376), config-sync takes 16s, 5s hook timeout killed process before block returned. Fix: blocking modules (auto-continue, never-give-up) run sync (14ms), block output immediately, remaining modules spawn as detached background (run-stop-bg.js). Also: all runners read HOOK_INPUT_FILE env var to avoid Windows stdin pipe deadlock.
@@ -633,14 +633,13 @@ See `specs/fix-run-hidden/investigation.md` for full analysis with ProcMon evide
 - [x] T390-whi: Added windowsHide:true to 3 remaining spawn calls (chat-export, interrupt-detector)
 
 ## Test Fixes
-- [ ] T394: Fix batch module test — validate helper files (_is-pid-running.js) with correct contract instead of gate module contract
+- [x] T394: Fix batch module test — validate helper files (_is-pid-running.js) with correct contract instead of gate module contract (PR #264)
 
 ## Pending
-- [ ] PR for branch 262-T393-execfile-fix needs to be created/merged (contains T390 auto-continue fix + watchdog health + windowsHide + T393 resolved paths)
 - [ ] Marketplace sync needed (v2.19.0)
 
 ## Status
-- 326 tasks completed, 1 pending
+- 328 tasks completed, 0 pending
 - Version: 2.19.0
 - Marketplace: claude-code-skills synced to v2.17.0 (needs sync to v2.19.0)
 - CI: ALL GREEN (Linux + Windows)
