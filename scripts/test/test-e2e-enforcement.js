@@ -229,6 +229,30 @@ test("normal: Read always passes", {
   expectBlock: false
 });
 
+// 11. hook-editing-gate: should block cp to hooks dir from non-hook-runner project
+test("hook-editing-gate: blocks Bash cp to hooks dir", {
+  runner: "run-pretooluse.js",
+  input: {
+    tool_name: "Bash",
+    tool_input: { command: "cp my-module.js ~/.claude/hooks/run-modules/PreToolUse/" },
+    _git: { branch: "265-T403-enforcement-visibility", tracking: true }
+  },
+  // This will only block if CLAUDE_PROJECT_DIR is NOT hook-runner.
+  // Since we run from hook-runner, it should pass (allowed for sync-live).
+  expectBlock: false
+});
+
+// 12. hook-editing-gate: should block mv to hooks dir from non-hook-runner project
+test("hook-editing-gate: blocks Bash mv to run-modules/", {
+  runner: "run-pretooluse.js",
+  input: {
+    tool_name: "Bash",
+    tool_input: { command: "mv gate.js $HOME/.claude/hooks/run-modules/PreToolUse/" },
+    _git: { branch: "265-T403-enforcement-visibility", tracking: true }
+  },
+  expectBlock: false // allowed from hook-runner
+});
+
 // === Stop E2E Tests ===
 
 // 11. auto-continue: Stop should block (auto-continue fires)

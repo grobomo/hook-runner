@@ -78,8 +78,48 @@ function auditLog(filePath, tool, approved, reason, projectDir) {
   } catch (e) { /* best effort */ }
 }
 
+// T395: Detect Bash cp/mv/copy targeting hooks dir (bypass of Write/Edit gate)
+function checkBashHookCopy(command) {
+  if (!command) return null;
+  // Patterns: cp/copy/mv source target, where target is hooks dir
+  var hooksPatterns = [
+    /\b(cp|copy|mv|install)\b.*['"\/]\.claude\/hooks\//,
+    /\b(cp|copy|mv|install)\b.*~\/\.claude\/hooks\//,
+    /\b(cp|copy|mv|install)\b.*\$HOME\/\.claude\/hooks\//,
+    /\b(cp|copy|mv|install)\b.*run-modules\//
+  ];
+  for (var i = 0; i < hooksPatterns.length; i++) {
+    if (hooksPatterns[i].test(command)) return true;
+  }
+  return false;
+}
+
 module.exports = function(input) {
   var tool = input.tool_name;
+
+  // T395: Check Bash commands that copy files into hooks dir
+  if (tool === "Bash") {
+    var cmd = ((input.tool_input || {}).command || "");
+    if (checkBashHookCopy(cmd)) {
+      var projectDir = (process.env.CLAUDE_PROJECT_DIR || "").replace(/\\/g, "/");
+      if (!isHookRunnerProject()) {
+        auditLog("(bash-copy)", "Bash", false, "BASH BYPASS: " + cmd.substring(0, 100), projectDir);
+        return {
+          decision: "block",
+          reason: "HOOK EDITING GATE: Bash copy/move to hooks dir is blocked.\n" +
+            "WHY: Claude used cp/mv to copy modules directly into ~/.claude/hooks/,\n" +
+            "bypassing the Write/Edit gate. All hook changes must go through hook-runner.\n\n" +
+            "Your project: " + (projectDir || "(unknown)") + "\n" +
+            "Command: " + cmd.substring(0, 120) + "\n\n" +
+            "TO MODIFY HOOKS: Run:\n" +
+            "  python ~/Documents/ProjectsCL1/context-reset/context_reset.py --project-dir ~/Documents/ProjectsCL1/_grobomo/hook-runner"
+        };
+      }
+      // In hook-runner project: allow (this is the sync-live workflow)
+    }
+    return null;
+  }
+
   if (tool !== "Edit" && tool !== "Write") return null;
 
   var ti = input.tool_input;
