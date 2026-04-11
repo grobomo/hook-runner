@@ -739,8 +739,11 @@ What was done this session:
 ## Release
 - [x] T418: Version bump to 2.21.1 + CHANGELOG for T415-T417 (PR #287)
 
+## Performance
+- [ ] T419: Optimize pr-first-gate — file-based cache with 5min TTL instead of per-process gh call (~67ms→<1ms for cached lookups)
+
 ## Status
-- 355 tasks completed, 0 pending
+- 355 tasks completed, 1 pending
 - Version: 2.21.1
 - Marketplace: needs sync to v2.21.1
 - CI: ALL GREEN (Linux + Windows)
