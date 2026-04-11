@@ -1045,6 +1045,10 @@ Status:
 ## Release
 - [x] T424: Version bump to 2.23.4 + CHANGELOG for T423 + marketplace sync (PR #312)
 
+## Stale Workflow References
+- [x] T425: Fix hardcoded path in no-nested-claude.js (PR #314)
+- [ ] T426: Fix stale workflow names in watchdog.js + setup.js — code-quality, self-improvement, session-management, messaging-safety were consolidated into shtd in T313. Watchdog reports false failures. Setup default workflows reference nonexistent messaging-safety.
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
