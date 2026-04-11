@@ -707,8 +707,11 @@ Remaining:
 ## Marketplace Sync
 - [x] T410: Sync marketplace to v2.20.1 (T407-T409 fixes: YAML alignment, cpt-gate false positive fix, version bump) (PR #278)
 
+## Workflow Resilience
+- [ ] T411: Fix workflow-gate 87 errors — stale workflow_path in .workflow-state.json + checkGate not resilient to missing YAML
+
 ## Status
-- 347 tasks completed, 0 pending
+- 347 tasks completed, 1 pending
 - Version: 2.20.1
 - Marketplace: claude-code-skills synced to v2.20.1
 - CI: ALL GREEN (Linux + Windows)
