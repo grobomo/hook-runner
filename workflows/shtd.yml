@@ -70,6 +70,11 @@ modules:
   - test-checkpoint-gate
   - why-reminder
   - workflow-gate
+  - blueprint-no-sleep
+  - gh-auto-gate
+  - no-hook-bypass
+  - no-nested-claude
+  - publish-json-guard
   # Code quality (was: code-quality)
   - archive-not-delete
   - claude-p-pattern

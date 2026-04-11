@@ -69,7 +69,7 @@ node setup.js --workflow query Edit        # which workflows affect Edit?
 
 | Workflow | Modules | What it enforces |
 |----------|---------|-----------------|
-| `shtd` | 83 | Spec-Hook-Test-Driven — the full development pipeline. Enforces spec → branch → test → implement → PR, plus code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement. |
+| `shtd` | 90 | Spec-Hook-Test-Driven — the full development pipeline. Enforces spec → branch → test → implement → PR, plus code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement. |
 | `customer-data-guard` | 3 | Read-only incident response — blocks env changes, data exfil, and V1 modifications. |
 | `dispatcher-worker` | 3 | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
 | `no-local-docker` | 1 | Blocks local Docker commands, forces remote infrastructure. |
@@ -305,6 +305,7 @@ Full catalog in `modules/` directory:
 | `archive-not-delete` | Blocks file deletion, suggests archiving instead |
 | `aws-tagging-gate` | Enforces required tags on AWS resource creation |
 | `block-local-docker` | Blocks docker/docker-compose commands |
+| `blueprint-no-sleep` | Blocks sleep between Blueprint MCP calls (pages load during prompt processing) |
 | `branch-pr-gate` | Enforces feature branch → task branch → PR workflow |
 | `claude-p-pattern` | Enforces correct `claude -p` invocation pattern |
 | `commit-counter-gate` | Forces commit after every 5 edits — prevents losing work on context reset |
@@ -318,6 +319,7 @@ Full catalog in `modules/` directory:
 | `enforcement-gate` | Requires git repo + TODO.md before edits |
 | `env-var-check` | Blocks edits if required env vars missing |
 | `force-push-gate` | Blocks git push --force to main/master |
+| `gh-auto-gate` | Forces gh_auto wrapper for all gh/git push commands (EMU account safety) |
 | `git-destructive-guard` | Blocks git reset --hard, checkout ., clean -f without diagnosis |
 | `git-rebase-safety` | Warns about reversed --ours/--theirs during rebase |
 | `hook-editing-gate` | Enforces WORKFLOW tag, WHY comment, exit(1) in hook files |
@@ -329,12 +331,15 @@ Full catalog in `modules/` directory:
 | `no-fragile-heuristics` | Blocks pixel-counting heuristics |
 | `reflection-gate` | Blocks edits if self-reflection found unresolved issues |
 | `no-hardcoded-paths` | Blocks hardcoded absolute paths in code |
+| `no-hook-bypass` | Blocks Bash cat/echo writes when Write/Edit is gated |
+| `no-nested-claude` | Blocks nested claude -p calls (use context-reset for cross-project) |
 | `no-passive-rules` | Blocks .md rules when a hook module is better |
 | `no-rules-gate` | Blocks creation of ~/.claude/rules/ files (use hook modules instead) |
 | `hook-system-reminder` | Reminds Claude that enforcement is ONLY via hook-runner modules |
 | `pr-first-gate` | Blocks spec/code edits on branches without an open PR |
 | `pr-per-task-gate` | Requires task ID in PR titles |
 | `preserve-iterated-content` | Warns on full-file rewrites of iterated files |
+| `publish-json-guard` | Blocks edits to .github/publish.json and git remote config |
 | `remote-tracking-gate` | Blocks edits if branch not pushed to remote |
 | `root-cause-gate` | Blocks retry without root cause diagnosis |
 | `secret-scan-gate` | Blocks commits with API keys or tokens |
