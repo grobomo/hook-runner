@@ -67,12 +67,13 @@ function getModuleDescription(filePath) {
 
 /**
  * Parse "// WORKFLOW: name" from a module's header lines.
+ * Supports comma-separated multi-tag: "// WORKFLOW: shtd, starter"
  */
 function getModuleWorkflow(filePath) {
   var lines = getHeaderLines(filePath);
   for (var i = 0; i < lines.length; i++) {
-    var match = lines[i].match(/^\/\/\s*WORKFLOW:\s*(\S+)/i);
-    if (match) return match[1];
+    var match = lines[i].match(/^\/\/\s*WORKFLOW:\s*(.+)/i);
+    if (match) return match[1].replace(/\s+$/g, "");
   }
   return null;
 }
