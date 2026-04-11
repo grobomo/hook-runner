@@ -689,10 +689,25 @@ Remaining:
 ## Release
 - [x] T409: Version bump to 2.20.1 + CHANGELOG for T407-T408 (PR #277)
 
+## Session Handoff (2026-04-10c)
+What was done this session:
+- T406: Marketplace synced to v2.20.0 (pushed to grobomo/claude-code-skills)
+- T407 (PR #275): Fixed workflow YAML/tag mismatches — shtd.yml + cpr.yml aligned
+- T408 (PR #276): Fixed cpt-gate false positive — workflow names no longer trigger marker check. 8 tests.
+- T409 (PR #277): Version bump to 2.20.1 + CHANGELOG
+- Code review: ES5 clean, security clean, no DRY issues
+- Full test suite: 50 suites, 742 passed, 0 failed
+- Pruned 37 stale remote branches
+
+Remaining:
+- hook-editing-gate.js has 2 hardcoded ProjectsCL1 paths in block messages (lines 115, 165) — self-edit protected, requires manual user fix
+- 2 stale local branches (237-bookkeeping-docs-complete, 255-T390-runtime-hook-monitor) — squash-merged, need `git branch -D` (user approval)
+- Marketplace could be synced for v2.20.1 (minor fixes only)
+
 ## Status
 - 346 tasks completed, 0 pending
 - Version: 2.20.1
-- Marketplace: claude-code-skills synced to v2.20.0
+- Marketplace: claude-code-skills synced to v2.20.0 (v2.20.1 is minor fixes only)
 - CI: ALL GREEN (Linux + Windows)
 - 86 modules across 5 workflows (2 active: shtd + customer-data-guard), 51 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
