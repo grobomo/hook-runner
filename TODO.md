@@ -1013,7 +1013,7 @@ Status:
 
 - [x] T370: Add missing files to package.json (PR #307) — preflight.js, generate-manifest.js, run-stop-bg.js missing from `files` array, won't be included in npx installs.
 
-- [ ] T371: Version bump to 2.23.3 + CHANGELOG for T368-T370 cleanup + marketplace sync
+- [x] T371: Version bump to 2.23.3 + CHANGELOG for T368-T370 cleanup + marketplace sync (PR #308)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
