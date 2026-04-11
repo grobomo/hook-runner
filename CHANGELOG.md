@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.24.4] — 2026-04-11
+
+### Fixed
+- **JSON.parse safety in setup.js** (T433) — Replaced 4 bare `JSON.parse(settings.json)` calls with `readSettings()` helper that returns `{}` on corrupt/missing files. CLI no longer crashes on malformed settings.
+
 ## [2.24.3] — 2026-04-11
 
 ### Fixed
