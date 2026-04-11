@@ -1047,7 +1047,10 @@ Status:
 
 ## Stale Workflow References
 - [x] T425: Fix hardcoded path in no-nested-claude.js (PR #314)
-- [ ] T426: Fix stale workflow names in watchdog.js + setup.js — code-quality, self-improvement, session-management, messaging-safety were consolidated into shtd in T313. Watchdog reports false failures. Setup default workflows reference nonexistent messaging-safety.
+- [x] T426: Fix stale workflow names in watchdog.js + setup.js (PR #315) — consolidated names from T313. Watchdog default, setup --yes, and test files all updated.
+
+## Release
+- [ ] T427: Version bump to 2.23.5 + CHANGELOG for T423-T426 + marketplace sync
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog

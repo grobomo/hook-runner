@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.23.5] — 2026-04-11
+
+### Fixed
+- **Hardcoded path in no-nested-claude.js** (T425) — Replaced user-specific path with generic reference.
+- **Stale workflow names** (T426) — watchdog.js, setup.js, and test files referenced pre-T313 consolidated workflow names (code-quality, self-improvement, session-management, messaging-safety). Updated to current names (shtd, customer-data-guard).
+
 ## [2.23.4] — 2026-04-11
 
 ### Added
