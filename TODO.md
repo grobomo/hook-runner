@@ -1065,12 +1065,14 @@ What was done this session:
 - Live hooks synced (watchdog.js, setup.js)
 - gh auth on default (joel-ginsberg_tmemu)
 
-## Starter Workflow & Multi-Tag (T428)
-- [x] T428: Starter workflow — 11 universally useful modules, multi-tag support (`// WORKFLOW: shtd, starter`), `--yes` installs starter instead of shtd. Version 2.24.0.
+## Starter Workflow & Multi-Tag (T428-T430)
+- [x] T428: Starter workflow — 11 universally useful modules, multi-tag support (`// WORKFLOW: shtd, starter`), `--yes` installs starter instead of shtd (PR #319)
+- [x] T429: Adoption polish — modules.example.yaml reorganized, report.js/generate-manifest.js multi-tag fix (PR #320)
+- [x] T430: Version bump to 2.24.1 + SKILL.md starter keyword + CHANGELOG
 
 Status:
 - 0 pending tasks
-- Version: 2.24.0
+- Version: 2.24.1
 - 99 modules, 90 in shtd workflow, 11 in starter workflow (shared via multi-tag)
 - Clean git, marketplace synced
 
