@@ -23,14 +23,15 @@ module.exports = function(input) {
 
   // Extract commit message from -m flag
   var msg = "";
-  // Match -m "msg", -m 'msg', or heredoc patterns
-  var mMatch = cmd.match(/\-m\s+["']([^"']+)["']/);
-  if (!mMatch) {
-    // Try heredoc: -m "$(cat <<'EOF'\nmsg\nEOF\n)"
-    var heredocMatch = cmd.match(/\-m\s+"\$\(cat\s+<<'?EOF'?\s*\n([\s\S]*?)\nEOF/);
-    if (heredocMatch) msg = heredocMatch[1].trim();
+  // Try heredoc first: -m "$(cat <<'EOF'\nmsg\nEOF\n)"
+  // Must check before simple -m "msg" because the outer quotes confuse the simple regex
+  var heredocMatch = cmd.match(/\-m\s+"\$\(cat\s+<<'?EOF'?\s*\n([\s\S]*?)\nEOF/);
+  if (heredocMatch) {
+    msg = heredocMatch[1].trim();
   } else {
-    msg = mMatch[1].trim();
+    // Simple -m "msg" or -m 'msg'
+    var mMatch = cmd.match(/\-m\s+["']([^"']+)["']/);
+    if (mMatch) msg = mMatch[1].trim();
   }
 
   if (!msg) return null; // Can't parse message — don't block (might be interactive)
