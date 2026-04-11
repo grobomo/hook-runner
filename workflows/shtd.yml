@@ -103,6 +103,10 @@ modules:
   # Messaging safety (was: messaging-safety)
   - messaging-safety-gate
   - share-is-generic
+  # Project-scoped (ddei-email-security)
+  - rdp-testbox-gate
+  # System reminders
+  - hook-system-reminder
   # Self-improvement (was: self-improvement)
   - instruction-to-hook-gate
   - instruction-detector
