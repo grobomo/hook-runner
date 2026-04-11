@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Claude rewrote a stop hook module, condensing a user-authored message
 // that had been refined over 15 iterations. The message text was treated as
 // "my code" instead of a carefully evolved artifact. This gate catches

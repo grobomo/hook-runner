@@ -33,7 +33,7 @@ node setup.js --test    # runs all suites, auto-discovers scripts/test/test-*.sh
 - Async: `module.exports = async function(input) { ... }` — 4s timeout
 - Return `null` to pass, `{decision: "block", reason: "..."}` to block
 - `// WHY:` comment required — explains the real incident that caused the module
-- `// WORKFLOW: name` — only runs when that workflow is active
+- `// WORKFLOW: name` — only runs when that workflow is active (comma-separated for multi: `// WORKFLOW: shtd, starter`)
 - `// requires: mod1, mod2` — missing deps = module skipped
 
 ## CLI Commands

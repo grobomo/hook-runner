@@ -86,5 +86,48 @@ RESULT4=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR
 ")
 check "shtd disabled: tagged-cq + untagged pass" '[ "$RESULT4" = "tagged-cq,untagged" ]'
 
+# Test: multi-tag module — tagged with both shtd AND starter
+cat > "$TMPDIR/run-modules/PreToolUse/multi-tag.js" << 'JS'
+// WORKFLOW: shtd, starter
+module.exports = function(input) { return null; };
+JS
+
+# Reset: disable all, enable only starter
+node -e "
+  var wf = require('$REPO_DIR/workflow.js');
+  wf.disableWorkflow('code-quality', '$TMPDIR');
+  wf.enableWorkflow('starter', '$TMPDIR');
+"
+RESULT5=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" node -e "
+  delete require.cache[require.resolve('$REPO_DIR/load-modules.js')];
+  delete require.cache[require.resolve('$REPO_DIR/workflow.js')];
+  var lm = require('$REPO_DIR/load-modules.js');
+  var mods = lm('$TMPDIR/run-modules/PreToolUse');
+  console.log(mods.map(function(m) { return require('path').basename(m, '.js'); }).sort().join(','));
+")
+check "starter enabled: multi-tag + untagged pass (shtd-only excluded)" '[ "$RESULT5" = "multi-tag,untagged" ]'
+
+# Test: enable shtd too — multi-tag still passes (both workflows active)
+node -e "
+  var wf = require('$REPO_DIR/workflow.js');
+  wf.enableWorkflow('shtd', '$TMPDIR');
+"
+RESULT6=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" node -e "
+  delete require.cache[require.resolve('$REPO_DIR/load-modules.js')];
+  delete require.cache[require.resolve('$REPO_DIR/workflow.js')];
+  var lm = require('$REPO_DIR/load-modules.js');
+  var mods = lm('$TMPDIR/run-modules/PreToolUse');
+  console.log(mods.map(function(m) { return require('path').basename(m, '.js'); }).sort().join(','));
+")
+check "shtd+starter enabled: all tagged + untagged pass" '[ "$RESULT6" = "multi-tag,tagged-shtd,untagged" ]'
+
+# Test: parseWorkflowTags returns both tags
+RESULT7=$(node -e "
+  var lm = require('$REPO_DIR/load-modules.js');
+  var tags = lm.parseWorkflowTags('$TMPDIR/run-modules/PreToolUse/multi-tag.js');
+  console.log(tags.join(','));
+")
+check "parseWorkflowTags returns both tags" '[ "$RESULT7" = "shtd,starter" ]'
+
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ]

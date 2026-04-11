@@ -1310,7 +1310,7 @@ function cmdWizard(reportOnly, dryRun, openMode, autoYes, analyzeMode, deepMode,
       console.log("  " + dryChanges[d].action + ": " + dryChanges[d].file);
     }
     if (autoYes) {
-      console.log("  [--yes] Would enable default workflows: shtd");
+      console.log("  [--yes] Would enable default workflows: starter");
     }
     console.log("\n[hook-runner] Dry-run complete. No changes made.");
     return;
@@ -1339,14 +1339,15 @@ function cmdWizard(reportOnly, dryRun, openMode, autoYes, analyzeMode, deepMode,
   if (openMode) openFile(afterReport);
 
   // Step 7: Enable default workflows (if --yes or interactive)
-  // WHY: New users don't know which workflows to enable. Defaults provide
-  // immediate value (spec-first, test-first, no accidental messaging).
+  // WHY: New users don't know which workflows to enable. "starter" provides
+  // safe defaults (force-push, secret-scan, archive-not-delete) without
+  // overwhelming them with 90 shtd modules. Users enable shtd manually later.
   var enableWorkflows = autoYes;
   if (enableWorkflows) {
     console.log("[6/6] Enabling default workflows...");
     var wf = require("./workflow");
     var globalDir = path.join(os.homedir(), ".claude", "hooks");
-    var defaultWorkflows = ["shtd"];
+    var defaultWorkflows = ["starter"];
     for (var wi = 0; wi < defaultWorkflows.length; wi++) {
       var wfName = defaultWorkflows[wi];
       try {
