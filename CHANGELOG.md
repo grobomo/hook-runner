@@ -2,6 +2,13 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.21.1] — 2026-04-10
+
+### Fixed
+- **T339 test** (T415) — Updated test for T413 self-edit protection removal. Was expecting BLOCK, now expects PASS.
+- **Report analysis false coverage gaps** (T416) — `resolveScriptPath` returned `run-hidden.js` wrapper path instead of actual runner on Windows. `isRunner` never matched → 0 modules → all 5 events reported as empty.
+- **Report analysis false positives** (T417) — Bare runner name resolved to project dir instead of hooks dir, mixing archived modules into analysis. `_prefix` helper files flagged for missing headers. Score C(8 demerits) → A(0).
+
 ## [2.21.0] — 2026-04-10
 
 ### Changed
