@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.21.2] — 2026-04-10
+
+### Performance
+- **spec-gate caching** (T420) — Added mtime-based caching for specs/ directory scan, TODO.md reads, and autoActivateShtd. Cold call ~108ms, warm calls ~1.7ms avg (was ~98ms). 57x speedup on cached calls. Cache invalidates when file mtimes change.
+
 ## [2.21.1] — 2026-04-10
 
 ### Fixed
