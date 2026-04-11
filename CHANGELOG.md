@@ -2,6 +2,13 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.23.1] — 2026-04-11
+
+### Fixed
+- **deploy-history-reminder silent discard** (T363) — Module returned `{text: "..."}` but PreToolUse runner only checks `result.decision`. Advisory was never shown. Writes to stderr now. DEPLOY_PATTERNS aligned with deploy-gate (5→10).
+- **Runner {text} advisory handling** (T363) — Added `{text}` output to run-stop-bg.js and run-posttooluse.js so advisory modules (config-sync, drift-review, hook-health-monitor) are visible.
+- **commit-quality-gate heredoc parsing** (T364) — Simple `-m "msg"` regex matched before heredoc pattern, extracting `$(cat <<` as the message. Fixed by checking heredoc first.
+
 ## [2.23.0] — 2026-04-11
 
 ### Added
