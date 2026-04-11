@@ -687,11 +687,11 @@ Remaining:
 - [x] T408: Fix false positive in cpt-gate — workflow name triggers the standalone marker check (PR #276)
 
 ## Release
-- [ ] T409: Version bump to 2.20.1 + CHANGELOG for T407-T408
+- [x] T409: Version bump to 2.20.1 + CHANGELOG for T407-T408 (PR #277)
 
 ## Status
-- 345 tasks completed, 1 pending
-- Version: 2.20.0
+- 346 tasks completed, 0 pending
+- Version: 2.20.1
 - Marketplace: claude-code-skills synced to v2.20.0
 - CI: ALL GREEN (Linux + Windows)
 - 86 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
