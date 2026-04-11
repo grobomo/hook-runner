@@ -1116,10 +1116,13 @@ What was done this session:
 - gh auth on default (joel-ginsberg_tmemu)
 
 Status:
-- 0 pending tasks
 - Version: 2.24.4
-- Project mature, all code review items addressed
-- Full test suite: 51 suites, 405 passed, 0 failed (modules suite timeout on Windows is known)
+
+## DRY & Gate Fixes (T434+)
+
+- [ ] T434: Fix spec-before-code-gate catch-22 — gate blocks TODO.md edits, but demands TODO.md edits. Exempt TODO.md/SESSION_STATE.md/spec files from the gate.
+- [ ] T435: DRY FILE_MODIFY_PATTERNS — duplicated in commit-counter-gate.js and spec-before-code-gate.js. Extract to shared helper.
+- [ ] T436: Code review pass + version bump
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
