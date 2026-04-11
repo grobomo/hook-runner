@@ -926,7 +926,7 @@ Context: The self-reflection → load-lessons pipeline has gaps found during dde
 
 - [x] T353: Added `--lessons` CLI command — shows all lessons, supports `--project <name>`, `--date YYYY-MM-DD`, `--archive` filters (PR #292)
 
-- [ ] T354: Modify Stop hook text — when Claude creates TODOs in another project, the stop hook should tell it: "If you created tasks in another project, run: `touch ~/.claude/.preserve-tab` then `python C:/Users/joelg/Documents/ProjectsCL1/context-reset/context_reset.py --project-dir $CLAUDE_PROJECT_DIR` — this preserves the current tab so user can review, while a new Claude tab opens to work on the cross-project TODOs." Currently the stop hook says "Do NOT preserve the old tab unless something unusual happened" which prevents this workflow.
+- [x] T354: Added cross-project workflow instructions to stop-message.txt — tells Claude to preserve tab + context-reset to other project when cross-project TODOs are created. Also added stop-message.txt to module catalog (PR #294)
 
 ## Commit Discipline & Spec Enforcement
 
