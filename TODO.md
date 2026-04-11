@@ -928,6 +928,8 @@ Context: The self-reflection → load-lessons pipeline has gaps found during dde
 
 - [x] T354: Added cross-project workflow instructions to stop-message.txt — tells Claude to preserve tab + context-reset to other project when cross-project TODOs are created. Also added stop-message.txt to module catalog (PR #294)
 
+- [x] T355: Version bump to 2.22.0 + CHANGELOG for T349-T354 lessons system improvements (PR #295)
+
 ## Commit Discipline & Spec Enforcement
 
 Context: Claude spins wheels making undocumented changes, no git trail, can't debug what was tried. User tracks progress from GitHub Mobile. E2E cycles take 10+ min — wasted when changes aren't documented.

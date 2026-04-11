@@ -2,6 +2,16 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.22.0] — 2026-04-11
+
+### Added
+- **Lessons path fix** (T349) — Injected prompt now specifies full path `~/.claude/hooks/self-analysis-lessons.jsonl` so Claude writes to the correct location.
+- **Lessons rotation** (T351) — When lessons file exceeds 200 lines, oldest entries are archived and recent 100 kept. Prevents unbounded growth.
+- **More lessons injected** (T352) — MAX_LESSONS increased from 10 to 20 for richer session context.
+- **`--lessons` CLI** (T353) — New command shows all self-analysis lessons with `--project`, `--date`, `--archive` filters.
+- **Operational lessons** (T350) — `extractOperationalLessons()` captures workarounds, env quirks, and tool gotchas from normal work. Tagged `[OPERATIONAL]` in lessons file.
+- **Cross-project stop** (T354) — Stop message now includes instructions for preserving tab and context-resetting to another project when cross-project TODOs are created.
+
 ## [2.21.2] — 2026-04-10
 
 ### Performance
