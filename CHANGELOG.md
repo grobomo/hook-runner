@@ -2,6 +2,13 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.23.3] — 2026-04-11
+
+### Fixed
+- **Untracked run-modules/ from git** (T368) — Directory was in `.gitignore` but still tracked, causing 46+ phantom dirty files every session. Removed from tracking without deleting live files.
+- **README module catalog** (T369) — Added 5 missing modules (commit-counter-gate, commit-quality-gate, deploy-gate, deploy-history-reminder, spec-before-code-gate). Updated shtd workflow count from 69 to 83.
+- **package.json files array** (T370) — Added preflight.js, generate-manifest.js, run-stop-bg.js to `files` array so they're included in npx installs.
+
 ## [2.23.2] — 2026-04-11
 
 ### Security
