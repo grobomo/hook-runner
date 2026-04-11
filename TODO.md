@@ -978,7 +978,32 @@ Remaining:
 
 - [x] T366: Replace execSync with execFileSync in 7 modules — eliminates shell interpretation for git/gh commands. Defense-in-depth: push-unpushed, pr-first-gate, drift-review, config-sync, hook-autocommit, _is-pid-running. (PR #302, #303)
 
-- [ ] T367: Version bump to 2.23.2 + CHANGELOG for T366 security hardening + marketplace sync (PR #304)
+- [x] T367: Version bump to 2.23.2 + CHANGELOG for T366 security hardening + marketplace sync (PR #304)
+
+## Session Handoff (2026-04-11c)
+What was done this session:
+- T363 (PR #299): Fixed deploy-history-reminder silent discard — {text} returns never shown. Added {text} handling to run-stop-bg.js and run-posttooluse.js. Aligned DEPLOY_PATTERNS (5→10).
+- T364 (PR #300): Fixed commit-quality-gate heredoc parsing — simple regex matched before heredoc
+- T365 (PR #301): Version bump to 2.23.1
+- T366 (PR #302): Replaced execSync with execFileSync in 5 modules
+- T366b (PR #303): Remaining 2 execSync conversions (config-sync catch, _is-pid-running)
+- T367 (PR #304): Version bump to 2.23.2
+- Marketplace synced to v2.23.2 (grobomo/claude-code-skills)
+- Stale remote branches being cleaned up (background)
+- gh auth on default (joel-ginsberg_tmemu)
+- Health: 115 OK, 0 warnings, 0 failures
+- Batch module validation: 94/94 pass
+- Workflow audit: 93 modules, 92 tagged, all matching YAML
+
+Status:
+- 0 pending tasks
+- Version: 2.23.2
+- Project mature, code review clean, security hardened
+- Remaining execSync: only `claude -p` calls (need shell for stdin piping, inherently safe)
+
+## Cleanup
+
+- [ ] T368: Untrack run-modules/ from git — directory was in .gitignore but still tracked, causing 46+ phantom dirty files on every session. `git rm --cached -r run-modules/` removes from tracking without deleting live files.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
