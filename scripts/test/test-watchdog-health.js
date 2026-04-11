@@ -20,7 +20,7 @@ var alertFile = path.join(tmpDir, ".watchdog-alert");
 
 // Create minimal required files so other watchdog checks pass
 var wcPath = path.join(tmpDir, "workflow-config.json");
-fs.writeFileSync(wcPath, JSON.stringify({shtd: true, "code-quality": true, "self-improvement": true, "session-management": true, "messaging-safety": true}));
+fs.writeFileSync(wcPath, JSON.stringify({shtd: true, "customer-data-guard": true}));
 
 // Create required runner files
 var requiredRunners = ["run-pretooluse.js", "run-posttooluse.js", "run-stop.js", "run-sessionstart.js", "run-userpromptsubmit.js", "load-modules.js", "workflow.js", "hook-log.js", "run-async.js", "workflow-cli.js", "constants.js"];
