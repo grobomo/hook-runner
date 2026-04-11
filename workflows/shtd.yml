@@ -58,7 +58,12 @@ modules:
   - pr-per-task-gate
   - push-unpushed
   - remote-tracking-gate
+  - commit-counter-gate
+  - commit-quality-gate
+  - deploy-gate
+  - deploy-history-reminder
   - secret-scan-gate
+  - spec-before-code-gate
   - spec-gate
   - task-completion-gate
   - test-before-done
