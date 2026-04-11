@@ -1003,7 +1003,11 @@ Status:
 
 ## Cleanup
 
-- [ ] T368: Untrack run-modules/ from git — directory was in .gitignore but still tracked, causing 46+ phantom dirty files on every session. `git rm --cached -r run-modules/` removes from tracking without deleting live files.
+- [x] T368: Untrack run-modules/ from git (PR #305) — directory was in .gitignore but still tracked, causing 46+ phantom dirty files on every session. `git rm --cached -r run-modules/` removes from tracking without deleting live files.
+
+## Docs
+
+- [ ] T369: Add 5 missing modules to README catalog — commit-counter-gate, commit-quality-gate, deploy-gate, deploy-history-reminder, spec-before-code-gate. Update shtd module count from 69 to 83.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
