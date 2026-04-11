@@ -950,6 +950,27 @@ Design principle: gate on ALL tools via PreToolUse (not just Edit/Write). Claude
 
 - [x] T361: Version bump to 2.23.0 + CHANGELOG for T355-T360 commit discipline gates (PR #297)
 
+- [x] T362: Updated shtd.yml workflow — added 5 new modules (commit-counter-gate, commit-quality-gate, deploy-gate, deploy-history-reminder, spec-before-code-gate). Audit now shows 85/85 match.
+
+## Session Handoff (2026-04-11b)
+What was done this session:
+- T349 (PR #292): Fixed lessons file path in prompt + rotation + MAX_LESSONS 20 + --lessons CLI
+- T350 (PR #293): General operational lessons extraction
+- T354 (PR #294): Cross-project workflow in stop-message.txt
+- T355 (PR #295): Version bump 2.22.0
+- T355-T360 (PR #296): 5 new commit discipline gate modules
+- T361 (PR #297): Version bump 2.23.0
+- T362: Updated shtd.yml with new modules, audit clean
+- Marketplace synced to v2.23.0
+- gh auth on default (joel-ginsberg_tmemu)
+
+Remaining:
+- shtd.yml update not yet committed (minor — just module count)
+- 0 pending tasks
+- 94 modules across 5 workflows, health 110/0/0
+- Step 3 (code review/optimize) partially done — ES5 clean, workflow audit clean
+- Step 4 (zoom out) not started — project is mature, consider: npm publish, team demo, documentation refresh
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
