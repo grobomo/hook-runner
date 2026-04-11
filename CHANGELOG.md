@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.23.2] — 2026-04-11
+
+### Security
+- **execSync→execFileSync** (T366, T366b) — Converted all shell-interpolated `execSync` calls to `execFileSync` with args arrays across 7 modules (push-unpushed, pr-first-gate, drift-review, config-sync, hook-autocommit, _is-pid-running). Eliminates shell interpretation as defense-in-depth. Only `claude -p` calls remain (need shell for stdin piping, no interpolation).
+
 ## [2.23.1] — 2026-04-11
 
 ### Fixed
