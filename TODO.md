@@ -1015,6 +1015,10 @@ Status:
 
 - [x] T371: Version bump to 2.23.3 + CHANGELOG for T368-T370 cleanup + marketplace sync (PR #308)
 
+## Test Fixes
+
+- [ ] T372: Fix test-runners.sh — Tests 2 and 6 reference `run-modules/` which was untracked in T368. Point at `modules/` instead.
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
