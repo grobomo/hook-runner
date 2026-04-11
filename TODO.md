@@ -717,12 +717,12 @@ Remaining:
 - [x] T413: Remove self-edit protection from hook-editing-gate + fix hardcoded paths. Hook-runner is the gatekeeper — it can edit all hooks. Other projects blocked. 16 tests. (PR #282)
 
 ## Docs + Release
-- [ ] T414: Update CLAUDE.md test count (49→51), version bump to 2.21.0 for T413, marketplace sync
+- [x] T414: Update CLAUDE.md test count (49→51), version bump to 2.21.0 for T413, marketplace sync (PR #283)
 
 ## Status
-- 350 tasks completed, 1 pending
-- Version: 2.20.2
-- Marketplace: claude-code-skills synced to v2.20.2
+- 351 tasks completed, 0 pending
+- Version: 2.21.0
+- Marketplace: claude-code-skills synced to v2.21.0
 - CI: ALL GREEN (Linux + Windows)
 - 86 modules across 5 workflows (2 active: shtd + customer-data-guard), 51 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
