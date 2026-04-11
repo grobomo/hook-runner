@@ -32,9 +32,9 @@ module.exports = function(input) {
         decision: "block",
         reason: "NO NESTED CLAUDE: Cannot run claude as a subprocess — it doesn't work reliably.\n" +
           "FIX: Use context_reset.py to spawn a proper new session:\n" +
-          "  python ~/Documents/ProjectsCL1/context-reset/context_reset.py \\\n" +
-          "    --target-project /path/to/other/project \\\n" +
-          "    --no-close --prompt \"your instructions here\""
+          "  python context_reset.py --target-project /path/to/other/project \\\n" +
+          "    --no-close --prompt \"your instructions here\"\n" +
+          "Or open a new terminal tab and run claude there."
       };
     }
   }
