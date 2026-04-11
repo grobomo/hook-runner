@@ -936,17 +936,17 @@ Context: Claude spins wheels making undocumented changes, no git trail, can't de
 
 Design principle: gate on ALL tools via PreToolUse (not just Edit/Write). Claude bypasses Edit gates by using Bash with sed/awk/echo/python. Use `git diff --stat` as ground truth. Persist state in files, not memory (survives context resets).
 
-- [ ] T355: **Commit counter gate (PreToolUse, ALL tools)** — Track file modifications since last commit. Count increments on: Edit, Write, Bash containing file-modifying patterns (sed -i, awk, echo >, cat >, python -c.*open.*write, tee). After 5 modifications without a `git commit`, block ALL tool calls with: "You have N uncommitted file changes. Commit now with a descriptive message before continuing." Reset counter on successful `git commit`. Store in `~/.claude/hooks/.uncommitted-edit-count`. Cross-check with `git diff --stat` (counter can drift if files are reverted).
+- [x] T355: **Commit counter gate** — commit-counter-gate.js tracks Edit/Write/file-modifying Bash. After 5 without commit, blocks. Cross-checks git diff. State in .uncommitted-edit-count (PR #296)
 
-- [ ] T356: **Deploy gate (PreToolUse, Bash)** — Before commands matching `upload-and-run|quick-sync|create-zip|terraform apply|az vm run-command create`, check `git status --porcelain`. If dirty tree, block: "Uncommitted changes detected. Commit before deploying so results are tied to a known git state." Every E2E run must be traceable to a commit SHA.
+- [x] T356: **Deploy gate** — deploy-gate.js blocks deploy commands (upload-and-run, terraform apply, kubectl apply, docker push, etc.) when git tree is dirty. Shows changed files (PR #296)
 
-- [ ] T357: **Spec-before-code gate (PreToolUse, Edit/Write/Bash file-modify)** — On FIRST file modification after a commit, check for a spec. Look for: recent TODO.md entry with "SPEC:" or "FIX:" prefix, or a git commit within 5 min with message >20 chars. If no spec: "Write a spec first. What's broken? What's the fix? Why? Add to TODO.md or a commit message."
+- [x] T357: **Spec-before-code gate** — spec-before-code-gate.js blocks first file modification after commit unless TODO.md has unchecked tasks or recent commit has descriptive message (PR #296)
 
-- [ ] T358: **Commit message quality gate (PreToolUse, Bash matching git commit)** — Block if message: (a) <10 words, (b) starts with generic "fix/update/change" without specifics, (c) doesn't say what changed and why. Example good message: "Fix F5 marketplace import — winpath() needed when MSYS_NO_PATHCONV=1 blocks Git Bash path conversion"
+- [x] T358: **Commit message quality gate** — commit-quality-gate.js blocks git commit with <5 word messages or generic starts (fix/update/change without detail) (PR #296)
 
-- [ ] T359: **Git history check reminder (PreToolUse, Bash matching upload-and-run|quick-sync)** — Non-blocking advisory before E2E re-runs: "Before re-running: `git log --oneline -10` to see what you tried. Don't repeat failed approaches."
+- [x] T359: **Git history check reminder** — deploy-history-reminder.js shows last 5 commits as advisory before deploy commands. Non-blocking (PR #296)
 
-- [ ] T360: **Anti-circumvention patterns** — File-modifying Bash detection must cover: `sed -i, awk -i, echo.*>, cat.*>, tee, python.*open.*write, printf.*>, cp .*, mv .*`. Cannot be bypassed by wrapping in a script — gate checks the actual command content. Counter file persists across context resets.
+- [x] T360: **Anti-circumvention patterns** — Both commit-counter-gate and spec-before-code-gate detect file-modifying Bash patterns: sed -i, awk -i, echo >, cat >, tee, python open write, printf >, cp, mv (PR #296)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
