@@ -2,6 +2,13 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.24.1] — 2026-04-11
+
+### Fixed
+- **Multi-tag in report/manifest** (T429) — report.js and generate-manifest.js now handle comma-separated workflow tags correctly.
+- **modules.example.yaml** (T429) — Reorganized around starter workflow with clear sections for starter, shtd, and optional modules.
+- **SKILL.md** (T430) — Updated workflow list to include starter, added starter keyword.
+
 ## [2.24.0] — 2026-04-11
 
 ### Added

@@ -14,6 +14,7 @@ keywords:
   - gate
   - module
   - shtd
+  - starter
 custom_commands:
   - name: setup
     command: "node $SKILL_DIR/setup.js"
@@ -58,7 +59,7 @@ node setup.js --workflow audit     # coverage report
 node setup.js --workflow query Edit  # which workflows affect Edit?
 ```
 
-Built-in: `shtd` (spec→test→implement→PR), `messaging-safety`, `no-local-docker`, `cross-project-reset`.
+Built-in: `starter` (safe defaults, 11 modules), `shtd` (full development pipeline, 90 modules), `customer-data-guard`, `no-local-docker`, `cross-project-reset`.
 
 ## Module Contract
 
@@ -73,7 +74,7 @@ module.exports = function(input) {
 
 - Return `null` to pass, `{decision: "block"}` to block
 - Sync or async (4s timeout for async)
-- `// WORKFLOW: name` restricts to that workflow
+- `// WORKFLOW: name` restricts to that workflow (multi: `// WORKFLOW: shtd, starter`)
 - `// requires: mod1` for dependencies
 
 ## CLI
