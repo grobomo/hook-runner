@@ -79,7 +79,7 @@ node setup.js --workflow query Edit        # which workflows affect Edit?
 | `customer-data-guard` | 3 | Read-only incident response — blocks env changes, data exfil, and V1 modifications. |
 | `dispatcher-worker` | 3 | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
 | `no-local-docker` | 1 | Blocks local Docker commands, forces remote infrastructure. |
-| `cross-project-reset` | 1 | Blocks cross-project file access, forces proper project switching. |
+| `cross-project-reset` | 0 | Step template for cross-project context switching (cwd-drift-detector is in shtd). |
 
 ### Workflow State Machine
 

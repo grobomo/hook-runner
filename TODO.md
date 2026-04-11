@@ -1071,7 +1071,7 @@ What was done this session:
 - [x] T430: Version bump to 2.24.1 + SKILL.md starter keyword + CHANGELOG
 
 ## Code Review (T431)
-- [ ] T431: Code review — fix README cross-project-reset count (1→0), regenerate ENFORCEMENT.md, version bump
+- [x] T431: Code review — fix README cross-project-reset count (1→0), regenerate ENFORCEMENT.md, version bump to 2.24.2
 
 Status:
 - Version: 2.24.1
