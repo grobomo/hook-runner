@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.23.4] — 2026-04-11
+
+### Added
+- **5 orphan modules to catalog** (T423) — blueprint-no-sleep, gh-auto-gate, no-hook-bypass, no-nested-claude, publish-json-guard. Retagged from stale workflow names (performance, security, session-management) to shtd. shtd.yml updated 85→90 modules.
+
 ## [2.23.3] — 2026-04-11
 
 ### Fixed
