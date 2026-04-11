@@ -747,6 +747,7 @@ function cmdHelp() {
   console.log("  --sync          Sync modules from GitHub per ~/.claude/hooks/modules.yaml");
   console.log("  --list          Show catalog vs installed modules with status");
   console.log("  --stats         Quick text summary of hook log activity");
+  console.log("  --lessons       Show self-analysis lessons (--project <name>, --date YYYY-MM-DD)");
   console.log("  --workflow      Manage enforceable step pipelines (list|start|status|complete|reset)");
   console.log("  --export [file] Export installed modules as shareable YAML (default: modules-export.yaml)");
   console.log("  --perf          Analyze module timing data and identify bottlenecks");
@@ -1024,6 +1025,54 @@ function cmdStats() {
     }
     console.log("");
   }
+}
+
+function cmdLessons(args) {
+  console.log("[hook-runner] Self-Analysis Lessons");
+  console.log("========================");
+  var lessonsFile = path.join(HOOKS_DIR, "self-analysis-lessons.jsonl");
+  var archiveFile = path.join(HOOKS_DIR, "self-analysis-lessons-archive.jsonl");
+
+  // Parse filters
+  var filterProject = null;
+  var filterDate = null;
+  var pidx = args.indexOf("--project");
+  if (pidx !== -1 && args[pidx + 1]) filterProject = args[pidx + 1].toLowerCase();
+  var didx = args.indexOf("--date");
+  if (didx !== -1 && args[didx + 1]) filterDate = args[didx + 1];
+  var showArchive = args.indexOf("--archive") !== -1;
+
+  var targetFile = showArchive ? archiveFile : lessonsFile;
+  if (!fs.existsSync(targetFile)) {
+    console.log("  No lessons file found at " + targetFile);
+    return;
+  }
+  var content = fs.readFileSync(targetFile, "utf-8").trim();
+  if (!content) {
+    console.log("  Lessons file is empty.");
+    return;
+  }
+  var lines = content.split("\n").filter(function(l) { return l.trim(); });
+  var lessons = [];
+  for (var i = 0; i < lines.length; i++) {
+    try {
+      var obj = JSON.parse(lines[i]);
+      if (filterProject && obj.lesson && obj.lesson.toLowerCase().indexOf(filterProject) === -1 &&
+          (!obj.session || obj.session.toLowerCase().indexOf(filterProject) === -1)) continue;
+      if (filterDate && obj.ts && obj.ts.indexOf(filterDate) !== 0) continue;
+      lessons.push(obj);
+    } catch(e) {}
+  }
+  console.log("  Total: " + lessons.length + " lesson(s)" + (showArchive ? " (archive)" : ""));
+  if (filterProject) console.log("  Filter: project contains '" + filterProject + "'");
+  if (filterDate) console.log("  Filter: date starts with '" + filterDate + "'");
+  console.log("");
+  for (var j = 0; j < lessons.length; j++) {
+    var l = lessons[j];
+    var prefix = l.ts ? "[" + l.ts.slice(0, 10) + "] " : "";
+    console.log("  " + prefix + (l.lesson || "(no lesson text)"));
+  }
+  if (lessons.length === 0) console.log("  No lessons match the given filters.");
 }
 
 function cmdList() {
@@ -1646,6 +1695,7 @@ function main() {
   if (args.indexOf("--upgrade") !== -1) return cmdUpgrade(args, dryRun);
   if (args.indexOf("--uninstall") !== -1) return cmdUninstall(args, dryRun);
   if (args.indexOf("--prune") !== -1) return cmdPrune(args, dryRun);
+  if (args.indexOf("--lessons") !== -1) return cmdLessons(args);
   if (args.indexOf("--stats") !== -1) return cmdStats();
   if (args.indexOf("--export") !== -1) return cmdExport(args);
   if (args.indexOf("--perf") !== -1) return cmdPerf();
