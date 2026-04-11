@@ -2,6 +2,16 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.24.5] — 2026-04-11
+
+### Fixed
+- **spec-before-code-gate catch-22** (T434) — Gate blocked TODO.md edits but demanded TODO.md edits. Now exempts TODO.md, SESSION_STATE.md, CLAUDE.md, and specs/ paths.
+- **cat regex false positive** (T434) — `/\bcat\s+.*>/` matched read-only cat commands when path contained special chars. Tightened to `/\bcat\s+\S+\s+>/` requiring explicit redirect.
+- **Batch module test helper validation** (T435) — `_file-modify-patterns.js` exports array, not function. Test now accepts non-function helper exports.
+
+### Changed
+- **DRY FILE_MODIFY_PATTERNS** (T435) — Extracted duplicated regex array from commit-counter-gate.js and spec-before-code-gate.js into shared `_file-modify-patterns.js` helper.
+
 ## [2.24.4] — 2026-04-11
 
 ### Fixed

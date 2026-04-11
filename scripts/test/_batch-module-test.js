@@ -17,9 +17,10 @@ function testHelper(event, name, filePath) {
   try {
     delete require.cache[require.resolve(filePath)];
     var m = require(filePath);
-    if (typeof m !== "function") { failures.push(event + "/" + name + ": helper not a function"); return; }
-    // Call with a safe default arg — helpers typically take a single value (pid, path, etc.)
-    m(0);
+    // Helpers can export functions, arrays, or objects — just verify they load
+    if (m === null || m === undefined) { failures.push(event + "/" + name + ": helper exports nothing"); return; }
+    // If it's a function, call with a safe default arg
+    if (typeof m === "function") m(0);
   } catch(e) {
     failures.push(event + "/" + name + ": helper threw: " + e.message.split("\n")[0]);
   }

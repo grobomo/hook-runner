@@ -1120,9 +1120,9 @@ Status:
 
 ## DRY & Gate Fixes (T434+)
 
-- [ ] T434: Fix spec-before-code-gate catch-22 — gate blocks TODO.md edits, but demands TODO.md edits. Exempt TODO.md/SESSION_STATE.md/spec files from the gate.
-- [ ] T435: DRY FILE_MODIFY_PATTERNS — duplicated in commit-counter-gate.js and spec-before-code-gate.js. Extract to shared helper.
-- [ ] T436: Code review pass + version bump
+- [x] T434: Fix spec-before-code-gate catch-22 + cat regex false positive — gate blocks TODO.md edits, but demands TODO.md edits. Exempt TODO.md/SESSION_STATE.md/spec files from the gate.
+- [x] T435: DRY FILE_MODIFY_PATTERNS — duplicated in commit-counter-gate.js and spec-before-code-gate.js. Extract to shared helper.
+- [x] T436: Version bump to 2.24.5 + CHANGELOG
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
