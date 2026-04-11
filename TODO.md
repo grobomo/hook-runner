@@ -704,8 +704,11 @@ Remaining:
 - 2 stale local branches (237-bookkeeping-docs-complete, 255-T390-runtime-hook-monitor) — squash-merged, need `git branch -D` (user approval)
 - Marketplace could be synced for v2.20.1 (minor fixes only)
 
+## Marketplace Sync
+- [ ] T410: Sync marketplace to v2.20.1 (T407-T409 fixes: YAML alignment, cpt-gate false positive fix, version bump)
+
 ## Status
-- 346 tasks completed, 0 pending
+- 346 tasks completed, 1 pending
 - Version: 2.20.1
 - Marketplace: claude-code-skills synced to v2.20.0 (v2.20.1 is minor fixes only)
 - CI: ALL GREEN (Linux + Windows)
