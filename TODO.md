@@ -714,10 +714,10 @@ Remaining:
 - [x] T412: Version bump to 2.20.2 + CHANGELOG for T411 + marketplace sync (PR #280)
 
 ## Hook Editing Gate
-- [ ] T413: Remove self-edit protection from hook-editing-gate + fix hardcoded paths. Hook-runner is the gatekeeper — it should be able to edit all hooks including its own gate. Other projects blocked. Hardcoded ProjectsCL1 paths replaced with env vars.
+- [x] T413: Remove self-edit protection from hook-editing-gate + fix hardcoded paths. Hook-runner is the gatekeeper — it can edit all hooks. Other projects blocked. 16 tests. (PR #282)
 
 ## Status
-- 349 tasks completed, 1 pending
+- 350 tasks completed, 0 pending
 - Version: 2.20.2
 - Marketplace: claude-code-skills synced to v2.20.2
 - CI: ALL GREEN (Linux + Windows)
