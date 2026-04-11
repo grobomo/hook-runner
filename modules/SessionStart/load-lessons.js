@@ -12,7 +12,9 @@ var CLAUDE_DIR = path.join(os.homedir(), ".claude");
 var LESSONS_FILE = path.join(CLAUDE_DIR, "hooks", "self-analysis-lessons.jsonl");
 var ERROR_LOG = path.join(CLAUDE_DIR, "self-analysis-errors.log");
 var ANALYSIS_LOG = path.join(CLAUDE_DIR, "self-analysis.log");
-var MAX_LESSONS = 10; // inject the 10 most recent
+var MAX_LESSONS = 20; // inject the 20 most recent (T352: increased from 10)
+var MAX_LINES = 200; // rotate when file exceeds this (T351)
+var ARCHIVE_FILE = path.join(CLAUDE_DIR, "hooks", "self-analysis-lessons-archive.jsonl");
 
 function checkBgErrors() {
   // Surface background script errors that the user can't see
@@ -50,7 +52,7 @@ module.exports = function(input) {
       "(3) This module (load-lessons) injects those lessons at SessionStart so you learn from past sessions.\n" +
       "(4) reflection-score.js tracks your score (clean reflections +points, corrections -points).\n" +
       "YOUR ROLE: When you learn something this session (a mistake, a better pattern, a user correction),\n" +
-      "write it to self-analysis-lessons.jsonl as a JSONL line: {\"lesson\": \"...\", \"ts\": \"ISO\", \"session\": \"id\"}.\n" +
+      "write it to ~/.claude/hooks/self-analysis-lessons.jsonl as a JSONL line: {\"lesson\": \"...\", \"ts\": \"ISO\", \"session\": \"id\"}.\n" +
       "Future sessions will see it. Do NOT reinvent the system — it already exists and runs automatically."
     );
 
@@ -60,6 +62,21 @@ module.exports = function(input) {
       parts.push("BACKGROUND SCRIPT ERRORS (auto-detected):\n" + errors +
         "\nInvestigate and fix these before they recur.");
     }
+
+    // T351: Rotate lessons file if it exceeds MAX_LINES
+    try {
+      if (fs.existsSync(LESSONS_FILE)) {
+        var allLines = fs.readFileSync(LESSONS_FILE, "utf-8").trim().split("\n");
+        if (allLines.length > MAX_LINES) {
+          var archive = allLines.slice(0, allLines.length - 100);
+          var keep = allLines.slice(-100);
+          // Append old lines to archive
+          fs.appendFileSync(ARCHIVE_FILE, archive.join("\n") + "\n");
+          // Overwrite lessons with recent 100
+          fs.writeFileSync(LESSONS_FILE, keep.join("\n") + "\n");
+        }
+      }
+    } catch(e) {}
 
     // Load lessons
     if (fs.existsSync(LESSONS_FILE)) {

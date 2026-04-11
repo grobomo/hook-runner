@@ -760,10 +760,10 @@ Perf notes: preserve-iterated-content (46ms) and secret-scan-gate (45ms) average
 - [x] T421: Version bump to 2.21.2 + CHANGELOG for T420 (PR #290)
 
 ## Cache Correctness Fix
-- [ ] T422: Fix cachedSpecScan stale hasUnchecked — editing tasks.md doesn't change parent specs/ dir mtime, so cached entries return stale hasUnchecked. Fix: re-check task content via cachedReadFile on cache hit.
+- [x] T422: Fix cachedSpecScan stale hasUnchecked — re-check task content via cachedReadFile on cache hit (~3.8ms avg, still 25x faster) (PR #291)
 
 ## Status
-- 358 tasks completed, 1 pending
+- 359 tasks completed, 0 pending
 - Version: 2.21.2
 - Marketplace: synced to v2.21.2
 - CI: ALL GREEN (Linux + Windows)
@@ -911,6 +911,22 @@ Remaining from this session's discussion:
 - [x] T347: Self-reflection buildPrompt handles no-edit sessions — shows "NO FILES EDITED" warning so claude -p analysis flags unproductive sessions.
 - [x] T348: Version bump to 2.12.0 + CHANGELOG + marketplace sync (T341-T347: UPS ban, frustration detection in runner, self-reflection improvements)
 - Duplicate T refs removed — see Bugs & Security section above for T337-T340
+
+## Self-Analysis Lessons System — Fixes Needed
+
+Context: The self-reflection → load-lessons pipeline has gaps found during ddei-e2e session (2026-04-11).
+
+- [x] T349: Fix dual lessons file — injected prompt told Claude to write to `self-analysis-lessons.jsonl` without full path. Fixed to specify `~/.claude/hooks/self-analysis-lessons.jsonl` (PR #292)
+
+- [ ] T350: Self-reflection only writes lessons for high-severity corrective feedback (user corrections). It should ALSO extract general operational lessons — patterns like "PowerShell Compress-Archive fails on file locks" or "MSYS_NO_PATHCONV blocks winpath conversion". These are discovered during normal work, not just user corrections. Add a "general lessons" extraction path in `extractCorrectiveFeedback()` or a new function.
+
+- [x] T351: Lessons rotation — when file exceeds 200 lines, archive oldest and keep recent 100. Added to load-lessons.js SessionStart module (PR #292)
+
+- [x] T352: Increased MAX_LESSONS from 10 to 20 so more lessons are injected at session start (PR #292)
+
+- [x] T353: Added `--lessons` CLI command — shows all lessons, supports `--project <name>`, `--date YYYY-MM-DD`, `--archive` filters (PR #292)
+
+- [ ] T354: Modify Stop hook text — when Claude creates TODOs in another project, the stop hook should tell it: "If you created tasks in another project, run: `touch ~/.claude/.preserve-tab` then `python C:/Users/joelg/Documents/ProjectsCL1/context-reset/context_reset.py --project-dir $CLAUDE_PROJECT_DIR` — this preserves the current tab so user can review, while a new Claude tab opens to work on the cross-project TODOs." Currently the stop hook says "Do NOT preserve the old tab unless something unusual happened" which prevents this workflow.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
