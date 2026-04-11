@@ -680,8 +680,11 @@ Remaining:
 - [x] T405: Version bump to 2.20.0 + CHANGELOG (PR #274)
 - [x] T406: Marketplace sync — copy T397-T405 changes to claude-code-skills (pushed to grobomo/claude-code-skills)
 
+## YAML Sync
+- [ ] T407: Fix workflow YAML/tag mismatches — add 3 missing modules to shtd.yml, remove stale entry from cpr workflow yml
+
 ## Status
-- 343 tasks completed, 0 pending
+- 343 tasks completed, 1 pending
 - Version: 2.20.0
 - Marketplace: claude-code-skills synced to v2.20.0
 - CI: ALL GREEN (Linux + Windows)
