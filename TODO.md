@@ -705,12 +705,12 @@ Remaining:
 - Marketplace could be synced for v2.20.1 (minor fixes only)
 
 ## Marketplace Sync
-- [ ] T410: Sync marketplace to v2.20.1 (T407-T409 fixes: YAML alignment, cpt-gate false positive fix, version bump)
+- [x] T410: Sync marketplace to v2.20.1 (T407-T409 fixes: YAML alignment, cpt-gate false positive fix, version bump) (PR #278)
 
 ## Status
-- 346 tasks completed, 1 pending
+- 347 tasks completed, 0 pending
 - Version: 2.20.1
-- Marketplace: claude-code-skills synced to v2.20.0 (v2.20.1 is minor fixes only)
+- Marketplace: claude-code-skills synced to v2.20.1
 - CI: ALL GREEN (Linux + Windows)
 - 86 modules across 5 workflows (2 active: shtd + customer-data-guard), 51 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
