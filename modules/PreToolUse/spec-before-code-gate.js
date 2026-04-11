@@ -10,16 +10,8 @@ var os = require("os");
 
 var STATE_FILE = path.join(os.homedir(), ".claude", "hooks", ".spec-before-code-state");
 
-// File-modifying Bash patterns (shared with commit-counter-gate)
-var FILE_MODIFY_PATTERNS = [
-  /\bsed\s+-i/,
-  /\bawk\s+-i/,
-  /\becho\s+.*>/,
-  /\bcat\s+.*>/,
-  /\btee\s/,
-  /\bpython[23]?\s+.*open\s*\(.*['"]\s*w/,
-  /\bprintf\s+.*>/
-];
+// File-modifying Bash patterns (shared helper — DRY with commit-counter-gate)
+var FILE_MODIFY_PATTERNS = require("./_file-modify-patterns");
 
 function readState() {
   try {
@@ -70,6 +62,18 @@ module.exports = function(input) {
   if (input.tool_name === "Bash" && /git\s+commit/.test(cmd)) {
     writeState({ lastCommitTs: Date.now(), specChecked: false });
     return null;
+  }
+
+  // Exempt spec-related files — these ARE the spec, not code
+  if (input.tool_name === "Edit" || input.tool_name === "Write") {
+    var filePath = "";
+    try {
+      filePath = (typeof input.tool_input === "string" ? JSON.parse(input.tool_input) : input.tool_input || {}).file_path || "";
+    } catch(e) { filePath = (input.tool_input || {}).file_path || ""; }
+    var baseName = path.basename(filePath);
+    if (baseName === "TODO.md" || baseName === "SESSION_STATE.md" || baseName === "CLAUDE.md" || filePath.indexOf("/specs/") !== -1 || filePath.indexOf("\\specs\\") !== -1) {
+      return null;
+    }
   }
 
   // Only check on file modifications
