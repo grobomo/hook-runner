@@ -716,8 +716,11 @@ Remaining:
 ## Hook Editing Gate
 - [x] T413: Remove self-edit protection from hook-editing-gate + fix hardcoded paths. Hook-runner is the gatekeeper — it can edit all hooks. Other projects blocked. 16 tests. (PR #282)
 
+## Docs + Release
+- [ ] T414: Update CLAUDE.md test count (49→51), version bump to 2.21.0 for T413, marketplace sync
+
 ## Status
-- 350 tasks completed, 0 pending
+- 350 tasks completed, 1 pending
 - Version: 2.20.2
 - Marketplace: claude-code-skills synced to v2.20.2
 - CI: ALL GREEN (Linux + Windows)
