@@ -195,6 +195,18 @@ RESULT=$(node -e "
 # Clean up workflow state
 node -e "var wf = require('$REPO_DIR/workflow.js'); wf.resetState('$WFTMP_WIN');" 2>/dev/null
 
+echo "[17] checkGate: resilient to missing YAML (stale workflow_path)"
+# Write a state file pointing to a non-existent YAML path
+cat > "$WFTMP/.workflow-state.json" << 'STATEEOF'
+{"workflow":"fake","workflow_path":"/tmp/does-not-exist.yml","started_at":"2026-01-01T00:00:00Z","steps":{"step1":{"status":"pending"}}}
+STATEEOF
+RESULT=$(node -e "
+  var wf = require('$REPO_DIR/workflow.js');
+  var check = wf.checkGate('step1', '$WFTMP_WIN');
+  console.log(check.allowed ? 'allowed' : 'blocked');
+" 2>/dev/null)
+[ "$RESULT" = "allowed" ] && pass "missing YAML returns allowed" || fail "got: $RESULT"
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ] || exit 1
