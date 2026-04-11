@@ -579,6 +579,46 @@ function extractCorrectiveFeedback(result, gitCtx) {
   }
 }
 
+// T350: Extract general operational lessons — patterns discovered during normal work,
+// not just user corrections. These include workarounds, tool quirks, environment
+// gotchas that are valuable to remember across sessions.
+function extractOperationalLessons(result, gitCtx) {
+  if (!result || !result.issues || result.issues.length === 0) return;
+  var ts = new Date().toISOString();
+  var project = gitCtx.project || "unknown";
+
+  for (var i = 0; i < result.issues.length; i++) {
+    var issue = result.issues[i];
+    var desc = (issue.description || "").toLowerCase();
+    // Skip corrective feedback — already handled by extractCorrectiveFeedback
+    var isCorrective = issue.severity === "high" && (
+      /user.*correct|user.*point|user.*frustrat|user.*repeat|not.*fix|wrong.*tool|skip.*root.*cause|conflat|bundle.*bug/i.test(desc) ||
+      /constraint.*reject|declared.*impossible|pushed.*back/i.test(desc)
+    );
+    if (isCorrective) continue;
+
+    // Look for operational lesson indicators — workarounds, environment issues, tool quirks
+    var isOperational = (
+      /workaround|alternative|instead.*use|fail.*on|broken.*on|doesn.t.*work|quirk|gotcha|trick|lock|timeout|path.*issue|permission|encoding/i.test(desc) ||
+      /windows|linux|bash|powershell|git.*bash|wsl|docker|npm|node/i.test(desc) && /fail|error|issue|bug|fix/i.test(desc)
+    );
+    if (!isOperational) continue;
+
+    var lesson = issue.fix || issue.description || "";
+    if (!lesson || lesson.length < 20) continue; // skip trivial
+
+    try {
+      var lessonEntry = {
+        ts: ts,
+        lesson: "[OPERATIONAL] " + lesson,
+        source: "self-reflection-T350",
+        project: project
+      };
+      fs.appendFileSync(LESSONS_FILE, JSON.stringify(lessonEntry) + "\n");
+    } catch (e) {}
+  }
+}
+
 // Auto-append TODOs to the project's TODO.md
 // This is the "motivation" mechanism — the reflection system doesn't just
 // observe, it generates actionable work. Without this, dismissed improvements
@@ -691,6 +731,9 @@ module.exports = async function(input) {
 
   // T381: Extract corrective feedback and persist as lessons
   extractCorrectiveFeedback(result, gitCtx);
+
+  // T350: Extract general operational lessons (workarounds, env quirks)
+  extractOperationalLessons(result, gitCtx);
 
   // Auto-append any TODOs the reflection identified
   if (result.todos && result.todos.length > 0) {
