@@ -1123,6 +1123,8 @@ Status:
 - [x] T434: Fix spec-before-code-gate catch-22 + cat regex false positive — gate blocks TODO.md edits, but demands TODO.md edits. Exempt TODO.md/SESSION_STATE.md/spec files from the gate.
 - [x] T435: DRY FILE_MODIFY_PATTERNS — duplicated in commit-counter-gate.js and spec-before-code-gate.js. Extract to shared helper.
 - [x] T436: Version bump to 2.24.5 + CHANGELOG
+- [ ] T437: Fix health check false failure on _prefix helper files — setup.js healthCheck treats all .js as gate modules, fails on array-exporting helpers
+- [ ] T438: Version bump to 2.24.6 + CHANGELOG + marketplace sync
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog

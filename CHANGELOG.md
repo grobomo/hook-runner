@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.24.6] — 2026-04-11
+
+### Fixed
+- **Health check false failure on helpers** (T437) — `_file-modify-patterns.js` exports array, not function. Health check now accepts `_` prefixed helpers without requiring function exports. 116 OK, 0 failures.
+
 ## [2.24.5] — 2026-04-11
 
 ### Fixed
