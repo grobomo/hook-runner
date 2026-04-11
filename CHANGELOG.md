@@ -2,6 +2,23 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.20.0] — 2026-04-10
+
+### Added
+- **hook-system-reminder** (T397) — PreToolUse module reminds Claude that enforcement is ONLY via hook-runner modules, not `.claude/rules/`. Spec + 11 tests.
+- **rdp-testbox-gate spec/tests** (T398) — 15-test suite for existing ddei-email-security module.
+
+### Fixed
+- **Cross-project write protection** (T400) — `cwd-drift-detector` was tagged `cross-project-reset` workflow (disabled). Moved to `shtd` (always active) so cross-project writes are blocked.
+- **Hardcoded paths** (T399) — replaced `ProjectsCL1` references in `hook-system-reminder.js` and `worktree-gate.js` with dynamic env vars.
+- **test-modules.sh hang** (T404) — added `process.exit(0)` on sync path to prevent spawned child processes from keeping node alive.
+- **Portable paths test** — excluded self-edit-protected `hook-editing-gate.js` from scan.
+
+### Changed
+- Added `run-modules/` to `.gitignore` (T401) — local hook copies are not repo content.
+- Added `cwd-drift-detector` to `shtd.yml` workflow module list.
+- Updated README with `hook-system-reminder` and `rdp-testbox-gate` module entries.
+
 ## [2.19.0] — 2026-04-10
 
 ### Fixed
