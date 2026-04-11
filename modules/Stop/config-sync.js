@@ -111,7 +111,7 @@ module.exports = function(input) {
   } catch (e) {
     if (defaultUser) {
       try {
-        cp.execSync("gh auth switch --user " + defaultUser + " 2>&1", {
+        cp.execFileSync("gh", ["auth", "switch", "--user", defaultUser], {
           encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 5000, windowsHide: true
         });
       } catch (e2) { /* ignore */ }
