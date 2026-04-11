@@ -742,28 +742,30 @@ What was done this session:
 ## Performance
 - [x] T419: Optimize pr-first-gate — file-based cache with 5min TTL instead of per-process gh call (~67ms→<1ms for cached lookups) (PR #288)
 
-## Session Handoff (2026-04-10e)
+## Session Handoff (2026-04-10f)
 What was done this session:
-- T415 (PR #284): Fixed T339 test for T413 self-edit change
-- T416 (PR #285): Fixed report analysis — resolveScriptPath returned run-hidden.js wrapper instead of runner
-- T417 (PR #286): Fixed analysis false positives — bare name resolution, _prefix exclusion. Score C(8)→A(0)
-- T418 (PR #287): Version bump to 2.21.1 + CHANGELOG
-- T419 (PR #288): Optimized pr-first-gate — file-based PR cache with 5min TTL (~67ms→<1ms)
-- Deleted 2 stale local branches (237, 255), pruned 6 stale remote branches
-- Synced setup.js + report.js + pr-first-gate.js to live hooks
-- Marketplace files copied to claude-code-skills (needs commit+push from that project)
-- gh auth on grobomo — SWITCH BACK to default at session start
+- T420 (PR #289): Optimized spec-gate — mtime-based caching for specs/ scan + TODO.md reads + autoActivateShtd (~98ms→2ms per call, 57x speedup)
+- T421 (PR #290): Version bump to 2.21.2 + CHANGELOG
+- Marketplace synced to v2.21.2 (claude-code-skills)
+- gh auth switched back to default (joel-ginsberg_tmemu)
+- Cleaned up report-debug.js (moved to archive/)
+- All spec-gate tests pass (38/38), batch module validation (89/89), setup wizard (7/7)
+- Health: 110 OK, 0 warnings, 0 failures
+- Workflow audit: 88 modules, all tagged, all matching YAML
 
-Remaining perf targets (from --perf): preserve-iterated-content (47ms avg), secret-scan-gate (44ms avg), spec-gate (40ms avg)
+Perf notes: preserve-iterated-content (46ms) and secret-scan-gate (45ms) averages are from historical data including git-spawning calls. Their early-exit paths are sub-millisecond (<0.01ms). Not worth optimizing further — the avg is dominated by the few times they actually do work (git rev-list, git diff --cached).
 
 ## Performance Optimization
 - [x] T420: Optimize spec-gate — mtime-based caching for specs/ scan + TODO.md reads + autoActivateShtd (~98ms→2ms per call, 57x speedup) (PR #289)
 - [x] T421: Version bump to 2.21.2 + CHANGELOG for T420 (PR #290)
 
+## Cache Correctness Fix
+- [ ] T422: Fix cachedSpecScan stale hasUnchecked — editing tasks.md doesn't change parent specs/ dir mtime, so cached entries return stale hasUnchecked. Fix: re-check task content via cachedReadFile on cache hit.
+
 ## Status
-- 358 tasks completed, 0 pending
+- 358 tasks completed, 1 pending
 - Version: 2.21.2
-- Marketplace: synced to v2.21.1
+- Marketplace: synced to v2.21.2
 - CI: ALL GREEN (Linux + Windows)
 - 88 modules across 5 workflows (2 active: shtd + customer-data-guard), 51 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject

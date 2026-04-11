@@ -56,7 +56,19 @@ function cachedSpecScan(specsDir) {
     var stat = fs.statSync(specsDir);
     var mtime = stat.mtimeMs;
     var cached = _cache.specScans[specsDir];
-    if (cached && cached.mtime === mtime) return cached.entries;
+    if (cached && cached.mtime === mtime) {
+      // T422: Directory listing is cached, but re-check task content freshness.
+      // Editing tasks.md doesn't change parent specs/ dir mtime, so hasUnchecked
+      // could be stale. cachedReadFile has its own mtime check per file.
+      for (var ci = 0; ci < cached.entries.length; ci++) {
+        if (cached.entries[ci].hasTasks) {
+          var ctPath = path.join(specsDir, cached.entries[ci].dir, "tasks.md");
+          var ctc = cachedReadFile(ctPath);
+          cached.entries[ci].hasUnchecked = ctc ? /- \[ \] T\d+/.test(ctc) : false;
+        }
+      }
+      return cached.entries;
+    }
     var specDirs = fs.readdirSync(specsDir);
     var entries = [];
     for (var j = 0; j < specDirs.length; j++) {
