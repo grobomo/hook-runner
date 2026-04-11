@@ -1050,7 +1050,7 @@ Status:
 - [x] T426: Fix stale workflow names in watchdog.js + setup.js (PR #315) — consolidated names from T313. Watchdog default, setup --yes, and test files all updated.
 
 ## Release
-- [ ] T427: Version bump to 2.23.5 + CHANGELOG for T423-T426 + marketplace sync
+- [x] T427: Version bump to 2.23.5 + CHANGELOG for T423-T426 + marketplace sync (PR #316)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
