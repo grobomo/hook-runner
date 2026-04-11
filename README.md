@@ -69,7 +69,7 @@ node setup.js --workflow query Edit        # which workflows affect Edit?
 
 | Workflow | Modules | What it enforces |
 |----------|---------|-----------------|
-| `shtd` | 69 | Spec-Hook-Test-Driven — the full development pipeline. Enforces spec → branch → test → implement → PR, plus code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement. |
+| `shtd` | 83 | Spec-Hook-Test-Driven — the full development pipeline. Enforces spec → branch → test → implement → PR, plus code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement. |
 | `customer-data-guard` | 3 | Read-only incident response — blocks env changes, data exfil, and V1 modifications. |
 | `dispatcher-worker` | 3 | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
 | `no-local-docker` | 1 | Blocks local Docker commands, forces remote infrastructure. |
@@ -307,9 +307,13 @@ Full catalog in `modules/` directory:
 | `block-local-docker` | Blocks docker/docker-compose commands |
 | `branch-pr-gate` | Enforces feature branch → task branch → PR workflow |
 | `claude-p-pattern` | Enforces correct `claude -p` invocation pattern |
+| `commit-counter-gate` | Forces commit after every 5 edits — prevents losing work on context reset |
+| `commit-quality-gate` | Blocks generic commit messages (< 5 words, "fix"/"update" without detail) |
 | `continuous-claude-gate` | Blocks code without tracked task workflow |
 | `crlf-ssh-key-check` | Blocks SSH key copy without CRLF stripping |
 | `cwd-drift-detector` | Blocks cross-project file access |
+| `deploy-gate` | Blocks deploy commands when git tree is dirty |
+| `deploy-history-reminder` | Shows last 5 commits before deploy — prevents repeating failed approaches |
 | `disk-space-guard` | Blocks destructive commands after disk space errors |
 | `enforcement-gate` | Requires git repo + TODO.md before edits |
 | `env-var-check` | Blocks edits if required env vars missing |
@@ -336,6 +340,7 @@ Full catalog in `modules/` directory:
 | `secret-scan-gate` | Blocks commits with API keys or tokens |
 | `settings-change-gate` | Requires rationale when modifying config |
 | `settings-hooks-gate` | Blocks adding hooks directly to settings.json |
+| `spec-before-code-gate` | Forces spec/TODO entry before first file modification after commit |
 | `spec-gate` | Blocks code without specs/tasks.md |
 | `task-completion-gate` | Blocks marking tasks complete without PR evidence |
 | `test-checkpoint-gate` | Blocks code without e2e test (auto-detects `scripts/test/test-TXXX*.sh`) |
