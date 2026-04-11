@@ -1007,7 +1007,11 @@ Status:
 
 ## Docs
 
-- [ ] T369: Add 5 missing modules to README catalog — commit-counter-gate, commit-quality-gate, deploy-gate, deploy-history-reminder, spec-before-code-gate. Update shtd module count from 69 to 83.
+- [x] T369: Add 5 missing modules to README catalog (PR #306) — commit-counter-gate, commit-quality-gate, deploy-gate, deploy-history-reminder, spec-before-code-gate. Update shtd module count from 69 to 83.
+
+## Packaging
+
+- [ ] T370: Add missing files to package.json — preflight.js, generate-manifest.js, run-stop-bg.js missing from `files` array, won't be included in npx installs.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
