@@ -1097,7 +1097,7 @@ Status:
 
 ## Code Review & Tags (T432)
 
-- [ ] T432: Code review — fix ES6 template literal in load-instructions.js, create 37 missing git tags (v2.9.0–v2.24.2), GitHub release for v2.24.2
+- [x] T432: Code review — fix ES6 template literal in load-instructions.js, create 37 missing git tags (v2.9.0–v2.24.2), GitHub release for v2.24.2, version bump to 2.24.3
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
