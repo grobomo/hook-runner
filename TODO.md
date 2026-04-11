@@ -1052,6 +1052,30 @@ Status:
 ## Release
 - [x] T427: Version bump to 2.23.5 + CHANGELOG for T423-T426 + marketplace sync (PR #316)
 
+## Session Handoff (2026-04-11e)
+What was done this session:
+- T423 (PR #311): Added 5 orphan modules to catalog — blueprint-no-sleep, gh-auto-gate, no-hook-bypass, no-nested-claude, publish-json-guard. Retagged to shtd. shtd.yml 85→90.
+- T425 (PR #314): Fixed hardcoded path in no-nested-claude.js
+- T426 (PR #315): Fixed stale workflow refs in watchdog.js, setup.js, tests — consolidated from T313
+- T427 (PR #316): Version bump to 2.23.5 + marketplace sync
+- Code review: ES5 clean, no security issues, no hardcoded paths (except 1 detection pattern in share-is-generic)
+- Integrity: 110 files verified, 0 orphans (was 5 at session start)
+- Health: 115 OK, 0 warnings, 0 failures
+- Watchdog + setup now reference correct workflow defaults
+- Live hooks synced (watchdog.js, setup.js)
+- gh auth on default (joel-ginsberg_tmemu)
+
+Next session (step 4 — zoom out):
+- Consider what real-world value comes next for external adopters
+- E2E pipeline test freshness (full suite takes minutes — optimize or batch)
+- Any new module patterns worth adding to catalog
+
+Status:
+- 0 pending tasks
+- Version: 2.23.5
+- 99 modules, 90 in shtd workflow
+- Clean git, marketplace synced
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
