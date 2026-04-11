@@ -731,10 +731,10 @@ What was done this session:
 - [x] T415: Fix T339 test — T413 removed self-edit protection, test still expected BLOCK. Updated to expect PASS. Synced setup.js to live. (PR #284)
 
 ## Report Analysis Fix
-- [ ] T416: Fix false coverage gaps in --report --analyze — analyzeHooks reports "No modules for X event" for all 5 events despite modules existing. Debug and fix.
+- [x] T416: Fix false coverage gaps in --report --analyze — resolveScriptPath returned run-hidden.js wrapper instead of actual runner, isRunner never matched. Fix: prefer runner paths over wrapper. (PR #285)
 
 ## Status
-- 352 tasks completed, 1 pending
+- 353 tasks completed, 0 pending
 - Version: 2.21.0
 - Marketplace: claude-code-skills synced to v2.21.0
 - CI: ALL GREEN (Linux + Windows)
