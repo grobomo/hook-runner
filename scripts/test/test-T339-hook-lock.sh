@@ -88,12 +88,12 @@ else
   fail "other project should be blocked from settings: $OUTPUT"
 fi
 
-# 4. Self-edit of hook-editing-gate.js always blocked (even from hook-runner)
+# 4. Self-edit of hook-editing-gate.js allowed from hook-runner (T413 removed self-edit protection)
 OUTPUT=$(run_gate "Edit" "$HOOKS_DIR/run-modules/PreToolUse/hook-editing-gate.js" "var x = 1;")
-if echo "$OUTPUT" | grep -q "BLOCKED.*SELF-EDIT"; then
-  pass "self-edit of hook-editing-gate.js always blocked"
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "self-edit of hook-editing-gate.js allowed from hook-runner"
 else
-  fail "self-edit should be blocked: $OUTPUT"
+  fail "self-edit should pass from hook-runner: $OUTPUT"
 fi
 
 # 5. Safe small edits to modules pass from hook-runner project
