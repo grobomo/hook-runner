@@ -976,6 +976,8 @@ Remaining:
 
 - [x] T365: Version bump to 2.23.1 + CHANGELOG for T363-T364 (PR #301)
 
+- [ ] T366: Replace execSync with execFileSync in 5 modules — eliminates shell interpretation for git/gh commands. Defense-in-depth: push-unpushed, pr-first-gate, drift-review, config-sync, hook-autocommit. (PR #302)
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type

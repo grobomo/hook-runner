@@ -76,7 +76,7 @@ module.exports = function(input) {
     if (defaultUser && !safeUser.test(defaultUser)) defaultUser = "";
 
     if (configUser) {
-      cp.execSync("gh auth switch --user " + configUser + " 2>&1", {
+      cp.execFileSync("gh", ["auth", "switch", "--user", configUser], {
         encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 5000, windowsHide: true
       });
     }
@@ -91,14 +91,14 @@ module.exports = function(input) {
     if (!/^[a-zA-Z0-9._\-\/]+$/.test(branch)) branch = "main";
 
     try {
-      cp.execSync("git push origin " + branch + " 2>&1", {
+      cp.execFileSync("git", ["push", "origin", branch], {
         cwd: claudeDir, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"],
         timeout: 15000, windowsHide: true
       });
     } finally {
       if (defaultUser) {
         try {
-          cp.execSync("gh auth switch --user " + defaultUser + " 2>&1", {
+          cp.execFileSync("gh", ["auth", "switch", "--user", defaultUser], {
             encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: 5000, windowsHide: true
           });
         } catch (e2) { /* ignore */ }
