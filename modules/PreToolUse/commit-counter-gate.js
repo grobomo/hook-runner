@@ -11,18 +11,8 @@ var os = require("os");
 var COUNTER_FILE = path.join(os.homedir(), ".claude", "hooks", ".uncommitted-edit-count");
 var MAX_EDITS = 5;
 
-// Patterns indicating file-modifying Bash commands (T360)
-var FILE_MODIFY_PATTERNS = [
-  /\bsed\s+-i/,
-  /\bawk\s+-i/,
-  /\becho\s+.*>/,
-  /\bcat\s+.*>/,
-  /\btee\s/,
-  /\bpython[23]?\s+.*open\s*\(.*['"]\s*w/,
-  /\bprintf\s+.*>/,
-  /\bcp\s+/,
-  /\bmv\s+/
-];
+// Patterns indicating file-modifying Bash commands (shared helper — DRY with spec-before-code-gate)
+var FILE_MODIFY_PATTERNS = require("./_file-modify-patterns");
 
 function readCounter() {
   try {

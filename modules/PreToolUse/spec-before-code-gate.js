@@ -10,16 +10,8 @@ var os = require("os");
 
 var STATE_FILE = path.join(os.homedir(), ".claude", "hooks", ".spec-before-code-state");
 
-// File-modifying Bash patterns (shared with commit-counter-gate)
-var FILE_MODIFY_PATTERNS = [
-  /\bsed\s+-i/,
-  /\bawk\s+-i/,
-  /\becho\s+.*>/,
-  /\bcat\s+\S+\s+>/,
-  /\btee\s/,
-  /\bpython[23]?\s+.*open\s*\(.*['"]\s*w/,
-  /\bprintf\s+.*>/
-];
+// File-modifying Bash patterns (shared helper — DRY with commit-counter-gate)
+var FILE_MODIFY_PATTERNS = require("./_file-modify-patterns");
 
 function readState() {
   try {
