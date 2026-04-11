@@ -48,6 +48,9 @@ runAsync.runModules(modules, input,
     if (result && result.decision === "block") {
       hookLog.logHook("Stop", modName, "block", Object.assign({}, ctx, { reason: result.reason, ms: ms }));
     } else {
+      if (result && result.text) {
+        process.stderr.write(result.text + "\n");
+      }
       hookLog.logHook("Stop", modName, "pass", Object.assign({}, ctx, { ms: ms }));
     }
     return false;
