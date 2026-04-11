@@ -260,9 +260,23 @@ function resolveScriptPath(cmd) {
   if (allPaths.length === 0) return null;
   // Prefer the actual runner over run-hidden.js wrapper
   var runnerRe = /run-(pretooluse|posttooluse|stop|sessionstart|userpromptsubmit)\.js$/i;
+  // Find the wrapper's directory (first quoted full path) to resolve bare runner names
+  var wrapperDir = "";
+  for (var wi = 0; wi < allPaths.length; wi++) {
+    var resolved = allPaths[wi].replace(/\$HOME/g, HOME).replace(/~/g, HOME);
+    if (resolved.indexOf("/") !== -1 || resolved.indexOf("\\") !== -1) {
+      wrapperDir = path.dirname(resolved);
+      break;
+    }
+  }
   for (var ri = 0; ri < allPaths.length; ri++) {
     if (runnerRe.test(allPaths[ri])) {
-      return allPaths[ri].replace(/\$HOME/g, HOME).replace(/~/g, HOME);
+      var rp = allPaths[ri].replace(/\$HOME/g, HOME).replace(/~/g, HOME);
+      // If bare name (no directory), resolve relative to wrapper dir
+      if (wrapperDir && rp.indexOf("/") === -1 && rp.indexOf("\\") === -1) {
+        rp = path.join(wrapperDir, rp);
+      }
+      return rp;
     }
   }
   return null;
