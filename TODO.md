@@ -1070,8 +1070,10 @@ What was done this session:
 - [x] T429: Adoption polish — modules.example.yaml reorganized, report.js/generate-manifest.js multi-tag fix (PR #320)
 - [x] T430: Version bump to 2.24.1 + SKILL.md starter keyword + CHANGELOG
 
+## Code Review (T431)
+- [x] T431: Code review — fix README cross-project-reset count (1→0), regenerate ENFORCEMENT.md, version bump to 2.24.2
+
 Status:
-- 0 pending tasks
 - Version: 2.24.1
 - 99 modules, 90 in shtd workflow, 11 in starter workflow (shared via multi-tag)
 - Clean git, marketplace synced

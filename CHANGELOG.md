@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.24.2] — 2026-04-11
+
+### Fixed
+- **README cross-project-reset count** (T431) — Listed 1 module but YAML and audit show 0 (cwd-drift-detector moved to shtd in T400).
+- **ENFORCEMENT.md** (T431) — Regenerated with current module counts (95→100).
+
 ## [2.24.1] — 2026-04-11
 
 ### Fixed
