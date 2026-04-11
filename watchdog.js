@@ -23,7 +23,7 @@ var configFile = getArg("--config") || path.join(hooksDir, "watchdog-config.json
 
 // --- Load watchdog config (what "healthy" looks like) ---
 var DEFAULT_CONFIG = {
-  required_workflows: ["shtd", "code-quality", "self-improvement", "session-management", "messaging-safety"],
+  required_workflows: ["shtd", "customer-data-guard"],
   required_runners: [
     "run-pretooluse.js", "run-posttooluse.js", "run-stop.js",
     "run-sessionstart.js", "run-userpromptsubmit.js",
