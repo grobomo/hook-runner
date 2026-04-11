@@ -656,6 +656,24 @@ no test caught because tests only validated modules in isolation, not the full p
 - [x] T403b: E2E pipeline tests — pipe real input through run-hidden.js → runner → modules, verify block/pass output. Tests the full pipeline including timeouts. Cover every rule in the manifest. (PR #265)
 - [x] T403c: Preflight check — runs at session start or on demand. Reports: X rules active, Y tested in last 24h, Z never fired. Flags dead rules. (PR #265)
 
+## Session Handoff (2026-04-10b)
+What was done this session:
+- T397 (PR #268): Formalized hook-system-reminder — spec + 11 tests + catalog copy
+- T398 (PR #269): Formalized rdp-testbox-gate — spec + 15 tests
+- T399 (PR #272): Fixed hardcoded paths in hook-system-reminder + worktree-gate, updated README
+- T400 (PR #270): Fixed cross-project write protection — cwd-drift-detector moved to shtd workflow
+- T401 (PR #271): Added run-modules/ to .gitignore
+- T402: Verified deployed copies match catalog
+- T404 (PR #273): Fixed test-modules.sh hang on sync path
+- T405 (PR #274): Version bump to 2.20.0 + CHANGELOG
+- Code review: fixed 2/3 failing test suites (portable-paths, module-docs)
+- Cleaned up 3 stale local branches
+
+Remaining:
+- T406: Marketplace sync (cross-project, documented in claude-code-skills TODO.md T003)
+- 2 stale local branches (237-bookkeeping-docs-complete, 255-T390-runtime-hook-monitor) — squash-merged, harmless
+- hook-editing-gate.js has hardcoded ProjectsCL1 paths — requires manual edit (self-edit protection)
+
 ## Test & Release (T404+)
 
 - [x] T404: Fix test-modules.sh hang — add process.exit(0) on sync path (PR #273)
