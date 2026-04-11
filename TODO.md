@@ -948,6 +948,8 @@ Design principle: gate on ALL tools via PreToolUse (not just Edit/Write). Claude
 
 - [x] T360: **Anti-circumvention patterns** — Both commit-counter-gate and spec-before-code-gate detect file-modifying Bash patterns: sed -i, awk -i, echo >, cat >, tee, python open write, printf >, cp, mv (PR #296)
 
+- [x] T361: Version bump to 2.23.0 + CHANGELOG for T355-T360 commit discipline gates (PR #297)
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
