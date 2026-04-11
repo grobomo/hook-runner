@@ -727,12 +727,15 @@ What was done this session:
 ## Docs + Release
 - [x] T414: Update CLAUDE.md test count (49→51), version bump to 2.21.0 for T413, marketplace sync (PR #283)
 
+## Test & Sync Fixes
+- [ ] T415: Fix T339 test — T413 removed self-edit protection, test still expected BLOCK. Updated to expect PASS. Synced setup.js to live.
+
 ## Status
-- 351 tasks completed, 0 pending
+- 352 tasks completed, 0 pending
 - Version: 2.21.0
 - Marketplace: claude-code-skills synced to v2.21.0
 - CI: ALL GREEN (Linux + Windows)
-- 86 modules across 5 workflows (2 active: shtd + customer-data-guard), 51 test suites
+- 88 modules across 5 workflows (2 active: shtd + customer-data-guard), 51 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
 - Scoring: Novice→Master levels, intervention tracking, full audit logging
 - Health: 110 OK, 0 warnings, 0 failures
