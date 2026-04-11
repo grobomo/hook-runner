@@ -16,13 +16,13 @@ echo "[1] load-modules.js exports a function"
 node -e "var lm = require('$REPO_DIR/load-modules.js'); if (typeof lm !== 'function') throw new Error('not a function');" 2>/dev/null && pass "load-modules exports function" || fail "load-modules not a function"
 
 # Test 2: load-modules returns array for existing dir
-echo "[2] load-modules returns array for run-modules/PreToolUse"
-COUNT=$(node -e "var lm = require('$REPO_DIR/load-modules.js'); var r = lm('$REPO_DIR/run-modules/PreToolUse'); console.log(r.length);" 2>/dev/null)
+echo "[2] load-modules returns array for modules/PreToolUse"
+COUNT=$(node -e "var lm = require('$REPO_DIR/load-modules.js'); var r = lm('$REPO_DIR/modules/PreToolUse'); console.log(r.length);" 2>/dev/null)
 if [ "$COUNT" -gt 0 ]; then pass "found $COUNT PreToolUse modules"; else fail "no modules found"; fi
 
 # Test 3: load-modules returns empty for nonexistent dir
 echo "[3] load-modules returns empty for nonexistent dir"
-COUNT=$(node -e "var lm = require('$REPO_DIR/load-modules.js'); var r = lm('$REPO_DIR/run-modules/FakeEvent'); console.log(r.length);" 2>/dev/null)
+COUNT=$(node -e "var lm = require('$REPO_DIR/load-modules.js'); var r = lm('$REPO_DIR/modules/FakeEvent'); console.log(r.length);" 2>/dev/null)
 if [ "$COUNT" -eq 0 ]; then pass "empty for fake dir"; else fail "returned $COUNT for fake dir"; fi
 
 # Test 4: Each runner script exists and has shebang
@@ -48,7 +48,7 @@ done
 
 # Test 6: Example modules export functions
 echo "[6] Example modules export functions"
-for mod in run-modules/PreToolUse/enforcement-gate.js run-modules/Stop/auto-continue.js run-modules/PostToolUse/rule-hygiene.js; do
+for mod in modules/PreToolUse/enforcement-gate.js modules/Stop/auto-continue.js modules/PostToolUse/rule-hygiene.js; do
   if [ -f "$BASH_DIR/$mod" ]; then
     node -e "var m = require('$REPO_DIR/$mod'); if (typeof m !== 'function') throw new Error('not a function');" 2>/dev/null && pass "$mod exports function" || fail "$mod not a function"
   else
