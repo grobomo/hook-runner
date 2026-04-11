@@ -2,6 +2,17 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.23.0] — 2026-04-11
+
+### Added
+- **Commit discipline gates** (T355-T360) — 5 new PreToolUse modules:
+  - `commit-counter-gate` — Blocks after 5 file modifications without commit. Cross-checks git diff.
+  - `deploy-gate` — Blocks deploy commands when git tree is dirty.
+  - `commit-quality-gate` — Blocks short/generic commit messages.
+  - `spec-before-code-gate` — Blocks first edit without TODO task or recent descriptive commit.
+  - `deploy-history-reminder` — Non-blocking advisory showing recent commits before deploy.
+- Anti-circumvention Bash patterns in counter and spec gates (T360).
+
 ## [2.22.0] — 2026-04-11
 
 ### Added
