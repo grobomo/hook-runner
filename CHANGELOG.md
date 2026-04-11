@@ -2,6 +2,14 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.24.3] — 2026-04-11
+
+### Fixed
+- **ES6 template literal in load-instructions.js** (T432) — Replaced backtick template with ES5 string concatenation for consistency.
+
+### Added
+- **37 missing git tags** (T432) — Created and pushed tags for v2.9.0 through v2.24.2. GitHub release for v2.24.2.
+
 ## [2.24.2] — 2026-04-11
 
 ### Fixed
