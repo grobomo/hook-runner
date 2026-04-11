@@ -68,8 +68,9 @@ module.exports = function(input) {
   // Check for cross-project references in unchecked TODOs only
   var issues = [];
 
-  // Pattern 1: Explicit "cross-project" marker
-  if (todoContent.indexOf("cross-project") >= 0 || todoContent.indexOf("Cross-project") >= 0) {
+  // Pattern 1: Explicit "cross-project" marker (standalone phrase, not part of
+  // hyphenated compound words like workflow names e.g. "cross-project-reset")
+  if (/cross-project(?![-\w])/i.test(todoContent)) {
     issues.push("Contains 'cross-project' marker");
   }
 
