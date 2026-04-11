@@ -89,6 +89,7 @@ for event_dir in "$REPO_DIR"/modules/*/; do
           setTimeout(function() { console.log('timeout'); process.exit(0); }, 5000);
         } else {
           console.log(r === null ? 'null' : typeof r);
+          process.exit(0);
         }
       } catch(e) {
         console.log('error: ' + e.message);
