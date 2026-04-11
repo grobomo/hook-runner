@@ -51,6 +51,17 @@ var VERSION = require(path.join(__dirname, "package.json")).version;
 // Shared file lists — single source of truth (see constants.js)
 var RUNNER_FILES = require(path.join(__dirname, "constants.js")).RUNNER_FILES;
 
+// Safe settings.json reader — returns {} on corrupt/missing file
+function readSettings() {
+  if (!fs.existsSync(SETTINGS_PATH)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf-8"));
+  } catch (e) {
+    console.error("WARNING: " + SETTINGS_PATH + " is corrupt — " + e.message);
+    return {};
+  }
+}
+
 // ============================================================
 // 0. Hook Log Stats
 // ============================================================
@@ -170,10 +181,10 @@ function pruneLog(days, dryRun) {
 // ============================================================
 
 function scanHooks() {
-  if (!fs.existsSync(SETTINGS_PATH)) {
+  var settings = readSettings();
+  if (!settings.hooks) {
     return { events: {}, totalHooks: 0, totalMatchers: 0, scripts: [] };
   }
-  var settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf-8"));
   var hooks = settings.hooks || {};
   var events = {};
   var totalHooks = 0;
@@ -309,8 +320,8 @@ function backupHooks(scan) {
   };
 
   // Backup settings.json hooks section
-  if (fs.existsSync(SETTINGS_PATH)) {
-    var settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf-8"));
+  var settings = readSettings();
+  if (Object.keys(settings).length > 0) {
     manifest.settingsHooks = settings.hooks || {};
     fs.writeFileSync(
       path.join(backupDir, "hooks-backup.json"),
@@ -412,11 +423,7 @@ function installRunners(dryRun) {
 
 function updateSettings(dryRun) {
   var changes = [];
-  var settings = {};
-  if (fs.existsSync(SETTINGS_PATH)) {
-    settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf-8"));
-  }
-
+  var settings = readSettings();
   if (!settings.hooks) settings.hooks = {};
 
   // T387/T393: On Windows, use run-hidden.js wrapper to prevent console window focus steal.
@@ -861,37 +868,35 @@ function cmdUninstall(args, dryRun) {
   if (dryRun) console.log("  (dry-run mode — no changes will be made)");
   console.log("");
   var uninstallChanges = [];
-  if (fs.existsSync(SETTINGS_PATH)) {
-    var settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf-8"));
-    if (settings.hooks) {
-      var hookEvents = Object.keys(settings.hooks);
-      var runnerPattern = /run-(pretooluse|posttooluse|stop|sessionstart|userpromptsubmit)\.js/;
-      var keptEvents = {};
-      for (var ui = 0; ui < hookEvents.length; ui++) {
-        var evt = hookEvents[ui];
-        var entries = settings.hooks[evt];
-        if (!Array.isArray(entries)) { keptEvents[evt] = entries; continue; }
-        var kept = entries.filter(function(entry) {
-          var hooks = entry.hooks || [];
-          return !hooks.some(function(h) { return h.command && runnerPattern.test(h.command); });
-        });
-        if (kept.length > 0) {
-          keptEvents[evt] = kept;
-          uninstallChanges.push({ what: "settings.json " + evt, status: "kept " + kept.length + " non-runner entry(s)" });
-        } else {
-          uninstallChanges.push({ what: "settings.json " + evt, status: "removed" });
-        }
-      }
-      settings.hooks = keptEvents;
-      if (Object.keys(keptEvents).length === 0) delete settings.hooks;
-      if (!dryRun) {
-        fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2), "utf-8");
-      }
-    } else {
-      uninstallChanges.push({ what: "settings.json", status: "no hooks section found" });
-    }
+  var settings = readSettings();
+  if (Object.keys(settings).length === 0) {
+    uninstallChanges.push({ what: "settings.json", status: "not found or corrupt" });
+  } else if (!settings.hooks) {
+    uninstallChanges.push({ what: "settings.json", status: "no hooks section found" });
   } else {
-    uninstallChanges.push({ what: "settings.json", status: "not found" });
+    var hookEvents = Object.keys(settings.hooks);
+    var runnerPattern = /run-(pretooluse|posttooluse|stop|sessionstart|userpromptsubmit)\.js/;
+    var keptEvents = {};
+    for (var ui = 0; ui < hookEvents.length; ui++) {
+      var evt = hookEvents[ui];
+      var entries = settings.hooks[evt];
+      if (!Array.isArray(entries)) { keptEvents[evt] = entries; continue; }
+      var kept = entries.filter(function(entry) {
+        var hooks = entry.hooks || [];
+        return !hooks.some(function(h) { return h.command && runnerPattern.test(h.command); });
+      });
+      if (kept.length > 0) {
+        keptEvents[evt] = kept;
+        uninstallChanges.push({ what: "settings.json " + evt, status: "kept " + kept.length + " non-runner entry(s)" });
+      } else {
+        uninstallChanges.push({ what: "settings.json " + evt, status: "removed" });
+      }
+    }
+    settings.hooks = keptEvents;
+    if (Object.keys(keptEvents).length === 0) delete settings.hooks;
+    if (!dryRun) {
+      fs.writeFileSync(SETTINGS_PATH, JSON.stringify(settings, null, 2), "utf-8");
+    }
   }
   var runnerFiles = RUNNER_FILES.concat(["setup.js", "report.js"]);
   for (var uf = 0; uf < runnerFiles.length; uf++) {
