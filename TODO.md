@@ -728,7 +728,7 @@ What was done this session:
 - [x] T414: Update CLAUDE.md test count (49→51), version bump to 2.21.0 for T413, marketplace sync (PR #283)
 
 ## Test & Sync Fixes
-- [ ] T415: Fix T339 test — T413 removed self-edit protection, test still expected BLOCK. Updated to expect PASS. Synced setup.js to live.
+- [x] T415: Fix T339 test — T413 removed self-edit protection, test still expected BLOCK. Updated to expect PASS. Synced setup.js to live. (PR #284)
 
 ## Status
 - 352 tasks completed, 0 pending
