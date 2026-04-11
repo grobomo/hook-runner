@@ -700,9 +700,17 @@ What was done this session:
 - Pruned 37 stale remote branches
 
 Remaining:
-- hook-editing-gate.js has 2 hardcoded ProjectsCL1 paths in block messages (lines 115, 165) — self-edit protected, requires manual user fix
 - 2 stale local branches (237-bookkeeping-docs-complete, 255-T390-runtime-hook-monitor) — squash-merged, need `git branch -D` (user approval)
-- Marketplace could be synced for v2.20.1 (minor fixes only)
+
+## Session Handoff (2026-04-10d)
+What was done this session:
+- T410 (PR #278): Marketplace synced to v2.20.1
+- T411 (PR #279): Fixed workflow-gate 87 errors — checkGate resilient to missing YAML + stale path fix
+- T412 (PR #280): Version bump to 2.20.2
+- T413 (PR #282): Removed self-edit protection from hook-editing-gate. Hook-runner is the gatekeeper — it can now edit all hooks. Other projects blocked. Hardcoded paths fixed. 16 tests.
+- T414 (PR #283): Version bump to 2.21.0, CLAUDE.md test count fix, marketplace synced
+- Previous session logs reviewed — no abandoned tangents found
+- Code review: ES5 clean, security clean, config-sync latency acceptable (debounced)
 
 ## Marketplace Sync
 - [x] T410: Sync marketplace to v2.20.1 (T407-T409 fixes: YAML alignment, cpt-gate false positive fix, version bump) (PR #278)
