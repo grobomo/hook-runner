@@ -51,6 +51,17 @@ var VERSION = require(path.join(__dirname, "package.json")).version;
 // Shared file lists — single source of truth (see constants.js)
 var RUNNER_FILES = require(path.join(__dirname, "constants.js")).RUNNER_FILES;
 
+// Safe settings.json reader — returns {} on corrupt/missing file
+function readSettings() {
+  if (!fs.existsSync(SETTINGS_PATH)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf-8"));
+  } catch (e) {
+    console.error("WARNING: " + SETTINGS_PATH + " is corrupt — " + e.message);
+    return {};
+  }
+}
+
 // ============================================================
 // 0. Hook Log Stats
 // ============================================================
@@ -170,10 +181,10 @@ function pruneLog(days, dryRun) {
 // ============================================================
 
 function scanHooks() {
-  if (!fs.existsSync(SETTINGS_PATH)) {
+  var settings = readSettings();
+  if (!settings.hooks) {
     return { events: {}, totalHooks: 0, totalMatchers: 0, scripts: [] };
   }
-  var settings = JSON.parse(fs.readFileSync(SETTINGS_PATH, "utf-8"));
   var hooks = settings.hooks || {};
   var events = {};
   var totalHooks = 0;
