@@ -1043,7 +1043,7 @@ Status:
 - [x] T423: Add 5 orphan modules to catalog (PR #311) — blueprint-no-sleep, gh-auto-gate, no-hook-bypass, no-nested-claude, publish-json-guard. Retagged to shtd. shtd.yml 85→90. README +5 rows.
 
 ## Release
-- [ ] T424: Version bump to 2.23.4 + CHANGELOG for T423 + marketplace sync
+- [x] T424: Version bump to 2.23.4 + CHANGELOG for T423 + marketplace sync (PR #312)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
