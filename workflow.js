@@ -254,7 +254,10 @@ function checkGate(stepId, projectDir) {
   var state = readState(projectDir);
   if (!state) return { allowed: true, reason: "no active workflow" };
 
-  var def = loadWorkflow(state.workflow_path);
+  var def;
+  try { def = loadWorkflow(state.workflow_path); } catch(e) {
+    return { allowed: true, reason: "workflow YAML not found: " + state.workflow_path };
+  }
   var stepDef = null;
   for (var i = 0; i < def.steps.length; i++) {
     if (def.steps[i].id === stepId) { stepDef = def.steps[i]; break; }
