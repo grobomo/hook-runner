@@ -73,15 +73,15 @@ module.exports = function(input) {
   // Get recent uncommitted changes
   var diff = "";
   try {
-    diff = cp.execSync("git diff --stat HEAD 2>/dev/null || true", {
-      cwd: projectDir, encoding: "utf8", timeout: 5000, windowsHide: true
+    diff = cp.execFileSync("git", ["diff", "--stat", "HEAD"], {
+      cwd: projectDir, encoding: "utf8", timeout: 5000, windowsHide: true, stdio: ["pipe", "pipe", "pipe"]
     }).trim();
   } catch (e) {}
 
   var uncommitted = "";
   try {
-    uncommitted = cp.execSync("git status --porcelain 2>/dev/null || true", {
-      cwd: projectDir, encoding: "utf8", timeout: 5000, windowsHide: true
+    uncommitted = cp.execFileSync("git", ["status", "--porcelain"], {
+      cwd: projectDir, encoding: "utf8", timeout: 5000, windowsHide: true, stdio: ["pipe", "pipe", "pipe"]
     }).trim();
   } catch (e) {}
 

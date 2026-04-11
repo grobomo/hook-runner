@@ -72,9 +72,8 @@ module.exports = function(input) {
   }
   if (cached === undefined) {
     try {
-      var result = cp.execSync(
-        "gh_auto pr list --head " + branch + " --state open --json number --limit 1",
-        { cwd: process.cwd(), encoding: "utf-8", timeout: 5000, windowsHide: true }
+      var result = cp.execFileSync("gh_auto", ["pr", "list", "--head", branch, "--state", "open", "--json", "number", "--limit", "1"],
+        { cwd: process.cwd(), encoding: "utf-8", timeout: 5000, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] }
       ).trim();
       var prs = JSON.parse(result || "[]");
       var hasPR = prs.length > 0;

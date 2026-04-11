@@ -21,10 +21,8 @@ module.exports = function(input) {
   // Auto-commit the change
   try {
     var fileName = filePath.split("/run-modules/")[1] || path.basename(filePath);
-    child_process.execSync(
-      'git add -A && git commit -m "auto: update ' + fileName.replace(/"/g, '\\"') + '"',
-      { cwd: MODULES_DIR, stdio: "ignore", timeout: 5000, windowsHide: true }
-    );
+    child_process.execFileSync("git", ["add", "-A"], { cwd: MODULES_DIR, stdio: "ignore", timeout: 5000, windowsHide: true });
+    child_process.execFileSync("git", ["commit", "-m", "auto: update " + fileName], { cwd: MODULES_DIR, stdio: "ignore", timeout: 5000, windowsHide: true });
   } catch (e) {
     // No changes or git error — silent
   }

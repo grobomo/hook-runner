@@ -23,7 +23,7 @@ module.exports = function(input) {
       };
     }
 
-    var unpushed = cp.execSync("git log " + remote + "/" + branch + "..HEAD --oneline 2>/dev/null", { cwd: process.cwd(), encoding: "utf-8", windowsHide: true }).trim();
+    var unpushed = cp.execFileSync("git", ["log", remote + "/" + branch + "..HEAD", "--oneline"], { cwd: process.cwd(), encoding: "utf-8", windowsHide: true, stdio: ["pipe", "pipe", "pipe"] }).trim();
     if (unpushed) {
       var count = unpushed.split("\n").length;
       return {
