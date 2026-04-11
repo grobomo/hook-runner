@@ -1379,6 +1379,9 @@ function generateReport(scan, outputPath, hookStats, options) {
       var aModList = [];
       for (var ami = 0; ami < aMods.length; ami++) {
         if (aMods[ami].archived) continue;
+        // Skip _prefix helper files (shared utilities, not modules)
+        var aBaseName = aMods[ami].name.replace(/^.*\//, "");
+        if (aBaseName.charAt(0) === "_") continue;
         var aModName = aMods[ami].name.replace(/\.js$/, "");
         var aStatsKey = aEvt + "/" + aModName;
         aModList.push({

@@ -733,8 +733,11 @@ What was done this session:
 ## Report Analysis Fix
 - [x] T416: Fix false coverage gaps in --report --analyze — resolveScriptPath returned run-hidden.js wrapper instead of actual runner, isRunner never matched. Fix: prefer runner paths over wrapper. (PR #285)
 
+## Analysis Quality
+- [ ] T417: Fix analysis false positives — exclude _prefix helpers from WHY/WORKFLOW checks, exclude archived modules from DRY detection, improve score accuracy.
+
 ## Status
-- 353 tasks completed, 0 pending
+- 353 tasks completed, 1 pending
 - Version: 2.21.0
 - Marketplace: claude-code-skills synced to v2.21.0
 - CI: ALL GREEN (Linux + Windows)
