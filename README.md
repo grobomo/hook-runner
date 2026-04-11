@@ -58,6 +58,28 @@ node setup.js --workflow enable shtd    # 90 modules: spec-first, test-first, PR
 
 To undo everything: `node setup.js --uninstall --confirm`
 
+## What does a block look like?
+
+When Claude tries something a module blocks, the hook fires and Claude sees the block reason inline. Two examples from the `starter` workflow:
+
+**Force push blocked:**
+```
+BLOCKED: Force-push to main is destructive and irreversible.
+Use a regular push or create a revert commit instead.
+```
+
+**Destructive git command blocked:**
+```
+DESTRUCTIVE: git reset --hard destroys uncommitted changes permanently.
+Alternatives:
+  git stash        — save changes for later
+  git reset --soft — move HEAD but keep changes staged
+  git checkout <file> — revert specific files only
+If you truly need --hard, ask the user first.
+```
+
+Claude reads the block message and adjusts its approach — no user intervention needed. Modules that pass return `null` silently, so there's zero overhead on normal operations.
+
 ## Workflows
 
 Workflows are the primary abstraction. Instead of managing 80+ individual modules, you enable a workflow and its modules activate automatically.

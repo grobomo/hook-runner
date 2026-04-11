@@ -1149,6 +1149,7 @@ Status:
 ## Session Maintenance (2026-04-11i)
 
 - [x] T439: Session maintenance — health 116/0/0, no incomplete tangents, stop-message.txt portability fix (hardcoded path → $CONTEXT_RESET_PY env var)
+- [x] T440: Add "What does a block look like?" example to README — force-push and git-destructive-guard examples (PR #328)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
