@@ -658,14 +658,14 @@ no test caught because tests only validated modules in isolation, not the full p
 
 ## Test & Release (T404+)
 
-- [ ] T404: Fix test-modules.sh hang on Stop/auto-continue.js — module spawns detached process, test runner waits forever. Add timeout per-module or skip async Stop modules in batch test.
-- [ ] T405: Version bump to 2.20.0 + CHANGELOG (T397-T402 formalization, T400 cwd-drift fix, portable paths)
-- [ ] T406: Marketplace sync — copy T397-T402 changes to claude-code-skills (also covers T002/T003 from claude-code-skills TODO)
+- [x] T404: Fix test-modules.sh hang — add process.exit(0) on sync path (PR #273)
+- [ ] T405: Version bump to 2.20.0 + CHANGELOG (T397-T404)
+- [ ] T406: Marketplace sync — copy T397-T405 changes to claude-code-skills
 
 ## Status
-- 339 tasks completed, 3 pending
-- Version: 2.19.0
-- Marketplace: claude-code-skills synced to v2.19.0
+- 341 tasks completed, 1 pending
+- Version: 2.20.0
+- Marketplace: claude-code-skills synced to v2.19.0 (T406 pending)
 - CI: ALL GREEN (Linux + Windows)
 - 86 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
