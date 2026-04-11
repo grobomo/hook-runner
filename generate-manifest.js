@@ -68,8 +68,8 @@ for (var ei = 0; ei < EVENTS.length; ei++) {
       ? whyMatch[1].replace(/\n\/\/\s*/g, " ").trim()
       : "(no WHY comment)";
 
-    var workflowMatch = src.match(/\/\/\s*WORKFLOW:\s*(\S+)/);
-    var workflow = workflowMatch ? workflowMatch[1] : "untagged";
+    var workflowMatch = src.match(/\/\/\s*WORKFLOW:\s*(.+)/);
+    var workflow = workflowMatch ? workflowMatch[1].replace(/\s+$/, "") : "untagged";
 
     // Determine module role
     var role;
