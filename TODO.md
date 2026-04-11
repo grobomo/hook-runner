@@ -1148,7 +1148,7 @@ Status:
 
 ## Session Maintenance (2026-04-11i)
 
-- [ ] T439: Session maintenance — health check, log scan for incomplete tangents, code review pass, optimize if needed
+- [x] T439: Session maintenance — health 116/0/0, no incomplete tangents, stop-message.txt portability fix (hardcoded path → $CONTEXT_RESET_PY env var)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
