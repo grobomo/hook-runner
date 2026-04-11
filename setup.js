@@ -205,7 +205,10 @@ function scanHooks() {
         var cmd = h.command || "";
         var scriptPath = resolveScriptPath(cmd);
         var exists = scriptPath ? fs.existsSync(scriptPath) : false;
-        var isRunner = scriptPath ? /run-(pretooluse|posttooluse|stop|sessionstart|userpromptsubmit)\.js$/i.test(scriptPath) : false;
+        // T416: run-hidden.js wrapper means scriptPath resolves to run-hidden.js, not the actual runner.
+        // Check both the resolved path and the full command string for the runner pattern.
+        var runnerPattern = /run-(pretooluse|posttooluse|stop|sessionstart|userpromptsubmit)\.js/i;
+        var isRunner = scriptPath ? runnerPattern.test(scriptPath) || runnerPattern.test(cmd) : false;
 
         var info = {
           event: event,
@@ -243,15 +246,23 @@ function scanHooks() {
 
 function resolveScriptPath(cmd) {
   // Extract script path from command like: node "$HOME/.claude/hooks/run-stop.js"
-  var match = cmd.match(/["']([^"']+\.(js|sh|py))["']/);
-  if (match) {
-    return match[1].replace(/\$HOME/g, HOME).replace(/~/g, HOME);
-  }
-  // Try bare path after "node "
+  // T416: For run-hidden.js wrapper commands like: node "...run-hidden.js" run-stop.js
+  // collect all .js paths and prefer the actual runner over the wrapper.
+  var allPaths = [];
+  var re = /["']([^"']+\.(js|sh|py))["']/g;
+  var m;
+  while ((m = re.exec(cmd)) !== null) allPaths.push(m[1]);
   var parts = cmd.split(/\s+/);
-  for (var i = 0; i < parts.length; i++) {
-    if (/\.(js|sh|py)$/.test(parts[i])) {
-      return parts[i].replace(/\$HOME/g, HOME).replace(/~/g, HOME);
+  for (var pi = 0; pi < parts.length; pi++) {
+    var p = parts[pi].replace(/^["']|["']$/g, "");
+    if (/\.(js|sh|py)$/.test(p) && allPaths.indexOf(p) === -1) allPaths.push(p);
+  }
+  if (allPaths.length === 0) return null;
+  // Prefer the actual runner over run-hidden.js wrapper
+  var runnerRe = /run-(pretooluse|posttooluse|stop|sessionstart|userpromptsubmit)\.js$/i;
+  for (var ri = 0; ri < allPaths.length; ri++) {
+    if (runnerRe.test(allPaths[ri])) {
+      return allPaths[ri].replace(/\$HOME/g, HOME).replace(/~/g, HOME);
     }
   }
   return null;
