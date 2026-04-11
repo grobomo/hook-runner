@@ -756,8 +756,12 @@ What was done this session:
 
 Remaining perf targets (from --perf): preserve-iterated-content (47ms avg), secret-scan-gate (44ms avg), spec-gate (40ms avg)
 
+## Performance Optimization
+- [ ] T420: Optimize spec-gate — cache specs/ directory scan with mtime invalidation (~62ms→<1ms for cached), cache autoActivateShtd result per session (~7ms→0ms)
+- [ ] T421: Version bump + CHANGELOG
+
 ## Status
-- 356 tasks completed, 0 pending
+- 356 tasks completed, 2 pending
 - Version: 2.21.1
 - Marketplace: needs sync to v2.21.1
 - CI: ALL GREEN (Linux + Windows)

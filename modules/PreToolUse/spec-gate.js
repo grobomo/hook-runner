@@ -16,8 +16,72 @@
 var fs = require("fs");
 var path = require("path");
 
+// --- Caching layer (T420) ---
+// spec-gate runs on every Edit/Write/Bash call. The specs/ directory scan is ~62ms
+// and autoActivateShtd is ~7ms. Cache both with mtime invalidation.
+var _cache = {
+  shtdActivated: {},  // projectDir → true (once per process)
+  specScans: {},      // specsDir → { mtime, entries }
+  todoReads: {},      // todoPath → { mtime, content, hasUnchecked }
+  taskReads: {},      // tasksPath → { mtime, content }
+};
+
+function cachedReadFile(filePath) {
+  try {
+    var stat = fs.statSync(filePath);
+    var mtime = stat.mtimeMs;
+    var cached = _cache.taskReads[filePath];
+    if (cached && cached.mtime === mtime) return cached.content;
+    var content = fs.readFileSync(filePath, "utf-8");
+    _cache.taskReads[filePath] = { mtime: mtime, content: content };
+    return content;
+  } catch (e) { return null; }
+}
+
+function cachedTodoRead(todoPath) {
+  try {
+    var stat = fs.statSync(todoPath);
+    var mtime = stat.mtimeMs;
+    var cached = _cache.todoReads[todoPath];
+    if (cached && cached.mtime === mtime) return cached;
+    var content = fs.readFileSync(todoPath, "utf-8");
+    var result = { mtime: mtime, content: content, hasUnchecked: /- \[ \] T\d+/.test(content) };
+    _cache.todoReads[todoPath] = result;
+    return result;
+  } catch (e) { return null; }
+}
+
+function cachedSpecScan(specsDir) {
+  try {
+    var stat = fs.statSync(specsDir);
+    var mtime = stat.mtimeMs;
+    var cached = _cache.specScans[specsDir];
+    if (cached && cached.mtime === mtime) return cached.entries;
+    var specDirs = fs.readdirSync(specsDir);
+    var entries = [];
+    for (var j = 0; j < specDirs.length; j++) {
+      var specBase = path.join(specsDir, specDirs[j]);
+      try { if (!fs.statSync(specBase).isDirectory()) continue; } catch (e) { continue; }
+      var hasSpec = fs.existsSync(path.join(specBase, "spec.md"));
+      var tasksPath = path.join(specBase, "tasks.md");
+      var hasTasks = fs.existsSync(tasksPath);
+      var hasUnchecked = false;
+      if (hasTasks) {
+        var tc = cachedReadFile(tasksPath);
+        if (tc) hasUnchecked = /- \[ \] T\d+/.test(tc);
+      }
+      entries.push({ dir: specDirs[j], hasSpec: hasSpec, hasTasks: hasTasks, hasUnchecked: hasUnchecked });
+    }
+    _cache.specScans[specsDir] = { mtime: mtime, entries: entries };
+    return entries;
+  } catch (e) { return []; }
+}
+
 // T079: Auto-activate SHTD workflow state when shtd is enabled but no state exists
+// T420: Cached — only runs once per projectDir per process (~7ms saved per call)
 function autoActivateShtd(projectDir) {
+  if (_cache.shtdActivated[projectDir]) return;
+  _cache.shtdActivated[projectDir] = true;
   try {
     var wfPath = path.join(path.dirname(__dirname), "..", "workflow.js");
     if (!fs.existsSync(wfPath)) return;
@@ -229,32 +293,25 @@ module.exports = function(input) {
   // use the exact spec instead of fuzzy word matching later.
   var taskFoundIn = ""; // "" = not found, "TODO" = in TODO.md, "specs/<dir>" = in a spec
   if (taskId) {
-    // Check TODO.md files in all roots
+    // Check TODO.md files in all roots (T420: cached with mtime)
     for (var tci = 0; tci < roots.length; tci++) {
       var tPath = path.join(roots[tci], "TODO.md");
-      if (!fs.existsSync(tPath)) continue;
-      try {
-        var tContent = fs.readFileSync(tPath, "utf-8");
-        if (isTaskUnchecked(tContent, taskId)) { taskFoundIn = "TODO"; break; }
-      } catch (e) {}
+      var tCached = cachedTodoRead(tPath);
+      if (!tCached) continue;
+      if (isTaskUnchecked(tCached.content, taskId)) { taskFoundIn = "TODO"; break; }
     }
 
-    // Check specs/*/tasks.md files in all roots (even if found in TODO — spec match is more precise)
+    // Check specs/*/tasks.md files in all roots (T420: cached with mtime)
     for (var sci = 0; sci < roots.length; sci++) {
       var sDir = path.join(roots[sci], "specs");
-      if (!fs.existsSync(sDir)) continue;
-      try {
-        var sDirs = fs.readdirSync(sDir);
-        for (var sdi = 0; sdi < sDirs.length; sdi++) {
-          var stPath = path.join(sDir, sDirs[sdi], "tasks.md");
-          if (!fs.existsSync(stPath)) continue;
-          try {
-            var stContent = fs.readFileSync(stPath, "utf-8");
-            if (isTaskUnchecked(stContent, taskId)) { taskFoundIn = "specs/" + sDirs[sdi]; break; }
-          } catch (e) {}
-        }
-        if (taskFoundIn.indexOf("specs/") === 0) break;
-      } catch (e) {}
+      var sCachedEntries = cachedSpecScan(sDir);
+      for (var sdi = 0; sdi < sCachedEntries.length; sdi++) {
+        var stPath = path.join(sDir, sCachedEntries[sdi].dir, "tasks.md");
+        if (!sCachedEntries[sdi].hasTasks) continue;
+        var stContent = cachedReadFile(stPath);
+        if (stContent && isTaskUnchecked(stContent, taskId)) { taskFoundIn = "specs/" + sCachedEntries[sdi].dir; break; }
+      }
+      if (taskFoundIn.indexOf("specs/") === 0) break;
     }
 
     if (!taskFoundIn) {
@@ -270,50 +327,32 @@ module.exports = function(input) {
     }
   }
 
-  // Scan all spec directories across roots
+  // Scan all spec directories across roots (T420: cached with mtime)
   // Collect: { dir, hasSpec, hasTasks, hasUnchecked, matchScore }
   var specEntries = [];
   for (var ri = 0; ri < roots.length; ri++) {
     var specsDir = path.join(roots[ri], "specs");
-    if (!fs.existsSync(specsDir)) continue;
-    try {
-      var specDirs = fs.readdirSync(specsDir);
-      for (var j = 0; j < specDirs.length; j++) {
-        var specBase = path.join(specsDir, specDirs[j]);
-        if (!fs.statSync(specBase).isDirectory()) continue;
-        var hasSpec = fs.existsSync(path.join(specBase, "spec.md"));
-        var tasksPath = path.join(specBase, "tasks.md");
-        var hasTasks = fs.existsSync(tasksPath);
-        var hasUnchecked = false;
-        if (hasTasks) {
-          try {
-            var content = fs.readFileSync(tasksPath, "utf-8");
-            hasUnchecked = /- \[ \] T\d+/.test(content);
-          } catch (e) {}
-        }
-        specEntries.push({
-          dir: specDirs[j],
-          hasSpec: hasSpec,
-          hasTasks: hasTasks,
-          hasUnchecked: hasUnchecked,
-          score: matchScore(specDirs[j], featureWords),
-        });
-      }
-    } catch (e) {}
+    var cachedEntries = cachedSpecScan(specsDir);
+    for (var j = 0; j < cachedEntries.length; j++) {
+      specEntries.push({
+        dir: cachedEntries[j].dir,
+        hasSpec: cachedEntries[j].hasSpec,
+        hasTasks: cachedEntries[j].hasTasks,
+        hasUnchecked: cachedEntries[j].hasUnchecked,
+        score: matchScore(cachedEntries[j].dir, featureWords),
+      });
+    }
   }
 
-  // Also check TODO.md as a fallback task source (for simpler projects)
+  // Also check TODO.md as a fallback task source (T420: cached with mtime)
   var hasTodoUnchecked = false;
   for (var ti = 0; ti < roots.length; ti++) {
     var todoPath = path.join(roots[ti], "TODO.md");
-    if (!fs.existsSync(todoPath)) continue;
-    try {
-      var todoContent = fs.readFileSync(todoPath, "utf-8");
-      if (/- \[ \] T\d+/.test(todoContent)) {
-        hasTodoUnchecked = true;
-        break;
-      }
-    } catch (e) {}
+    var todoCached = cachedTodoRead(todoPath);
+    if (todoCached && todoCached.hasUnchecked) {
+      hasTodoUnchecked = true;
+      break;
+    }
   }
 
   // --- Enforcement logic ---
