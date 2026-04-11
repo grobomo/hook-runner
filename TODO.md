@@ -970,7 +970,9 @@ Remaining:
 
 ## Code Review Fix
 
-- [ ] T363: Fix deploy-history-reminder silent discard — module returned `{text: "..."}` which PreToolUse runner ignores (only checks `result.decision`). Advisory was never shown. Fix: write to stderr + return null. Also aligned DEPLOY_PATTERNS with deploy-gate (5→10 patterns). (PR #299)
+- [x] T363: Fix deploy-history-reminder silent discard — module returned `{text: "..."}` which PreToolUse runner ignores (only checks `result.decision`). Advisory was never shown. Fix: write to stderr + return null. Also aligned DEPLOY_PATTERNS with deploy-gate (5→10 patterns). Added {text} handling to run-stop-bg.js and run-posttooluse.js. (PR #299)
+
+- [ ] T364: Fix commit-quality-gate heredoc parsing — simple `-m "msg"` regex matched before heredoc, extracting `$(cat <<` as the message. Fix: try heredoc pattern first. (PR #300)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
