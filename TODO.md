@@ -659,11 +659,11 @@ no test caught because tests only validated modules in isolation, not the full p
 ## Test & Release (T404+)
 
 - [x] T404: Fix test-modules.sh hang — add process.exit(0) on sync path (PR #273)
-- [ ] T405: Version bump to 2.20.0 + CHANGELOG (T397-T404)
+- [x] T405: Version bump to 2.20.0 + CHANGELOG (PR #274)
 - [ ] T406: Marketplace sync — copy T397-T405 changes to claude-code-skills
 
 ## Status
-- 341 tasks completed, 1 pending
+- 342 tasks completed, 1 pending
 - Version: 2.20.0
 - Marketplace: claude-code-skills synced to v2.19.0 (T406 pending)
 - CI: ALL GREEN (Linux + Windows)
