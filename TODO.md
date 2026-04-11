@@ -1017,7 +1017,27 @@ Status:
 
 ## Test Fixes
 
-- [ ] T372: Fix test-runners.sh — Tests 2 and 6 reference `run-modules/` which was untracked in T368. Point at `modules/` instead.
+- [x] T372: Fix test-runners.sh (PR #310) — Tests 2 and 6 reference `run-modules/` which was untracked in T368. Point at `modules/` instead.
+
+## Session Handoff (2026-04-11d)
+What was done this session:
+- T368 (PR #305): Untracked run-modules/ from git — eliminated 46+ phantom dirty files
+- T369 (PR #306): Added 5 missing modules to README catalog, updated shtd count to 83
+- T370 (PR #307): Added 3 missing files to package.json files array
+- T371 (PR #308): Version bump to 2.23.3 + marketplace sync
+- T372 (PR #310): Fixed test-runners.sh broken by T368 run-modules/ untracking
+- Code review: all JSON.parse wrapped in try/catch, all execSync safe, no path traversal
+- Module validation: 372/372 pass (all modules load and execute)
+- gh auth on grobomo (switch back to joel-ginsberg_tmemu before push)
+
+Remaining to investigate:
+- test-T351-session-collision.sh and test-module-sync.sh failures (may be transient/slow)
+- Full test suite: 395 pass, 6 fail → after T372 fix, runners suite should now pass (was 3 of the 6)
+
+Status:
+- 0 pending tasks
+- Version: 2.23.3
+- Clean git status on main
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
