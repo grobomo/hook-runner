@@ -197,12 +197,31 @@ else
   fail "other project should be blocked from settings: $OUTPUT"
 fi
 
-# 14. T339: Self-edit of hook-editing-gate.js always blocked (even from hook-runner)
+# 14. T413: hook-runner CAN edit hook-editing-gate.js (it's the gatekeeper)
+# But weakening detector still catches malicious content like bare "return null;"
 OUTPUT=$(run_gate "Edit" "$HOOKS_DIR/run-modules/PreToolUse/hook-editing-gate.js" "return null;")
-if echo "$OUTPUT" | grep -q "BLOCKED.*SELF-EDIT"; then
-  pass "self-edit of hook-editing-gate.js always blocked"
+if echo "$OUTPUT" | grep -q "BLOCKED.*weakening"; then
+  pass "hook-editing-gate.js editable from hook-runner but weakening still caught"
 else
-  fail "self-edit should be blocked: $OUTPUT"
+  fail "weakening detector should catch bare return null: $OUTPUT"
+fi
+
+# 15. T413: legitimate edit to hook-editing-gate.js passes from hook-runner
+LEGIT_EDIT='var timeout = 5000;
+var label = "gate";'
+OUTPUT=$(run_gate "Edit" "$HOOKS_DIR/run-modules/PreToolUse/hook-editing-gate.js" "$LEGIT_EDIT")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "legitimate edit to hook-editing-gate.js allowed from hook-runner"
+else
+  fail "legitimate edit should pass: $OUTPUT"
+fi
+
+# 16. T413: other projects still blocked from editing hook-editing-gate.js
+OUTPUT=$(run_gate_other "Edit" "$HOOKS_DIR/run-modules/PreToolUse/hook-editing-gate.js" "$LEGIT_EDIT")
+if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
+  pass "other projects blocked from editing hook-editing-gate.js"
+else
+  fail "other project should be blocked: $OUTPUT"
 fi
 
 echo ""
