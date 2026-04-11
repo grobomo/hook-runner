@@ -678,12 +678,12 @@ Remaining:
 
 - [x] T404: Fix test-modules.sh hang — add process.exit(0) on sync path (PR #273)
 - [x] T405: Version bump to 2.20.0 + CHANGELOG (PR #274)
-- [ ] T406: Marketplace sync — copy T397-T405 changes to claude-code-skills
+- [x] T406: Marketplace sync — copy T397-T405 changes to claude-code-skills (pushed to grobomo/claude-code-skills)
 
 ## Status
-- 342 tasks completed, 1 pending
+- 343 tasks completed, 0 pending
 - Version: 2.20.0
-- Marketplace: claude-code-skills synced to v2.19.0 (T406 pending)
+- Marketplace: claude-code-skills synced to v2.20.0
 - CI: ALL GREEN (Linux + Windows)
 - 86 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
