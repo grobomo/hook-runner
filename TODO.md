@@ -711,12 +711,12 @@ Remaining:
 - [x] T411: Fix workflow-gate 87 errors — checkGate resilient to missing YAML + fixed stale workflow_path (PR #279)
 
 ## Release
-- [ ] T412: Version bump to 2.20.2 + CHANGELOG for T411 + marketplace sync
+- [x] T412: Version bump to 2.20.2 + CHANGELOG for T411 + marketplace sync (PR #280)
 
 ## Status
-- 348 tasks completed, 1 pending
-- Version: 2.20.1
-- Marketplace: claude-code-skills synced to v2.20.1
+- 349 tasks completed, 0 pending
+- Version: 2.20.2
+- Marketplace: claude-code-skills synced to v2.20.2
 - CI: ALL GREEN (Linux + Windows)
 - 86 modules across 5 workflows (2 active: shtd + customer-data-guard), 51 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
