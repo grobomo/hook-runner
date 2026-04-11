@@ -742,6 +742,20 @@ What was done this session:
 ## Performance
 - [x] T419: Optimize pr-first-gate — file-based cache with 5min TTL instead of per-process gh call (~67ms→<1ms for cached lookups) (PR #288)
 
+## Session Handoff (2026-04-10e)
+What was done this session:
+- T415 (PR #284): Fixed T339 test for T413 self-edit change
+- T416 (PR #285): Fixed report analysis — resolveScriptPath returned run-hidden.js wrapper instead of runner
+- T417 (PR #286): Fixed analysis false positives — bare name resolution, _prefix exclusion. Score C(8)→A(0)
+- T418 (PR #287): Version bump to 2.21.1 + CHANGELOG
+- T419 (PR #288): Optimized pr-first-gate — file-based PR cache with 5min TTL (~67ms→<1ms)
+- Deleted 2 stale local branches (237, 255), pruned 6 stale remote branches
+- Synced setup.js + report.js + pr-first-gate.js to live hooks
+- Marketplace files copied to claude-code-skills (needs commit+push from that project)
+- gh auth on grobomo — SWITCH BACK to default at session start
+
+Remaining perf targets (from --perf): preserve-iterated-content (47ms avg), secret-scan-gate (44ms avg), spec-gate (40ms avg)
+
 ## Status
 - 356 tasks completed, 0 pending
 - Version: 2.21.1
