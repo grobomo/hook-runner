@@ -2026,7 +2026,10 @@ function healthCheck() {
       } else if (f.slice(-3) === ".js") {
         try {
           var mod2 = require(fPath);
-          if (typeof mod2 !== "function") {
+          // Underscore-prefix files are helpers (arrays, objects) — not gate modules
+          if (f.charAt(0) === "_") {
+            results.push({ check: "module", file: evt + "/" + f, status: "ok" });
+          } else if (typeof mod2 !== "function") {
             results.push({ check: "module", file: evt + "/" + f, status: "bad-export", detail: "exports " + typeof mod2 + ", expected function" });
           } else {
             results.push({ check: "module", file: evt + "/" + f, status: "ok" });
