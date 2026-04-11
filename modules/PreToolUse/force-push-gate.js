@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Force-pushing to main/master can destroy shared history and others' work.
 // There is no undo for a force-push that overwrites remote commits.
 "use strict";

@@ -1,0 +1,27 @@
+name: starter
+description: Safe defaults for any Claude Code user. Blocks common mistakes (force push, destructive git, rm -rf, secret commits) and adds helpful guardrails (commit quality, test reminders). Start here, then enable shtd when you want full development discipline.
+version: 1
+steps:
+  - id: ready
+    name: Ready to work
+    gate:
+      require_files: []
+    completion:
+      require_files: []
+
+modules:
+  # Git safety — prevent irreversible mistakes
+  - force-push-gate
+  - git-destructive-guard
+  - secret-scan-gate
+  - commit-quality-gate
+  # File safety — prevent accidental deletion
+  - archive-not-delete
+  # Code quality — catch common issues
+  - no-hardcoded-paths
+  - test-coverage-check
+  - preserve-iterated-content
+  # Session lifecycle — helpful context
+  - project-health
+  - workflow-summary
+  - terminal-title

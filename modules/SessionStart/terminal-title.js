@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: With multiple Claude tabs open, they all show the same title making it
 // impossible to find the right session. Setting the terminal title to the CWD
 // folder name gives each tab a distinct label. Also fires after context-reset

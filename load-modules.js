@@ -48,15 +48,30 @@ function parseRequires(filePath) {
 
 /**
  * Parse "// WORKFLOW: workflow-name" from the first 5 lines of a module file.
- * Returns the workflow name or null if no tag found.
+ * Supports comma-separated names: "// WORKFLOW: shtd, starter"
+ * Returns array of workflow names, or empty array if no tag found.
  */
-function parseWorkflowTag(filePath) {
+function parseWorkflowTags(filePath) {
   var lines = getHeaderLines(filePath);
   for (var i = 0; i < lines.length; i++) {
-    var match = lines[i].match(/^\/\/\s*WORKFLOW:\s*(\S+)/i);
-    if (match) return match[1];
+    var match = lines[i].match(/^\/\/\s*WORKFLOW:\s*(.+)/i);
+    if (match) {
+      var tags = match[1].split(",");
+      var result = [];
+      for (var t = 0; t < tags.length; t++) {
+        var tag = tags[t].replace(/^\s+|\s+$/g, "");
+        if (tag) result.push(tag);
+      }
+      if (result.length > 0) return result;
+    }
   }
-  return null;
+  return [];
+}
+
+// Backwards-compatible: returns first tag or null
+function parseWorkflowTag(filePath) {
+  var tags = parseWorkflowTags(filePath);
+  return tags.length > 0 ? tags[0] : null;
 }
 
 /**
@@ -109,11 +124,19 @@ function filterByWorkflow(modulePaths) {
 
   var result = [];
   for (var i = 0; i < modulePaths.length; i++) {
-    var tag = parseWorkflowTag(modulePaths[i]);
-    if (!tag) {
+    var tags = parseWorkflowTags(modulePaths[i]);
+    if (tags.length === 0) {
       result.push(modulePaths[i]); // untagged always passes
-    } else if (enabledSet[tag] && !disabledSet[tag]) {
-      result.push(modulePaths[i]); // workflow enabled
+    } else {
+      // Module passes if ANY of its workflow tags is enabled and not disabled
+      var anyEnabled = false;
+      for (var ti = 0; ti < tags.length; ti++) {
+        if (enabledSet[tags[ti]] && !disabledSet[tags[ti]]) {
+          anyEnabled = true;
+          break;
+        }
+      }
+      if (anyEnabled) result.push(modulePaths[i]);
     }
   }
   return result;
@@ -194,4 +217,5 @@ module.exports = function loadModules(eventDir) {
 module.exports.parseRequires = parseRequires;
 module.exports.validateDeps = validateDeps;
 module.exports.parseWorkflowTag = parseWorkflowTag;
+module.exports.parseWorkflowTags = parseWorkflowTags;
 module.exports.filterByWorkflow = filterByWorkflow;

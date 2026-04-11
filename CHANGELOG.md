@@ -2,6 +2,15 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.24.0] — 2026-04-11
+
+### Added
+- **Starter workflow** (T428) — New `starter` workflow with 11 universally useful modules (force-push-gate, git-destructive-guard, secret-scan-gate, commit-quality-gate, archive-not-delete, no-hardcoded-paths, test-coverage-check, preserve-iterated-content, project-health, workflow-summary, terminal-title). Safe defaults for any Claude Code user.
+- **Multi-tag workflow support** — Modules can now belong to multiple workflows with comma-separated tags: `// WORKFLOW: shtd, starter`. Module runs if ANY tagged workflow is enabled.
+
+### Changed
+- **`--yes` installs starter instead of shtd** — New users get 11 essential modules instead of 90 advanced ones. Enables `shtd` manually when ready.
+
 ## [2.23.5] — 2026-04-11
 
 ### Fixed

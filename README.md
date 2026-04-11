@@ -49,7 +49,12 @@ The setup wizard will:
 1. Scan your current hooks and generate a styled HTML report
 2. Back up existing hooks to `~/.claude/hooks/archive/`
 3. Install the runner system
-4. Enable default workflows (with `--yes`)
+4. Enable the `starter` workflow (with `--yes`) — 11 universally useful modules
+
+Ready for more? Enable the full development pipeline:
+```bash
+node setup.js --workflow enable shtd    # 90 modules: spec-first, test-first, PR discipline
+```
 
 To undo everything: `node setup.js --uninstall --confirm`
 
@@ -69,6 +74,7 @@ node setup.js --workflow query Edit        # which workflows affect Edit?
 
 | Workflow | Modules | What it enforces |
 |----------|---------|-----------------|
+| `starter` | 11 | **Start here.** Safe defaults for any user — blocks force-push, destructive git, secret commits, file deletion. Adds commit quality checks, test reminders, and session context. |
 | `shtd` | 90 | Spec-Hook-Test-Driven — the full development pipeline. Enforces spec → branch → test → implement → PR, plus code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement. |
 | `customer-data-guard` | 3 | Read-only incident response — blocks env changes, data exfil, and V1 modifications. |
 | `dispatcher-worker` | 3 | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
@@ -160,7 +166,7 @@ Rules:
 - **Return null** to pass, `{decision: "block", reason: "..."}` to block
 - **Sync or async** — return a Promise for async work (4s timeout)
 - **Dependencies** — `// requires: mod1, mod2` in first 5 lines
-- **Workflow tag** — `// WORKFLOW: name` restricts module to that workflow
+- **Workflow tag** — `// WORKFLOW: name` restricts module to that workflow (comma-separated for multiple: `// WORKFLOW: shtd, starter`)
 
 ### Event Types
 

@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Generic commit messages like "fix" or "update" make git history useless.
 // When debugging E2E failures across 10+ deploy cycles, you need to know what
 // each commit actually changed and why. Bad messages waste 10+ minutes per cycle.

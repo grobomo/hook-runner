@@ -168,27 +168,32 @@ function cmdWorkflow(args) {
       for (var fi = 0; fi < entries.length; fi++) {
         if (entries[fi].isFile() && entries[fi].name.slice(-3) === ".js") {
           var modPath = path.join(evDir, entries[fi].name);
-          var tag = lm.parseWorkflowTag(modPath);
-          allModules.push({ name: entries[fi].name.replace(/\.js$/, ""), event: events[ei], path: modPath, tag: tag });
+          var tags = lm.parseWorkflowTags ? lm.parseWorkflowTags(modPath) : [];
+          var tag = tags.length > 0 ? tags[0] : null;
+          allModules.push({ name: entries[fi].name.replace(/\.js$/, ""), event: events[ei], path: modPath, tag: tag, tags: tags });
         } else if (entries[fi].isDirectory() && entries[fi].name !== "archive" && entries[fi].name.charAt(0) !== "_") {
           var subDir = path.join(evDir, entries[fi].name);
           var subFiles = fs.readdirSync(subDir).filter(function(f) { return f.slice(-3) === ".js"; }).sort();
           for (var si = 0; si < subFiles.length; si++) {
             var subModPath = path.join(subDir, subFiles[si]);
-            var subTag = lm.parseWorkflowTag(subModPath);
-            allModules.push({ name: subFiles[si].replace(/\.js$/, ""), event: events[ei], path: subModPath, tag: subTag });
+            var subTags = lm.parseWorkflowTags ? lm.parseWorkflowTags(subModPath) : [];
+            var subTag = subTags.length > 0 ? subTags[0] : null;
+            allModules.push({ name: subFiles[si].replace(/\.js$/, ""), event: events[ei], path: subModPath, tag: subTag, tags: subTags });
           }
         }
       }
     }
 
-    var tagged = allModules.filter(function(m) { return m.tag; });
-    var untagged = allModules.filter(function(m) { return !m.tag; });
+    var tagged = allModules.filter(function(m) { return m.tags && m.tags.length > 0; });
+    var untagged = allModules.filter(function(m) { return !m.tags || m.tags.length === 0; });
 
-    // Per-workflow counts from actual tags
+    // Per-workflow counts from actual tags (multi-tag modules count toward each)
     var tagCounts = {};
     for (var ti = 0; ti < tagged.length; ti++) {
-      tagCounts[tagged[ti].tag] = (tagCounts[tagged[ti].tag] || 0) + 1;
+      var modTags = tagged[ti].tags || [tagged[ti].tag];
+      for (var tgi = 0; tgi < modTags.length; tgi++) {
+        tagCounts[modTags[tgi]] = (tagCounts[modTags[tgi]] || 0) + 1;
+      }
     }
 
     // Coverage summary
@@ -210,9 +215,12 @@ function cmdWorkflow(args) {
     // Orphan tags: modules tagged with a workflow that has no YAML
     var orphanTags = {};
     for (var oi = 0; oi < tagged.length; oi++) {
-      if (!yamlModules[tagged[oi].tag]) {
-        if (!orphanTags[tagged[oi].tag]) orphanTags[tagged[oi].tag] = [];
-        orphanTags[tagged[oi].tag].push(tagged[oi].event + "/" + tagged[oi].name);
+      var oiTags = tagged[oi].tags || [tagged[oi].tag];
+      for (var oti = 0; oti < oiTags.length; oti++) {
+        if (!yamlModules[oiTags[oti]]) {
+          if (!orphanTags[oiTags[oti]]) orphanTags[oiTags[oti]] = [];
+          orphanTags[oiTags[oti]].push(tagged[oi].event + "/" + tagged[oi].name);
+        }
       }
     }
     var orphanKeys = Object.keys(orphanTags);
@@ -302,8 +310,8 @@ function cmdWorkflow(args) {
           // Check if module source references the tool name (case-sensitive match for tool names)
           var toolPattern = new RegExp('["\'\\s]' + queryTool + '["\'\\s,;)\\]]', 'g');
           if (toolPattern.test(src)) {
-            var tag = lmq.parseWorkflowTag(path.join(modulesDir, files[qi]));
-            matches.push({ name: files[qi].replace(/\.js$/, ""), workflow: tag || "(untagged)" });
+            var qTags = lmq.parseWorkflowTags ? lmq.parseWorkflowTags(path.join(modulesDir, files[qi])) : [];
+            matches.push({ name: files[qi].replace(/\.js$/, ""), workflow: qTags.length > 0 ? qTags.join(", ") : "(untagged)" });
           }
         } catch(e) {}
       }
