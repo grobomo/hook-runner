@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.20.1] — 2026-04-10
+
+### Fixed
+- **Workflow YAML/tag mismatches** (T407) — added `rdp-testbox-gate` and `hook-system-reminder` to `shtd.yml`, removed stale `cwd-drift-detector` from `cross-project-reset.yml`.
+- **cpt-gate false positive** (T408) — gate matched "cross-project" as substring, blocking edits referencing workflow names like `cross-project-reset`. Fixed with regex negative lookahead. 8 tests added.
+
 ## [2.20.0] — 2026-04-10
 
 ### Added
