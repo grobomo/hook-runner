@@ -1039,6 +1039,9 @@ Status:
 - Version: 2.23.3
 - Clean git status on main
 
+## Catalog Sync
+- [ ] T423: Add 5 orphan modules to catalog — blueprint-no-sleep, gh-auto-gate, no-hook-bypass, no-nested-claude, publish-json-guard. Retag from stale workflow names to shtd. Update shtd.yml (85→90) + README module table.
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
