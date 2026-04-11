@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.20.2] — 2026-04-10
+
+### Fixed
+- **Workflow gate resilience** (T411) — `checkGate` now handles missing YAML files gracefully instead of throwing ENOENT (was causing 87 errors from stale `.workflow-state.json` paths). Test added.
+
 ## [2.20.1] — 2026-04-10
 
 ### Fixed
