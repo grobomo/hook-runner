@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.21.0] — 2026-04-10
+
+### Changed
+- **hook-editing-gate** (T413) — Removed self-edit protection. hook-runner is the gatekeeper and can now edit all hooks including its own gate. Other projects remain blocked. Weakening detector + quality checks still apply. Hardcoded paths replaced with generic guidance. 16 tests (was 14).
+
 ## [2.20.2] — 2026-04-10
 
 ### Fixed
