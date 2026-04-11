@@ -694,7 +694,7 @@ Remaining:
 - Version: 2.20.1
 - Marketplace: claude-code-skills synced to v2.20.0
 - CI: ALL GREEN (Linux + Windows)
-- 86 modules across 5 workflows (2 active: shtd + customer-data-guard), 49 test suites
+- 86 modules across 5 workflows (2 active: shtd + customer-data-guard), 51 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
 - Scoring: Novice→Master levels, intervention tracking, full audit logging
 - Health: 110 OK, 0 warnings, 0 failures
