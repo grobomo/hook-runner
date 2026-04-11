@@ -10,7 +10,12 @@ var DEPLOY_PATTERNS = [
   /quick-sync/,
   /create-zip/,
   /terraform\s+apply/,
-  /az\s+vm\s+run-command\s+create/
+  /az\s+vm\s+run-command\s+create/,
+  /aws\s+(?:s3\s+cp|lambda\s+update|ecs\s+update|deploy)/,
+  /kubectl\s+apply/,
+  /docker\s+push/,
+  /scp\s+.*:/,
+  /rsync\s+.*:/
 ];
 
 module.exports = function(input) {
@@ -39,9 +44,8 @@ module.exports = function(input) {
 
   if (!history) return null;
 
-  // Return as text advisory (non-blocking)
-  return {
-    text: "DEPLOY REMINDER: Recent commits before this run:\n" + history +
-      "\nVerify you're not repeating a failed approach."
-  };
+  // Advisory — write to stderr (visible in hook log) and return null (non-blocking)
+  process.stderr.write("DEPLOY REMINDER: Recent commits before this run:\n" + history +
+    "\nVerify you're not repeating a failed approach.\n");
+  return null;
 };

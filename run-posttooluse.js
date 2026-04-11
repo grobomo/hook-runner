@@ -46,6 +46,9 @@ runAsync.runModules(modules, input,
       if (!firstResult) firstResult = result;
       return false; // T378: continue running remaining modules
     }
+    if (result && result.text) {
+      process.stderr.write(result.text + "\n");
+    }
     hookLog.logHook("PostToolUse", modName, "pass", Object.assign({}, ctx, { ms: ms }));
     return false;
   },

@@ -966,10 +966,11 @@ What was done this session:
 
 Remaining:
 - shtd.yml update not yet committed (minor — just module count)
-- 0 pending tasks
 - 94 modules across 5 workflows, health 110/0/0
-- Step 3 (code review/optimize) partially done — ES5 clean, workflow audit clean
-- Step 4 (zoom out) not started — project is mature, consider: npm publish, team demo, documentation refresh
+
+## Code Review Fix
+
+- [ ] T363: Fix deploy-history-reminder silent discard — module returned `{text: "..."}` which PreToolUse runner ignores (only checks `result.decision`). Advisory was never shown. Fix: write to stderr + return null. Also aligned DEPLOY_PATTERNS with deploy-gate (5→10 patterns). (PR #299)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
