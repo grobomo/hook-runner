@@ -736,13 +736,13 @@ What was done this session:
 ## Analysis Quality
 - [x] T417: Fix analysis false positives — resolveScriptPath bare name resolution, _prefix helper exclusion, archived module DRY fix. Score C(8)→A(0). (PR #286)
 
-## Status
-- [ ] T418: Version bump to 2.21.1 + CHANGELOG for T415-T417
+## Release
+- [x] T418: Version bump to 2.21.1 + CHANGELOG for T415-T417 (PR #287)
 
 ## Status
-- 354 tasks completed, 1 pending
-- Version: 2.21.0
-- Marketplace: claude-code-skills synced to v2.21.0
+- 355 tasks completed, 0 pending
+- Version: 2.21.1
+- Marketplace: needs sync to v2.21.1
 - CI: ALL GREEN (Linux + Windows)
 - 88 modules across 5 workflows (2 active: shtd + customer-data-guard), 51 test suites
 - Self-reflection system live: self-reflection (brain bridge) + reflection-gate + reflection-score + score-inject
