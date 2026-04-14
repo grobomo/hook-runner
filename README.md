@@ -338,6 +338,8 @@ Full catalog in `modules/` directory:
 | `claude-p-pattern` | Enforces correct `claude -p` invocation pattern |
 | `commit-counter-gate` | Forces commit after every 5 edits — prevents losing work on context reset |
 | `commit-quality-gate` | Blocks generic commit messages (< 5 words, "fix"/"update" without detail) |
+| `victory-declaration-gate` | Blocks vague success claims in commit titles ("all tests pass", "all green", "100%") |
+| `unresolved-issues-gate` | Scans TODO.md for unchecked FAIL/WARN/timeout tasks before allowing commit |
 | `continuous-claude-gate` | Blocks code without tracked task workflow |
 | `crlf-ssh-key-check` | Blocks SSH key copy without CRLF stripping |
 | `cwd-drift-detector` | Blocks cross-project file access |
@@ -407,6 +409,8 @@ Full catalog in `modules/` directory:
 | `test-coverage-check` | Warns when source files modified without tests |
 | `troubleshoot-detector` | Detects fail-fail-succeed patterns |
 | `update-stale-docs` | Detects stale docs after code edits |
+| `empty-output-detector` | Warns when ls/cat/find/curl/kubectl/az return empty output |
+| `result-review-gate` | Injects review checklist when reading report/PDF/coverage files |
 
 ### UserPromptSubmit (processes user prompts)
 | Module | Description |
@@ -431,6 +435,7 @@ Full catalog in `modules/` directory:
 | `self-reflection` | LLM-powered review of recent gate decisions (async, calls claude -p) |
 | `session-brain-analysis` | Sends session summary to unified-brain for cross-session analysis |
 | `test-before-done` | Reminds to run e2e tests before done |
+| `unresolved-issues-check` | Blocks session end with stale TESTING NOW/IN PROGRESS/WIP tasks |
 
 #### Project-Scoped Stop
 | Module | Project | Description |
