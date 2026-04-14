@@ -999,15 +999,15 @@ Context: Claude declares E2E tests "PASSED" and commits without investigating fa
 
 Root cause: Claude optimizes for "task complete" status. Once it sees mostly-green results, it skips to commit+push without enumerating every issue. No hook forces thorough review before declaring done.
 
-- [ ] T368: **Result review gate** — PostToolUse module on Read (PDF/report files). When Claude reads a test report or PDF, inject a checklist reminder: "Before committing results: 1) List every FAIL/WARN/timeout/error/empty in this report. 2) For each: is it a real bug, expected behavior, or needs investigation? Justify. 3) File a TODO for each unresolved issue. 4) Only then commit." Non-blocking advisory but highly visible. Must fire EVERY time a report is read, not just first time.
+- [ ] T368: **Result review gate** — `result-review-gate.js` PostToolUse on Read. Fires on report/results/coverage/PDF/summary/health-check files and reports/ directories. Injects checklist: enumerate every FAIL/WARN/timeout, justify each, file TODOs, check for missing items. 15/15 tests. shtd.
 
 - [x] T369: **Victory-declaration detector** — `victory-declaration-gate.js`. Blocks title-line claims like "all tests pass", "all green", "succeeded", "100%". Only checks title so body can quote phrases. 15/15 tests. shtd + starter.
 
 - [x] T370: **FAIL/error scan before commit** — `unresolved-issues-gate.js`. Scans TODO.md for unchecked FAIL/timeout/MISMATCH/WARN/ERROR. FP protection for completed tasks, "0 failed". Acknowledges "known"/"pre-existing"/"intermittent". 15/15 tests. shtd.
 
-- [ ] T371: **Empty-output detector** — PostToolUse module. When a Bash command returns empty stdout where content was expected (e.g., `ls` on screenshots/, `check-file` returning blank), inject warning: "Empty output where content was expected. This likely means something failed silently. Investigate before proceeding." Heuristic: detect common dir-listing patterns followed by empty output.
+- [x] T371: **Empty-output detector** — `empty-output-detector.js` PostToolUse. Warns on empty output from ls, cat, find, curl, kubectl, az. Skips commands where empty is normal (cp, mkdir, git add). 15/15 tests. shtd. (PR #331)
 
-- [ ] T372: **Stop hook: unresolved issues check** — Stop module enhancement. Before session end, scan TODO.md for items still marked "TESTING NOW" or "IN PROGRESS" that weren't updated to pass/fail. Also grep recent conversation history for FAIL/WARN/timeout that were never addressed with a fix or TODO entry. Block with: "Unresolved test issues found — update TODO with actual outcomes before stopping."
+- [x] T372: **Stop hook: unresolved issues check** — `unresolved-issues-check.js` Stop module. Blocks session end when TODO.md has unchecked tasks with TESTING NOW/IN PROGRESS/WIP/INVESTIGATING or FAIL/MISMATCH/BROKEN. 12/12 tests. shtd. (PR #331)
 - Batch module validation: 94/94 pass
 - Workflow audit: 93 modules, 92 tagged, all matching YAML
 
