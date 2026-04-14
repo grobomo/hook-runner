@@ -338,6 +338,8 @@ Full catalog in `modules/` directory:
 | `claude-p-pattern` | Enforces correct `claude -p` invocation pattern |
 | `commit-counter-gate` | Forces commit after every 5 edits — prevents losing work on context reset |
 | `commit-quality-gate` | Blocks generic commit messages (< 5 words, "fix"/"update" without detail) |
+| `victory-declaration-gate` | Blocks vague success claims in commit titles ("all tests pass", "all green", "100%") |
+| `unresolved-issues-gate` | Scans TODO.md for unchecked FAIL/WARN/timeout tasks before allowing commit |
 | `continuous-claude-gate` | Blocks code without tracked task workflow |
 | `crlf-ssh-key-check` | Blocks SSH key copy without CRLF stripping |
 | `cwd-drift-detector` | Blocks cross-project file access |
