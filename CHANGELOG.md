@@ -2,6 +2,19 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.25.0] — 2026-04-14
+
+### Added
+- **Victory-declaration gate** (T369) — Blocks vague commit title claims like "all tests pass", "all green", "100%", "succeeded". Forces specific counts and scope. Only checks title line so body can quote phrases. 15/15 tests. shtd + starter.
+- **Unresolved-issues gate** (T370) — PreToolUse on commit. Scans TODO.md for unchecked tasks with FAIL/timeout/MISMATCH/WARN/ERROR. FP protection for completed tasks and "0 failed" lines. Commits can acknowledge via "known"/"pre-existing"/"intermittent". 17/17 tests. shtd.
+- **Empty-output detector** (T371) — PostToolUse on Bash. Warns when ls, cat, find, curl, kubectl, az return empty output. Skips commands where empty is normal (cp, mkdir, git add). 15/15 tests. shtd.
+- **Unresolved-issues stop check** (T372) — Stop module. Blocks session end when TODO.md has unchecked tasks with TESTING NOW/IN PROGRESS/WIP or FAIL/MISMATCH/BROKEN. 12/12 tests. shtd.
+- **Result-review gate** (T368) — PostToolUse on Read. Fires on report/results/coverage/PDF/summary/health-check files. Injects review checklist for every FAIL/WARN/timeout. 15/15 tests. shtd.
+
+### Fixed
+- **rdp-testbox-gate false positive** (T442) — Added gh_auto/gh to safe-tools regex so git/GitHub commands with "rdp" in branch names or PR body aren't blocked. 17/17 tests.
+- **unresolved-issues-gate false positive** — Tightened to only scan `- [ ]` task lines, not plain bullet points with issue keywords.
+
 ## [2.24.6] — 2026-04-11
 
 ### Fixed

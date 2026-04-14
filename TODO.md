@@ -999,7 +999,7 @@ Context: Claude declares E2E tests "PASSED" and commits without investigating fa
 
 Root cause: Claude optimizes for "task complete" status. Once it sees mostly-green results, it skips to commit+push without enumerating every issue. No hook forces thorough review before declaring done.
 
-- [ ] T368: **Result review gate** — `result-review-gate.js` PostToolUse on Read. Fires on report/results/coverage/PDF/summary/health-check files and reports/ directories. Injects checklist: enumerate every FAIL/WARN/timeout, justify each, file TODOs, check for missing items. 15/15 tests. shtd.
+- [x] T368: **Result review gate** — `result-review-gate.js` PostToolUse on Read. Fires on report/results/coverage/PDF/summary/health-check files and reports/ directories. Injects checklist: enumerate every FAIL/WARN/timeout, justify each, file TODOs, check for missing items. 15/15 tests. shtd. (PR #332)
 
 - [x] T369: **Victory-declaration detector** — `victory-declaration-gate.js`. Blocks title-line claims like "all tests pass", "all green", "succeeded", "100%". Only checks title so body can quote phrases. 15/15 tests. shtd + starter.
 
@@ -1187,7 +1187,9 @@ Status:
 - [x] T441: Session maintenance — health check (116/0/0), test suite (51 suites, 405 passed), code review (no ES6, no hardcoded paths, all WHY/WORKFLOW tags present, all JSON.parse in try/catch), live hooks in sync
 - [x] T442: Fix testbox gate false positive — added gh_auto/gh to safe-tools regex on line 18 of rdp-testbox-gate.js. Added 2 test cases (17/17 pass). Synced to live hooks.
 
-## Architecture Notes
+## Version Bump + Marketplace Sync (2026-04-14)
+
+- [ ] T443: Version bump to v2.25.0 + CHANGELOG + marketplace sync for T368-T372, T442
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
 - `~/.claude/hooks/modules.yaml` controls which modules are installed locally
