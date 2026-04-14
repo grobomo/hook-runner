@@ -70,6 +70,7 @@ modules:
   - task-completion-gate
   - test-before-done
   - test-checkpoint-gate
+  - unresolved-issues-check
   - why-reminder
   - workflow-gate
   - blueprint-no-sleep
@@ -89,6 +90,7 @@ modules:
   - no-rules-gate
   - rule-hygiene
   - test-coverage-check
+  - empty-output-detector
   - update-stale-docs
   - hook-health-monitor
   - hook-self-test
