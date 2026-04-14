@@ -1190,6 +1190,9 @@ Status:
 ## Version Bump + Marketplace Sync (2026-04-14)
 
 - [x] T443: Version bump to v2.25.0 + CHANGELOG + marketplace sync for T368-T372, T442. Pushed to grobomo/claude-code-skills.
+- [ ] T444: Fix T331 brain-bridge test flaky crash — HTTP servers in tests 4/8 don't close cleanly, causing intermittent non-zero exit. Fix: explicit process.exit(0) after server.close().
+
+## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
 - `~/.claude/hooks/modules.yaml` controls which modules are installed locally

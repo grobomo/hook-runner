@@ -88,7 +88,7 @@ RESULT=$(node -e "
       res.on('data', function(c) { data += c; });
       res.on('end', function() {
         var health = JSON.parse(data);
-        if (health.status !== 'ok') { console.log('FAIL-health'); server.close(); return; }
+        if (health.status !== 'ok') { console.log('FAIL-health'); server.close(function() { process.exit(0); }); return; }
         // Test /ask
         var payload = JSON.stringify({
           question: 'test reflection prompt',
@@ -110,7 +110,7 @@ RESULT=$(node -e "
             } else {
               console.log('FAIL-content');
             }
-            server.close();
+            server.close(function() { process.exit(0); });
           });
         });
         req.write(payload);
