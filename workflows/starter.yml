@@ -15,6 +15,7 @@ modules:
   - git-destructive-guard
   - secret-scan-gate
   - commit-quality-gate
+  - victory-declaration-gate
   # File safety — prevent accidental deletion
   - archive-not-delete
   # Code quality — catch common issues
