@@ -91,6 +91,7 @@ modules:
   - rule-hygiene
   - test-coverage-check
   - empty-output-detector
+  - result-review-gate
   - update-stale-docs
   - hook-health-monitor
   - hook-self-test
