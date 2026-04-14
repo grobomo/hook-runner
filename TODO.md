@@ -1192,6 +1192,11 @@ Status:
 - [x] T443: Version bump to v2.25.0 + CHANGELOG + marketplace sync for T368-T372, T442. Pushed to grobomo/claude-code-skills.
 - [x] T444: Fix T331 brain-bridge test flaky crash (process.exit(0) in server.close) + add 5 new modules to README (T094 7/7). Full suite: 51 suites, 817 passed.
 
+## Test & Code Quality (2026-04-14b)
+
+- [ ] T445: Fix --test to discover .js test files — 15 JS test suites (145+ tests) silently skipped because cmdTest() only discovers .sh files
+- [ ] T446: Performance audit — PreToolUse ~281ms overhead. Document top offenders, add perf baseline to CI
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type

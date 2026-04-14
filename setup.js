@@ -1162,7 +1162,9 @@ function cmdTest() {
   var testDir = path.join(REPO_DIR, "scripts", "test");
   var testFiles;
   try {
-    testFiles = fs.readdirSync(testDir).filter(function(f) { return f.indexOf("test-") === 0 && f.slice(-3) === ".sh"; }).sort();
+    testFiles = fs.readdirSync(testDir).filter(function(f) {
+      return f.indexOf("test-") === 0 && (f.slice(-3) === ".sh" || f.slice(-3) === ".js");
+    }).sort();
   } catch(e) {
     console.log("  ERROR: test directory not found: " + testDir);
     process.exit(1);
@@ -1189,11 +1191,13 @@ function cmdTest() {
   var totalPass = 0, totalFail = 0, suiteFail = 0, failedSuites = [];
   for (var ti = 0; ti < testFiles.length; ti++) {
     var testPath = path.join(testDir, testFiles[ti]);
-    var suiteName = testFiles[ti].replace("test-", "").replace(".sh", "");
+    var isJs = testFiles[ti].slice(-3) === ".js";
+    var suiteName = testFiles[ti].replace("test-", "").replace(/\.(sh|js)$/, "");
     console.log("");
     console.log("  [" + suiteName + "] " + testFiles[ti]);
     try {
-      var result = cp.execSync("bash " + JSON.stringify(testPath), {
+      var execCmd = isJs ? "node " + JSON.stringify(testPath) : "bash " + JSON.stringify(testPath);
+      var result = cp.execSync(execCmd, {
         cwd: REPO_DIR,
         encoding: "utf-8",
         stdio: ["pipe", "pipe", "pipe"],
