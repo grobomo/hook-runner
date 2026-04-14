@@ -70,5 +70,13 @@ assert("block mentions ddei-tester", r6.reason.indexOf("ddei-tester") !== -1);
 var r14 = gate({ tool_name: "Bash", tool_input: { command: "echo hello world" } });
 assert("normal bash passes", r14 === null);
 
+// T442: gh_auto push with rdp in PR body/filenames passes
+var r15 = gate({ tool_name: "Bash", tool_input: { command: 'gh_auto push -u origin fix-rdp-testbox-gate' } });
+assert("gh_auto push with rdp branch name passes", r15 === null);
+
+// T442: gh pr create with rdp in body passes
+var r16 = gate({ tool_name: "Bash", tool_input: { command: 'gh pr create --title "Fix rdp-testbox-gate" --body "Fixed rdp false positive"' } });
+assert("gh pr create with rdp in body passes", r16 === null);
+
 console.log("\n" + pass + "/" + (pass + fail) + " passed");
 process.exit(fail > 0 ? 1 : 0);
