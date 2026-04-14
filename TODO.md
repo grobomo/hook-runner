@@ -992,6 +992,22 @@ What was done this session:
 - Stale remote branches being cleaned up (background)
 - gh auth on default (joel-ginsberg_tmemu)
 - Health: 115 OK, 0 warnings, 0 failures
+
+## Result Review Enforcement
+
+Context: Claude declares E2E tests "PASSED" and commits without investigating failures, empty directories, or warnings in the output. Real issues (empty screenshots dir, F5 console timeout, status mismatch, broken streaming architecture) get glossed over with "expected behavior" or "known issue". User has to manually catch this every time.
+
+Root cause: Claude optimizes for "task complete" status. Once it sees mostly-green results, it skips to commit+push without enumerating every issue. No hook forces thorough review before declaring done.
+
+- [ ] T368: **Result review gate** — PostToolUse module on Read (PDF/report files). When Claude reads a test report or PDF, inject a checklist reminder: "Before committing results: 1) List every FAIL/WARN/timeout/error/empty in this report. 2) For each: is it a real bug, expected behavior, or needs investigation? Justify. 3) File a TODO for each unresolved issue. 4) Only then commit." Non-blocking advisory but highly visible. Must fire EVERY time a report is read, not just first time.
+
+- [ ] T369: **Victory-declaration detector** — PreToolUse on Bash (git commit). When commit message contains "PASS", "succeeded", "all green", "complete", "done", "all tests" — inject advisory: "You're declaring success. Did you: review every failure? check for empty/missing outputs? investigate warnings? look at what's NOT in the results that should be? If not, fix issues first." Catches premature victory laps.
+
+- [ ] T370: **FAIL/error scan before commit** — PreToolUse on Bash (git commit). Scan the TODO.md and any .report-data.json in the project for unresolved FAIL, timeout, error, WARN, MISMATCH. If found and the commit message doesn't reference them, block with: "Unresolved issues in project: [list]. Address each in TODO with a specific plan, or explain in commit message why they're acceptable."
+
+- [ ] T371: **Empty-output detector** — PostToolUse module. When a Bash command returns empty stdout where content was expected (e.g., `ls` on screenshots/, `check-file` returning blank), inject warning: "Empty output where content was expected. This likely means something failed silently. Investigate before proceeding." Heuristic: detect common dir-listing patterns followed by empty output.
+
+- [ ] T372: **Stop hook: unresolved issues check** — Stop module enhancement. Before session end, scan TODO.md for items still marked "TESTING NOW" or "IN PROGRESS" that weren't updated to pass/fail. Also grep recent conversation history for FAIL/WARN/timeout that were never addressed with a fix or TODO entry. Block with: "Unresolved test issues found — update TODO with actual outcomes before stopping."
 - Batch module validation: 94/94 pass
 - Workflow audit: 93 modules, 92 tagged, all matching YAML
 
@@ -1150,6 +1166,26 @@ Status:
 
 - [x] T439: Session maintenance — health 116/0/0, no incomplete tangents, stop-message.txt portability fix (hardcoded path → $CONTEXT_RESET_PY env var)
 - [x] T440: Add "What does a block look like?" example to README — force-push and git-destructive-guard examples (PR #328)
+
+## Session Handoff (2026-04-11i)
+What was done this session:
+- T439 (PR #327): stop-message.txt portability — hardcoded context-reset path → $CONTEXT_RESET_PY env var
+- T440 (PR #328): README "What does a block look like?" section — concrete gate output examples
+- Marketplace synced (README + stop-message.txt)
+- Code review: ES5 clean, no security issues, no bare-string return bugs
+- Full test suite: 51 suites, 405 passed, 0 failed
+- Health: 116 OK, 0 warnings, 0 failures
+- gh auth on default (joel-ginsberg_tmemu)
+
+Status:
+- 0 pending tasks
+- Version: 2.24.6
+- 101 modules, 5 workflows, clean git on main
+
+## Session Maintenance (2026-04-11j)
+
+- [x] T441: Session maintenance — health check (116/0/0), test suite (51 suites, 405 passed), code review (no ES6, no hardcoded paths, all WHY/WORKFLOW tags present, all JSON.parse in try/catch), live hooks in sync
+- [x] T442: Fix testbox gate false positive — added gh_auto/gh to safe-tools regex on line 18 of rdp-testbox-gate.js. Added 2 test cases (17/17 pass). Synced to live hooks.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog

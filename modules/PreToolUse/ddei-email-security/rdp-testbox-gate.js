@@ -13,9 +13,8 @@ module.exports = function(input) {
   var cmd = (input.tool_input || {}).command || "";
   var lower = cmd.toLowerCase();
 
-  // T396: Skip read-only git commands that reference files with "rdp" in the name
-  // (e.g. `git status rdp-testbox-gate.js`, `git add rdp-*`, `git diff rdp-*`)
-  if (/^\s*(git|cat|head|tail|grep|ls|diff|less|wc)\b/.test(lower)) return null;
+  // T396/T442: Skip git/gh commands that reference "rdp" in filenames or PR body text
+  if (/^\s*(git|gh_auto|gh|cat|head|tail|grep|ls|diff|less|wc)\b/.test(lower)) return null;
 
   // Fire on RDP connection/creation commands
   var isRdp = /\b(mstsc|cmdkey|testbox-rdp|open-rdp|testbox-create|testbox-destroy)\b/.test(lower);
