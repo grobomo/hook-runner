@@ -66,8 +66,8 @@ module.exports = function(input) {
     // Check for issue patterns in unchecked tasks or status lines
     for (var p = 0; p < ISSUE_PATTERNS.length; p++) {
       if (ISSUE_PATTERNS[p].test(line)) {
-        // Only flag lines that look like task items or status entries
-        if (/^\s*-\s*\[ \]/.test(line) || /^\s*-\s/.test(line) || /Status:|TESTING|IN PROGRESS/i.test(line)) {
+        // Only flag unchecked task items or explicit status markers
+        if (/^\s*-\s*\[ \]/.test(line) || /Status:|TESTING|IN PROGRESS/i.test(line)) {
           issues.push("  L" + (i + 1) + ": " + line.trim().substring(0, 120));
           break;
         }

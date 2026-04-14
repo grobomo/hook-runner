@@ -1001,9 +1001,9 @@ Root cause: Claude optimizes for "task complete" status. Once it sees mostly-gre
 
 - [ ] T368: **Result review gate** — PostToolUse module on Read (PDF/report files). When Claude reads a test report or PDF, inject a checklist reminder: "Before committing results: 1) List every FAIL/WARN/timeout/error/empty in this report. 2) For each: is it a real bug, expected behavior, or needs investigation? Justify. 3) File a TODO for each unresolved issue. 4) Only then commit." Non-blocking advisory but highly visible. Must fire EVERY time a report is read, not just first time.
 
-- [ ] T369: **Victory-declaration detector** — PreToolUse on Bash (git commit). When commit message contains "PASS", "succeeded", "all green", "complete", "done", "all tests" — inject advisory: "You're declaring success. Did you: review every failure? check for empty/missing outputs? investigate warnings? look at what's NOT in the results that should be? If not, fix issues first." Catches premature victory laps.
+- [x] T369: **Victory-declaration detector** — `victory-declaration-gate.js`. Blocks title-line claims like "all tests pass", "all green", "succeeded", "100%". Only checks title so body can quote phrases. 15/15 tests. shtd + starter.
 
-- [ ] T370: **FAIL/error scan before commit** — PreToolUse on Bash (git commit). Scan the TODO.md and any .report-data.json in the project for unresolved FAIL, timeout, error, WARN, MISMATCH. If found and the commit message doesn't reference them, block with: "Unresolved issues in project: [list]. Address each in TODO with a specific plan, or explain in commit message why they're acceptable."
+- [x] T370: **FAIL/error scan before commit** — `unresolved-issues-gate.js`. Scans TODO.md for unchecked FAIL/timeout/MISMATCH/WARN/ERROR. FP protection for completed tasks, "0 failed". Acknowledges "known"/"pre-existing"/"intermittent". 15/15 tests. shtd.
 
 - [ ] T371: **Empty-output detector** — PostToolUse module. When a Bash command returns empty stdout where content was expected (e.g., `ls` on screenshots/, `check-file` returning blank), inject warning: "Empty output where content was expected. This likely means something failed silently. Investigate before proceeding." Heuristic: detect common dir-listing patterns followed by empty output.
 

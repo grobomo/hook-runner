@@ -110,6 +110,16 @@ var errorDir = setupProject("has-error", "# TODO\n- [ ] T106: ERROR in health ch
 var r15 = runGate(errorDir);
 assert("unchecked ERROR blocks", r15 && r15.decision === "block");
 
+// 16. Plain bullet with issue word passes (not a task checkbox)
+var bulletDir = setupProject("plain-bullet", "# Session Log\n- CI has pre-existing failures in T094\n- FAIL was fixed in commit abc123\n");
+var r16 = runGate(bulletDir);
+assert("plain bullet with FAIL passes (not a task)", r16 === null);
+
+// 17. Session notes with crash/timeout pass
+var notesDir = setupProject("session-notes", "# Notes\n- timeout increased to 360s per suite\n- crash in brain-bridge was intermittent\n");
+var r17 = runGate(notesDir);
+assert("session notes with issue words pass", r17 === null);
+
 // Cleanup
 try { fs.rmSync(tmpBase, { recursive: true, force: true }); } catch(e) {}
 
