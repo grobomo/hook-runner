@@ -223,7 +223,7 @@ RESULT=$(node -e "
                  receivedPayload.question.length > 0 &&
                  receivedPayload.metadata && receivedPayload.metadata.type === 'reflection';
         console.log(ok ? 'OK' : 'FAIL: ' + JSON.stringify(receivedPayload));
-        server.close();
+        server.close(function() { process.exit(0); });
       });
     });
     req.write(payload);
