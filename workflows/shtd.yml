@@ -60,6 +60,8 @@ modules:
   - remote-tracking-gate
   - commit-counter-gate
   - commit-quality-gate
+  - unresolved-issues-gate
+  - victory-declaration-gate
   - deploy-gate
   - deploy-history-reminder
   - secret-scan-gate
