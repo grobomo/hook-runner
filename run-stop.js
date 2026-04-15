@@ -24,7 +24,8 @@ try {
 if (input.stop_hook_active) process.exit(0);
 
 var ctx = hookLog.extractContext("Stop", input);
-var modulePaths = loadModules(path.join(__dirname, "run-modules", "Stop"));
+var modulesDir = process.env.HOOK_RUNNER_MODULES_DIR || path.join(__dirname, "run-modules");
+var modulePaths = loadModules(path.join(modulesDir, "Stop"));
 
 // Known blocking modules — these return {decision:"block"} and are fast.
 // Run them directly. Everything else goes to background.
