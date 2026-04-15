@@ -1194,8 +1194,21 @@ Status:
 
 ## Test & Code Quality (2026-04-14b)
 
-- [ ] T445: Fix --test to discover .js test files — 15 JS test suites (145+ tests) silently skipped because cmdTest() only discovers .sh files
+- [x] T445: Fix --test to discover .js test files — 15 JS test suites (~76 tests) silently skipped. Suite count 51→66, test count 817→893. (#336)
 - [ ] T446: Performance audit — PreToolUse ~281ms overhead. Document top offenders, add perf baseline to CI
+- [x] T447: Fix e2e-enforcement test — HOOK_RUNNER_MODULES_DIR env var + isolated temp dirs per test. 11/11 pass.
+
+## GSD Workflow Migration (T448-T452)
+
+Replace shtd spec-based enforcement with GSD `.planning/` enforcement.
+Keep: feature branches, PR-per-task, git safety, security gates.
+Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
+
+- [ ] T448: Archive shtd workflow — disable shtd, create `workflows/gsd.yml` workflow definition
+- [ ] T449: Write `gsd-plan-gate.js` PreToolUse module — blocks code edits unless `.planning/ROADMAP.md` exists with an active phase that has PLAN.md. Branch must reference phase number.
+- [ ] T450: Write `gsd-branch-gate.js` PreToolUse module — enforces branch naming `<num>-phase-<N>-<slug>` pattern matching active GSD phases
+- [ ] T451: Write `gsd-pr-gate.js` PreToolUse module — one PR per plan/task in a phase. Branch must map to a single phase.
+- [ ] T452: E2E tests for all new GSD modules + workflow enable/disable
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
