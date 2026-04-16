@@ -1240,7 +1240,7 @@ All tasks complete. v2.26.0 released. Next session should:
 
 - [x] T463: Sync stop-message.txt repo copy to match live (removed preserve-tab, added $NEW_SESSION_PY)
 - [x] T464: Protect all files in run-modules/ (not just .js) — skip WORKFLOW/WHY for .txt/.yaml
-- [ ] T465: Investigate inconsistent hook-system-reminder.js blocking
+- [x] T465: Investigated — stop-message.txt was never protected (old gate only matched .js). Fixed by T464.
 
 ## Commit Counter Branch Awareness (2026-04-16, from dd-lab incident)
 
