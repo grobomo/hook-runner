@@ -2,7 +2,9 @@
 // WORKFLOW: shtd, gsd
 // WHY: Claude makes 20+ file changes without committing, then context resets
 // and all work is lost or untraceable. User tracks progress via GitHub Mobile.
-// Every 5 edits, force a commit so there's a git trail.
+// Every 15 edits, force a commit so there's a git trail.
+// T459: Raised from 5→15. 5 interrupted mid-feature (config+code+test+docs = 5 files).
+// 15 gives room for a coherent change while still catching runaway sessions.
 "use strict";
 var fs = require("fs");
 var path = require("path");
@@ -10,7 +12,7 @@ var cp = require("child_process");
 var os = require("os");
 
 var COUNTER_FILE = path.join(os.homedir(), ".claude", "hooks", ".uncommitted-edit-count");
-var MAX_EDITS = 5;
+var MAX_EDITS = 15;
 
 // Patterns indicating file-modifying Bash commands (shared helper — DRY with spec-before-code-gate)
 var FILE_MODIFY_PATTERNS = require("./_file-modify-patterns");
