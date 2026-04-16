@@ -1228,6 +1228,14 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 
 - [x] T458: Fix spec-gate blocking git/gh with env var prefixes ($() subshells) + node test scripts allowlist. 38/38 tests. (PR #344, #345)
 
+## Session Handoff (2026-04-16)
+
+All tasks complete. v2.26.0 released. Next session should:
+- [ ] T459: Code review the 4 new modules (gsd-plan-gate, gsd-branch-gate, gsd-pr-gate, snapshot.js) — check for DRY violations, missing edge cases, shared helper extraction (getActivePhases duplicated in branch-gate and pr-gate)
+- [ ] T460: Clean up stale branches — 8+ feature branches from this session need deleting
+- [ ] T461: Run full test suite on main (`node setup.js --test`) and fix T117-posttooluse-runner pre-existing failure
+- [ ] T462: Marketplace sync for T458 spec-gate fix (not included in v2.26.0 marketplace push)
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
