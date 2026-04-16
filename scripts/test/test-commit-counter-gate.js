@@ -196,7 +196,8 @@ test("matching branch and files: no WRONG BRANCH", function() {
 
 test("main checkout without worktree: enforces worktree", function() {
   // In a main checkout (.git is a directory) with matching branch keywords
-  var dir = createTempRepo("feature-app", ["src/app.js"]);
+  // Branch keyword "src" matches file dir "src" so mismatch won't fire
+  var dir = createTempRepo("build-src-utils", ["src/app.js"]);
   process.env.CLAUDE_PROJECT_DIR = dir;
   setCounter(14);
 
