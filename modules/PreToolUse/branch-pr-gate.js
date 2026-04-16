@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Claude committed directly to main, bypassing review.
 "use strict";
 // Branch-PR gate: enforces Model C workflow.

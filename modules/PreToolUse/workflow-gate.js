@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 "use strict";
 // WHY: Steps in a workflow were skipped — build ran before setup, deploy before test.
 // Workflow gate: enforces step order in active workflows.
