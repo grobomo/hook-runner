@@ -37,7 +37,8 @@ module.exports = function(input) {
   var checkoutMatch = cmd.match(/git\s+(checkout|restore)\s+(.*)/);
   if (checkoutMatch) {
     var subcmd = checkoutMatch[1];
-    var args = checkoutMatch[2].trim();
+    // T460: Only examine checkout args, not chained commands after && || ; |
+    var args = checkoutMatch[2].split(/\s*(?:&&|\|\||\||;|[12]?>>?)\s*/)[0].trim();
     // Allow branch operations: checkout -b, checkout --orphan, checkout -
     if (subcmd === "checkout" && /^(-b|--orphan|-t|--track|-)\s/.test(args)) return null;
     // Allow checkout with no args (detached HEAD info) or bare branch name (no dots, no slashes with extensions)
@@ -63,15 +64,9 @@ module.exports = function(input) {
     };
   }
 
-  // git branch -D — force-deletes a branch (may have unmerged commits)
-  if (/git\s+branch\s+-D\s/.test(cmd)) {
-    return {
-      decision: "block",
-      reason: "DESTRUCTIVE: git branch -D force-deletes even unmerged branches.\n" +
-        "Use git branch -d (lowercase) which refuses if commits are unmerged.\n" +
-        "If you truly need -D, ask the user first."
-    };
-  }
+  // T460: git branch -D removed as a block. Claude's built-in instructions already
+  // require user approval for -D. The gate was preventing Claude from following
+  // through after the user approved (e.g. merged branches with pruned remote refs).
 
   return null;
 };

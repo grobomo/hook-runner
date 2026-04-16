@@ -23,13 +23,17 @@ run("git restore src/main.js", "block", "restore file");
 run("git checkout -- file.js", "block", "checkout -- file");
 run("git reset --hard", "block", "reset hard");
 run("git clean -fd", "block", "clean force");
-run("git branch -D old-branch", "block", "branch force delete");
+// T460: git branch -D no longer blocked (Claude's instructions already require user approval)
+run("git branch -D old-branch", "pass", "branch force delete (user-gated)");
 
 // Non-destructive — should pass
 run("git checkout -b new-branch", "pass", "new branch");
 run("git checkout main", "pass", "switch branch");
 run("git checkout feature-branch", "pass", "switch feature");
 run("git status", "pass", "status");
+// T460: chained commands — checkout branch + other commands should pass
+run("git checkout main && git pull origin main 2>&1 | tail -5", "pass", "checkout main chained with pull");
+run("git checkout main && GH_TOKEN=$(gh auth token --user grobomo 2>/dev/null) git pull origin main", "pass", "checkout main chained with env var pull");
 
 // False positives: git commands mentioned in strings/heredocs — should pass
 run('gh pr create --body "$(cat <<\'EOF\'\ngit checkout file.js is blocked\nEOF\n)"', "pass", "heredoc mention");
