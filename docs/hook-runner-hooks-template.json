@@ -1,0 +1,89 @@
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/joelg/.claude/hooks/run-hidden.js\" run-sessionstart.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/joelg/.claude/hooks/run-hidden.js\" run-stop.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/joelg/.claude/hooks/run-hidden.js\" run-pretooluse.js",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/joelg/.claude/hooks/run-hidden.js\" run-pretooluse.js",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/joelg/.claude/hooks/run-hidden.js\" run-pretooluse.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/joelg/.claude/hooks/run-hidden.js\" run-posttooluse.js",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/joelg/.claude/hooks/run-hidden.js\" run-posttooluse.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"C:/Users/joelg/.claude/hooks/run-hidden.js\" run-userpromptsubmit.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
