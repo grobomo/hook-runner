@@ -1197,6 +1197,10 @@ Status:
 - [ ] T445: Fix --test to discover .js test files — 15 JS test suites (145+ tests) silently skipped because cmdTest() only discovers .sh files
 - [ ] T446: Performance audit — PreToolUse ~281ms overhead. Document top offenders, add perf baseline to CI
 
+## Spec Gate Bugfix (2026-04-16)
+
+- [ ] T458: Fix spec-gate blocking git commands with env var prefixes (GH_TOKEN=... git pull) and node test scripts on main
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
