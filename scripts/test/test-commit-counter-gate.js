@@ -42,11 +42,20 @@ function createTempRepo(branchName, dirtyFiles) {
     cp.execFileSync("git", ["checkout", "-b", branchName], { cwd: dir, windowsHide: true });
   }
 
-  // Create dirty files (uncommitted changes)
-  for (var i = 0; i < dirtyFiles.length; i++) {
-    var filePath = path.join(dir, dirtyFiles[i]);
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
-    fs.writeFileSync(filePath, "content-" + i);
+  // Create files, commit them, then modify — so git diff --stat sees them as dirty
+  // (git diff only shows tracked modified files, not untracked new files)
+  if (dirtyFiles.length > 0) {
+    for (var i = 0; i < dirtyFiles.length; i++) {
+      var filePath = path.join(dir, dirtyFiles[i]);
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+      fs.writeFileSync(filePath, "original-" + i);
+    }
+    cp.execFileSync("git", ["add", "."], { cwd: dir, windowsHide: true });
+    cp.execFileSync("git", ["commit", "-m", "add files"], { cwd: dir, windowsHide: true });
+    // Now modify them so git diff shows them as dirty
+    for (var j = 0; j < dirtyFiles.length; j++) {
+      fs.writeFileSync(path.join(dir, dirtyFiles[j]), "modified-" + j);
+    }
   }
 
   return dir;
