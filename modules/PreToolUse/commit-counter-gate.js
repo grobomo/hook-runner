@@ -35,11 +35,14 @@ function writeCounter(count) {
   } catch(e) {}
 }
 
+function getProjectDir() {
+  return process.env.CLAUDE_PROJECT_DIR || process.cwd();
+}
+
 function getGitDiffCount() {
   try {
-    var out = cp.execFileSync("git", ["diff", "--stat"], {
-      encoding: "utf-8", timeout: 5000, windowsHide: true
-    }).trim();
+    var opts = { encoding: "utf-8", timeout: 5000, windowsHide: true, cwd: getProjectDir() };
+    var out = cp.execFileSync("git", ["diff", "--stat"], opts).trim();
     if (!out) return 0;
     var lines = out.split("\n");
     // Last line is summary like "3 files changed, ..."
@@ -52,15 +55,10 @@ function getGitDiffCount() {
 // Get changed file paths (tracked modifications + untracked new files)
 function getChangedFiles() {
   try {
-    var modified = cp.execFileSync("git", ["diff", "--name-only"], {
-      encoding: "utf-8", timeout: 5000, windowsHide: true
-    }).trim();
-    var staged = cp.execFileSync("git", ["diff", "--name-only", "--cached"], {
-      encoding: "utf-8", timeout: 5000, windowsHide: true
-    }).trim();
-    var untracked = cp.execFileSync("git", ["ls-files", "--others", "--exclude-standard"], {
-      encoding: "utf-8", timeout: 5000, windowsHide: true
-    }).trim();
+    var opts = { encoding: "utf-8", timeout: 5000, windowsHide: true, cwd: getProjectDir() };
+    var modified = cp.execFileSync("git", ["diff", "--name-only"], opts).trim();
+    var staged = cp.execFileSync("git", ["diff", "--name-only", "--cached"], opts).trim();
+    var untracked = cp.execFileSync("git", ["ls-files", "--others", "--exclude-standard"], opts).trim();
     var all = (modified + "\n" + staged + "\n" + untracked).split("\n").filter(function(f) { return f.length > 0; });
     // Deduplicate
     var seen = {};
