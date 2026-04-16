@@ -4,8 +4,7 @@
 // making it impossible to trace which branch implemented which phase.
 // This gate enforces branch naming that maps to active GSD phases.
 "use strict";
-var fs = require("fs");
-var path = require("path");
+var getActivePhases = require("./_gsd-helpers").getActivePhases;
 
 // GSD branch pattern: <seq>-phase-<N>-<slug>
 // Examples: 001-phase-1-replace-f5, 042-phase-3-e2e-test
@@ -13,45 +12,6 @@ var GSD_BRANCH_RE = /^(\d+)-phase-(\d+)-(.+)$/;
 
 // Also allow shtd-style task branches (for mixed workflows)
 var TASK_BRANCH_RE = /^\d{3}-T\d{3}/;
-
-/**
- * Parse active phase numbers from ROADMAP.md
- * Returns array of phase numbers (as strings) under "Active Milestone"
- */
-function getActivePhases(projectDir) {
-  var roadmap = path.join(projectDir, ".planning", "ROADMAP.md");
-  if (!fs.existsSync(roadmap)) return [];
-
-  try {
-    var content = fs.readFileSync(roadmap, "utf-8");
-    var phases = [];
-    var inActive = false;
-    var lines = content.split("\n");
-
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i];
-      // Start tracking after "Active Milestone" header
-      if (/^##\s+Active Milestone/i.test(line)) {
-        inActive = true;
-        continue;
-      }
-      // Stop at next ## header (different milestone)
-      if (inActive && /^##\s/.test(line) && !/^###/.test(line)) {
-        break;
-      }
-      // Collect phase numbers
-      if (inActive) {
-        var phaseMatch = line.match(/^###\s+Phase\s+(\d+)/i);
-        if (phaseMatch) {
-          phases.push(phaseMatch[1]);
-        }
-      }
-    }
-    return phases;
-  } catch (e) {
-    return [];
-  }
-}
 
 module.exports = function(input) {
   if (input.tool_name !== "Bash") return null;
