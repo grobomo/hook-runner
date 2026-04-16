@@ -1222,11 +1222,11 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 
 ## Merge & Release (2026-04-16)
 
-- [ ] T457: Merge PRs #337-#342, version bump, marketplace sync, sync modules to live
+- [x] T457: Merge PRs #337-#342, version bump v2.26.0, marketplace sync, modules synced to live (PR #343)
 
 ## Spec Gate Bugfix (2026-04-16)
 
-- [ ] T458: Fix spec-gate blocking git commands with env var prefixes (GH_TOKEN=... git pull) and node test scripts on main
+- [x] T458: Fix spec-gate blocking git/gh with env var prefixes ($() subshells) + node test scripts allowlist. 38/38 tests. (PR #344, #345)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
