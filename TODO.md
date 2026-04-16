@@ -1220,6 +1220,10 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 
 - [x] T456: Update stop-message.txt to add step 3: "TEST what you built" before hardening. New 5-step order verified via stop hook test. (PR #339)
 
+## Merge & Release (2026-04-16)
+
+- [ ] T457: Merge PRs #337-#342, version bump, marketplace sync, sync modules to live
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
