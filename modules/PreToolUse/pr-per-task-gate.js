@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, gsd
 // WHY: Batched PRs with multiple tasks made mobile monitoring and rollbacks impossible.
 "use strict";

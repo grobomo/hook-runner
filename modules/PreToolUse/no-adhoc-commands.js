@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, gsd
 // WHY: Ad-hoc AWS/SSH/Azure commands died with the session. Scripts survive.
 // Block ad-hoc Bash commands for AWS, Azure, SSH, Docker, and infrastructure.
