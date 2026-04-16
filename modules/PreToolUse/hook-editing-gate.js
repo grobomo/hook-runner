@@ -173,8 +173,10 @@ module.exports = function(input) {
   }
 
   // For modules: check WORKFLOW tag and WHY comment (Write only, not Edit fragments)
+  // T464: only enforce JS-specific tags on .js files — .txt/.yaml/.yml are data files
   if (protectedType === "module") {
-    if (tool === "Write") {
+    var isJsFile = /\.js$/.test(norm);
+    if (tool === "Write" && isJsFile) {
       if (!/\/\/ WORKFLOW:/.test(content)) {
         issues.push("Missing // WORKFLOW: tag — every module must declare its workflow");
       }
