@@ -1233,7 +1233,7 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 All tasks complete. v2.26.0 released. Next session should:
 - [x] T459: Code review — extracted _gsd-helpers.js (DRY), raised commit-counter 5→15 (PR #347, #348)
 - [ ] T460: Clean up 10 stale local branches (need `git branch -D`, gate blocks it — user must approve)
-- [ ] T461: Run full test suite on main (`node setup.js --test`) and fix T117-posttooluse-runner pre-existing failure
+- [x] T461: Run full test suite — fixed 3 failing suites: worktree-gate (16 tests rewritten for PR #350), T117 grep pattern, T094 README docs (#351)
 - [ ] T462: Marketplace sync for T458 spec-gate fix + T459 commit-counter fix (not in v2.26.0)
 
 ## Commit Counter Branch Awareness (2026-04-16, from dd-lab incident)
