@@ -202,6 +202,7 @@ var BASH_ALLOW_PATTERNS = [
   /^\s*node\s+-e\b/, /^\s*node\s+--eval\b/, // quick evals (not running files)
   /^\s*python\s+-c\b/, // quick evals
   /^\s*bash\s+scripts\/test\//, // running existing test scripts
+  /^\s*node\s+scripts\/test\//, // running JS test scripts
   /^\s*node\s+setup\.js\s+--test/, // hook-runner tests
   /python\s+.*new.session\.py/, // T384: session management (launch new Claude tab)
   /python\s+.*context.reset\.py/, // T384: session management (backward-compat alias)
@@ -226,6 +227,8 @@ module.exports = function(input) {
 
     // Strip leading cd ... && or cd ... ; to get the real command
     var realCmd = cmd.replace(/^(\s*cd\s+[^;&|]+\s*&&\s*)+/, "").trim();
+    // Strip leading env var assignments (e.g. GH_TOKEN=... git pull)
+    realCmd = realCmd.replace(/^(\s*\w+=\S*\s+)+/, "").trim();
     // Also handle piped commands — check the first command in the pipeline
     var firstCmd = realCmd.split("|")[0].trim();
 
