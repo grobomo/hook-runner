@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Context-reset spawns new Claude Code tabs that all work on the same project
 // simultaneously. This caused 4-5 parallel sessions doing git checkout, git commit,
 // branch switching — total chaos. index.lock contention, parallel commits stomping

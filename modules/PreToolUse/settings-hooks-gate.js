@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Claude added hooks directly to settings.json instead of using the
 // hook-runner module system (run-modules/{Event}/*.js). Direct settings.json
 // hook entries bypass the modular architecture and create one-off hooks that

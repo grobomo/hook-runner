@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Config changes happened without stated rationale, causing confusion later.
 // Settings change gate: injects a reminder when modifying ~/.claude/ config files.
 // Doesn't block — just ensures Claude states the reason in its response.

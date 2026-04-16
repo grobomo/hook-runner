@@ -20,7 +20,8 @@ try {
 }
 
 var ctx = hookLog.extractContext("SessionStart", input);
-var modules = loadModules(path.join(__dirname, "run-modules", "SessionStart"));
+var modulesDir = process.env.HOOK_RUNNER_MODULES_DIR || path.join(__dirname, "run-modules");
+var modules = loadModules(path.join(modulesDir, "SessionStart"));
 var output = [];
 
 runAsync.runModules(modules, input,

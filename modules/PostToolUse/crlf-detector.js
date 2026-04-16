@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: On Windows, Write/Edit can produce CRLF line endings that break shell scripts,
 // YAML files, SSH keys, and other Unix-sensitive formats. The crlf-ssh-key-check
 // module only covers SSH keys — this catches CRLF in all sensitive file types.

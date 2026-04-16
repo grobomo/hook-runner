@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: User has instructed at least 3 times across sessions to never use
 // ~/.claude/rules/ or .claude/rules/ — only hook-runner modules and workflows.
 // Rules are invisible, unenforceable, and duplicate what hooks already do.

@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: A background process silently overwrote live hook modules between prompts,
 // stripping WORKFLOW tags from 37 modules. Mid-session drift went undetected.
 "use strict";

@@ -1194,8 +1194,27 @@ Status:
 
 ## Test & Code Quality (2026-04-14b)
 
-- [ ] T445: Fix --test to discover .js test files — 15 JS test suites (145+ tests) silently skipped because cmdTest() only discovers .sh files
+- [x] T445: Fix --test to discover .js test files — 15 JS test suites (~76 tests) silently skipped. Suite count 51→66, test count 817→893. (#336)
 - [ ] T446: Performance audit — PreToolUse ~281ms overhead. Document top offenders, add perf baseline to CI
+- [x] T447: Fix e2e-enforcement test — HOOK_RUNNER_MODULES_DIR env var + isolated temp dirs per test. 11/11 pass.
+
+## GSD Workflow Migration (T448-T452)
+
+Replace shtd spec-based enforcement with GSD `.planning/` enforcement.
+Keep: feature branches, PR-per-task, git safety, security gates.
+Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
+
+- [x] T448: Archive shtd workflow — disabled shtd at project level, created `workflows/gsd.yml` with gsd-plan-gate replacing spec-gate. 12 E2E tests pass.
+- [x] T449: `gsd-plan-gate.js` — blocks code edits unless `.planning/ROADMAP.md` exists with active phases+PLAN.md, or TODO.md has tasks. Merged into T448.
+- [ ] T450: Write `gsd-branch-gate.js` PreToolUse module — enforces branch naming `<num>-phase-<N>-<slug>` pattern matching active GSD phases
+
+## Snapshot & Workflow Simplification (T453-T455)
+
+- [ ] T453: Snapshot system — SHA256 manifest, drift detection, git-backed backup/restore (snapshot.js + drift-check SessionStart module)
+- [ ] T454: Promote universal modules to starter — 27 modules that protect system/account/platform should fire regardless of dev workflow
+- [ ] T455: Simplify workflow tiers — clarify starter (universal) vs shtd (dev discipline) vs gsd (phase-based), investigate which shtd modules to keep vs merge
+- [ ] T451: Write `gsd-pr-gate.js` PreToolUse module — one PR per plan/task in a phase. Branch must map to a single phase.
+- [x] T452: E2E tests for gsd-plan-gate — 12 tests covering all scenarios. Merged into T448.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog

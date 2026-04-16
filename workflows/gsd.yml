@@ -1,0 +1,139 @@
+name: gsd
+description: GSD-driven development discipline. Enforces .planning/ → ROADMAP.md → phase plan → branch → execute → PR pipeline. Replaces shtd's spec-based flow with GSD's phase-based flow while keeping all safety, quality, and session lifecycle modules.
+version: 1
+steps:
+  - id: plan
+    name: Discuss and plan the phase (PLAN.md exists)
+    gate:
+      require_files: []
+    completion:
+      require_files: [".planning/ROADMAP.md"]
+  - id: branch
+    name: Create feature branch for the phase
+    gate:
+      require_step: plan
+    completion:
+      require_files: []
+  - id: execute
+    name: Execute the plan tasks
+    gate:
+      require_step: branch
+    completion:
+      require_files: []
+  - id: verify
+    name: Verify implementation passes tests
+    gate:
+      require_step: execute
+    completion:
+      require_files: []
+  - id: pr
+    name: Create PR for the phase work
+    gate:
+      require_step: verify
+    completion:
+      require_files: []
+
+modules:
+  # GSD pipeline enforcement (replaces spec-gate, spec-before-code-gate)
+  - gsd-plan-gate
+  # Development pipeline (kept from shtd)
+  - branch-pr-gate
+  - commit-msg-check
+  - continuous-claude-gate
+  - drift-review
+  - hook-editing-gate
+  - hook-integrity-monitor
+  - workflow-compliance-gate
+  - pr-per-task-gate
+  - push-unpushed
+  - remote-tracking-gate
+  - commit-counter-gate
+  - commit-quality-gate
+  - unresolved-issues-gate
+  - victory-declaration-gate
+  - deploy-gate
+  - deploy-history-reminder
+  - secret-scan-gate
+  - task-completion-gate
+  - test-before-done
+  - test-checkpoint-gate
+  - unresolved-issues-check
+  - why-reminder
+  - workflow-gate
+  - blueprint-no-sleep
+  - gh-auto-gate
+  - no-hook-bypass
+  - no-nested-claude
+  - publish-json-guard
+  # Code quality
+  - archive-not-delete
+  - claude-p-pattern
+  - git-destructive-guard
+  - git-rebase-safety
+  - no-fragile-heuristics
+  - no-hardcoded-paths
+  - preserve-iterated-content
+  - root-cause-gate
+  - no-rules-gate
+  - rule-hygiene
+  - test-coverage-check
+  - empty-output-detector
+  - result-review-gate
+  - update-stale-docs
+  - hook-health-monitor
+  - hook-self-test
+  - windowless-spawn-gate
+  - worktree-gate
+  - pr-first-gate
+  # Infrastructure safety
+  - aws-tagging-gate
+  - crlf-detector
+  - crlf-ssh-key-check
+  - disk-space-guard
+  - disk-space-detect
+  - force-push-gate
+  - env-var-check
+  - session-cleanup
+  - hook-autocommit
+  - no-adhoc-commands
+  - cross-project-todo-gate
+  - cwd-drift-detector
+  - no-focus-steal
+  - settings-audit-log
+  - settings-change-gate
+  - settings-hooks-gate
+  # Messaging safety
+  - messaging-safety-gate
+  - share-is-generic
+  # Project-scoped (ddei-email-security)
+  - rdp-testbox-gate
+  # System reminders
+  - hook-system-reminder
+  # Self-improvement
+  - instruction-to-hook-gate
+  - instruction-detector
+  - interrupt-detector
+  - troubleshoot-detector
+  - no-passive-rules
+  - prompt-logger
+  # Self-reflection
+  - self-reflection
+  - reflection-gate
+  - reflection-score
+  - reflection-score-inject
+  - session-brain-analysis
+  - lesson-effectiveness
+  # Session lifecycle
+  - auto-continue
+  - backup-check
+  - chat-export
+  - config-sync
+  - load-instructions
+  - load-lessons
+  - log-gotchas
+  - mark-turn-complete
+  - never-give-up
+  - project-health
+  - session-collision-detector
+  - terminal-title
+  - workflow-summary
