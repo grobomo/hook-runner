@@ -1251,7 +1251,7 @@ All tasks complete. v2.26.0 released. Next session should:
 
 - [ ] T460: Clean up stale local branches (need `git branch -D`, gate blocks it — user must approve)
 - [ ] T462: Marketplace sync for T458-T467 changes
-- [ ] T465: Investigate inconsistent hook-system-reminder.js blocking
+- [x] T465: Investigated — not inconsistent. stop-message.txt was never protected (old gate only matched .js). Fixed by T464.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
