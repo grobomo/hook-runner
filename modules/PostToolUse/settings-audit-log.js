@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Settings changes happened silently with no audit trail.
 // Audit log: records all modifications to ~/.claude/ config files.
 // Logs to ~/.claude/audit/settings-changes.jsonl with timestamp, file, tool, and diff.

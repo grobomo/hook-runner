@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: E2E deploy cycles take 10+ minutes. When deployed from a dirty tree,
 // results can't be traced to a specific commit SHA. Wasted debugging time
 // when you can't reproduce what was actually deployed.

@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Claude treats empty command output as success — e.g., `ls screenshots/` returning
 // nothing means no screenshots exist, but Claude proceeds as if they do. Empty output
 // from directory listings, file checks, and query commands often means silent failure.

@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Self-reflection catches issues in-session but misses cross-session patterns.
 // User has given the same instruction 3+ times ("no rules, only hooks") without it
 // sticking. This module triggers brain-level analysis at session end to review

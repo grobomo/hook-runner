@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: During a rebase, --ours/--theirs are REVERSED from intuition.
 // Claude used --theirs thinking it meant "my local changes" but during
 // rebase it means the upstream branch. This silently dropped 30+ hook

@@ -1,6 +1,7 @@
 name: shtd
 description: Spec-Hook-Test-Driven — all development discipline in one workflow. Enforces spec → branch → test → implement → PR pipeline, code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement.
-version: 2
+version: 3
+extends: starter
 steps:
   - id: spec
     name: Write spec describing the feature or rule
@@ -46,12 +47,16 @@ steps:
       require_files: []
 
 modules:
-  # Development pipeline (was: shtd)
+  # === SHTD-EXCLUSIVE: spec-based methodology ===
+  - spec-gate
+  - spec-before-code-gate
+  - enforcement-gate
+  # === DEV DISCIPLINE: shared with gsd (tagged: shtd, gsd) ===
+  # Development pipeline
   - branch-pr-gate
   - commit-msg-check
   - continuous-claude-gate
   - drift-review
-  - enforcement-gate
   - hook-editing-gate
   - hook-integrity-monitor
   - workflow-compliance-gate
@@ -65,8 +70,6 @@ modules:
   - deploy-gate
   - deploy-history-reminder
   - secret-scan-gate
-  - spec-before-code-gate
-  - spec-gate
   - task-completion-gate
   - test-before-done
   - test-checkpoint-gate
@@ -78,7 +81,7 @@ modules:
   - no-hook-bypass
   - no-nested-claude
   - publish-json-guard
-  # Code quality (was: code-quality)
+  # Code quality
   - archive-not-delete
   - claude-p-pattern
   - git-destructive-guard
@@ -98,7 +101,7 @@ modules:
   - windowless-spawn-gate
   - worktree-gate
   - pr-first-gate
-  # Infrastructure safety (was: infra-safety)
+  # Infrastructure safety
   - aws-tagging-gate
   - crlf-detector
   - crlf-ssh-key-check
@@ -115,14 +118,14 @@ modules:
   - settings-audit-log
   - settings-change-gate
   - settings-hooks-gate
-  # Messaging safety (was: messaging-safety)
+  # Messaging safety
   - messaging-safety-gate
   - share-is-generic
   # Project-scoped (ddei-email-security)
   - rdp-testbox-gate
   # System reminders
   - hook-system-reminder
-  # Self-improvement (was: self-improvement)
+  # Self-improvement
   - instruction-to-hook-gate
   - instruction-detector
   - interrupt-detector
@@ -136,7 +139,7 @@ modules:
   - reflection-score-inject
   - session-brain-analysis
   - lesson-effectiveness
-  # Session lifecycle (was: session-management)
+  # Session lifecycle
   - auto-continue
   - backup-check
   - chat-export

@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Claude repeatedly tries to create .claude/rules/ files despite being
 // told dozens of times across dozens of sessions. This hook fires when Claude
 // tries to WRITE or EDIT anything in ~/.claude/ to remind it how the system works.

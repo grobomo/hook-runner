@@ -1210,11 +1210,15 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 
 ## Snapshot & Workflow Simplification (T453-T455)
 
-- [ ] T453: Snapshot system — SHA256 manifest, drift detection, git-backed backup/restore (snapshot.js + drift-check SessionStart module)
-- [ ] T454: Promote universal modules to starter — 27 modules that protect system/account/platform should fire regardless of dev workflow
+- [x] T453: Snapshot system — SHA256 manifest, drift detection, git-backed backup/restore (snapshot.js + drift-check SessionStart module) (PR #337)
+- [x] T454: Promote universal modules to starter — 27 modules that protect system/account/platform should fire regardless of dev workflow (PR #337)
 - [ ] T455: Simplify workflow tiers — clarify starter (universal) vs shtd (dev discipline) vs gsd (phase-based), investigate which shtd modules to keep vs merge
 - [ ] T451: Write `gsd-pr-gate.js` PreToolUse module — one PR per plan/task in a phase. Branch must map to a single phase.
 - [x] T452: E2E tests for gsd-plan-gate — 12 tests covering all scenarios. Merged into T448.
+
+## Stop Hook: Add Testing Step (T456)
+
+- [ ] T456: Update stop-message.txt to add step 3: "TEST what you built" before hardening. Claude skips E2E verification and goes straight to code review/hardening after unit tests. New order: (1) TODO tasks, (2) log tangents, (3) E2E test the MVP, (4) code review/harden, (5) zoom out.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
