@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Windows scp/cp adds \r\n to SSH keys. OpenSSH rejects them with
 // "error in libcrypto". This happened repeatedly with fleet key deployment.
 "use strict";

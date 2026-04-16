@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: ep-incident-response (private customer data) was published to grobomo (public).
 // Root cause: nothing prevented Claude from editing publish.json or git remotes,
 // which control which GitHub account receives pushes. This gate blocks all edits

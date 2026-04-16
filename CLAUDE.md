@@ -17,6 +17,7 @@ Modular hook runner for Claude Code. Workflows group modules into enforceable pi
 - `hook-log.js` — centralized logger (JSONL per invocation, per-module timing)
 - `run-async.js` — async module executor (Promise detection, 4s timeout)
 - `run-*.js` — event runners (pretooluse, posttooluse, stop, sessionstart, userpromptsubmit)
+- `snapshot.js` — ecosystem snapshot, drift detection, and portable backup/restore
 - `modules/` — distributable module catalog organized by event type
 - `workflows/` — built-in workflow definitions (YAML)
 - `specs/` — feature specs with tasks and checkpoints
@@ -52,6 +53,10 @@ node setup.js --test         # run all test suites
 node setup.js --upgrade      # fetch latest from GitHub
 node setup.js --uninstall    # remove hook-runner (--confirm restores backup)
 node setup.js --prune [N]    # prune log entries older than N days
+node setup.js --snapshot     # SHA256 snapshot of current state
+node setup.js --snapshot drift  # detect drift from last snapshot
+node setup.js --snapshot backup # copy to git repo, commit, push
+node setup.js --snapshot restore # clone repo, restore files
 node setup.js --version      # show version
 node setup.js --help         # show all commands
 ```

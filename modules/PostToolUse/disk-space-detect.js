@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Companion to PreToolUse/disk-space-guard.js.
 // Detects disk space errors in tool output and sets alert mode.
 // Alert mode blocks destructive commands until user resolves the issue.

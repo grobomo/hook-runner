@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: A rogue Claude tab silently weakened spec-gate.js by removing Bash from
 // the gated tools list. No audit trail, no alert. Any session could modify hooks
 // to bypass its own enforcement. This gate now locks hook editing to the

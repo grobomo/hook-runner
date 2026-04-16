@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Nested `claude -p` calls inside a session don't work reliably.
 // Cross-project work must use context_reset.py which opens a proper new terminal session.
 // Also blocks TaskCreate since it's a within-session tracker, not a session spawner.
