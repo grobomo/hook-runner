@@ -227,8 +227,9 @@ module.exports = function(input) {
 
     // Strip leading cd ... && or cd ... ; to get the real command
     var realCmd = cmd.replace(/^(\s*cd\s+[^;&|]+\s*&&\s*)+/, "").trim();
-    // Strip leading env var assignments (e.g. GH_TOKEN=... git pull)
-    realCmd = realCmd.replace(/^(\s*\w+=\S*\s+)+/, "").trim();
+    // Strip leading env var assignments (e.g. GH_TOKEN=$(cmd) git pull)
+    // Handles subshells $(), quoted values, and simple KEY=val
+    realCmd = realCmd.replace(/^(\s*\w+=(?:\$\([^)]*\)|"[^"]*"|'[^']*'|\S)*\s+)+/, "").trim();
     // Also handle piped commands — check the first command in the pipeline
     var firstCmd = realCmd.split("|")[0].trim();
 
