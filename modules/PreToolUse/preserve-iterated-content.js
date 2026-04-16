@@ -1,3 +1,4 @@
+// TOOLS: Write
 // WORKFLOW: shtd, starter
 // WHY: Claude rewrote a stop hook module, condensing a user-authored message
 // that had been refined over 15 iterations. The message text was treated as

@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, starter
 // WHY: Claude ran `git reset --hard` and `git checkout .` to "clean up" working
 // trees, destroying uncommitted work. These ops are rarely the right solution —

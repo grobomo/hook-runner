@@ -53,7 +53,8 @@ try {
 } catch (e) { /* not in a git repo — modules handle this gracefully */ }
 
 var ctx = hookLog.extractContext("PreToolUse", input);
-var modules = loadModules(path.join(__dirname, "run-modules", "PreToolUse"));
+var modulesDir = process.env.HOOK_RUNNER_MODULES_DIR || path.join(__dirname, "run-modules");
+var modules = loadModules(path.join(modulesDir, "PreToolUse"), input.tool_name);
 
 runAsync.runModules(modules, input,
   function handleResult(modName, result, err, ms) {

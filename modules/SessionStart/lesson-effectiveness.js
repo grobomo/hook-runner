@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Self-analysis lessons were captured (T381) but never checked for repetition.
 // If the same lesson appears 3+ times, it means Claude keeps making the same mistake
 // and the lesson alone isn't enough — a gate module should enforce it instead.

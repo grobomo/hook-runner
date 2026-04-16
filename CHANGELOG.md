@@ -2,6 +2,19 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.26.0] — 2026-04-16
+
+### Added
+- **Snapshot system** (T453) — `snapshot.js` with SHA256 manifest creation, drift detection, and git-backed backup/restore to private repo. `drift-check.js` SessionStart module for daily drift detection.
+- **TOOLS: tag filtering** (T446) — New `// TOOLS: Bash, Edit, Write` module header. `load-modules.js` skips modules that don't match the current tool. Read calls skip 21/54 modules (39%), Edit skips 17 (31%). ~300ms savings on Read calls.
+- **gsd-branch-gate** (T450) — Enforces GSD branch naming `<seq>-phase-<N>-<slug>` matching active ROADMAP.md phases. Allows shtd-style branches for compatibility. 9/9 tests.
+- **gsd-pr-gate** (T451) — Enforces phase/task reference in PR titles. Phase branches must map to active phases. 9/9 tests.
+- **Testing step in stop-message** (T456) — Step 3: "TEST what you built" before hardening. New 5-step stop order.
+
+### Fixed
+- **Workflow tier bug** (T455) — 52 shared modules were tagged `// WORKFLOW: shtd` only, silently stopping when shtd disabled and gsd enabled. Now dual-tagged `shtd, gsd`.
+- **Starter workflow expansion** (T454) — `starter.yml` expanded from 12 to 40 modules (system protection, account safety, session lifecycle, platform guards).
+
 ## [2.25.0] — 2026-04-14
 
 ### Added

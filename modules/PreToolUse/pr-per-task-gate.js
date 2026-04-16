@@ -1,4 +1,5 @@
-// WORKFLOW: shtd
+// TOOLS: Bash
+// WORKFLOW: shtd, gsd
 // WHY: Batched PRs with multiple tasks made mobile monitoring and rollbacks impossible.
 "use strict";
 // PR-per-task gate: blocks `gh pr create` if PR title doesn't include a task ID.

@@ -1,57 +1,45 @@
-name: shtd
-description: Spec-Hook-Test-Driven — all development discipline in one workflow. Enforces spec → branch → test → implement → PR pipeline, code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement.
-version: 3
+name: gsd
+description: GSD-driven development discipline. Enforces .planning/ → ROADMAP.md → phase plan → branch → execute → PR pipeline. Replaces shtd's spec-based flow with GSD's phase-based flow while keeping all safety, quality, and session lifecycle modules.
+version: 2
 extends: starter
 steps:
-  - id: spec
-    name: Write spec describing the feature or rule
+  - id: plan
+    name: Discuss and plan the phase (PLAN.md exists)
     gate:
       require_files: []
     completion:
-      require_files: ["specs/*/spec.md"]
-  - id: tasks
-    name: Break spec into tasks with e2e test checkpoints
-    gate:
-      require_step: spec
-    completion:
-      require_files: ["specs/*/tasks.md"]
+      require_files: [".planning/ROADMAP.md"]
   - id: branch
-    name: Create feature branch from main
+    name: Create feature branch for the phase
     gate:
-      require_step: tasks
+      require_step: plan
     completion:
       require_files: []
-  - id: test
-    name: Write test script before implementation
+  - id: execute
+    name: Execute the plan tasks
     gate:
       require_step: branch
     completion:
       require_files: []
-  - id: implement
-    name: Implement the feature
-    gate:
-      require_step: test
-    completion:
-      require_files: []
   - id: verify
-    name: Run tests and verify all pass
+    name: Verify implementation passes tests
     gate:
-      require_step: implement
+      require_step: execute
     completion:
       require_files: []
   - id: pr
-    name: Create PR with task ID in title
+    name: Create PR for the phase work
     gate:
       require_step: verify
     completion:
       require_files: []
 
 modules:
-  # === SHTD-EXCLUSIVE: spec-based methodology ===
-  - spec-gate
-  - spec-before-code-gate
-  - enforcement-gate
-  # === DEV DISCIPLINE: shared with gsd (tagged: shtd, gsd) ===
+  # === GSD-EXCLUSIVE: phase-based methodology ===
+  - gsd-plan-gate
+  - gsd-branch-gate
+  - gsd-pr-gate
+  # === DEV DISCIPLINE: shared with shtd (tagged: shtd, gsd) ===
   # Development pipeline
   - branch-pr-gate
   - commit-msg-check
@@ -132,7 +120,7 @@ modules:
   - troubleshoot-detector
   - no-passive-rules
   - prompt-logger
-  # Self-reflection (LLM-powered introspection + gamified scoring)
+  # Self-reflection
   - self-reflection
   - reflection-gate
   - reflection-score

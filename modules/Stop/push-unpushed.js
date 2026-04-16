@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Commits sat on local branches, invisible to mobile monitoring.
 "use strict";
 // Stop hook: block stopping if there are unpushed commits.

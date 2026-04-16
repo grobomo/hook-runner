@@ -350,6 +350,7 @@ Full catalog in `modules/` directory:
 | `env-var-check` | Blocks edits if required env vars missing |
 | `force-push-gate` | Blocks git push --force to main/master |
 | `gh-auto-gate` | Forces gh_auto wrapper for all gh/git push commands (EMU account safety) |
+| `gsd-plan-gate` | Blocks code edits without a phase plan in GSD workflow |
 | `git-destructive-guard` | Blocks git reset --hard, checkout ., clean -f without diagnosis |
 | `git-rebase-safety` | Warns about reversed --ours/--theirs during rebase |
 | `hook-editing-gate` | Enforces WORKFLOW tag, WHY comment, exit(1) in hook files |
@@ -446,6 +447,7 @@ Full catalog in `modules/` directory:
 | Module | Description |
 |--------|-------------|
 | `backup-check` | Warns if config backup is stale |
+| `drift-check` | Daily drift detection against last snapshot |
 | `load-instructions` | Injects working instructions at session start |
 | `load-lessons` | Injects recent self-analysis lessons |
 | `hook-self-test` | Validates runner exit codes and block processing at session start |

@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: A Claude session on ddei project ran ad-hoc commands for 45 minutes without
 // SHTD active. When asked, it admitted "no, I just jumped straight into ad hoc commands."
 // Globally enforced workflows must be active in EVERY project. No exceptions by default.

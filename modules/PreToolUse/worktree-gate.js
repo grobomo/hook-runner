@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Multiple Claude tabs working on the same repo directory caused git
 // conflicts — stash collisions, dirty working trees, branch switches stomping
 // each other's changes. Git worktrees give each branch its own directory,

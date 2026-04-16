@@ -1194,8 +1194,35 @@ Status:
 
 ## Test & Code Quality (2026-04-14b)
 
-- [ ] T445: Fix --test to discover .js test files — 15 JS test suites (145+ tests) silently skipped because cmdTest() only discovers .sh files
-- [ ] T446: Performance audit — PreToolUse ~281ms overhead. Document top offenders, add perf baseline to CI
+- [x] T445: Fix --test to discover .js test files — 15 JS test suites (~76 tests) silently skipped. Suite count 51→66, test count 817→893. (#336)
+- [x] T446: Performance audit — added TOOLS: tag filtering, Read calls skip 21/54 modules (39% reduction, ~300ms saved). Top offenders documented. (PR #340)
+- [x] T447: Fix e2e-enforcement test — HOOK_RUNNER_MODULES_DIR env var + isolated temp dirs per test. 11/11 pass.
+
+## GSD Workflow Migration (T448-T452)
+
+Replace shtd spec-based enforcement with GSD `.planning/` enforcement.
+Keep: feature branches, PR-per-task, git safety, security gates.
+Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
+
+- [x] T448: Archive shtd workflow — disabled shtd at project level, created `workflows/gsd.yml` with gsd-plan-gate replacing spec-gate. 12 E2E tests pass.
+- [x] T449: `gsd-plan-gate.js` — blocks code edits unless `.planning/ROADMAP.md` exists with active phases+PLAN.md, or TODO.md has tasks. Merged into T448.
+- [x] T450: Write `gsd-branch-gate.js` PreToolUse module — enforces branch naming `<seq>-phase-<N>-<slug>` matching active ROADMAP.md phases. 9/9 tests. (PR #341)
+
+## Snapshot & Workflow Simplification (T453-T455)
+
+- [x] T453: Snapshot system — SHA256 manifest, drift detection, git-backed backup/restore (snapshot.js + drift-check SessionStart module) (PR #337)
+- [x] T454: Promote universal modules to starter — 27 modules that protect system/account/platform should fire regardless of dev workflow (PR #337)
+- [x] T455: Simplify workflow tiers — dual-tag 52 shared modules shtd+gsd, expand starter.yml 12→40 modules, clear tier structure (PR #338)
+- [x] T451: Write `gsd-pr-gate.js` PreToolUse module — enforces phase/task reference in PRs, validates active ROADMAP.md phases. 9/9 tests. (PR #342)
+- [x] T452: E2E tests for gsd-plan-gate — 12 tests covering all scenarios. Merged into T448.
+
+## Stop Hook: Add Testing Step (T456)
+
+- [x] T456: Update stop-message.txt to add step 3: "TEST what you built" before hardening. New 5-step order verified via stop hook test. (PR #339)
+
+## Merge & Release (2026-04-16)
+
+- [ ] T457: Merge PRs #337-#342, version bump, marketplace sync, sync modules to live
 
 ## Spec Gate Bugfix (2026-04-16)
 

@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Every session starts blank. Without injecting the reflection score,
 // Claude has no memory of past performance and repeats the same mistakes.
 // This module injects the score, level, streak, and WHY into context so

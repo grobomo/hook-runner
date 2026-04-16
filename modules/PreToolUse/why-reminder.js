@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Comments that describe WHAT code does are useless — Claude can read code.
 // Comments that explain WHY decisions were made are invaluable — they survive context
 // resets, guide fleet workers, and prevent future sessions from repeating mistakes.

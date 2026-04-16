@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Claude autonomously sent messages to real people during testing.
 // This gate blocks all outbound messaging (email, Teams, meetings) unless
 // the target is explicitly authorized. Prevents accidental spam to colleagues.

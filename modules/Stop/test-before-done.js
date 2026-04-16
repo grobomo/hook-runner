@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Claude declares features "done" without running tests. The user
 // then discovers broken code on mobile. This gate reminds Claude to test
 // before stopping, and that "test it" means real e2e, not unit tests.

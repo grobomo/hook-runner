@@ -27,7 +27,8 @@ if (input && input.tool_input && typeof input.tool_input.path === "string") {
 }
 
 var ctx = hookLog.extractContext("PostToolUse", input);
-var modules = loadModules(path.join(__dirname, "run-modules", "PostToolUse"));
+var modulesDir = process.env.HOOK_RUNNER_MODULES_DIR || path.join(__dirname, "run-modules");
+var modules = loadModules(path.join(modulesDir, "PostToolUse"), input.tool_name);
 
 // T378: Run all modules before exiting (consistent with T376 Stop runner fix).
 // PostToolUse is monitoring/reporting — all modules should run even if one blocks.

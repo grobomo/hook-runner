@@ -1,5 +1,5 @@
 "use strict";
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Prevents cross-project TODO items from being written into the current
 // project's TODO.md. These items belong in the referenced project's TODO.md
 // where they'll actually get picked up and executed. The cwd-drift-detector

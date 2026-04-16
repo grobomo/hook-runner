@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Claude implemented features without any task tracking, making progress invisible.
 // Tracked workflow gate: blocks implementation code unless the project has a
 // tracked task workflow (specs/tasks.md with T### checkboxes).

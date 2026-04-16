@@ -1,6 +1,6 @@
 name: starter
 description: Safe defaults for any Claude Code user. Blocks common mistakes (force push, destructive git, rm -rf, secret commits) and adds helpful guardrails (commit quality, test reminders). Start here, then enable shtd when you want full development discipline.
-version: 1
+version: 2
 steps:
   - id: ready
     name: Ready to work
@@ -22,7 +22,39 @@ modules:
   - no-hardcoded-paths
   - test-coverage-check
   - preserve-iterated-content
-  # Session lifecycle — helpful context
+  # Hook system protection — prevent self-sabotage
+  - hook-editing-gate
+  - no-hook-bypass
+  - no-rules-gate
+  - hook-autocommit
+  - hook-health-monitor
+  - hook-integrity-monitor
+  # Account/platform safety — correct identity and environment
+  - gh-auto-gate
+  - publish-json-guard
+  - settings-change-gate
+  - settings-hooks-gate
+  - messaging-safety-gate
+  - no-nested-claude
+  - no-focus-steal
+  - windowless-spawn-gate
+  # Infrastructure — disk, CRLF, SSH
+  - disk-space-guard
+  - disk-space-detect
+  - crlf-ssh-key-check
+  - crlf-detector
+  # Session lifecycle — context and continuity
+  - auto-continue
+  - never-give-up
+  - backup-check
+  - drift-check
+  - hook-self-test
+  - load-instructions
   - project-health
-  - workflow-summary
+  - session-cleanup
+  - session-collision-detector
   - terminal-title
+  - workflow-summary
+  # User prompt monitoring
+  - interrupt-detector
+  - prompt-logger

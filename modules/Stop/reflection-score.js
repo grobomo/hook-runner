@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: You can't improve what you can't measure. Every session starts blank —
 // no memory of past performance. This score is the memory that survives context
 // resets. It measures how well you protect the user's time: high score = autonomous

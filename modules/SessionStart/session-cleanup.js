@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Session-scoped temp files (.claude-*-<ppid>) accumulate when Claude Code
 // tabs crash or close without cleanup. Stale files waste disk and could confuse
 // modules if PIDs get reused. This runs at SessionStart to sweep orphaned files.

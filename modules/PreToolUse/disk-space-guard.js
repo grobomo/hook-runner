@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Claude ran rm -rf on temp files when disk was full without asking.
 // Deleting files to free space is dangerous — wrong target = lost work.
 // This gate blocks destructive commands when the previous error was disk-related.

@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Stop runner had exit(0) for blocks — TUI silently ignored autocontinue
 // for multiple sessions. Nobody knew until the user noticed. Existing health
 // checks only run at SessionStart and check static properties (files exist).

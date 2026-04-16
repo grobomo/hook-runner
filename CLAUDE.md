@@ -17,6 +17,7 @@ Modular hook runner for Claude Code. Workflows group modules into enforceable pi
 - `hook-log.js` — centralized logger (JSONL per invocation, per-module timing)
 - `run-async.js` — async module executor (Promise detection, 4s timeout)
 - `run-*.js` — event runners (pretooluse, posttooluse, stop, sessionstart, userpromptsubmit)
+- `snapshot.js` — ecosystem snapshot, drift detection, and portable backup/restore
 - `modules/` — distributable module catalog organized by event type
 - `workflows/` — built-in workflow definitions (YAML)
 - `specs/` — feature specs with tasks and checkpoints
@@ -52,6 +53,10 @@ node setup.js --test         # run all test suites
 node setup.js --upgrade      # fetch latest from GitHub
 node setup.js --uninstall    # remove hook-runner (--confirm restores backup)
 node setup.js --prune [N]    # prune log entries older than N days
+node setup.js --snapshot     # SHA256 snapshot of current state
+node setup.js --snapshot drift  # detect drift from last snapshot
+node setup.js --snapshot backup # copy to git repo, commit, push
+node setup.js --snapshot restore # clone repo, restore files
 node setup.js --version      # show version
 node setup.js --help         # show all commands
 ```
@@ -63,6 +68,7 @@ node setup.js --help         # show all commands
 - **Runners** must use `exit(1)` for blocks (not `exit(0)`) so the TUI shows the block.
 - **Runners** must write block messages to `stderr` for TUI visibility.
 - **Modules** must have `// WORKFLOW: name` tag and `// WHY:` comment.
+- **Modules** may have `// TOOLS: Bash, Edit, Write` tag — skips loading when tool doesn't match (saves ~5ms/module).
 - The `hook-editing-gate` module enforces these rules at edit time (including the UPS no-block rule).
 
 ## Self-Reflection Architecture

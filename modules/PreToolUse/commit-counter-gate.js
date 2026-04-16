@@ -1,4 +1,5 @@
-// WORKFLOW: shtd
+// TOOLS: Bash, Edit, Write
+// WORKFLOW: shtd, gsd
 // WHY: Claude makes 20+ file changes without committing, then context resets
 // and all work is lost or untraceable. User tracks progress via GitHub Mobile.
 // Every 5 edits, force a commit so there's a git trail.

@@ -1,4 +1,5 @@
-// WORKFLOW: shtd
+// TOOLS: Bash
+// WORKFLOW: shtd, gsd
 // WHY: Claude kept adding `sleep` between Blueprint MCP calls thinking pages
 // needed time to load. Each Claude prompt takes 3-10s to process — more than
 // enough for pages to load. Sleep wastes time twice: once for the sleep, once

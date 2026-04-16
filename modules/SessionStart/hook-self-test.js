@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Stop runner had exit(0) for blocks instead of exit(1). TUI silently
 // ignored autocontinue — user had to notice manually. project-health.js
 // checks that files exist and modules load, but never validates that runners

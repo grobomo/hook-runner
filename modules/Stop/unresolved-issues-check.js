@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Claude ends sessions with tasks still marked "TESTING NOW" or "IN PROGRESS"
 // in TODO.md, or with FAIL/WARN/timeout mentioned but never resolved.
 // Next session starts with stale state and wastes time rediscovering issues.

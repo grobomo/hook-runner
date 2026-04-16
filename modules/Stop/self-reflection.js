@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Hook-runner gates made wrong decisions (T321: branch T319 allowed edits
 // for T321 work). Regex gates can't catch semantic mismatches. This module
 // reviews recent gate decisions at natural pause points and flags issues for

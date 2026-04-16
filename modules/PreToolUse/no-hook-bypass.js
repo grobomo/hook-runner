@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Claude circumvented a PreToolUse gate by using Bash (cat >, echo >) instead
 // of the blocked Write/Edit tool. This defeats the entire hook enforcement system.
 // If a gate blocks Write/Edit, Bash must not be used as a backdoor to write the same file.

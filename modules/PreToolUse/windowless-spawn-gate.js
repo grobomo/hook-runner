@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, starter
 // WHY: Hook modules using execSync("git ...") spawn cmd.exe on Windows,
 // creating visible console popups that steal focus. Every tool call fires
 // 2-5 hooks, each potentially spawning multiple cmd.exe windows. Fix:

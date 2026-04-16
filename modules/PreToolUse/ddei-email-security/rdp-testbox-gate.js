@@ -1,4 +1,4 @@
-// WORKFLOW: shtd
+// WORKFLOW: shtd, gsd
 // WHY: Claude wasted an entire session reinventing RDP connection logic that
 // already worked in start-e2e-test.sh (commit 21e5b3d). This hook fires on
 // any RDP-related command to remind Claude of:

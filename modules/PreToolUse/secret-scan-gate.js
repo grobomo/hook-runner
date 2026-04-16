@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, starter
 // WHY: API keys were committed to git history and had to be rotated.
 "use strict";
