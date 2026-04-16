@@ -1,6 +1,7 @@
 name: gsd
 description: GSD-driven development discipline. Enforces .planning/ → ROADMAP.md → phase plan → branch → execute → PR pipeline. Replaces shtd's spec-based flow with GSD's phase-based flow while keeping all safety, quality, and session lifecycle modules.
-version: 1
+version: 2
+extends: starter
 steps:
   - id: plan
     name: Discuss and plan the phase (PLAN.md exists)
@@ -34,9 +35,10 @@ steps:
       require_files: []
 
 modules:
-  # GSD pipeline enforcement (replaces spec-gate, spec-before-code-gate)
+  # === GSD-EXCLUSIVE: phase-based methodology ===
   - gsd-plan-gate
-  # Development pipeline (kept from shtd)
+  # === DEV DISCIPLINE: shared with shtd (tagged: shtd, gsd) ===
+  # Development pipeline
   - branch-pr-gate
   - commit-msg-check
   - continuous-claude-gate
