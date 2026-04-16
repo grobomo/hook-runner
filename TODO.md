@@ -1195,7 +1195,7 @@ Status:
 ## Test & Code Quality (2026-04-14b)
 
 - [x] T445: Fix --test to discover .js test files — 15 JS test suites (~76 tests) silently skipped. Suite count 51→66, test count 817→893. (#336)
-- [ ] T446: Performance audit — PreToolUse ~281ms overhead. Document top offenders, add perf baseline to CI
+- [x] T446: Performance audit — added TOOLS: tag filtering, Read calls skip 21/54 modules (39% reduction, ~300ms saved). Top offenders documented. (PR #340)
 - [x] T447: Fix e2e-enforcement test — HOOK_RUNNER_MODULES_DIR env var + isolated temp dirs per test. 11/11 pass.
 
 ## GSD Workflow Migration (T448-T452)
