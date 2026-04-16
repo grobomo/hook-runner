@@ -1231,10 +1231,10 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 ## Session Handoff (2026-04-16)
 
 All tasks complete. v2.26.0 released. Next session should:
-- [ ] T459: Code review the 4 new modules (gsd-plan-gate, gsd-branch-gate, gsd-pr-gate, snapshot.js) — check for DRY violations, missing edge cases, shared helper extraction (getActivePhases duplicated in branch-gate and pr-gate)
-- [ ] T460: Clean up stale branches — 8+ feature branches from this session need deleting
+- [x] T459: Code review — extracted _gsd-helpers.js (DRY), raised commit-counter 5→15 (PR #347, #348)
+- [ ] T460: Clean up 10 stale local branches (need `git branch -D`, gate blocks it — user must approve)
 - [ ] T461: Run full test suite on main (`node setup.js --test`) and fix T117-posttooluse-runner pre-existing failure
-- [ ] T462: Marketplace sync for T458 spec-gate fix (not included in v2.26.0 marketplace push)
+- [ ] T462: Marketplace sync for T458 spec-gate fix + T459 commit-counter fix (not in v2.26.0)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
