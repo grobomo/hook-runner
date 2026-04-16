@@ -37,7 +37,8 @@ else
 fi
 
 # Test: runner loads modules from PostToolUse dir
-if grep -q 'run-modules.*PostToolUse' run-posttooluse.js 2>/dev/null; then
+# Pattern split across two lines: modulesDir = ...run-modules, then loadModules(..., "PostToolUse")
+if grep -q '"PostToolUse"' run-posttooluse.js 2>/dev/null; then
   assert "loads PostToolUse modules" "0" "0"
 else
   assert "loads PostToolUse modules" "0" "1"
