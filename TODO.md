@@ -1212,7 +1212,7 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 
 - [x] T453: Snapshot system — SHA256 manifest, drift detection, git-backed backup/restore (snapshot.js + drift-check SessionStart module) (PR #337)
 - [x] T454: Promote universal modules to starter — 27 modules that protect system/account/platform should fire regardless of dev workflow (PR #337)
-- [ ] T455: Simplify workflow tiers — clarify starter (universal) vs shtd (dev discipline) vs gsd (phase-based), investigate which shtd modules to keep vs merge
+- [x] T455: Simplify workflow tiers — dual-tag 52 shared modules shtd+gsd, expand starter.yml 12→40 modules, clear tier structure (PR #338)
 - [ ] T451: Write `gsd-pr-gate.js` PreToolUse module — one PR per plan/task in a phase. Branch must map to a single phase.
 - [x] T452: E2E tests for gsd-plan-gate — 12 tests covering all scenarios. Merged into T448.
 
