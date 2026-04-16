@@ -261,12 +261,22 @@ function backup(repoUrl) {
   var msg = "backup " + new Date().toISOString().slice(0, 19).replace("T", " ") + " (" + copied + " files)";
   cp.execSync('git commit -m "' + msg + '"', { cwd: backupDir, stdio: "pipe", windowsHide: true });
 
-  // Push if remote exists
+  // Push if remote exists — use gh auth token for correct account
   try {
     var remote = cp.execSync("git remote get-url origin", { cwd: backupDir, encoding: "utf-8", windowsHide: true }).trim();
     if (remote) {
       console.log("[backup] Pushing to " + remote + "...");
-      cp.execSync("git push -u origin main 2>/dev/null || git push -u origin master", { cwd: backupDir, stdio: "pipe", windowsHide: true });
+      var account = remote.indexOf("grobomo") !== -1 ? "grobomo" : null;
+      var pushEnv = Object.assign({}, process.env);
+      if (account) {
+        try {
+          var token = cp.execSync("gh auth token --user " + account, { encoding: "utf-8", windowsHide: true }).trim();
+          if (token) pushEnv.GH_TOKEN = token;
+        } catch (e2) {}
+      }
+      cp.execSync("git push -u origin main 2>/dev/null || git push -u origin master", {
+        cwd: backupDir, stdio: "pipe", windowsHide: true, env: pushEnv
+      });
     }
   } catch (e) {
     // No remote — local-only backup is fine
