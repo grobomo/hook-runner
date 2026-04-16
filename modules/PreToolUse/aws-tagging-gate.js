@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, gsd
 // WHY: AWS resources created without tags were impossible to attribute or clean up.
 // Enforce hackathon26 tags on AWS resource creation commands.

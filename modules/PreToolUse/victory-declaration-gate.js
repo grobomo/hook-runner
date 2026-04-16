@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, starter
 // WHY: Claude declares victory prematurely — "all tests pass", "complete", "all green" in
 // commit messages when failures were skipped, warnings ignored, or outputs not reviewed.

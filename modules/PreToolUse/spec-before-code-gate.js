@@ -1,3 +1,4 @@
+// TOOLS: Bash, Edit, Write
 // WORKFLOW: shtd
 // WHY: Claude dives into coding without documenting what it's fixing or why.
 // After context resets, there's no trail of intent. Forces a spec (TODO entry

@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, starter
 // WHY: Background claude -p self-analysis opened a visible terminal tab that
 // stole focus from the user's work. On Windows, child_process.spawn with

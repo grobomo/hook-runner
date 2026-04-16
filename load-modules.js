@@ -13,7 +13,7 @@
 var fs = require("fs");
 var path = require("path");
 
-// Cache header lines (first 5) per file path within a single loadModules() call.
+// Cache header lines (first 8) per file path within a single loadModules() call.
 // Each hook invocation is a fresh Node process, so no stale cache risk.
 var _headerCache = {};
 
@@ -21,14 +21,57 @@ function getHeaderLines(filePath) {
   if (_headerCache[filePath]) return _headerCache[filePath];
   try {
     var content = fs.readFileSync(filePath, "utf-8");
-    var lines = content.split("\n").slice(0, 5);
+    var lines = content.split("\n").slice(0, 8);
     _headerCache[filePath] = lines;
     return lines;
   } catch (e) { return []; }
 }
 
 /**
- * Parse "// requires: mod1, mod2" from the first 5 lines of a module file.
+ * Parse "// TOOLS: Bash, Edit" from the first 8 lines of a module file.
+ * When present, the module only runs for the listed tool names.
+ * Returns array of tool names, or empty array (= runs for all tools).
+ */
+function parseToolTags(filePath) {
+  var lines = getHeaderLines(filePath);
+  for (var i = 0; i < lines.length; i++) {
+    var match = lines[i].match(/^\/\/\s*TOOLS:\s*(.+)/i);
+    if (match) {
+      var tools = match[1].split(",");
+      var result = [];
+      for (var t = 0; t < tools.length; t++) {
+        var tool = tools[t].replace(/^\s+|\s+$/g, "");
+        if (tool) result.push(tool);
+      }
+      if (result.length > 0) return result;
+    }
+  }
+  return [];
+}
+
+/**
+ * Filter modules by tool name. Modules with a // TOOLS: tag are skipped
+ * if the current tool doesn't match. Modules without the tag always pass.
+ * @param {string[]} modulePaths
+ * @param {string} toolName - current tool being invoked (e.g. "Bash", "Edit")
+ * @returns {string[]} filtered paths
+ */
+function filterByTool(modulePaths, toolName) {
+  if (!toolName) return modulePaths;
+  var result = [];
+  for (var i = 0; i < modulePaths.length; i++) {
+    var tools = parseToolTags(modulePaths[i]);
+    if (tools.length === 0) {
+      result.push(modulePaths[i]); // no tag = runs for all tools
+    } else if (tools.indexOf(toolName) !== -1) {
+      result.push(modulePaths[i]);
+    }
+  }
+  return result;
+}
+
+/**
+ * Parse "// requires: mod1, mod2" from the first 8 lines of a module file.
  * Only matches module-name patterns (lowercase with hyphens, no spaces in names).
  * Returns array of required module base names (without .js).
  */
@@ -173,9 +216,10 @@ function validateDeps(modulePaths) {
  * Return sorted list of module paths to load for the given event dir.
  * Validates module dependencies — modules with missing deps are skipped.
  * @param {string} eventDir  e.g. ~/.claude/hooks/run-modules/PreToolUse
+ * @param {string} [toolName]  optional tool name for TOOLS: tag filtering (PreToolUse/PostToolUse)
  * @returns {string[]} absolute paths to .js module files
  */
-module.exports = function loadModules(eventDir) {
+module.exports = function loadModules(eventDir, toolName) {
   if (!fs.existsSync(eventDir)) return [];
 
   // 1. Global modules: top-level .js files
@@ -209,8 +253,11 @@ module.exports = function loadModules(eventDir) {
   // 3. Filter by active workflow — skip modules tagged for inactive workflows
   var afterWorkflow = filterByWorkflow(allFiles);
 
-  // 4. Validate dependencies — skip modules with missing deps
-  return validateDeps(afterWorkflow);
+  // 4. Filter by tool name — skip modules that don't match the current tool
+  var afterTool = toolName ? filterByTool(afterWorkflow, toolName) : afterWorkflow;
+
+  // 5. Validate dependencies — skip modules with missing deps
+  return validateDeps(afterTool);
 };
 
 // Exported for testing
@@ -219,3 +266,5 @@ module.exports.validateDeps = validateDeps;
 module.exports.parseWorkflowTag = parseWorkflowTag;
 module.exports.parseWorkflowTags = parseWorkflowTags;
 module.exports.filterByWorkflow = filterByWorkflow;
+module.exports.parseToolTags = parseToolTags;
+module.exports.filterByTool = filterByTool;

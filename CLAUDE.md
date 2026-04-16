@@ -68,6 +68,7 @@ node setup.js --help         # show all commands
 - **Runners** must use `exit(1)` for blocks (not `exit(0)`) so the TUI shows the block.
 - **Runners** must write block messages to `stderr` for TUI visibility.
 - **Modules** must have `// WORKFLOW: name` tag and `// WHY:` comment.
+- **Modules** may have `// TOOLS: Bash, Edit, Write` tag — skips loading when tool doesn't match (saves ~5ms/module).
 - The `hook-editing-gate` module enforces these rules at edit time (including the UPS no-block rule).
 
 ## Self-Reflection Architecture

@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, starter
 // WHY: `gh auth switch` is broken with EMU accounts — the API still uses the EMU token
 // even after switching. Raw `gh` and `git push` commands silently use the wrong account,

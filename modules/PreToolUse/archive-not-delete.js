@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, starter
 // WHY: Claude deleted files that turned out to be needed later.
 // Block destructive delete commands. Always archive, never delete.

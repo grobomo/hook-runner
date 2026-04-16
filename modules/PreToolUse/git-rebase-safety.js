@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, gsd
 // WHY: During a rebase, --ours/--theirs are REVERSED from intuition.
 // Claude used --theirs thinking it meant "my local changes" but during
