@@ -1236,6 +1236,11 @@ All tasks complete. v2.26.0 released. Next session should:
 - [ ] T461: Run full test suite on main (`node setup.js --test`) and fix T117-posttooluse-runner pre-existing failure
 - [ ] T462: Marketplace sync for T458 spec-gate fix + T459 commit-counter fix (not in v2.26.0)
 
+## Commit Counter Branch Awareness (2026-04-16, from dd-lab incident)
+
+- [x] T466: Enhance commit-counter-gate with branch-file mismatch detection + worktree enforcement (#351)
+- [x] T467: Add 12-test suite for commit-counter-gate (branch mismatch, worktree, substring matching)
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
