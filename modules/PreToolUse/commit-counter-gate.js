@@ -112,16 +112,16 @@ function branchKeywords(branch) {
     });
 }
 
-// Extract directory segments from changed file paths
+// Extract directory segments from changed file paths (NOT filename stems —
+// filenames like deploy.sh, main.tf, config.json are too generic and cause false matches)
 // "labs/dd-lab/terraform/main.tf" → ["labs", "dd-lab", "terraform"]
 function fileKeywords(files) {
   var dirs = {};
   files.forEach(function(f) {
     var parts = f.replace(/\\/g, "/").split("/");
-    // Keep directory segments AND filename stem (without extension)
-    for (var i = 0; i < parts.length; i++) {
-      var seg = (i < parts.length - 1) ? parts[i] : parts[i].replace(/\.[^.]+$/, "");
-      seg = seg.toLowerCase();
+    // Only directory segments, skip the filename
+    for (var i = 0; i < parts.length - 1; i++) {
+      var seg = parts[i].toLowerCase();
       if (seg && seg.length >= 2 && !/^\d+$/.test(seg)) {
         dirs[seg] = true;
       }
