@@ -155,10 +155,9 @@ module.exports = function(input) {
     if (branch === "main" || branch === "master") {
       return {
         decision: "block",
-        reason: "BRANCH GATE: Cannot edit code on " + branch + ".\n" +
-          "WHY: The dev team monitors all work via GitHub PRs. Edits on main are invisible.\n" +
-          "Every change must be a PR so the team can see what's happening and why.\n" +
-          "FIX: git checkout -b <NNN>-<verb-noun> → git checkout -b <NNN>-T<NNN>-<slug>"
+        reason: "BRANCH GATE: Edits blocked on " + branch + ".\n" +
+          "REQUIRED: Call the EnterWorktree tool now.\n" +
+          "All work happens in worktrees. No exceptions."
       };
     }
 
@@ -215,15 +214,12 @@ module.exports = function(input) {
       if (/git\s+reset\s+--(soft|hard)\s+.*origin/.test(cmd)) return null;
       if (/git\s+reset\s+--(soft|hard)\s+HEAD~/.test(cmd)) return null;
       if (/git\s+branch\s+-f\s+main\s+origin/.test(cmd)) return null;
-      if (/git\s+checkout\s+-b/.test(cmd)) return null;  // validated earlier
-      if (/git\s+checkout\s+\S/.test(cmd) && !/git\s+checkout\s+(main|master)/.test(cmd)) return null;  // switching away from main
 
       return {
         decision: "block",
         reason: "BRANCH GATE: State-changing command blocked on " + branch + ".\n" +
-          "WHY: All work must be visible as PRs for team collaboration.\n" +
-          "Deploying/committing from main bypasses the PR trail.\n" +
-          "FIX: Create a feature branch and task branch first.\n" +
+          "REQUIRED: Call the EnterWorktree tool now.\n" +
+          "All work happens in worktrees. No commits on main.\n" +
           "Repair allowed: git reset --soft HEAD~N, git branch -f main origin/main\n" +
           "Command: " + cmd.substring(0, 80)
       };

@@ -1,41 +1,12 @@
 // WORKFLOW: shtd, gsd
-// WHY: Multiple Claude tabs working on the same repo directory caused git
-// conflicts — stash collisions, dirty working trees, branch switches stomping
-// each other's changes. Git worktrees give each branch its own directory,
-// so parallel tabs never interfere. This gate blocks feature branch edits
-// when another Claude session is active on the same project (multi-tab),
-// unless the session is already in a worktree.
+// WHY: Multiple Claude tabs on the same repo directory cause git conflicts —
+// stash collisions, dirty working trees, index.lock contention, branch switches
+// stomping each other's changes. Git worktrees give each tab its own directory.
+// This gate enforces worktree usage: edits in the main checkout are blocked,
+// forcing Claude to use EnterWorktree for an isolated working directory.
 "use strict";
 var path = require("path");
 var fs = require("fs");
-var os = require("os");
-
-// Detect other active Claude sessions using session-collision-detector lock files
-function hasOtherSessions(projectDir) {
-  var prefix = ".claude-session-lock-" +
-    projectDir.replace(/[^a-zA-Z0-9]/g, "-").replace(/-+/g, "-").substring(0, 80) + "-";
-  var myPpid = process.ppid;
-  var tmpDir = os.tmpdir();
-  try {
-    var files = fs.readdirSync(tmpDir);
-    for (var i = 0; i < files.length; i++) {
-      if (files[i].indexOf(prefix) !== 0) continue;
-      var pidStr = files[i].substring(prefix.length);
-      var pid = parseInt(pidStr, 10);
-      if (isNaN(pid) || pid <= 0 || pid === myPpid) continue;
-      // Check if PID is still running (signal 0 = existence check)
-      // ESRCH = no such process (dead). EPERM = exists but no permission (alive).
-      try {
-        process.kill(pid, 0);
-        return true; // another session is alive
-      } catch(e) {
-        if (e.code === "EPERM") return true; // alive but no permission
-        // ESRCH = dead — stale lock, ignore
-      }
-    }
-  } catch(e) {}
-  return false;
-}
 
 module.exports = function(input) {
   var tool = input.tool_name || "";
@@ -48,57 +19,60 @@ module.exports = function(input) {
   var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
   if (!projectDir) return null;
 
-  // Check if we're on main/master — those stay in the main checkout
+  // Check if .git exists and whether it's a directory (main checkout) or file (worktree)
+  var gitPath = path.join(projectDir, ".git");
+  try {
+    var gitStat = fs.statSync(gitPath);
+    if (gitStat.isFile()) {
+      // .git is a file → already in a worktree. Allow edits.
+      return null;
+    }
+  } catch(e) {
+    // No .git at all — not a git repo, skip
+    return null;
+  }
+
+  // We're in the main checkout (.git is a directory).
+  // Read current branch to check if we're on main/master.
   var branch = "";
   if (input._git && input._git.branch) {
     branch = input._git.branch;
   } else {
-    // Read .git/HEAD directly (no child_process spawn)
     try {
-      var gitStat;
-      try { gitStat = fs.statSync(path.join(projectDir, ".git")); } catch(e) { return null; }
-      if (gitStat.isFile()) {
-        // This IS a worktree — .git is a file pointing to the main repo
-        return null; // worktree detected, allow
-      }
-      var headContent = fs.readFileSync(path.join(projectDir, ".git", "HEAD"), "utf-8").trim();
+      var headContent = fs.readFileSync(path.join(gitPath, "HEAD"), "utf-8").trim();
       if (headContent.indexOf("ref: refs/heads/") === 0) {
         branch = headContent.slice("ref: refs/heads/".length);
       }
     } catch(e) { return null; }
   }
 
-  if (!branch) return null;
-  if (branch === "main" || branch === "master") return null;
-
-  // Only enforce when another Claude session is active (multi-tab scenario)
-  // Single-tab work on a feature branch is fine in the main checkout
-  if (!hasOtherSessions(projectDir)) return null;
-
-  // We're on a feature branch in the main checkout with another session active.
-  // Check if this repo has specs/ — only enforce for SHTD workflow repos
-  var hasSpecs = fs.existsSync(path.join(projectDir, "specs"));
-  if (!hasSpecs) return null;
-
-  // Check if .git is a directory (main checkout) vs file (worktree)
+  // Allow config/doc files on main (same allowlist as branch-pr-gate)
+  var targetFile = "";
   try {
-    var stat = fs.statSync(path.join(projectDir, ".git"));
-    if (stat.isFile()) return null; // already in a worktree
-  } catch(e) { return null; }
+    targetFile = (typeof input.tool_input === "string" ? JSON.parse(input.tool_input) : input.tool_input || {}).file_path || "";
+  } catch(e) { targetFile = (input.tool_input || {}).file_path || ""; }
 
-  // Multi-tab + main checkout + feature branch + has specs → block
-  var worktreeDir = path.join(path.dirname(projectDir), path.basename(projectDir) + "-worktrees", branch);
+  if (targetFile) {
+    var norm = targetFile.replace(/\\/g, "/");
+    var allowPatterns = [
+      /TODO\.md$/, /SESSION_STATE\.md$/, /CLAUDE\.md$/, /README\.md$/,
+      /\.claude\//, /\/specs\//, /\.planning\//, /\.specify\//,
+      /\.github\//, /\/hooks\//, /\/rules\//,
+      /\.gitignore$/, /scripts\/test\//, /\.json$/,
+    ];
+    for (var i = 0; i < allowPatterns.length; i++) {
+      if (allowPatterns[i].test(norm)) return null;
+    }
+  }
 
+  // Main checkout + code file edit → blocked. EnterWorktree is the only way.
   return {
     decision: "block",
-    reason: "WORKTREE GATE: Feature branch '" + branch + "' needs a git worktree.\n" +
-      "WHY: Another Claude session is active on this project. Working on the same\n" +
-      "directory causes git conflicts (stash collisions, branch switches, index.lock).\n\n" +
-      "CREATE WORKTREE:\n" +
-      "  git worktree add " + worktreeDir + " " + branch + "\n\n" +
-      "THEN: Open a new Claude tab in that directory:\n" +
-      "  python " + (process.env.CLAUDE_PROJECTS_ROOT || "~/projects") + "/context-reset/context_reset.py --project-dir " + worktreeDir + "\n\n" +
-      "CLEANUP when done:\n" +
-      "  git worktree remove " + worktreeDir
+    reason: "WORKTREE GATE: Edits blocked — you are in the main checkout.\n" +
+      "WHY: Multiple Claude tabs work on this project simultaneously.\n" +
+      "The main checkout stays clean. All work happens in worktrees.\n\n" +
+      "REQUIRED: Call the EnterWorktree tool now.\n" +
+      "It creates an isolated directory with its own branch. No alternatives.\n" +
+      "When done: commit, push, PR, then ExitWorktree."
   };
 };
