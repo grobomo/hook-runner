@@ -1206,7 +1206,7 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 
 - [x] T448: Archive shtd workflow — disabled shtd at project level, created `workflows/gsd.yml` with gsd-plan-gate replacing spec-gate. 12 E2E tests pass.
 - [x] T449: `gsd-plan-gate.js` — blocks code edits unless `.planning/ROADMAP.md` exists with active phases+PLAN.md, or TODO.md has tasks. Merged into T448.
-- [ ] T450: Write `gsd-branch-gate.js` PreToolUse module — enforces branch naming `<num>-phase-<N>-<slug>` pattern matching active GSD phases
+- [x] T450: Write `gsd-branch-gate.js` PreToolUse module — enforces branch naming `<seq>-phase-<N>-<slug>` matching active ROADMAP.md phases. 9/9 tests. (PR #341)
 
 ## Snapshot & Workflow Simplification (T453-T455)
 
