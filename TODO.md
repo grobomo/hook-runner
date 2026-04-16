@@ -1218,7 +1218,7 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 
 ## Stop Hook: Add Testing Step (T456)
 
-- [ ] T456: Update stop-message.txt to add step 3: "TEST what you built" before hardening. Claude skips E2E verification and goes straight to code review/hardening after unit tests. New order: (1) TODO tasks, (2) log tangents, (3) E2E test the MVP, (4) code review/harden, (5) zoom out.
+- [x] T456: Update stop-message.txt to add step 3: "TEST what you built" before hardening. New 5-step order verified via stop hook test. (PR #339)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
