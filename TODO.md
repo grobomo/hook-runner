@@ -1204,11 +1204,17 @@ Replace shtd spec-based enforcement with GSD `.planning/` enforcement.
 Keep: feature branches, PR-per-task, git safety, security gates.
 Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 
-- [ ] T448: Archive shtd workflow — disable shtd, create `workflows/gsd.yml` workflow definition
-- [ ] T449: Write `gsd-plan-gate.js` PreToolUse module — blocks code edits unless `.planning/ROADMAP.md` exists with an active phase that has PLAN.md. Branch must reference phase number.
+- [x] T448: Archive shtd workflow — disabled shtd at project level, created `workflows/gsd.yml` with gsd-plan-gate replacing spec-gate. 12 E2E tests pass.
+- [x] T449: `gsd-plan-gate.js` — blocks code edits unless `.planning/ROADMAP.md` exists with active phases+PLAN.md, or TODO.md has tasks. Merged into T448.
 - [ ] T450: Write `gsd-branch-gate.js` PreToolUse module — enforces branch naming `<num>-phase-<N>-<slug>` pattern matching active GSD phases
+
+## Snapshot & Workflow Simplification (T453-T455)
+
+- [ ] T453: Snapshot system — SHA256 manifest, drift detection, git-backed backup/restore (snapshot.js + drift-check SessionStart module)
+- [ ] T454: Promote universal modules to starter — 27 modules that protect system/account/platform should fire regardless of dev workflow
+- [ ] T455: Simplify workflow tiers — clarify starter (universal) vs shtd (dev discipline) vs gsd (phase-based), investigate which shtd modules to keep vs merge
 - [ ] T451: Write `gsd-pr-gate.js` PreToolUse module — one PR per plan/task in a phase. Branch must map to a single phase.
-- [ ] T452: E2E tests for all new GSD modules + workflow enable/disable
+- [x] T452: E2E tests for gsd-plan-gate — 12 tests covering all scenarios. Merged into T448.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
