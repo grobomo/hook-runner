@@ -37,6 +37,7 @@ steps:
 modules:
   # === GSD-EXCLUSIVE: phase-based methodology ===
   - gsd-plan-gate
+  - gsd-branch-gate
   # === DEV DISCIPLINE: shared with shtd (tagged: shtd, gsd) ===
   # Development pipeline
   - branch-pr-gate
