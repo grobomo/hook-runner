@@ -17,8 +17,9 @@ var path = require("path");
 
 // Files that are hook infrastructure (protected)
 function isProtectedPath(norm) {
-  // Hook modules
-  if (norm.indexOf("/run-modules/") !== -1 && norm.indexOf(".js", norm.length - 3) !== -1) return "module";
+  // Hook modules — all files in run-modules/ are protected (not just .js)
+  // T464: stop-message.txt was unprotected, allowing direct edits from other projects
+  if (norm.indexOf("/run-modules/") !== -1) return "module";
   // Runners
   if (/\/run-[a-z]+\.js$/.test(norm) && norm.indexOf("/.claude/hooks/") !== -1) return "runner";
   // Core hook files
@@ -172,8 +173,10 @@ module.exports = function(input) {
   }
 
   // For modules: check WORKFLOW tag and WHY comment (Write only, not Edit fragments)
+  // T464: only enforce JS-specific tags on .js files — .txt/.yaml/.yml are data files
   if (protectedType === "module") {
-    if (tool === "Write") {
+    var isJsFile = /\.js$/.test(norm);
+    if (tool === "Write" && isJsFile) {
       if (!/\/\/ WORKFLOW:/.test(content)) {
         issues.push("Missing // WORKFLOW: tag — every module must declare its workflow");
       }

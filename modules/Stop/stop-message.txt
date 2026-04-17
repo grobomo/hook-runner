@@ -6,12 +6,9 @@ DO NOT STOP. DO NOT SUMMARIZE. DO NOT LIST OPTIONS. Follow this order:
 4) Organize, modularize, optimize, secure the project. Code review, DRY, clean up, harden.
 5) Zoom out: why does this project exist, how does it integrate, what real-world value comes next? How can we share it with the team — publish, document, demo, package? Write new tasks to TODO.md then EXECUTE. No breaks. No asking. Plan then do.
 
-If context is getting long, save state to $CLAUDE_PROJECT_DIR/TODO.md (always the launch directory, not cwd), then run context-reset if available:
+If context is getting long, save state to $CLAUDE_PROJECT_DIR/TODO.md (always the launch directory, not cwd), then run context-reset (ALWAYS closes this tab):
   python "$CONTEXT_RESET_PY" --project-dir $CLAUDE_PROJECT_DIR
   (CONTEXT_RESET_PY defaults to ~/Documents/ProjectsCL1/_grobomo/context-reset/context_reset.py)
-To keep the old tab open for review: touch ~/.claude/.preserve-tab before running context_reset.py (one-shot, auto-deleted)
 
-CROSS-PROJECT WORK: If you created TODOs in another project's TODO.md, preserve this tab and open a new session for that project:
-  touch ~/.claude/.preserve-tab
-  python "$CONTEXT_RESET_PY" --project-dir <OTHER_PROJECT_DIR>
-This keeps the current tab for user review while a new Claude tab picks up the cross-project work.
+CROSS-PROJECT WORK: If you created TODOs in another project's TODO.md, open a new session there (this tab keeps running):
+  python "$NEW_SESSION_PY" --project-dir <OTHER_PROJECT_DIR>

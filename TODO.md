@@ -1233,8 +1233,25 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 All tasks complete. v2.26.0 released. Next session should:
 - [x] T459: Code review — extracted _gsd-helpers.js (DRY), raised commit-counter 5→15 (PR #347, #348)
 - [ ] T460: Clean up 10 stale local branches (need `git branch -D`, gate blocks it — user must approve)
-- [ ] T461: Run full test suite on main (`node setup.js --test`) and fix T117-posttooluse-runner pre-existing failure
+- [x] T461: Run full test suite — fixed 3 failing suites: worktree-gate (16 tests rewritten for PR #350), T117 grep pattern, T094 README docs (#351)
 - [ ] T462: Marketplace sync for T458 spec-gate fix + T459 commit-counter fix (not in v2.26.0)
+
+## Stop Message + Hook Safety (2026-04-16)
+
+- [x] T463: Sync stop-message.txt repo copy to match live (removed preserve-tab, added $NEW_SESSION_PY)
+- [x] T464: Protect all files in run-modules/ (not just .js) — skip WORKFLOW/WHY for .txt/.yaml
+- [x] T465: Investigated — stop-message.txt was never protected (old gate only matched .js). Fixed by T464.
+
+## Commit Counter Branch Awareness (2026-04-16, from dd-lab incident)
+
+- [x] T466: Enhance commit-counter-gate with branch-file mismatch detection + worktree enforcement (#351)
+- [x] T467: Add 12-test suite for commit-counter-gate (branch mismatch, worktree, substring matching)
+
+## Remaining
+
+- [ ] T460: Clean up stale local branches (need `git branch -D`, gate blocks it — user must approve)
+- [ ] T462: Marketplace sync for T458-T467 changes
+- [x] T465: Investigated — not inconsistent. stop-message.txt was never protected (old gate only matched .js). Fixed by T464.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog

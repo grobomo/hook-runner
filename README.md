@@ -350,7 +350,9 @@ Full catalog in `modules/` directory:
 | `env-var-check` | Blocks edits if required env vars missing |
 | `force-push-gate` | Blocks git push --force to main/master |
 | `gh-auto-gate` | Forces gh_auto wrapper for all gh/git push commands (EMU account safety) |
+| `gsd-branch-gate` | Enforces GSD branch naming (seq-phase-N-slug) for new branches |
 | `gsd-plan-gate` | Blocks code edits without a phase plan in GSD workflow |
+| `gsd-pr-gate` | Validates PR creation follows GSD conventions |
 | `git-destructive-guard` | Blocks git reset --hard, checkout ., clean -f without diagnosis |
 | `git-rebase-safety` | Warns about reversed --ours/--theirs during rebase |
 | `hook-editing-gate` | Enforces WORKFLOW tag, WHY comment, exit(1) in hook files |
