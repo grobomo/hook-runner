@@ -39,31 +39,23 @@ function getProjectDir() {
   return process.env.CLAUDE_PROJECT_DIR || process.cwd();
 }
 
-function getGitDiffCount() {
+// T478: Combined into single `git status --porcelain` call (was 4 separate git spawns).
+// Returns { files: string[], diffCount: number }.
+function getGitStatus() {
   try {
     var opts = { encoding: "utf-8", timeout: 5000, windowsHide: true, cwd: getProjectDir() };
-    var out = cp.execFileSync("git", ["diff", "--stat"], opts).trim();
-    if (!out) return 0;
+    var out = cp.execFileSync("git", ["status", "--porcelain"], opts).trim();
+    if (!out) return { files: [], diffCount: 0 };
     var lines = out.split("\n");
-    // Last line is summary like "3 files changed, ..."
-    var summary = lines[lines.length - 1];
-    var match = summary.match(/(\d+)\s+file/);
-    return match ? parseInt(match[1], 10) : 0;
-  } catch(e) { return 0; }
-}
-
-// Get changed file paths (tracked modifications + untracked new files)
-function getChangedFiles() {
-  try {
-    var opts = { encoding: "utf-8", timeout: 5000, windowsHide: true, cwd: getProjectDir() };
-    var modified = cp.execFileSync("git", ["diff", "--name-only"], opts).trim();
-    var staged = cp.execFileSync("git", ["diff", "--name-only", "--cached"], opts).trim();
-    var untracked = cp.execFileSync("git", ["ls-files", "--others", "--exclude-standard"], opts).trim();
-    var all = (modified + "\n" + staged + "\n" + untracked).split("\n").filter(function(f) { return f.length > 0; });
-    // Deduplicate
     var seen = {};
-    return all.filter(function(f) { if (seen[f]) return false; seen[f] = true; return true; });
-  } catch(e) { return []; }
+    var files = [];
+    for (var i = 0; i < lines.length; i++) {
+      // porcelain format: XY filename (or XY old -> new for renames)
+      var f = lines[i].slice(3).trim().replace(/.* -> /, "");
+      if (f && !seen[f]) { seen[f] = true; files.push(f); }
+    }
+    return { files: files, diffCount: files.length };
+  } catch(e) { return { files: [], diffCount: 0 }; }
 }
 
 // Get current branch name
@@ -188,8 +180,9 @@ module.exports = function(input) {
   writeCounter(count);
 
   if (count >= MAX_EDITS) {
-    // Cross-check with actual git diff
-    var gitCount = getGitDiffCount();
+    // T478: Single git call replaces 4 separate spawns
+    var status = getGitStatus();
+    var gitCount = status.diffCount;
     if (gitCount === 0) {
       // Counter drifted (files were reverted) — reset
       writeCounter(0);
@@ -197,7 +190,7 @@ module.exports = function(input) {
     }
 
     var branch = getBranch(input);
-    var files = getChangedFiles();
+    var files = status.files;
     var inWorktree = isInWorktree();
 
     // Check for branch-file mismatch
