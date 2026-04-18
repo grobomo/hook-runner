@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, starter
 // WHY: Nested `claude -p` calls inside a session don't work reliably.
 // Cross-project work must use context_reset.py which opens a proper new terminal session.

@@ -2,6 +2,18 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.36.0] — 2026-04-18
+
+### Improved
+- **TOOLS tag optimization batch 2** (T491) — Added `// TOOLS:` tags to 6 untagged PreToolUse modules, reducing overhead on Read/Grep/Glob calls:
+  - `spec-gate` → `Bash, Edit, Write` (12ms avg saved per non-matching call)
+  - `gsd-plan-gate` → `Bash, Edit, Write` (8ms avg saved)
+  - `env-var-check` → `Bash, Edit, Write`
+  - `no-nested-claude` → `Bash`
+  - `publish-json-guard` → `Bash, Edit, Write`
+  - `pr-first-gate` → `Bash, Edit, Write`
+- Combined with T488 (batch 1), 56 of 61 PreToolUse modules now have TOOLS tags
+
 ## [2.35.0] — 2026-04-18
 
 ### Added
