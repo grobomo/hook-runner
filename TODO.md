@@ -1277,6 +1277,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T484: RCA — spec-gate TODO.md bypass when matching spec has incomplete chain (PR #375)
 - [x] T485: RCA — commit-counter-gate worktreeRequired flag blocks git commit bypass (PR #375)
 
+- [ ] T486: Inter-project TODO priority system — when Project A adds TODO to Project B, it is P0 real-world feedback. Build: PostToolUse audit logger, SessionStart P0 gate, CLI dashboard.
+
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
 - [ ] Port more OpenClaw modules beyond 3 pilot gates (42 directly portable per T472 mapping)

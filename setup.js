@@ -771,6 +771,7 @@ function cmdHelp() {
   console.log("  --snapshot drift   Detect drift from last snapshot (--json for machine output)");
   console.log("  --snapshot backup  Copy files to git repo, commit, push");
   console.log("  --snapshot restore Clone repo and copy files back into place");
+  console.log("  --xref          Show inter-project TODO dashboard (audit log + pending items)");
   console.log("  --help, -h      Show this help");
   console.log("");
   console.log("Options:");
@@ -1758,6 +1759,91 @@ function cmdWorkflow(args) {
   return require(path.join(__dirname, "workflow-cli.js"))(args);
 }
 
+// T486: Inter-project TODO dashboard
+function cmdXref() {
+  var auditPath = path.join(os.homedir(), ".claude", "audit", "inter-project-todo.jsonl");
+  var projectsRoot = process.env.CLAUDE_PROJECTS_ROOT ||
+    (process.env.CLAUDE_PROJECT_DIR ? path.dirname(process.env.CLAUDE_PROJECT_DIR) : "") || "";
+  var XREF_PATTERN = /<!--\s*XREF:([^:]+):(\S+)\s+(\S+)\s*-->/;
+
+  console.log("[hook-runner] Inter-Project TODO Dashboard");
+  console.log("==========================================\n");
+
+  // 1. Scan audit log
+  var auditEntries = [];
+  try {
+    var auditLines = fs.readFileSync(auditPath, "utf-8").trim().split("\n");
+    for (var ai = 0; ai < auditLines.length; ai++) {
+      try { auditEntries.push(JSON.parse(auditLines[ai])); } catch(e) {}
+    }
+  } catch(e) { /* no audit log yet */ }
+
+  console.log("Audit Log: " + auditEntries.length + " inter-project writes recorded");
+  if (auditEntries.length > 0) {
+    // Show last 10
+    var recent = auditEntries.slice(-10);
+    for (var ri = 0; ri < recent.length; ri++) {
+      var e = recent[ri];
+      var age = Math.round((Date.now() - new Date(e.ts).getTime()) / 86400000);
+      console.log("  " + e.source_project + " → " + e.target_project +
+        " | " + (e.task_ids || []).join(", ") + " | " + age + "d ago" +
+        " | " + e.status);
+    }
+    if (auditEntries.length > 10) console.log("  ... and " + (auditEntries.length - 10) + " more");
+  }
+
+  // 2. Scan all projects for pending XREF items
+  console.log("\nPending XREF Items Across Projects:");
+  var totalPending = 0;
+  if (projectsRoot) {
+    try {
+      var projects = fs.readdirSync(projectsRoot);
+      for (var pi = 0; pi < projects.length; pi++) {
+        var todoFile = path.join(projectsRoot, projects[pi], "TODO.md");
+        try {
+          var content = fs.readFileSync(todoFile, "utf-8");
+          var lines = content.split("\n");
+          var projectXrefs = [];
+          for (var li = 0; li < lines.length; li++) {
+            if (!/^- \[ \] /.test(lines[li])) continue;
+            var m = lines[li].match(XREF_PATTERN);
+            if (m) projectXrefs.push({ source: m[1], taskId: m[2], date: m[3], text: lines[li] });
+          }
+          // Also check section header
+          var secIdx = content.indexOf("## Inbound Requests");
+          if (secIdx === -1) secIdx = content.indexOf("## Inter-Project Requests");
+          if (secIdx !== -1) {
+            var secLines = content.slice(secIdx).split("\n");
+            for (var si = 1; si < secLines.length; si++) {
+              if (/^## /.test(secLines[si]) && si > 0) break;
+              if (!/^- \[ \] /.test(secLines[si])) continue;
+              if (!XREF_PATTERN.test(secLines[si])) {
+                projectXrefs.push({ source: "section", taskId: "", date: "", text: secLines[si] });
+              }
+            }
+          }
+          if (projectXrefs.length > 0) {
+            console.log("\n  " + projects[pi] + " (" + projectXrefs.length + " pending):");
+            for (var xi = 0; xi < projectXrefs.length; xi++) {
+              var x = projectXrefs[xi];
+              console.log("    P0: " + x.text.replace(/^- \[ \] /, "").replace(/<!--.*?-->/, "").trim());
+              if (x.source !== "section") console.log("        from: " + x.source + " | " + x.taskId + " | " + x.date);
+            }
+            totalPending += projectXrefs.length;
+          }
+        } catch(e) { /* no TODO.md or can't read */ }
+      }
+    } catch(e) { console.log("  ERROR: Cannot read projects root: " + projectsRoot); }
+  }
+
+  if (totalPending === 0) {
+    console.log("  None — all clear!");
+  }
+
+  console.log("\n==========================================");
+  console.log("[hook-runner] " + totalPending + " P0 items pending, " + auditEntries.length + " audit entries");
+}
+
 function main() {
   var args = process.argv.slice(2);
   var dryRun = args.indexOf("--dry-run") !== -1;
@@ -1801,6 +1887,7 @@ function main() {
     process.exit(snapResult.status || 0);
   }
   if (args.indexOf("--health") !== -1) return cmdHealth();
+  if (args.indexOf("--xref") !== -1) return cmdXref();
   if (args.indexOf("--sync") !== -1) return cmdSync(dryRun);
 
   // Default: setup wizard (with --report and --install as sub-modes)
