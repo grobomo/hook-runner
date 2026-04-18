@@ -1253,6 +1253,73 @@ All tasks complete. v2.26.0 released. Next session should:
 - [ ] T462: Marketplace sync for T458-T467 changes
 - [x] T465: Investigated — not inconsistent. stop-message.txt was never protected (old gate only matched .js). Fixed by T464.
 
+## OpenClaw Hook Integration (T469-T475)
+
+**Goal**: Port hook-runner modules to OpenClaw's native hook system. Test on a
+separate _grobomo/openclaw instance — never modify _tmemu/openclaw (production).
+Guard module `openclaw-tmemu-guard.js` enforces this.
+
+**Research findings so far:**
+- OpenClaw hooks live in `~/.openclaw/hooks/<hook-name>/` with `HOOK.md` (metadata) + `handler.ts`
+- 8 built-in events: command:new, command:reset, command:stop, agent:bootstrap, gateway:startup, message events
+- tool:before / tool:after events are a feature request (issue #7597, #60943) — NOT yet released
+- Plugin SDK has 28 hooks including before_tool_call, after_tool_call — but these are plugin hooks, not standalone hooks
+- Hooks are TypeScript (handler.ts), not CommonJS JS like hook-runner modules
+- Hooks run in-process with the Gateway (same Node process)
+- Three-layer discovery: workspace → managed → bundled
+- CLI: `openclaw hooks list`, `openclaw hooks info <name>`, enable/disable via CLI
+
+**Key compatibility gap**: Hook-runner's PreToolUse/PostToolUse gates map to tool:before/tool:after
+which are NOT yet available as standalone hook events. Plugin SDK has before_tool_call but that
+requires building a full plugin, not just a hook script.
+
+### Research Tasks
+
+- [ ] T469: Set up _grobomo/openclaw test instance in WSL
+  - Install openclaw in WSL under a separate config dir
+  - Configure with RDsec AI Endpoint (same provider, different instance)
+  - Verify health check passes
+  - Document setup in _grobomo project CLAUDE.md
+
+- [ ] T470: Analyze _tmemu/openclaw existing hooks (READ ONLY)
+  - `wsl -e bash -c "openclaw hooks list"` — inventory what's installed
+  - Read HOOK.md + handler.ts for each hook (understand patterns)
+  - Document event types in use, handler patterns, error handling
+  - Check if any custom plugins are installed (`openclaw plugins list`)
+
+- [ ] T471: Research tool:before/tool:after availability
+  - Check openclaw version installed: `wsl -e bash -c "openclaw --version"`
+  - Check GitHub issues #7597, #5943, #60943 for merge status
+  - If not available: evaluate Plugin SDK as alternative (before_tool_call hook)
+  - If not available: evaluate command:new + agent:bootstrap as partial alternatives
+  - Document findings and recommended approach
+
+- [ ] T472: Map hook-runner modules to OpenClaw hook equivalents
+  - For each PreToolUse module: identify OpenClaw event + handler pattern
+  - For each PostToolUse module: identify OpenClaw event + handler pattern
+  - For Stop modules: map to command:stop event
+  - For SessionStart modules: map to agent:bootstrap or gateway:startup
+  - Categorize: direct port, needs adaptation, not portable
+
+- [ ] T473: Port 3 pilot modules to OpenClaw hook format
+  - Pick 3 high-value modules (e.g., publish-json-guard, force-push-gate, spec-gate)
+  - Convert from CommonJS JS to TypeScript handler.ts
+  - Create HOOK.md metadata for each
+  - Write tests that run against the _grobomo/openclaw test instance
+
+- [ ] T474: Build openclaw-hooks/ directory in hook-runner repo
+  - New directory: `openclaw-hooks/<hook-name>/HOOK.md + handler.ts`
+  - Install script: copies hooks to ~/.openclaw/hooks/ in WSL
+  - Test runner: validates hooks against test openclaw instance
+  - README: mapping table (hook-runner module → openclaw hook)
+
+- [ ] T475: End-to-end test — verify ported hooks block/allow correctly
+  - Spin up test openclaw instance
+  - Install ported hooks
+  - Send test prompts that should trigger each hook
+  - Verify block messages match expected output
+  - Compare behavior with hook-runner equivalents
+
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
 - `modules/` has all available modules organized by event type
