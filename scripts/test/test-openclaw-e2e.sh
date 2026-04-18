@@ -48,10 +48,9 @@ echo ""
 echo "=== Phase 2: Gate functions via tsx ==="
 echo "Running gate tests via tsx in WSL..."
 
-WSL_PLUGIN="${WSL_REPO}/openclaw-plugin/index.ts"
 WSL_HARNESS="${WSL_REPO}/scripts/test/e2e-tsx-harness.ts"
 
-TSX_OUTPUT=$(wsl -e bash -c "PLUGIN_PATH='${WSL_PLUGIN}' npx tsx '${WSL_HARNESS}' 2>&1" 2>/dev/null | tr -d '\000')
+TSX_OUTPUT=$(wsl -e bash -c "cd '${WSL_REPO}' && NODE_PATH=/usr/lib/node_modules npx tsx '${WSL_HARNESS}' 2>&1" 2>/dev/null | tr -d '\000')
 echo "$TSX_OUTPUT"
 
 TSX_PASS=$(echo "$TSX_OUTPUT" | grep -c "^OK:" || true)
