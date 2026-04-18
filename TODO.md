@@ -1245,7 +1245,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T472: Map 94 modules — 42 portable, 24 adaptable, 28 not portable (PR #355)
 - [x] T473: Port 3 pilot gates to Plugin SDK (PR #356)
 - [x] T474: Install script + 11-test suite (PR #357)
-- [x] T475: E2E test — 30/30, 3 phases (PR #359)
+- [x] T475: E2E test — 31/31 across 3 phases: plugin load (3), tsx gates with real SDK (16), cross-validation (11) + install (11). Rewrote tsx harness to use register(api)/api.on pattern.
 - [x] T476: Test profile + plugin SDK rewrite (PR #358)
 
 ## Session Handoff (2026-04-17, session 7+8)
@@ -1259,6 +1259,9 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
   - TOOLS tags on 7 modules: Read/Grep/Glob loads 35→28 modules
 - v2.28.0 released (PR #364, GitHub release)
 - All fixes synced to live hooks
+
+**Session 9:**
+- T475: Fixed e2e tsx harness — rewrote to use real OpenClaw Plugin SDK register(api)/api.on("before_tool_call") pattern instead of broken plugin.hooks.before_tool_call(). 31/31 tests pass across 3 phases.
 
 **Remaining:**
 1. T462: Marketplace sync (delegated to claude-code-skills T004) — only open task
