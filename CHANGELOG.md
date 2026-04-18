@@ -2,6 +2,15 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.35.0] — 2026-04-18
+
+### Added
+- **OpenClaw plugin v0.3.0** (T489) — Batch-ported 7 universal modules. Total: 25 modules.
+  - **before_tool_call (4 new)**: `no-nested-claude`, `disk-space-guard`, `no-unnecessary-sleep`, `claude-p-pattern`
+  - **after_tool_call (3 new)**: `empty-output-detector`, `disk-space-detect`, `troubleshoot-detector`
+- After-call gates now receive tool result for output-aware checks (empty output, disk errors, troubleshooting cycles)
+- 43-test suite for T489 batch port. Total OpenClaw tests: 116.
+
 ## [2.34.0] — 2026-04-18
 
 ### Improved
