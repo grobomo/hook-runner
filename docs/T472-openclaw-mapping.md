@@ -179,12 +179,12 @@ All Stop modules map to OpenClaw `command:stop` event.
 
 | Category | PreToolUse | PostToolUse | SessionStart | Stop | Total |
 |---|---|---|---|---|---|
-| **Portable** | 24 | 3 | 5 | 8 | **40** |
-| **Adaptable** | 13 | 5 | 3 | 2 | **23** |
+| **Portable** | 24 | 5 | 5 | 8 | **42** |
+| **Adaptable** | 13 | 6 | 3 | 2 | **24** |
 | **Not portable** | 22 | 1 | 2 | 3 | **28** |
-| **Total** | 59 | 9 | 10 | 13 | **91** |
+| **Total** | 59 | 12 | 10 | 13 | **94** |
 
-**63 of 91 modules (69%) are portable or adaptable to OpenClaw.**
+**66 of 94 modules (70%) are portable or adaptable to OpenClaw.**
 
 ## Recommended Pilot Modules (T473)
 
