@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.34.0] — 2026-04-18
+
+### Improved
+- **TOOLS tag optimization** (T488) — Added `// TOOLS:` tags to 19 PreToolUse modules that were loading unnecessarily. Reduces per-tool-call module count: Bash 57→40 (-30%), Read 30→11 (-63%), Write ~36→31 (-14%). Estimated ~200ms saved per Bash call, ~100ms per Read call.
+- **spec-gate allowlist** (T488) — Added `--sync` and `--upgrade` to allowed commands on main branch. These are operational maintenance commands that don't require a feature branch. 25-test suite updated.
+
 ## [2.33.0] — 2026-04-18
 
 ### Added

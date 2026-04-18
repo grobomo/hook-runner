@@ -1,3 +1,4 @@
+// TOOLS: Edit, Write
 // WORKFLOW: shtd
 // WHY: Code edits in repos without TODO.md or with dirty trees caused lost work.
 // Enforcement gate: git repo, clean tree, TODO.md required before Edit/Write

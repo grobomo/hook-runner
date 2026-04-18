@@ -1,3 +1,4 @@
+// TOOLS: Edit
 // WORKFLOW: shtd, gsd
 // WHY: A claude -p session marked T020-T024 as [x] complete in TODO.md without
 // creating PRs, deploying, or verifying. The "fixes" were never tested. This

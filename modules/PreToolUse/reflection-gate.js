@@ -1,3 +1,4 @@
+// TOOLS: Edit, Write
 // WORKFLOW: shtd, gsd
 // WHY: Self-reflection module (Stop event) flags workflow violations via LLM
 // analysis, but those flags are useless if Claude keeps editing without seeing

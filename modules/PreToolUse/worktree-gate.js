@@ -1,3 +1,4 @@
+// TOOLS: Edit, Write
 // WORKFLOW: shtd, gsd
 // WHY: Multiple Claude tabs on the same repo directory cause git conflicts —
 // stash collisions, dirty working trees, index.lock contention, branch switches

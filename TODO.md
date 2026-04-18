@@ -1281,6 +1281,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 
 **Session 12:**
 - [x] T487: Batch port 15 modules to OpenClaw plugin v0.2.0 — 18 total (13 before_tool_call + 5 after_tool_call), 49/49 tests (PR #379)
+- [x] T488: Add --sync/--upgrade to spec-gate allowlist + TOOLS tag optimization (19 modules tagged, Bash 57→40, Read 30→11)
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
