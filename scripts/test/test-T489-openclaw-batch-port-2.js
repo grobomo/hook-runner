@@ -67,6 +67,16 @@ ok("no-nested-claude: allows git commands mentioning claude", (function() {
   return r === null;
 })());
 
+ok("no-nested-claude: allows cd && git commit with claude in heredoc (T490 fix)", (function() {
+  var r = runGate(nnc, { tool_name: "Bash", tool_input: { command: 'cd "/project" && git commit -m "$(cat <<\'EOF\'\nFix claude -p pattern gate\nEOF\n)"' } });
+  return r === null;
+})());
+
+ok("no-nested-claude: allows chained git push mentioning claude paths", (function() {
+  var r = runGate(nnc, { tool_name: "Bash", tool_input: { command: 'cd "/project" && git push -u origin feature-claude-fix 2>&1' } });
+  return r === null;
+})());
+
 ok("no-nested-claude: allows non-Bash", (function() {
   var r = runGate(nnc, { tool_name: "Read", tool_input: { file_path: "/some/file" } });
   return r === null;
