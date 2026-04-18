@@ -1290,17 +1290,25 @@ requires building a full plugin, not just a hook script.
   - Document setup in _grobomo project CLAUDE.md
 
 - [ ] T470: Analyze _tmemu/openclaw existing hooks (READ ONLY)
-  - `wsl -e bash -c "openclaw hooks list"` — inventory what's installed
-  - Read HOOK.md + handler.ts for each hook (understand patterns)
-  - Document event types in use, handler patterns, error handling
-  - Check if any custom plugins are installed (`openclaw plugins list`)
+  - OpenClaw 2026.4.14 (323493f) installed
+  - **3 hooks** in `~/.openclaw/hooks/`:
+    - `channel-topic-guard` — LLM (Haiku) reviews outbound msgs vs channel rules (event: `message:sent`)
+    - `channel-topic-inject` — Injects channel context on inbound msgs (event: `message:received`)
+    - `heartbeat-enforce` — Injects HEARTBEAT.md enforcement on polls (event: `message:received`)
+  - **1 plugin**: `coconut-guardrails` — Full plugin using `openclaw/plugin-sdk/plugin-entry`
+    - Uses `api.on("before_tool_call")` for tool gating (block/approve/log)
+    - Uses `api.on("message_sending")` for outbound message review
+    - Return `{block: true, blockReason: "..."}` maps to hook-runner's `{decision: "block", reason: "..."}`
+  - **Hook structure**: HOOK.md (YAML frontmatter) + handler.ts (TypeScript ESM, `export default handler`)
+  - **Plugin structure**: `openclaw.plugin.json` + `index.ts` using `definePluginEntry({register(api){...}})`
 
 - [ ] T471: Research tool:before/tool:after availability
-  - Check openclaw version installed: `wsl -e bash -c "openclaw --version"`
-  - Check GitHub issues #7597, #5943, #60943 for merge status
-  - If not available: evaluate Plugin SDK as alternative (before_tool_call hook)
-  - If not available: evaluate command:new + agent:bootstrap as partial alternatives
-  - Document findings and recommended approach
+  - **Answer**: `before_tool_call` IS available — but ONLY through Plugin SDK, not standalone hooks
+  - Production coconut-guardrails plugin already uses it successfully
+  - Standalone hook events limited to: message:sent, message:received, command:*, agent:bootstrap, gateway:startup
+  - **Recommended approach**: Build hook-runner-openclaw as an OpenClaw PLUGIN (not standalone hooks)
+    - Map each PreToolUse module to a `before_tool_call` handler inside the plugin
+    - Reuse return value format (block/reason → block/blockReason)
 
 - [ ] T472: Map hook-runner modules to OpenClaw hook equivalents
   - For each PreToolUse module: identify OpenClaw event + handler pattern
