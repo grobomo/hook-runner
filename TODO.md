@@ -1250,14 +1250,22 @@ All tasks complete. v2.26.0 released. Next session should:
 ## Remaining
 
 - [ ] T460: Clean up stale local branches (need `git branch -D`, gate blocks it — user must approve)
-- [ ] T462: Marketplace sync for T458-T467 changes
+- [ ] T462: Marketplace sync for T458-T469 changes — delegated to claude-code-skills T004
 - [x] T465: Investigated — not inconsistent. stop-message.txt was never protected (old gate only matched .js). Fixed by T464.
 
-## OpenClaw Hook Integration (T469-T475)
+## Worktree-Aware Gate Modules (T469, PR #353)
+
+- [x] T469: Fix spec-gate, branch-pr-gate, worktree-gate for worktree detection
+  - Fixed getGitBranch to handle worktree .git files (follows gitdir reference)
+  - Added CWD-based root/branch detection scoped to worktrees inside project dir
+  - Moved openclaw-tmemu-guard to _openclaw/ project-scoped directory
+  - 8 new tests (T469 suite) + full suite: 73 suites, 1004 passed, 0 failed
+
+## OpenClaw Hook Integration (T470-T475)
 
 **Goal**: Port hook-runner modules to OpenClaw's native hook system. Test on a
 separate _grobomo/openclaw instance — never modify _tmemu/openclaw (production).
-Guard module `openclaw-tmemu-guard.js` enforces this.
+Guard module `_openclaw/tmemu-guard.js` enforces this.
 
 **Research findings so far:**
 - OpenClaw hooks live in `~/.openclaw/hooks/<hook-name>/` with `HOOK.md` (metadata) + `handler.ts`
@@ -1275,7 +1283,7 @@ requires building a full plugin, not just a hook script.
 
 ### Research Tasks
 
-- [ ] T469: Set up _grobomo/openclaw test instance in WSL
+- [ ] T476: Set up _grobomo/openclaw test instance in WSL
   - Install openclaw in WSL under a separate config dir
   - Configure with RDsec AI Endpoint (same provider, different instance)
   - Verify health check passes
@@ -1319,6 +1327,20 @@ requires building a full plugin, not just a hook script.
   - Send test prompts that should trigger each hook
   - Verify block messages match expected output
   - Compare behavior with hook-runner equivalents
+
+## Session Handoff (2026-04-17, session 2)
+
+**This session:**
+- PR #353 merged: T469 worktree-aware gate modules (spec-gate, branch-pr-gate, worktree-gate)
+- Deployed fixed modules to live hooks (spec-gate, branch-pr-gate, worktree-gate, openclaw-tmemu-guard)
+- Full suite: 73 suites, 1004 passed, 0 failed (up from 981)
+- Renumbered T469 (openclaw test instance) to T476 since T469 was used for gate fixes
+
+**Next session should:**
+1. T462: Marketplace sync — spawn claude-code-skills session for T004
+2. T470-T475: OpenClaw hook integration research (start with T470: analyze existing hooks)
+3. T476: Set up _grobomo/openclaw test instance in WSL
+4. T460: Clean up stale branches (user approval needed for `git branch -D`)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
