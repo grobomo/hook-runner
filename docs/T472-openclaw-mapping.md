@@ -74,6 +74,8 @@ These modules enforce generic development practices. Logic transfers cleanly.
 | `commit-msg-check` | PostToolUse | after_tool_call | Change return format |
 | `crlf-detector` | PostToolUse | after_tool_call | Change return format |
 | `test-coverage-check` | PostToolUse | after_tool_call | Change return format |
+| `result-review-gate` | PostToolUse | after_tool_call | Injects review checklist |
+| `rule-hygiene` | PostToolUse | after_tool_call | Validates rule file format |
 
 ### Adaptable (18) — Concept transfers but needs significant rework
 
