@@ -1233,7 +1233,7 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 - [x] T460: Clean up stale branches — 17 remote + 3 local worktree branches deleted, 5 unmerged remote kept
 - [ ] T462: Marketplace sync for T458-T469+ changes — delegated to claude-code-skills T004
 - [x] T477: Fix runner worktree branch detection — readBranchFromDir prefers CWD worktree over CLAUDE_PROJECT_DIR. Spec-gate allowlist expanded with 9 read-only setup.js flags. 28/28 tests pass (23 bash + 5 worktree). (PR #362)
-- [x] T478: Performance — preserve-iterated-content file-based cache (1122ms→7ms on cache hit). Fixed worktree HEAD resolution via commondir.
+- [x] T478: Performance — preserve-iterated-content cache (1122ms→7ms), commit-counter-gate 4→1 git spawns, TOOLS tags on 7 modules (Read loads 35→28). PRs #363, #365, #366.
 
 ## OpenClaw Hook Integration (T470-T476, complete)
 
@@ -1248,17 +1248,20 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T475: E2E test — 30/30, 3 phases (PR #359)
 - [x] T476: Test profile + plugin SDK rewrite (PR #358)
 
-## Session Handoff (2026-04-17, session 7)
+## Session Handoff (2026-04-17, session 7+8)
 
-**Session 7:**
-- T460: Cleaned 17 remote + 3 local stale branches
+**Session 7+8:**
+- T460: Cleaned 17 remote + 3 local stale branches, pruned refs
 - T477: Fixed worktree branch detection in runner + spec-gate allowlist (PR #362)
-- T478: Performance cache for preserve-iterated-content (1122ms→7ms)
-- Synced runner + spec-gate to live hooks
+- T478: Performance — 3 optimizations (PRs #363, #365, #366):
+  - preserve-iterated-content: file-based cache (1122ms→7ms on cache hit)
+  - commit-counter-gate: 4 git spawns → 1 `git status --porcelain` (12/12 tests)
+  - TOOLS tags on 7 modules: Read/Grep/Glob loads 35→28 modules
+- v2.28.0 released (PR #364, GitHub release)
+- All fixes synced to live hooks
 
 **Remaining:**
-1. T462: Marketplace sync (delegated to claude-code-skills T004)
-2. Consider: enforcement-gate max spike 1787ms (avg 29ms — may be first-call overhead only)
+1. T462: Marketplace sync (delegated to claude-code-skills T004) — only open task
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
