@@ -1336,17 +1336,26 @@ requires building a full plugin, not just a hook script.
   - Verify block messages match expected output
   - Compare behavior with hook-runner equivalents
 
-## Session Handoff (2026-04-17, session 2)
+## Session Handoff (2026-04-17, session 3)
 
-**This session:**
+**This session (session 2+3):**
 - PR #353 merged: T469 worktree-aware gate modules (spec-gate, branch-pr-gate, worktree-gate)
-- Deployed fixed modules to live hooks (spec-gate, branch-pr-gate, worktree-gate, openclaw-tmemu-guard)
-- Full suite: 73 suites, 1004 passed, 0 failed (up from 981)
-- Renumbered T469 (openclaw test instance) to T476 since T469 was used for gate fixes
+- PR #354 merged: T470-T471 OpenClaw hook research + wsl allowlist
+- Deployed to live hooks: spec-gate, branch-pr-gate, worktree-gate, openclaw-tmemu-guard
+- Full suite: 73 suites, 1004 passed, 0 failed
+- Spawned claude-code-skills session for T462 marketplace sync
+- Key finding: OpenClaw Plugin SDK has `before_tool_call` — build as plugin, not standalone hooks
 
 **Next session should:**
-1. T462: Marketplace sync — spawn claude-code-skills session for T004
-2. T470-T475: OpenClaw hook integration research (start with T470: analyze existing hooks)
+1. T472: Map hook-runner modules to OpenClaw plugin equivalents (60 PreToolUse, 38 other)
+   - PreToolUse → `before_tool_call` (Plugin SDK) — direct port
+   - PostToolUse → no `after_tool_call` yet — needs adaptation (audit logging)
+   - Stop → `command:stop` event
+   - SessionStart → `agent:bootstrap` / `gateway:startup`
+   - Categorize: direct port / needs adaptation / not portable (Claude Code-specific)
+2. T473: Port 3 pilot modules to OpenClaw plugin format
+3. T476: Set up _grobomo/openclaw test instance in WSL
+4. T460: Clean up stale branches (user approval needed)
 3. T476: Set up _grobomo/openclaw test instance in WSL
 4. T460: Clean up stale branches (user approval needed for `git branch -D`)
 
