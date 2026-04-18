@@ -96,6 +96,20 @@ test("Bash unrelated command: allowed", function() {
   assert(r === null, "should pass through");
 });
 
+// --- Test profile exceptions ---
+
+test("Bash WSL write to test profile: allowed", function() {
+  var guard = loadGuard();
+  var r = guard({ tool_name: "Bash", tool_input: { command: "wsl -e bash -c 'mkdir -p ~/.openclaw-grobomo-test/plugins && OPENCLAW_HOME=~/.openclaw-grobomo-test bash install.sh'" } });
+  assert(r === null, "should allow test profile writes");
+});
+
+test("Bash WSL --profile flag: allowed", function() {
+  var guard = loadGuard();
+  var r = guard({ tool_name: "Bash", tool_input: { command: "wsl -e bash -c 'openclaw --profile test hooks install my-hook'" } });
+  assert(r === null, "should allow --profile commands");
+});
+
 // --- Other tools: pass through ---
 
 test("Read tool: always allowed", function() {
