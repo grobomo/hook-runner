@@ -206,7 +206,7 @@ var BASH_ALLOW_PATTERNS = [
   /^\s*wc\b/, /^\s*diff\b/, /^\s*echo\b/, /^\s*printf\b/,
   /^\s*pwd\b/, /^\s*env\b/, /^\s*which\b/, /^\s*type\b/, /^\s*where\b/,
   /^\s*file\b/, /^\s*stat\b/, /^\s*du\b/, /^\s*df\b/,
-  /^\s*cd\b/, /^\s*readlink\b/, /^\s*realpath\b/,
+  /^\s*cd\b/, /^\s*readlink\b/, /^\s*realpath\b/, /^\s*wsl\b/,
   /^\s*jq\b/, /^\s*yq\b/, /^\s*sort\b/, /^\s*uniq\b/, /^\s*cut\b/, /^\s*tr\b/,
   /^\s*test\b/, /^\s*\[\s/, /^\s*true\b/, /^\s*false\b/,
   /^\s*date\b/, /^\s*hostname\b/, /^\s*whoami\b/, /^\s*id\b/,
