@@ -1316,11 +1316,11 @@ requires building a full plugin, not just a hook script.
   - SessionStart → `agent:bootstrap`, Stop → `command:stop`
   - Pilot picks: force-push-gate, secret-scan-gate, commit-quality-gate
 
-- [ ] T473: Port 3 pilot modules to OpenClaw hook format
-  - Pick 3 high-value modules (e.g., publish-json-guard, force-push-gate, spec-gate)
-  - Convert from CommonJS JS to TypeScript handler.ts
-  - Create HOOK.md metadata for each
-  - Write tests that run against the _grobomo/openclaw test instance
+- [x] T473: Port 3 pilot modules to OpenClaw Plugin SDK (openclaw-plugin/)
+  - Ported: force-push-gate, secret-scan-gate, commit-quality-gate
+  - Single plugin entry point dispatches to per-module gate functions
+  - 24-test suite validates gate logic and format conversion
+  - README with install guide and hook-runner→OpenClaw conversion table
 
 - [ ] T474: Build openclaw-hooks/ directory in hook-runner repo
   - New directory: `openclaw-hooks/<hook-name>/HOOK.md + handler.ts`
