@@ -291,6 +291,10 @@ module.exports = function(input) {
   var roots = [];
   if (projectDir) roots.push(projectDir);
 
+  // T469: Also check CWD — may be in a worktree with a different git root
+  var cwdRoot = findGitRoot(process.cwd());
+  if (cwdRoot && roots.indexOf(cwdRoot) === -1) roots.push(cwdRoot);
+
   if (!isBash && targetFile) {
     var fileGitRoot = findGitRoot(path.dirname(targetFile));
     if (fileGitRoot && roots.indexOf(fileGitRoot) === -1) roots.push(fileGitRoot);
