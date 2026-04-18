@@ -2,6 +2,15 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.33.0] — 2026-04-18
+
+### Added
+- **OpenClaw plugin v0.2.0** (T487) — Batch-ported 15 modules beyond the 3 T473 pilots. Total: 18 modules.
+  - **before_tool_call (10 new)**: `git-destructive-guard`, `archive-not-delete`, `git-rebase-safety`, `no-hardcoded-paths`, `victory-declaration-gate`, `root-cause-gate`, `no-fragile-heuristics`, `no-focus-steal`, `crlf-ssh-key-check`, `unresolved-issues-gate`
+  - **after_tool_call (5 new)**: `commit-msg-check`, `crlf-detector`, `test-coverage-check`, `result-review-gate`, `rule-hygiene`
+- All modules individually configurable via `openclaw.plugin.json` modules map
+- 49-test suite for T487. Updated T472 mapping doc with ported status.
+
 ## [2.32.0] — 2026-04-18
 
 ### Added
