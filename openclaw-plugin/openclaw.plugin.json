@@ -1,0 +1,19 @@
+{
+  "id": "hook-runner-gates",
+  "name": "Hook Runner Gates",
+  "description": "Ported hook-runner gate modules for OpenClaw. Enforces commit quality, secret scanning, and force-push protection via before_tool_call.",
+  "version": "0.1.0",
+  "author": "grobomo",
+  "license": "MIT",
+  "openclaw": {
+    "minVersion": "2026.4.0"
+  },
+  "hooks": ["before_tool_call"],
+  "config": {
+    "modules": {
+      "force-push-gate": true,
+      "secret-scan-gate": true,
+      "commit-quality-gate": true
+    }
+  }
+}

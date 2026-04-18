@@ -1,0 +1,11 @@
+{
+  "name": "openclaw-hook-runner-gates",
+  "version": "0.1.0",
+  "description": "Hook-runner gate modules ported to OpenClaw Plugin SDK",
+  "main": "index.ts",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grobomo/hook-runner"
+  }
+}
