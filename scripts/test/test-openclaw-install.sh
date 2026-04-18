@@ -6,7 +6,7 @@ REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"
 INSTALL_SCRIPT="$REPO_DIR/openclaw-plugin/install.sh"
 
 pass=0 fail=0
-ok() { if [ "$2" = "0" ]; then ((pass++)); echo "PASS: $1"; else ((fail++)); echo "FAIL: $1"; fi; }
+ok() { if [ "$2" = "0" ]; then pass=$((pass+1)); echo "PASS: $1"; else fail=$((fail+1)); echo "FAIL: $1"; fi; }
 
 # Use a temp dir as fake OpenClaw home
 TMPDIR_OC="$(mktemp -d)"
