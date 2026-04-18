@@ -38,7 +38,12 @@ module.exports = function(input) {
     var firstLine = cmd.split("\n")[0];
 
     // Block WSL commands that write to openclaw hooks in the tmemu instance
-    if (/wsl.*openclaw.*hook/i.test(firstLine) &&
+    // Allow test profiles: ~/.openclaw-grobomo-test, ~/.openclaw-dev, etc.
+    var isTestProfile = /openclaw-(grobomo-test|dev|test)\b/.test(firstLine) ||
+                        /--profile\s+\w/.test(firstLine) ||
+                        /OPENCLAW_HOME=.*openclaw-(grobomo-test|dev|test)/.test(firstLine);
+    if (!isTestProfile &&
+        /wsl.*openclaw.*hook/i.test(firstLine) &&
         /\b(write|edit|cp|mv|sed|tee|rm|mkdir)\b/.test(firstLine)) {
       return {
         decision: "block",
