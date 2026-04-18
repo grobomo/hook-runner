@@ -46,7 +46,8 @@ function cqInput(cmd) {
 }
 
 ok("commit-quality: short message blocked", commitQuality(cqInput('git commit -m "fix bug"')) !== null);
-ok("commit-quality: 5-word message allowed", commitQuality(cqInput('git commit -m "Fix the login page timeout"')) === null);
+ok("commit-quality: generic start < 8 words blocked", commitQuality(cqInput('git commit -m "Fix the login page timeout"')) !== null);
+ok("commit-quality: non-generic 5-word message allowed", commitQuality(cqInput('git commit -m "Refactor auth to use OAuth2"')) === null);
 ok("commit-quality: generic start with few words blocked",
   commitQuality(cqInput('git commit -m "Update the thing here"')) !== null);
 ok("commit-quality: generic start with detail allowed",
