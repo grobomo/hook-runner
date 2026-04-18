@@ -291,9 +291,17 @@ module.exports = function(input) {
   var roots = [];
   if (projectDir) roots.push(projectDir);
 
-  // T469: Also check CWD — may be in a worktree with a different git root
-  var cwdRoot = findGitRoot(process.cwd());
-  if (cwdRoot && roots.indexOf(cwdRoot) === -1) roots.push(cwdRoot);
+  // T469: Also check CWD if it's a git worktree (`.git` is a file, not a directory).
+  // This ensures worktree-local TODO.md and specs/ are found without contaminating
+  // test environments where CWD is a normal repo with its own state.
+  var cwdStr = process.cwd();
+  var cwdRoot = findGitRoot(cwdStr);
+  if (cwdRoot && roots.indexOf(cwdRoot) === -1) {
+    try {
+      var cwdDotGit = path.join(cwdRoot, ".git");
+      if (fs.statSync(cwdDotGit).isFile()) roots.push(cwdRoot);
+    } catch (e) { /* not a worktree, skip */ }
+  }
 
   if (!isBash && targetFile) {
     var fileGitRoot = findGitRoot(path.dirname(targetFile));
