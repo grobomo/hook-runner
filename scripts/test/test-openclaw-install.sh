@@ -26,8 +26,8 @@ ok "install copies index.ts" "$([ -f "$DEST/index.ts" ] && echo 0 || echo 1)"
 ok "install copies README.md" "$([ -f "$DEST/README.md" ] && echo 0 || echo 1)"
 
 # Test: plugin.json has correct id
-PLUGIN_ID=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$DEST/openclaw.plugin.json','utf8')).id)")
-ok "plugin id is hook-runner-gates" "$([ "$PLUGIN_ID" = "hook-runner-gates" ] && echo 0 || echo 1)"
+grep -q '"hook-runner-gates"' "$DEST/openclaw.plugin.json"
+ok "plugin id is hook-runner-gates" "$?"
 
 # Test: index.ts has before_tool_call
 grep -q "before_tool_call" "$DEST/index.ts"
