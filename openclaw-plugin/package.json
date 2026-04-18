@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "Hook-runner gate modules ported to OpenClaw Plugin SDK",
   "main": "index.ts",
+  "openclaw": {
+    "extensions": ["./index.ts"]
+  },
   "license": "MIT",
   "repository": {
     "type": "git",

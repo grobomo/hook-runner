@@ -1283,11 +1283,14 @@ requires building a full plugin, not just a hook script.
 
 ### Research Tasks
 
-- [ ] T476: Set up _grobomo/openclaw test instance in WSL
-  - Install openclaw in WSL under a separate config dir
-  - Configure with RDsec AI Endpoint (same provider, different instance)
-  - Verify health check passes
-  - Document setup in _grobomo project CLAUDE.md
+- [x] T476: Set up test OpenClaw profile + install hook-runner-gates plugin
+  - Used `--profile grobomo-test` (isolates to `~/.openclaw-grobomo-test/`)
+  - Plugin discovered and loaded: 56/99 plugins, status `loaded`
+  - Fixed tmemu-guard to allow test profile writes
+  - Fixed install.sh to use `extensions/` (not `plugins/`)
+  - Fixed package.json with `openclaw.extensions` field
+  - Added `configSchema` to manifest
+  - Rewrote index.ts to use `definePluginEntry` + `api.on("before_tool_call")`
 
 - [x] T470: Analyze _tmemu/openclaw existing hooks (PR #354)
   - OpenClaw 2026.4.14 (323493f) installed

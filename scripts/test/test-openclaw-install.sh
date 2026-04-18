@@ -12,7 +12,7 @@ ok() { if [ "$2" = "0" ]; then pass=$((pass+1)); echo "PASS: $1"; else fail=$((f
 TMPDIR_OC="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR_OC"' EXIT
 
-FAKE_PLUGINS="$TMPDIR_OC/plugins"
+FAKE_PLUGINS="$TMPDIR_OC/extensions"
 mkdir -p "$FAKE_PLUGINS"
 
 # Test: install to custom OPENCLAW_HOME

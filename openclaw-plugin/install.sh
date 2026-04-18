@@ -6,14 +6,14 @@ set -euo pipefail
 PLUGIN_NAME="hook-runner-gates"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Detect OpenClaw plugins directory
+# Detect OpenClaw extensions directory
 if [ -n "${OPENCLAW_HOME:-}" ]; then
-  PLUGINS_DIR="$OPENCLAW_HOME/plugins"
-elif [ -d "$HOME/.openclaw/plugins" ]; then
-  PLUGINS_DIR="$HOME/.openclaw/plugins"
+  PLUGINS_DIR="$OPENCLAW_HOME/extensions"
+elif [ -d "$HOME/.openclaw/extensions" ]; then
+  PLUGINS_DIR="$HOME/.openclaw/extensions"
 else
-  echo "ERROR: OpenClaw plugins directory not found."
-  echo "Set OPENCLAW_HOME or ensure ~/.openclaw/plugins/ exists."
+  echo "ERROR: OpenClaw extensions directory not found."
+  echo "Set OPENCLAW_HOME or ensure ~/.openclaw/extensions/ exists."
   exit 1
 fi
 
@@ -41,5 +41,5 @@ echo ""
 echo "Files:"
 ls -la "$DEST/"
 echo ""
-echo "Verify with: openclaw plugins list"
+echo "Verify with: openclaw extensions list"
 echo "To uninstall: bash $0 --uninstall"

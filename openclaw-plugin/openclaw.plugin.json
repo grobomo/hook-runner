@@ -9,6 +9,20 @@
     "minVersion": "2026.4.0"
   },
   "hooks": ["before_tool_call"],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "modules": {
+        "type": "object",
+        "description": "Enable/disable individual gate modules",
+        "properties": {
+          "force-push-gate": { "type": "boolean", "default": true },
+          "secret-scan-gate": { "type": "boolean", "default": true },
+          "commit-quality-gate": { "type": "boolean", "default": true }
+        }
+      }
+    }
+  },
   "config": {
     "modules": {
       "force-push-gate": true,

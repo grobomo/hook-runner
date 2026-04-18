@@ -8,45 +8,31 @@
  *
  * Ported from: https://github.com/grobomo/hook-runner
  * Original format: CommonJS (PreToolUse gates)
- * OpenClaw format: Plugin SDK (before_tool_call)
+ * OpenClaw format: Plugin SDK (definePluginEntry + api.on("before_tool_call"))
  */
 
-import { execFileSync } from "child_process";
+import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
+import { execFileSync } from "node:child_process";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-interface ToolCallArgs {
-  command?: string;
-  file_path?: string;
-  [key: string]: unknown;
+interface GateConfig {
+  modules?: Record<string, boolean>;
 }
 
-interface ToolCallContext {
-  session: unknown;
-  channel: unknown;
-  config: {
-    modules?: Record<string, boolean>;
-  };
+interface SecretPattern {
+  name: string;
+  re: RegExp;
+  context?: RegExp;
 }
-
-interface ToolCallInput {
-  tool: string;
-  args: ToolCallArgs;
-  context: ToolCallContext;
-}
-
-type GateResult = { action: "allow" } | { action: "deny"; reason: string };
-
-type GateFunction = (tool: string, args: ToolCallArgs) => GateResult | null;
 
 // ── Module: force-push-gate ────────────────────────────────────────────────
 // WHY: Force-pushing to main/master can destroy shared history and others' work.
-// There is no undo for a force-push that overwrites remote commits.
 
-function forcePushGate(tool: string, args: ToolCallArgs): GateResult | null {
-  if (tool !== "Bash") return null;
+function forcePushGate(toolName: string, params: Record<string, unknown>): string | null {
+  if (toolName !== "Bash") return null;
 
-  const cmd = (args.command || "").replace(/\s+/g, " ").trim();
+  const cmd = (String(params.command || "")).replace(/\s+/g, " ").trim();
   if (!/\bgit\s+push\b/.test(cmd)) return null;
 
   const hasForce = /\s--force\b/.test(cmd) || /\s-f\b/.test(cmd) || /\s--force-with-lease\b/.test(cmd);
@@ -55,10 +41,7 @@ function forcePushGate(tool: string, args: ToolCallArgs): GateResult | null {
   const protectedBranches = ["main", "master"];
   for (const branch of protectedBranches) {
     if (new RegExp("\\b" + branch + "\\b").test(cmd)) {
-      return {
-        action: "deny",
-        reason: `BLOCKED: Force-push to ${branch} is destructive and irreversible. Use a regular push or create a revert commit instead.`,
-      };
+      return `BLOCKED: Force-push to ${branch} is destructive and irreversible. Use a regular push or create a revert commit instead.`;
     }
   }
 
@@ -67,12 +50,6 @@ function forcePushGate(tool: string, args: ToolCallArgs): GateResult | null {
 
 // ── Module: secret-scan-gate ───────────────────────────────────────────────
 // WHY: API keys were committed to git history and had to be rotated.
-
-interface SecretPattern {
-  name: string;
-  re: RegExp;
-  context?: RegExp;
-}
 
 const SECRET_PATTERNS: SecretPattern[] = [
   { name: "AWS Access Key", re: /AKIA[0-9A-Z]{16}/ },
@@ -87,10 +64,10 @@ const SECRET_PATTERNS: SecretPattern[] = [
   { name: "Connection String", re: /(?:mongodb|postgres|mysql|redis|amqp):\/\/[^\s]{20,}/ },
 ];
 
-function secretScanGate(tool: string, args: ToolCallArgs): GateResult | null {
-  if (tool !== "Bash") return null;
+function secretScanGate(toolName: string, params: Record<string, unknown>): string | null {
+  if (toolName !== "Bash") return null;
 
-  const cmd = args.command || "";
+  const cmd = String(params.command || "");
   if (!/^\s*git\s+commit/.test(cmd) && !/&&\s*git\s+commit/.test(cmd)) return null;
 
   let diff = "";
@@ -106,9 +83,9 @@ function secretScanGate(tool: string, args: ToolCallArgs): GateResult | null {
 
   if (!diff) return null;
 
-  const addedLines = diff.split("\n").filter((line) => {
-    return line.charAt(0) === "+" && !line.startsWith("+++");
-  });
+  const addedLines = diff.split("\n").filter((line) =>
+    line.charAt(0) === "+" && !line.startsWith("+++")
+  );
 
   const filteredLines = addedLines.filter((line) => {
     if (/os\.environ|process\.env|getenv|secretsmanager|get-secret-value|credential/i.test(line)) return false;
@@ -129,14 +106,12 @@ function secretScanGate(tool: string, args: ToolCallArgs): GateResult | null {
   }
 
   if (findings.length > 0) {
-    return {
-      action: "deny",
-      reason:
-        "SECRET SCAN: Potential secrets detected in staged changes:\n" +
-        findings.map((f) => "  - " + f).join("\n") +
-        "\nReview with: git diff --cached\n" +
-        "Use environment variables or credential-manager instead of hardcoded secrets.",
-    };
+    return (
+      "SECRET SCAN: Potential secrets detected in staged changes:\n" +
+      findings.map((f) => "  - " + f).join("\n") +
+      "\nReview with: git diff --cached\n" +
+      "Use environment variables or credential-manager instead of hardcoded secrets."
+    );
   }
 
   return null;
@@ -148,10 +123,10 @@ function secretScanGate(tool: string, args: ToolCallArgs): GateResult | null {
 const GENERIC_STARTS = /^\s*(fix|update|change|modify|edit|tweak|adjust|minor|wip|tmp|temp|stuff|misc|cleanup)\b/i;
 const MIN_WORDS = 5;
 
-function commitQualityGate(tool: string, args: ToolCallArgs): GateResult | null {
-  if (tool !== "Bash") return null;
+function commitQualityGate(toolName: string, params: Record<string, unknown>): string | null {
+  if (toolName !== "Bash") return null;
 
-  const cmd = args.command || "";
+  const cmd = String(params.command || "");
   if (!/git\s+commit/.test(cmd)) return null;
   if (/--amend/.test(cmd)) return null;
 
@@ -169,23 +144,19 @@ function commitQualityGate(tool: string, args: ToolCallArgs): GateResult | null 
   const words = msg.split(/\s+/).filter((w) => w.length > 0);
 
   if (words.length < MIN_WORDS) {
-    return {
-      action: "deny",
-      reason:
-        `COMMIT MESSAGE TOO SHORT: ${words.length} words (min ${MIN_WORDS}).\n` +
-        `Your message: "${msg}"\n` +
-        'Good format: "Fix <what> — <why>" or "Add <feature> for <purpose>"',
-    };
+    return (
+      `COMMIT MESSAGE TOO SHORT: ${words.length} words (min ${MIN_WORDS}).\n` +
+      `Your message: "${msg}"\n` +
+      'Good format: "Fix <what> — <why>" or "Add <feature> for <purpose>"'
+    );
   }
 
   if (GENERIC_STARTS.test(msg) && words.length < 8) {
-    return {
-      action: "deny",
-      reason:
-        `COMMIT MESSAGE TOO GENERIC: starts with '${words[0]}' without enough detail.\n` +
-        `Your message: "${msg}"\n` +
-        'Say WHAT changed and WHY. Example: "Fix spec-gate cache — stale hasUnchecked when tasks.md edited"',
-    };
+    return (
+      `COMMIT MESSAGE TOO GENERIC: starts with '${words[0]}' without enough detail.\n` +
+      `Your message: "${msg}"\n` +
+      'Say WHAT changed and WHY. Example: "Fix spec-gate cache — stale hasUnchecked when tasks.md edited"'
+    );
   }
 
   return null;
@@ -193,27 +164,39 @@ function commitQualityGate(tool: string, args: ToolCallArgs): GateResult | null 
 
 // ── Plugin Entry Point ─────────────────────────────────────────────────────
 
+type GateFunction = (toolName: string, params: Record<string, unknown>) => string | null;
+
 const gates: Record<string, GateFunction> = {
   "force-push-gate": forcePushGate,
   "secret-scan-gate": secretScanGate,
   "commit-quality-gate": commitQualityGate,
 };
 
-export default {
-  hooks: {
-    before_tool_call(input: ToolCallInput): GateResult {
-      const config = input.context?.config?.modules ?? {};
+export default definePluginEntry({
+  id: "hook-runner-gates",
+  name: "Hook Runner Gates",
+  description:
+    "Ported hook-runner gate modules — blocks force-push to main, secrets in commits, and generic commit messages.",
+
+  register(api) {
+    const getConfig = (): GateConfig => {
+      return (api.pluginConfig as GateConfig) || {};
+    };
+
+    api.on("before_tool_call", async (event, _ctx) => {
+      const config = getConfig();
+      const modules = config.modules ?? {};
 
       for (const [name, fn] of Object.entries(gates)) {
-        if (config[name] === false) continue;
+        if (modules[name] === false) continue;
 
-        const result = fn(input.tool, input.args);
-        if (result && result.action === "deny") {
-          return result;
+        const reason = fn(event.toolName, event.params || {});
+        if (reason) {
+          return { block: true, blockReason: reason };
         }
       }
 
-      return { action: "allow" };
-    },
+      return undefined; // allow
+    });
   },
-};
+});
