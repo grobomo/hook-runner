@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, starter
 // WHY: Claude ran rm -rf on temp files when disk was full without asking.
 // Deleting files to free space is dangerous — wrong target = lost work.
