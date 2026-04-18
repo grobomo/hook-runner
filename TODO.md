@@ -1283,7 +1283,7 @@ requires building a full plugin, not just a hook script.
 
 ### Research Tasks
 
-- [x] T476: Set up test OpenClaw profile + install hook-runner-gates plugin
+- [x] T476: Set up test OpenClaw profile + install hook-runner-gates plugin (PR #358)
   - Used `--profile grobomo-test` (isolates to `~/.openclaw-grobomo-test/`)
   - Plugin discovered and loaded: 56/99 plugins, status `loaded`
   - Fixed tmemu-guard to allow test profile writes
@@ -1330,12 +1330,11 @@ requires building a full plugin, not just a hook script.
   - `install.sh` deploys to `~/.openclaw/plugins/hook-runner-gates/`
   - Supports `--uninstall`, OPENCLAW_HOME override, graceful error on missing dir
 
-- [ ] T475: End-to-end test — verify ported hooks block/allow correctly
-  - Spin up test openclaw instance
-  - Install ported hooks
-  - Send test prompts that should trigger each hook
-  - Verify block messages match expected output
-  - Compare behavior with hook-runner equivalents
+- [x] T475: E2E test — verify ported gates match hook-runner behavior (PR #359)
+  - Phase 1: Plugin loads in OpenClaw (inspect, hooks, version) — 3 tests
+  - Phase 2: Gate functions via tsx (force-push, commit-quality, secret-scan, config disable) — 16 tests
+  - Phase 3: Cross-validate hook-runner originals produce identical decisions — 11 tests
+  - Total: 30/30 passed
 
 ## Session Handoff (2026-04-17, session 3)
 
