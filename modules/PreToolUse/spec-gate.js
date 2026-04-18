@@ -215,6 +215,7 @@ var BASH_ALLOW_PATTERNS = [
   /^\s*bash\s+scripts\/test\//, // running existing test scripts
   /^\s*node\s+scripts\/test\//, // running JS test scripts
   /^\s*node\s+setup\.js\s+--test/, // hook-runner tests
+  /^\s*node\s+setup\.js\s+--(perf|stats|health|list|version|help|report|export|snapshot)/, // T477: hook-runner read-only commands
   /python\s+.*new.session\.py/, // T384: session management (launch new Claude tab)
   /python\s+.*context.reset\.py/, // T384: session management (backward-compat alias)
   /^\s*curl\s/, // HTTP requests (read-only, no local state change)

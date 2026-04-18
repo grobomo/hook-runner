@@ -186,6 +186,36 @@ else
   fail "curl should be allowed: $OUTPUT"
 fi
 
+# --- T477: hook-runner read-only commands always allowed ---
+
+OUTPUT=$(run_bash_gate "$PROJ" "node setup.js --perf")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "node setup.js --perf allowed (read-only)"
+else
+  fail "node setup.js --perf should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "node setup.js --stats")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "node setup.js --stats allowed (read-only)"
+else
+  fail "node setup.js --stats should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "node setup.js --health")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "node setup.js --health allowed (read-only)"
+else
+  fail "node setup.js --health should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "node setup.js --snapshot")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "node setup.js --snapshot allowed (read-only)"
+else
+  fail "node setup.js --snapshot should be allowed: $OUTPUT"
+fi
+
 # --- Piped commands check the first command ---
 
 OUTPUT=$(run_bash_gate "$PROJ" "jq '.name' package.json | head -1")
