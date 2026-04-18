@@ -1291,6 +1291,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 **Session 14:**
 - [x] T491: TOOLS tag optimization batch 2 — add TOOLS tags to 6 untagged PreToolUse modules (spec-gate, gsd-plan-gate, env-var-check, no-nested-claude, publish-json-guard, pr-first-gate) — 56/61 PreToolUse modules now tagged
 - [x] T492: Fix 2 pre-existing test failures — T112 why-gate WORKFLOW tag check, T094 module-docs missing 3 T486 modules in README
+- [x] T493: Convert test-modules.sh to JS — eliminates ~218 node spawns, fixes 60s timeout (436 tests, <5s)
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
