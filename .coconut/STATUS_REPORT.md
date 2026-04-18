@@ -1,16 +1,20 @@
-# Status Report
+# Coconut Status Report
 
-**Generated:** 2026-04-17 21:15 CDT
-**Task:** T472-T473 (OpenClaw Hook Integration)
+**Updated:** 2026-04-18 session 10
 
-## Currently Working On
-T474: Build install script for openclaw-plugin
+## Current Task
+- T481: v2.29.0 release — version bump, CHANGELOG, sync to live, PR + GitHub release
 
-## Completed Since Last Report
-- **T472** (PR #355): Mapped all 94 modules to OpenClaw equivalents — 70% transferable
-- **T473** (PR #356): Ported 3 pilot modules to OpenClaw Plugin SDK with 24 tests
-- Full suite: 74 suites, 1028 passed, 0 failed
+## Recent Completions (session 9)
+- T475: Fixed OpenClaw e2e tsx harness — 31/31 tests, 3 phases (PR #368)
+- T479: CHANGELOG accuracy fixes for v2.27.0 and v2.28.0 (PR #370)
+- T480: Cleaned 6 stale remote branches
+- T462: Delegated marketplace sync to claude-code-skills T006
+
+## Blockers
+- None
 
 ## Next Steps
-1. T474: Install script for plugin deployment
-2. T475-T476: E2E test with live OpenClaw instance
+1. Version bump to v2.29.0, update CHANGELOG
+2. Sync modules to live hooks
+3. Create PR + GitHub release
