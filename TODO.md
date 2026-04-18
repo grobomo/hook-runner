@@ -1228,136 +1228,31 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 
 - [x] T458: Fix spec-gate blocking git/gh with env var prefixes ($() subshells) + node test scripts allowlist. 38/38 tests. (PR #344, #345)
 
-## Session Handoff (2026-04-16)
-
-All tasks complete. v2.26.0 released. Next session should:
-- [x] T459: Code review — extracted _gsd-helpers.js (DRY), raised commit-counter 5→15 (PR #347, #348)
-- [ ] T460: Clean up 10 stale local branches (need `git branch -D`, gate blocks it — user must approve)
-- [x] T461: Run full test suite — fixed 3 failing suites: worktree-gate (16 tests rewritten for PR #350), T117 grep pattern, T094 README docs (#351)
-- [ ] T462: Marketplace sync for T458 spec-gate fix + T459 commit-counter fix (not in v2.26.0)
-
-## Stop Message + Hook Safety (2026-04-16)
-
-- [x] T463: Sync stop-message.txt repo copy to match live (removed preserve-tab, added $NEW_SESSION_PY)
-- [x] T464: Protect all files in run-modules/ (not just .js) — skip WORKFLOW/WHY for .txt/.yaml
-- [x] T465: Investigated — stop-message.txt was never protected (old gate only matched .js). Fixed by T464.
-
-## Commit Counter Branch Awareness (2026-04-16, from dd-lab incident)
-
-- [x] T466: Enhance commit-counter-gate with branch-file mismatch detection + worktree enforcement (#351)
-- [x] T467: Add 12-test suite for commit-counter-gate (branch mismatch, worktree, substring matching)
-
-## Remaining
+## Remaining Tasks
 
 - [ ] T460: Clean up stale local branches (need `git branch -D`, gate blocks it — user must approve)
-- [ ] T462: Marketplace sync for T458-T469 changes — delegated to claude-code-skills T004
-- [x] T465: Investigated — not inconsistent. stop-message.txt was never protected (old gate only matched .js). Fixed by T464.
+- [ ] T462: Marketplace sync for T458-T469+ changes — delegated to claude-code-skills T004
 
-## Worktree-Aware Gate Modules (T469, PR #353)
+## OpenClaw Hook Integration (T470-T476, complete)
 
-- [x] T469: Fix spec-gate, branch-pr-gate, worktree-gate for worktree detection
-  - Fixed getGitBranch to handle worktree .git files (follows gitdir reference)
-  - Added CWD-based root/branch detection scoped to worktrees inside project dir
-  - Moved openclaw-tmemu-guard to _openclaw/ project-scoped directory
-  - 8 new tests (T469 suite) + full suite: 73 suites, 1004 passed, 0 failed
+Ported hook-runner modules to OpenClaw Plugin SDK. Test profile: `openclaw --profile grobomo-test`.
+Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 
-## OpenClaw Hook Integration (T470-T475)
+- [x] T470: Analyze existing OpenClaw hooks (PR #354)
+- [x] T471: Research tool:before/tool:after — Plugin SDK `before_tool_call` is the path (PR #354)
+- [x] T472: Map 94 modules — 42 portable, 24 adaptable, 28 not portable (PR #355)
+- [x] T473: Port 3 pilot gates to Plugin SDK (PR #356)
+- [x] T474: Install script + 11-test suite (PR #357)
+- [x] T475: E2E test — 30/30, 3 phases (PR #359)
+- [x] T476: Test profile + plugin SDK rewrite (PR #358)
 
-**Goal**: Port hook-runner modules to OpenClaw's native hook system. Test on a
-separate _grobomo/openclaw instance — never modify _tmemu/openclaw (production).
-Guard module `_openclaw/tmemu-guard.js` enforces this.
+## Session Handoff (2026-04-17, session 6)
 
-**Research findings so far:**
-- OpenClaw hooks live in `~/.openclaw/hooks/<hook-name>/` with `HOOK.md` (metadata) + `handler.ts`
-- 8 built-in events: command:new, command:reset, command:stop, agent:bootstrap, gateway:startup, message events
-- tool:before / tool:after events are a feature request (issue #7597, #60943) — NOT yet released
-- Plugin SDK has 28 hooks including before_tool_call, after_tool_call — but these are plugin hooks, not standalone hooks
-- Hooks are TypeScript (handler.ts), not CommonJS JS like hook-runner modules
-- Hooks run in-process with the Gateway (same Node process)
-- Three-layer discovery: workspace → managed → bundled
-- CLI: `openclaw hooks list`, `openclaw hooks info <name>`, enable/disable via CLI
+**Session 6:** TODO cleanup — consolidated stale sections, removed duplicate task entries.
 
-**Key compatibility gap**: Hook-runner's PreToolUse/PostToolUse gates map to tool:before/tool:after
-which are NOT yet available as standalone hook events. Plugin SDK has before_tool_call but that
-requires building a full plugin, not just a hook script.
-
-### Research Tasks
-
-- [x] T476: Set up test OpenClaw profile + install hook-runner-gates plugin (PR #358)
-  - Used `--profile grobomo-test` (isolates to `~/.openclaw-grobomo-test/`)
-  - Plugin discovered and loaded: 56/99 plugins, status `loaded`
-  - Fixed tmemu-guard to allow test profile writes
-  - Fixed install.sh to use `extensions/` (not `plugins/`)
-  - Fixed package.json with `openclaw.extensions` field
-  - Added `configSchema` to manifest
-  - Rewrote index.ts to use `definePluginEntry` + `api.on("before_tool_call")`
-
-- [x] T470: Analyze _tmemu/openclaw existing hooks (PR #354)
-  - OpenClaw 2026.4.14 (323493f) installed
-  - **3 hooks** in `~/.openclaw/hooks/`:
-    - `channel-topic-guard` — LLM (Haiku) reviews outbound msgs vs channel rules (event: `message:sent`)
-    - `channel-topic-inject` — Injects channel context on inbound msgs (event: `message:received`)
-    - `heartbeat-enforce` — Injects HEARTBEAT.md enforcement on polls (event: `message:received`)
-  - **1 plugin**: `coconut-guardrails` — Full plugin using `openclaw/plugin-sdk/plugin-entry`
-    - Uses `api.on("before_tool_call")` for tool gating (block/approve/log)
-    - Uses `api.on("message_sending")` for outbound message review
-    - Return `{block: true, blockReason: "..."}` maps to hook-runner's `{decision: "block", reason: "..."}`
-  - **Hook structure**: HOOK.md (YAML frontmatter) + handler.ts (TypeScript ESM, `export default handler`)
-  - **Plugin structure**: `openclaw.plugin.json` + `index.ts` using `definePluginEntry({register(api){...}})`
-
-- [x] T471: Research tool:before/tool:after availability (PR #354)
-  - **Answer**: `before_tool_call` IS available — but ONLY through Plugin SDK, not standalone hooks
-  - Production coconut-guardrails plugin already uses it successfully
-  - Standalone hook events limited to: message:sent, message:received, command:*, agent:bootstrap, gateway:startup
-  - **Recommended approach**: Build hook-runner-openclaw as an OpenClaw PLUGIN (not standalone hooks)
-    - Map each PreToolUse module to a `before_tool_call` handler inside the plugin
-    - Reuse return value format (block/reason → block/blockReason)
-
-- [x] T472: Map hook-runner modules to OpenClaw hook equivalents (docs/T472-openclaw-mapping.md)
-  - 94 modules mapped: 42 portable, 24 adaptable, 28 not portable (70% transferable)
-  - PreToolUse → Plugin SDK `before_tool_call`, PostToolUse → `after_tool_call`
-  - SessionStart → `agent:bootstrap`, Stop → `command:stop`
-  - Pilot picks: force-push-gate, secret-scan-gate, commit-quality-gate
-
-- [x] T473: Port 3 pilot modules to OpenClaw Plugin SDK (openclaw-plugin/)
-  - Ported: force-push-gate, secret-scan-gate, commit-quality-gate
-  - Single plugin entry point dispatches to per-module gate functions
-  - 24-test suite validates gate logic and format conversion
-  - README with install guide and hook-runner→OpenClaw conversion table
-
-- [x] T474: Build openclaw-plugin/ with install script + 11-test suite
-  - Adapted from standalone hooks to plugin approach (Plugin SDK required)
-  - `install.sh` deploys to `~/.openclaw/plugins/hook-runner-gates/`
-  - Supports `--uninstall`, OPENCLAW_HOME override, graceful error on missing dir
-
-- [x] T475: E2E test — verify ported gates match hook-runner behavior (PR #359)
-  - Phase 1: Plugin loads in OpenClaw (inspect, hooks, version) — 3 tests
-  - Phase 2: Gate functions via tsx (force-push, commit-quality, secret-scan, config disable) — 16 tests
-  - Phase 3: Cross-validate hook-runner originals produce identical decisions — 11 tests
-  - Total: 30/30 passed
-
-## Session Handoff (2026-04-17, session 3)
-
-**This session (session 2+3):**
-- PR #353 merged: T469 worktree-aware gate modules (spec-gate, branch-pr-gate, worktree-gate)
-- PR #354 merged: T470-T471 OpenClaw hook research + wsl allowlist
-- Deployed to live hooks: spec-gate, branch-pr-gate, worktree-gate, openclaw-tmemu-guard
-- Full suite: 73 suites, 1004 passed, 0 failed
-- Spawned claude-code-skills session for T462 marketplace sync
-- Key finding: OpenClaw Plugin SDK has `before_tool_call` — build as plugin, not standalone hooks
-
-**Next session should:**
-1. T472: Map hook-runner modules to OpenClaw plugin equivalents (60 PreToolUse, 38 other)
-   - PreToolUse → `before_tool_call` (Plugin SDK) — direct port
-   - PostToolUse → no `after_tool_call` yet — needs adaptation (audit logging)
-   - Stop → `command:stop` event
-   - SessionStart → `agent:bootstrap` / `gateway:startup`
-   - Categorize: direct port / needs adaptation / not portable (Claude Code-specific)
-2. T473: Port 3 pilot modules to OpenClaw plugin format
-3. T476: Set up _grobomo/openclaw test instance in WSL
-4. T460: Clean up stale branches (user approval needed)
-3. T476: Set up _grobomo/openclaw test instance in WSL
-4. T460: Clean up stale branches (user approval needed for `git branch -D`)
+**Remaining:**
+1. T460: Clean up stale local branches (user must approve `git branch -D`)
+2. T462: Marketplace sync (delegated to claude-code-skills T004)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
