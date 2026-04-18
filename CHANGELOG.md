@@ -10,6 +10,8 @@ All notable changes to hook-runner are documented here.
 
 ### Performance
 - **preserve-iterated-content cache** (T478) — File-based cache for `git rev-list --count` results. First call: 1122ms, cache hit: 7ms (160x faster). Cache keyed by HEAD SHA + file path with 1hr TTL. Worktree HEAD resolution via `commondir`.
+- **commit-counter-gate optimization** (T478) — Replaced 4 git subprocess spawns with single `git status --porcelain`. 12/12 tests.
+- **TOOLS tags on 7 modules** (T478) — Added tool-specific `// TOOLS:` tags to 7 modules that already checked `tool_name` internally. Read/Grep/Glob calls now load 28 modules instead of 35.
 
 ### Maintenance
 - **Stale branch cleanup** (T460) — Deleted 17 merged remote branches + 3 stale local worktree branches.
@@ -19,7 +21,7 @@ All notable changes to hook-runner are documented here.
 ### Added
 - **OpenClaw Plugin SDK integration** (T470-T476) — Ported 3 pilot gate modules (force-push, secret-scan, commit-quality) to OpenClaw's Plugin SDK as `openclaw-plugin/`. Install script, `definePluginEntry` + `before_tool_call` hook, configurable per-module enable/disable.
 - **OpenClaw module mapping** (T472) — Mapped all 94 hook-runner modules to OpenClaw equivalents. 42 directly portable, 24 adaptable, 28 Claude Code-specific. See `docs/T472-openclaw-mapping.md`.
-- **OpenClaw E2E test suite** (T475) — 30-test suite across 3 phases: plugin load verification, tsx gate tests, cross-validation with hook-runner originals.
+- **OpenClaw E2E test suite** (T475) — 31-test suite across 3 phases: plugin load verification (3), tsx gate tests with real SDK (16), cross-validation with hook-runner originals (11). Harness uses `register(api)` + `api.on("before_tool_call")` pattern matching OpenClaw runtime.
 - **openclaw-tmemu-guard** (T468) — Project-scoped PreToolUse module preventing modification of production OpenClaw instance. Allows test profiles. 13/13 tests.
 - **Worktree-aware gates** (T469) — spec-gate, branch-pr-gate, and worktree-gate now detect git worktrees via `.git` file gitdir reference. 8 new tests.
 - **Commit counter branch awareness** (T466) — Branch-file mismatch detection + worktree enforcement. 12-test suite.
