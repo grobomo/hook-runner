@@ -1268,10 +1268,13 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 2. T479: CHANGELOG accuracy — v2.27.0 T475 count corrected (30→31), v2.28.0 added commit-counter + TOOLS tag entries
 3. T480: Stale branch cleanup — deleted 6 merged remote branches (237-bookkeeping, 253-T001, 253-T009, 350-T460, feat/event/T001, worktree-T462)
 
+**Session 10:**
+- [ ] T481: v2.29.0 release — T475 e2e fix + T479 CHANGELOG corrections + T480 branch cleanup
+
 ## Future (backlog)
+- [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
 - [ ] Port more OpenClaw modules beyond 3 pilot gates (42 directly portable per T472 mapping)
 - [ ] Test suite parallelization — bash tests hang when run sequentially due to WSL latency; add per-test timeouts
-- [ ] v2.29.0 — bundle T475 e2e fix + CHANGELOG corrections
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog

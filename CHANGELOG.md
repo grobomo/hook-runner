@@ -2,6 +2,15 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.29.0] — 2026-04-18
+
+### Fixed
+- **OpenClaw E2E tsx harness** (T475) — Rewrote harness to use real OpenClaw Plugin SDK `register(api)` + `api.on("before_tool_call")` pattern instead of incorrect `plugin.hooks.before_tool_call()`. Uses `NODE_PATH` to resolve SDK from WSL global install. 16/16 gate tests via tsx.
+- **CHANGELOG accuracy** (T479) — v2.27.0 T475 test count corrected 30→31. v2.28.0 added missing commit-counter-gate optimization and TOOLS tag entries.
+
+### Maintenance
+- **Stale branch cleanup** (T480) — Deleted 6 merged remote branches (237-bookkeeping, 253-T001, 253-T009, 350-T460, feat/event/T001, worktree-T462).
+
 ## [2.28.0] — 2026-04-17
 
 ### Fixed
