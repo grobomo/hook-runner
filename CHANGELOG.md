@@ -2,6 +2,20 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.27.0] — 2026-04-17
+
+### Added
+- **OpenClaw Plugin SDK integration** (T470-T476) — Ported 3 pilot gate modules (force-push, secret-scan, commit-quality) to OpenClaw's Plugin SDK as `openclaw-plugin/`. Install script, `definePluginEntry` + `before_tool_call` hook, configurable per-module enable/disable.
+- **OpenClaw module mapping** (T472) — Mapped all 94 hook-runner modules to OpenClaw equivalents. 42 directly portable, 24 adaptable, 28 Claude Code-specific. See `docs/T472-openclaw-mapping.md`.
+- **OpenClaw E2E test suite** (T475) — 30-test suite across 3 phases: plugin load verification, tsx gate tests, cross-validation with hook-runner originals.
+- **openclaw-tmemu-guard** (T468) — Project-scoped PreToolUse module preventing modification of production OpenClaw instance. Allows test profiles. 13/13 tests.
+- **Worktree-aware gates** (T469) — spec-gate, branch-pr-gate, and worktree-gate now detect git worktrees via `.git` file gitdir reference. 8 new tests.
+- **Commit counter branch awareness** (T466) — Branch-file mismatch detection + worktree enforcement. 12-test suite.
+
+### Fixed
+- **publish-json-guard** (T468) — Now allows creation of `.github/publish.json` (not just edits).
+- **install.sh path** (T474) — Uses `extensions/` instead of `plugins/` to match OpenClaw discovery.
+
 ## [2.26.0] — 2026-04-16
 
 ### Added

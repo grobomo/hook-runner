@@ -34,6 +34,8 @@ hook-runner is one piece of a larger Claude Code tooling ecosystem. Here's how t
 
 - **claude-code-skills marketplace** — hook-runner is published to `grobomo/claude-code-skills`. Install the skill to get `--workflow`, `--report`, and the full module catalog. The marketplace copy stays in sync with this repo.
 
+- **OpenClaw** — hook-runner gates are portable to [OpenClaw](https://openclaw.ai) via the Plugin SDK. The `openclaw-plugin/` directory contains a ready-to-install plugin with 3 ported gates (force-push, secret-scan, commit-quality). Install with `bash openclaw-plugin/install.sh`. See [openclaw-plugin/README.md](openclaw-plugin/README.md) for the conversion table.
+
 ## Quick Start
 
 ```bash
