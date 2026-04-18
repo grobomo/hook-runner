@@ -1285,6 +1285,11 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 
 **Session 13:**
 - [x] T489: OpenClaw batch port #2 — 7 universal modules, plugin v0.3.0, 25 total (17 before_tool_call + 8 after_tool_call), 116 tests (PR #382, v2.35.0)
+- [x] T489: Update openclaw.plugin.json + README.md for v0.3.0 (PR #383)
+- [x] T490: Fix no-nested-claude false positive on chained git commands — `cd && git commit` with "claude" in heredoc was blocked (PR #384)
+
+**Session 14:**
+- [x] T491: TOOLS tag optimization batch 2 — add TOOLS tags to 6 untagged PreToolUse modules (spec-gate, gsd-plan-gate, env-var-check, no-nested-claude, publish-json-guard, pr-first-gate) — 56/61 PreToolUse modules now tagged
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006

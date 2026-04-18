@@ -1,3 +1,4 @@
+// TOOLS: Bash, Edit, Write
 // WORKFLOW: gsd
 // WHY: Claude dived into coding without a GSD plan, producing untracked work
 // that couldn't be reviewed via PRs or traced to any roadmap phase.

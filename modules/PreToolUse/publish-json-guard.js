@@ -1,3 +1,4 @@
+// TOOLS: Bash, Edit, Write
 // WORKFLOW: shtd, starter
 // WHY: ep-incident-response (private customer data) was published to grobomo (public).
 // Root cause: nothing prevented Claude from editing publish.json or git remotes,

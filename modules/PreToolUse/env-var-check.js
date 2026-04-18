@@ -1,3 +1,4 @@
+// TOOLS: Bash, Edit, Write
 // WORKFLOW: shtd, gsd
 // WHY: Missing env vars caused silent failures deep in workflows.
 "use strict";

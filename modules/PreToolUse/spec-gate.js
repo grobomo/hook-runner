@@ -1,3 +1,4 @@
+// TOOLS: Bash, Edit, Write
 // WORKFLOW: shtd
 // WHY: Claude implemented features that nobody asked for, wasting hours.
 // T321: Strengthened — if branch has TXXX, that specific task must be unchecked.

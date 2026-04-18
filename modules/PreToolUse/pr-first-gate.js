@@ -1,3 +1,4 @@
+// TOOLS: Bash, Edit, Write
 // WORKFLOW: shtd, gsd
 // WHY: Claude created specs and wrote code on branches without opening a PR first.
 // The dev team monitors progress via GitHub Mobile notifications — without a PR,
