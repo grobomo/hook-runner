@@ -4,7 +4,7 @@ Ported [hook-runner](https://github.com/grobomo/hook-runner) gate modules for Op
 
 ## Modules
 
-### before_tool_call (13 gates)
+### before_tool_call (17 gates)
 
 | Module | What it does |
 |---|---|
@@ -21,8 +21,12 @@ Ported [hook-runner](https://github.com/grobomo/hook-runner) gate modules for Op
 | `no-focus-steal` | Blocks background processes that flash console windows (Windows) |
 | `crlf-ssh-key-check` | Warns about CRLF corruption when copying SSH keys |
 | `unresolved-issues-gate` | Blocks commit when TODO.md has unresolved FAIL/WARN entries |
+| `no-nested-claude` | Blocks running Claude Code as a subprocess |
+| `disk-space-guard` | Blocks destructive commands during disk space emergencies |
+| `no-unnecessary-sleep` | Blocks `sleep` > 1s between actions (wastes time) |
+| `claude-p-pattern` | Enforces correct `claude -p` invocation patterns |
 
-### after_tool_call (5 gates)
+### after_tool_call (8 gates)
 
 | Module | What it does |
 |---|---|
@@ -31,6 +35,9 @@ Ported [hook-runner](https://github.com/grobomo/hook-runner) gate modules for Op
 | `test-coverage-check` | Reminds to run tests when source files with matching test files are modified |
 | `result-review-gate` | Injects review checklist when reading report/results files |
 | `rule-hygiene` | Validates rule files are granular and properly scoped |
+| `empty-output-detector` | Flags commands that silently produce no output |
+| `disk-space-detect` | Detects disk space errors and activates disk-space-guard |
+| `troubleshoot-detector` | Detects fail-fail-succeed cycles, prompts to codify the lesson |
 
 ## Install
 
