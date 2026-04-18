@@ -97,16 +97,45 @@ function validateBranchName(name) {
   return null;
 }
 
+// T469: Read HEAD handling worktrees — .git may be a file containing "gitdir: /path/..."
+function readHeadFromGitDir(gitRoot) {
+  var dotGit = path.join(gitRoot, ".git");
+  var stat = fs.statSync(dotGit);
+  var headPath;
+  if (stat.isFile()) {
+    var gitdir = fs.readFileSync(dotGit, "utf-8").trim().replace(/^gitdir:\s*/, "");
+    if (!path.isAbsolute(gitdir)) gitdir = path.join(gitRoot, gitdir);
+    headPath = path.join(gitdir, "HEAD");
+  } else {
+    headPath = path.join(dotGit, "HEAD");
+  }
+  var head = fs.readFileSync(headPath, "utf-8").trim();
+  if (head.indexOf("ref: refs/heads/") === 0) return head.slice(16);
+  return "HEAD";
+}
+
 function getBranch(input) {
   // Use shared git context from runner if available (saves ~40ms)
   if (input && input._git && input._git.branch) return input._git.branch;
-  try {
-    // Read .git/HEAD directly — avoids spawning git (slow on Windows, can timeout)
-    var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
-    var head = fs.readFileSync(path.join(projectDir, ".git", "HEAD"), "utf-8").trim();
-    if (head.indexOf("ref: refs/heads/") === 0) return head.slice(16);
-    return "HEAD";
-  } catch(e) { return ""; }
+  // T469: Check CWD first (may be a worktree with a feature branch),
+  // then fall back to CLAUDE_PROJECT_DIR. Prefer non-main branches.
+  var dirs = [];
+  var cwd = process.cwd();
+  if (fs.existsSync(path.join(cwd, ".git"))) dirs.push(cwd);
+  var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
+  if (projectDir && dirs.indexOf(projectDir) === -1 && fs.existsSync(path.join(projectDir, ".git"))) {
+    dirs.push(projectDir);
+  }
+  var mainFallback = "";
+  for (var di = 0; di < dirs.length; di++) {
+    try {
+      var b = readHeadFromGitDir(dirs[di]);
+      if (!b) continue;
+      if (b !== "main" && b !== "master" && b !== "HEAD") return b;
+      if (!mainFallback) mainFallback = b;
+    } catch(e) { continue; }
+  }
+  return mainFallback || "";
 }
 
 function isTaskBranch(branch) {
