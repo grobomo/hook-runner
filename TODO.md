@@ -1269,7 +1269,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 3. T480: Stale branch cleanup — deleted 6 merged remote branches (237-bookkeeping, 253-T001, 253-T009, 350-T460, feat/event/T001, worktree-T462)
 
 **Session 10:**
-- [ ] T481: v2.29.0 release — T475 e2e fix + T479 CHANGELOG corrections + T480 branch cleanup
+- [x] T481: v2.29.0 release — T475 e2e fix + T479 CHANGELOG corrections + T480 branch cleanup (PR #371, GitHub release)
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
