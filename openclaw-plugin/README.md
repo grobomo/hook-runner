@@ -13,11 +13,17 @@ Ported [hook-runner](https://github.com/grobomo/hook-runner) gate modules for Op
 ## Install
 
 ```bash
-# Copy to OpenClaw plugins directory
-cp -r openclaw-plugin ~/.openclaw/plugins/hook-runner-gates
+# Option 1: Use the install script
+bash openclaw-plugin/install.sh
 
-# Restart OpenClaw to pick up the plugin
-openclaw plugins list  # verify it appears
+# Option 2: Manual copy to OpenClaw extensions directory
+cp -r openclaw-plugin ~/.openclaw/extensions/hook-runner-gates
+
+# Option 3: Install to a named profile
+OPENCLAW_HOME=~/.openclaw-myprofile bash openclaw-plugin/install.sh
+
+# Verify it appears
+openclaw plugins list
 ```
 
 ## Configuration
