@@ -2,6 +2,17 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.32.0] — 2026-04-18
+
+### Added
+- **Inter-project TODO priority system** (T486) — When Project A writes a TODO to Project B, it signals real-world feedback requiring P0 attention. Three new modules:
+  - `PostToolUse/inter-project-audit.js` — Logs inter-project TODO writes to `~/.claude/audit/inter-project-todo.jsonl`
+  - `SessionStart/inter-project-priority.js` — Surfaces XREF-tagged items as P0 at session start
+  - `PreToolUse/inter-project-priority-gate.js` — Blocks non-XREF work when XREF items pending (allows branch matching XREF task ID)
+- **`setup.js --xref`** (T486) — CLI dashboard showing audit log + pending XREF items across all projects
+- **XREF tag format**: `<!-- XREF:source-project:task-id YYYY-MM-DD -->` in TODO.md lines
+- **spec-gate**: Added `--xref` to bash allowlist. 15-test suite for T486.
+
 ## [2.31.0] — 2026-04-18
 
 ### Fixed
