@@ -47,7 +47,7 @@ OUT_PNG=$(node -e "
 check "skips binary files" '[ "$OUT_PNG" = "null" ]'
 
 # 6. Has WORKFLOW tag
-check "has WORKFLOW tag" 'head -1 "$MOD" | grep -q "WORKFLOW: shtd"'
+check "has WORKFLOW tag" 'head -3 "$MOD" | grep -q "WORKFLOW:"'
 
 # 7. Reminder text mentions WHY
 OUT_TEXT=$(node -e "

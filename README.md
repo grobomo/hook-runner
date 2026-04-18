@@ -371,6 +371,7 @@ Full catalog in `modules/` directory:
 | `no-passive-rules` | Blocks .md rules when a hook module is better |
 | `no-rules-gate` | Blocks creation of ~/.claude/rules/ files (use hook modules instead) |
 | `hook-system-reminder` | Reminds Claude that enforcement is ONLY via hook-runner modules |
+| `inter-project-priority-gate` | Blocks non-XREF work when P0 inter-project TODOs are pending |
 | `pr-first-gate` | Blocks spec/code edits on branches without an open PR |
 | `pr-per-task-gate` | Requires task ID in PR titles |
 | `preserve-iterated-content` | Warns on full-file rewrites of iterated files |
@@ -415,6 +416,7 @@ Full catalog in `modules/` directory:
 | `troubleshoot-detector` | Detects fail-fail-succeed patterns |
 | `update-stale-docs` | Detects stale docs after code edits |
 | `empty-output-detector` | Warns when ls/cat/find/curl/kubectl/az return empty output |
+| `inter-project-audit` | Logs inter-project TODO writes to JSONL audit trail |
 | `result-review-gate` | Injects review checklist when reading report/PDF/coverage files |
 
 ### UserPromptSubmit (processes user prompts)
@@ -461,6 +463,7 @@ Full catalog in `modules/` directory:
 | `session-cleanup` | Sweeps orphaned session-scoped temp files from crashed sessions |
 | `session-collision-detector` | Warns if another Claude Code session is active on the same project |
 | `terminal-title` | Sets terminal title to project folder name |
+| `inter-project-priority` | Injects P0 inter-project TODOs (XREF tags) at session start |
 | `workflow-summary` | Injects active workflow summary |
 
 ## Troubleshooting
