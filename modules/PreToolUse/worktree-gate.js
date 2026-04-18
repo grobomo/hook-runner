@@ -19,6 +19,17 @@ module.exports = function(input) {
   var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
   if (!projectDir) return null;
 
+  // T469: Check CWD first — may be in a worktree even if CLAUDE_PROJECT_DIR
+  // points to the main checkout.
+  var cwd = process.cwd();
+  var cwdGitPath = path.join(cwd, ".git");
+  try {
+    if (fs.statSync(cwdGitPath).isFile()) {
+      // CWD .git is a file → already in a worktree. Allow edits.
+      return null;
+    }
+  } catch(e) { /* no .git in cwd, check projectDir */ }
+
   // Check if .git exists and whether it's a directory (main checkout) or file (worktree)
   var gitPath = path.join(projectDir, ".git");
   try {
