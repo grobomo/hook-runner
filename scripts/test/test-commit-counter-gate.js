@@ -271,6 +271,93 @@ test("substring matching: branch 'deploy' matches dir 'deployment'", function() 
   cleanupRepo(dir);
 });
 
+// --- T485: worktreeRequired flag blocks git commit bypass ---
+
+test("T485: git commit blocked when worktreeRequired flag is set (not in worktree)", function() {
+  // Simulate: counter has worktreeRequired=true, session tries git commit
+  var dir = createTempRepo("main", ["src/app.js"]);
+  process.env.CLAUDE_PROJECT_DIR = dir;
+  // Write counter with worktreeRequired flag
+  fs.writeFileSync(COUNTER_FILE, JSON.stringify({ count: 15, ts: new Date().toISOString(), worktreeRequired: true }));
+
+  var gate = loadGate();
+  var r = gate({ tool_name: "Bash", tool_input: { command: "git commit -m 'sneaky commit'" } });
+  assert(r !== null, "should block git commit");
+  assert(r.decision === "block", "should be block decision");
+  assert(r.reason.indexOf("WORKTREE REQUIRED") !== -1, "should mention WORKTREE REQUIRED");
+
+  cleanupRepo(dir);
+});
+
+test("T485: git commit allowed when worktreeRequired is false", function() {
+  var dir = createTempRepo("main", []);
+  process.env.CLAUDE_PROJECT_DIR = dir;
+  fs.writeFileSync(COUNTER_FILE, JSON.stringify({ count: 10, ts: new Date().toISOString(), worktreeRequired: false }));
+
+  var gate = loadGate();
+  var r = gate({ tool_name: "Bash", tool_input: { command: "git commit -m 'normal commit'" } });
+  assert(r === null, "should allow commit when worktreeRequired is false");
+  var data = JSON.parse(fs.readFileSync(COUNTER_FILE, "utf-8"));
+  assert(data.count === 0, "counter should reset to 0");
+
+  cleanupRepo(dir);
+});
+
+test("T485: WRONG BRANCH sets worktreeRequired flag", function() {
+  var dir = createTempRepo("001-T001-deploy-nfs-datasec", [
+    "labs/dd-lab/terraform/main.tf",
+    "labs/dd-lab/scripts/setup.sh"
+  ]);
+  process.env.CLAUDE_PROJECT_DIR = dir;
+  setCounter(14);
+
+  var gate = loadGate();
+  var r = gate({ tool_name: "Edit", tool_input: { file_path: path.join(dir, "labs/dd-lab/terraform/main.tf"), old_string: "a", new_string: "b" } });
+  assert(r !== null && r.reason.indexOf("WRONG BRANCH") !== -1, "should detect wrong branch");
+  var data = JSON.parse(fs.readFileSync(COUNTER_FILE, "utf-8"));
+  assert(data.worktreeRequired === true, "worktreeRequired flag should be set");
+
+  cleanupRepo(dir);
+});
+
+test("T485: not-in-worktree block sets worktreeRequired flag", function() {
+  var dir = createTempRepo("build-src-utils", ["src/utils.js"]);
+  process.env.CLAUDE_PROJECT_DIR = dir;
+  setCounter(14);
+
+  var gate = loadGate();
+  var r = gate({ tool_name: "Edit", tool_input: { file_path: path.join(dir, "src/utils.js"), old_string: "a", new_string: "b" } });
+  assert(r !== null && r.reason.indexOf("main checkout") !== -1, "should enforce worktree");
+  var data = JSON.parse(fs.readFileSync(COUNTER_FILE, "utf-8"));
+  assert(data.worktreeRequired === true, "worktreeRequired flag should be set");
+
+  cleanupRepo(dir);
+});
+
+test("T485: worktreeRequired cleared on commit inside worktree", function() {
+  // Simulate being in a worktree: .git is a file
+  var dir = createTempRepo("worktree-T485-test", []);
+  process.env.CLAUDE_PROJECT_DIR = dir;
+  var gitDir = path.join(dir, ".git");
+  var realGitDir = path.join(os.tmpdir(), "fake-git-t485-" + Date.now());
+  fs.mkdirSync(realGitDir, { recursive: true });
+  fs.cpSync(path.join(gitDir, "HEAD"), path.join(realGitDir, "HEAD"));
+  fs.rmSync(gitDir, { recursive: true, force: true });
+  fs.writeFileSync(gitDir, "gitdir: " + realGitDir);
+
+  fs.writeFileSync(COUNTER_FILE, JSON.stringify({ count: 15, ts: new Date().toISOString(), worktreeRequired: true }));
+
+  var gate = loadGate();
+  var r = gate({ tool_name: "Bash", tool_input: { command: "git commit -m 'commit in worktree'" } });
+  // In worktree, commit should be allowed (worktreeRequired only blocks non-worktree)
+  assert(r === null, "should allow commit inside worktree even with worktreeRequired");
+  var data = JSON.parse(fs.readFileSync(COUNTER_FILE, "utf-8"));
+  assert(data.worktreeRequired === false, "worktreeRequired should be cleared");
+
+  fs.rmSync(realGitDir, { recursive: true, force: true });
+  cleanupRepo(dir);
+});
+
 // --- Cleanup ---
 process.env.CLAUDE_PROJECT_DIR = origProjectDir || "";
 process.env.HOOK_RUNNER_TEST = origTestEnv || "";

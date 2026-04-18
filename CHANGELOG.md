@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.31.0] — 2026-04-18
+
+### Fixed
+- **spec-gate TODO.md bypass** (T484) — When task ID exists in TODO.md AND a fuzzy-matching spec dir has `spec.md` but no `tasks.md`, gate now blocks. Prevents bypassing SHTD pipeline by adding tasks to TODO.md when an incomplete spec exists. Completed specs unaffected. 6-test suite.
+- **commit-counter-gate worktree bypass** (T485) — Wrong-branch and not-in-worktree blocks now set a `worktreeRequired` flag that also blocks `git commit` until session enters a worktree. Previously Claude could bypass by committing on the wrong branch. 5 new tests (17 total).
+
 ## [2.30.0] — 2026-04-18
 
 ### Improved

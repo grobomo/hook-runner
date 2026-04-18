@@ -25,13 +25,17 @@ var FILE_MODIFY_PATTERNS = require("./_file-modify-patterns");
 function readCounter() {
   try {
     var data = JSON.parse(fs.readFileSync(COUNTER_FILE, "utf-8"));
-    return data.count || 0;
-  } catch(e) { return 0; }
+    return { count: data.count || 0, worktreeRequired: !!data.worktreeRequired };
+  } catch(e) { return { count: 0, worktreeRequired: false }; }
 }
 
-function writeCounter(count) {
+function writeCounter(count, worktreeRequired) {
   try {
-    fs.writeFileSync(COUNTER_FILE, JSON.stringify({ count: count, ts: new Date().toISOString() }));
+    fs.writeFileSync(COUNTER_FILE, JSON.stringify({
+      count: count,
+      ts: new Date().toISOString(),
+      worktreeRequired: !!worktreeRequired
+    }));
   } catch(e) {}
 }
 
@@ -155,9 +159,21 @@ module.exports = function(input) {
     } catch(e) { cmd = (input.tool_input || {}).command || ""; }
   }
 
-  // Reset counter on git commit
+  // Reset counter on git commit — but block if worktree was required
+  // T485: Previously, Claude bypassed the worktree enforcement by just committing
+  // on the wrong branch. Now: if the gate flagged "worktree required", block commits too.
   if (input.tool_name === "Bash" && /git\s+commit/.test(cmd)) {
-    writeCounter(0);
+    var state = readCounter();
+    if (state.worktreeRequired && !isInWorktree()) {
+      return {
+        decision: "block",
+        reason: "COMMIT COUNTER — WORKTREE REQUIRED: Cannot commit on the main checkout.\n" +
+          "A previous check found files that need an isolated worktree.\n" +
+          "REQUIRED: Call EnterWorktree first, then commit in the worktree.\n" +
+          "This flag clears automatically once you're in a worktree."
+      };
+    }
+    writeCounter(0, false);
     return null;
   }
 
@@ -176,8 +192,9 @@ module.exports = function(input) {
 
   if (!isFileModify) return null;
 
-  var count = readCounter() + 1;
-  writeCounter(count);
+  var counterState = readCounter();
+  var count = counterState.count + 1;
+  writeCounter(count, counterState.worktreeRequired);
 
   if (count >= MAX_EDITS) {
     // T478: Single git call replaces 4 separate spawns
@@ -198,6 +215,8 @@ module.exports = function(input) {
 
     if (mismatch) {
       // WRONG BRANCH — changed files don't relate to this branch at all
+      // T485: Set worktreeRequired flag so git commit is also blocked
+      writeCounter(count, true);
       var topDirs = [];
       var seen = {};
       files.forEach(function(f) {
@@ -217,6 +236,8 @@ module.exports = function(input) {
 
     // Branch looks right (or we can't tell) but not in a worktree — enforce worktree
     if (!inWorktree) {
+      // T485: Set worktreeRequired flag so git commit is also blocked
+      writeCounter(count, true);
       return {
         decision: "block",
         reason: "COMMIT COUNTER: " + count + " file modifications since last commit (" + gitCount + " files changed in git).\n" +
