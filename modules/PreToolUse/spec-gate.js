@@ -116,8 +116,19 @@ function autoActivateShtd(projectDir) {
 
 function getGitBranch(gitRoot) {
   try {
+    var dotGit = path.join(gitRoot, ".git");
+    var headPath;
+    // T469: Handle worktrees — .git is a file containing "gitdir: /path/..."
+    var stat = fs.statSync(dotGit);
+    if (stat.isFile()) {
+      var gitdir = fs.readFileSync(dotGit, "utf-8").trim().replace(/^gitdir:\s*/, "");
+      if (!path.isAbsolute(gitdir)) gitdir = path.join(gitRoot, gitdir);
+      headPath = path.join(gitdir, "HEAD");
+    } else {
+      headPath = path.join(dotGit, "HEAD");
+    }
     // Read .git/HEAD directly — avoids spawning git (slow on Windows, can timeout)
-    var head = fs.readFileSync(path.join(gitRoot, ".git", "HEAD"), "utf-8").trim();
+    var head = fs.readFileSync(headPath, "utf-8").trim();
     // "ref: refs/heads/main" → "main", detached HEAD → "HEAD"
     if (head.indexOf("ref: refs/heads/") === 0) return head.slice(16);
     return "HEAD";
