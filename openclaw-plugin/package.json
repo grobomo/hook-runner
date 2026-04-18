@@ -1,6 +1,6 @@
 {
   "name": "openclaw-hook-runner-gates",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Hook-runner gate modules ported to OpenClaw Plugin SDK",
   "main": "index.ts",
   "openclaw": {

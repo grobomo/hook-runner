@@ -1,18 +1,20 @@
 /**
  * hook-runner-gates — Ported hook-runner gate modules for OpenClaw
  *
- * 18 modules ported from hook-runner's CommonJS format to OpenClaw Plugin SDK.
+ * 25 modules ported from hook-runner's CommonJS format to OpenClaw Plugin SDK.
  *
- * before_tool_call gates (13):
+ * before_tool_call gates (17):
  *   force-push-gate, secret-scan-gate, commit-quality-gate,
  *   git-destructive-guard, archive-not-delete, git-rebase-safety,
  *   no-hardcoded-paths, victory-declaration-gate, root-cause-gate,
  *   no-fragile-heuristics, no-focus-steal, crlf-ssh-key-check,
- *   unresolved-issues-gate
+ *   unresolved-issues-gate, no-nested-claude, disk-space-guard,
+ *   no-unnecessary-sleep, claude-p-pattern
  *
- * after_tool_call gates (5):
+ * after_tool_call gates (8):
  *   commit-msg-check, crlf-detector, test-coverage-check,
- *   result-review-gate, rule-hygiene
+ *   result-review-gate, rule-hygiene, empty-output-detector,
+ *   disk-space-detect, troubleshoot-detector
  *
  * Ported from: https://github.com/grobomo/hook-runner
  * Original format: CommonJS (PreToolUse/PostToolUse gates)
@@ -21,8 +23,9 @@
 
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync, unlinkSync } from "node:fs";
 import { basename, dirname, extname, join, relative } from "node:path";
+import { homedir, tmpdir } from "node:os";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -37,6 +40,7 @@ interface SecretPattern {
 }
 
 type GateFunction = (toolName: string, params: Record<string, unknown>) => string | null;
+type AfterGateFunction = (toolName: string, params: Record<string, unknown>, result?: string) => string | null;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -615,6 +619,170 @@ function unresolvedIssuesGate(toolName: string, params: Record<string, unknown>)
   );
 }
 
+// ── no-nested-claude ──────────────────────────────────────────────────
+// WHY: Nested `claude -p` calls inside a session don't work reliably.
+// Cross-project work must use a proper new terminal session.
+
+function noNestedClaude(toolName: string, params: Record<string, unknown>): string | null {
+  if (toolName !== "Bash") return null;
+
+  const cmd = String(params.command || "");
+
+  // Skip if "claude" only appears inside a search pattern (grep, rg, etc.)
+  const isSearchPattern = /\b(grep|rg|findstr|awk|sed)\b/.test(cmd) &&
+                          /["'].*claude.*["']/.test(cmd);
+  if (isSearchPattern) return null;
+
+  // Skip git/gh commands — "claude" appears in paths and commit messages
+  if (/^\s*(git\s|gh\s)/.test(cmd)) return null;
+
+  // Match: claude -p, claude --print, claude -m, or piped into claude
+  if (/\bclaude\s+(-p|--print|-m|--message)\b/.test(cmd) ||
+      /\|\s*claude\b/.test(cmd) ||
+      /\bclaude\s+-/.test(cmd)) {
+    return (
+      "NO NESTED CLAUDE: Cannot run claude as a subprocess — it doesn't work reliably.\n" +
+      "FIX: Open a new terminal tab and run claude there, or use a proper session spawner."
+    );
+  }
+
+  return null;
+}
+
+// ── disk-space-guard ──────────────────────────────────────────────────
+// WHY: Claude ran rm -rf on temp files when disk was full without asking.
+// Blocks destructive commands when a previous error was disk-related.
+
+const DISK_SPACE_STATE_FILE = join(
+  homedir(),
+  ".claude", ".disk-space-alert"
+);
+
+const DISK_DESTRUCTIVE_PATTERNS = [
+  /\brm\s+-rf?\b/,
+  /\brm\s+.*-[a-z]*f/,
+  /\brmdir\b/,
+  /\bdel\b.*\/[sS]/,
+  /Remove-Item.*-Recurse/i,
+  /\bclean\b.*--force/,
+  /\bprune\b/,
+  /\bpurge\b/,
+];
+
+function diskSpaceGuard(toolName: string, params: Record<string, unknown>): string | null {
+  if (toolName !== "Bash") return null;
+
+  const cmd = String(params.command || "");
+  if (!cmd) return null;
+
+  let inAlert = false;
+  try { inAlert = existsSync(DISK_SPACE_STATE_FILE); } catch { /* ignore */ }
+  if (!inAlert) return null;
+
+  for (const pattern of DISK_DESTRUCTIVE_PATTERNS) {
+    if (pattern.test(cmd)) {
+      return (
+        "DISK SPACE GUARD: Destructive command blocked during disk space emergency.\n" +
+        "WHY: Deleting files to free space risks destroying important data.\n" +
+        "Run a disk usage scan first to identify safe cleanup candidates.\n" +
+        "Present the results and wait for explicit user approval.\n" +
+        "Command blocked: " + cmd.substring(0, 100)
+      );
+    }
+  }
+
+  return null;
+}
+
+// ── no-unnecessary-sleep ──────────────────────────────────────────────
+// WHY: Claude adds sleep between actions thinking pages or processes need
+// time to load. Each prompt takes 3-10s — more than enough. Sleep wastes time.
+
+function noUnnecessarySleep(toolName: string, params: Record<string, unknown>): string | null {
+  if (toolName !== "Bash") return null;
+
+  const cmd = String(params.command || "");
+  if (!/^\s*sleep\b/.test(cmd)) return null;
+
+  const seconds = cmd.match(/sleep\s+(\d+)/);
+  if (!seconds) return null;
+  const dur = parseInt(seconds[1], 10);
+
+  // Only block sleeps > 1s (short sleeps may be intentional)
+  if (dur <= 1) return null;
+
+  return (
+    "PERFORMANCE: Do not use sleep between actions.\n" +
+    "Each prompt takes 3-10s to process — more than enough for pages to load.\n" +
+    "Just call the next action directly. Sleep wastes time twice.\n" +
+    "If you truly need a delay, use sleep 1 (max 1 second)."
+  );
+}
+
+// ── claude-p-pattern ──────────────────────────────────────────────────
+// WHY: Claude tried 3 wrong ways to call claude -p before finding the right
+// pattern. The correct pattern is: write to temp file, pipe via stdin redirect.
+
+const CLAUDE_P_CORRECT =
+  "\n\nCorrect claude -p pattern:\n" +
+  "  PROMPTFILE=$(mktemp /tmp/claude-p-XXXXXX.txt)\n" +
+  "  cat > \"$PROMPTFILE\" <<'EOF'\n  Your prompt here\n  EOF\n" +
+  "  claude -p --dangerously-skip-permissions < \"$PROMPTFILE\" > output.txt 2>&1\n" +
+  "  rm -f \"$PROMPTFILE\"\n\n" +
+  "For images/PDFs: put absolute file paths in the prompt and tell Claude\n" +
+  "to use the Read tool to view them. NEVER base64-encode images inline.\n" +
+  "No API key needed. No SDK needed. Same auth as Claude Code session.";
+
+function claudePPattern(toolName: string, params: Record<string, unknown>): string | null {
+  // Gate 1: Bash — block bad claude -p invocations
+  if (toolName === "Bash") {
+    const cmd = String(params.command || "");
+    if (cmd.indexOf("claude -p") === -1 && cmd.indexOf("claude.exe -p") === -1) return null;
+
+    const bad: string[] = [];
+    if (/claude\s+-p\s+--no-input/.test(cmd)) bad.push("--no-input is not a valid flag");
+    if (/echo\s+.*\|\s*claude\s+-p/.test(cmd)) bad.push("piping via echo hangs — use temp file + stdin redirect");
+    if (/claude\s+-p\s+"[^"]+"\s*2?>&?1?$/.test(cmd)) bad.push("passing prompt as argument is unreliable");
+
+    if (bad.length > 0) {
+      return "claude -p invocation issue: " + bad.join("; ") + CLAUDE_P_CORRECT;
+    }
+    return null;
+  }
+
+  // Gate 2: Edit/Write — block bad patterns in scripts that call claude
+  if (toolName !== "Edit" && toolName !== "Write") return null;
+
+  const content = toolName === "Edit"
+    ? String(params.new_string || "")
+    : String(params.content || "");
+
+  if (!/claude.*-p|anthropic|ANTHROPIC_API_KEY/i.test(content)) return null;
+
+  const filePath = String(params.file_path || "");
+  if (/claude-p-pattern|run-modules/i.test(filePath)) return null;
+  if (/claude.api|anthropic.sdk|api.wrapper/i.test(filePath)) return null;
+
+  if (/ANTHROPIC_API_KEY|os\.environ.*anthropic|api_key.*=.*os\./i.test(content)) {
+    if (/not.*need|no.*key.*needed|same.*auth/i.test(content)) return null;
+    return "Don't check for ANTHROPIC_API_KEY. claude -p uses Claude Code's " +
+      "own auth — no API key needed." + CLAUDE_P_CORRECT;
+  }
+
+  if (/base64.*encode.*image|b64encode.*read|base64\.b64encode.*\.png/i.test(content)) {
+    return "Don't base64-encode images into claude -p prompts. They're too " +
+      "large and cause timeouts. Include absolute file paths in the prompt " +
+      "and tell Claude to use its Read tool to view them." + CLAUDE_P_CORRECT;
+  }
+
+  if (/import anthropic|from anthropic import|anthropic\.Anthropic/i.test(content)) {
+    return "Don't use the Anthropic SDK when claude -p is available. " +
+      "claude -p is simpler (no API key, no SDK install)." + CLAUDE_P_CORRECT;
+  }
+
+  return null;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // AFTER_TOOL_CALL GATES (PostToolUse)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -845,6 +1013,174 @@ function ruleHygiene(toolName: string, params: Record<string, unknown>): string 
   return "Rule hygiene:\n" + warnings.map((w) => "- " + w).join("\n");
 }
 
+// ── empty-output-detector ─────────────────────────────────────────────
+// WHY: Claude treats empty command output as success — e.g., `ls screenshots/`
+// returning nothing means no screenshots exist, but Claude proceeds as if they do.
+
+const EXPECT_OUTPUT = [
+  /^\s*ls\b/,
+  /^\s*find\b/,
+  /^\s*cat\b/,
+  /^\s*node\s+.*--test/,
+  /^\s*node\s+setup\.js\s+--/,
+  /^\s*curl\b/,
+  /^\s*az\s/,
+  /^\s*kubectl\s+(get|describe|logs)\b/,
+];
+
+const EMPTY_OK = [
+  /^\s*(cp|mv|mkdir|rm|chmod|touch|cd)\b/,
+  /^\s*git\s+(add|checkout|push|pull|fetch|merge)\b/,
+  />/,
+  /2>&1\s*$/,
+  /\|\s*wc\b/,
+];
+
+function emptyOutputDetector(toolName: string, params: Record<string, unknown>, result?: string): string | null {
+  if (toolName !== "Bash") return null;
+
+  const cmd = String(params.command || "");
+  const output = (result || "").trim();
+  if (output.length > 0) return null;
+
+  for (const pattern of EMPTY_OK) {
+    if (pattern.test(cmd)) return null;
+  }
+
+  let expectsOutput = false;
+  for (const pattern of EXPECT_OUTPUT) {
+    if (pattern.test(cmd)) { expectsOutput = true; break; }
+  }
+  if (!expectsOutput) return null;
+
+  return (
+    "EMPTY OUTPUT from command that normally produces output.\n\n" +
+    "Command: " + cmd.substring(0, 150) + "\n\n" +
+    "This likely means:\n" +
+    "  - Directory is empty (no files where expected)\n" +
+    "  - File doesn't exist at that path\n" +
+    "  - Query returned no results\n" +
+    "  - Command failed silently\n\n" +
+    "Investigate before proceeding. Do not assume empty = success."
+  );
+}
+
+// ── disk-space-detect ─────────────────────────────────────────────────
+// WHY: Companion to disk-space-guard. Detects disk space errors in output
+// and sets alert mode so destructive commands are blocked.
+
+const DISK_ERROR_PATTERNS = [
+  /out of diskspace/i,
+  /no space left on device/i,
+  /not enough space/i,
+  /disk is full/i,
+  /write error.*diskspace/i,
+  /ENOSPC/,
+];
+
+function diskSpaceDetect(toolName: string, params: Record<string, unknown>, result?: string): string | null {
+  const output = result || "";
+
+  for (const pattern of DISK_ERROR_PATTERNS) {
+    if (pattern.test(output)) {
+      // Set alert mode via state file
+      try {
+        writeFileSync(DISK_SPACE_STATE_FILE, new Date().toISOString() + "\n" + output.substring(0, 500));
+      } catch { /* disk may be full */ }
+
+      return (
+        "DISK SPACE ALERT: The last command failed due to insufficient disk space.\n" +
+        "DO NOT attempt to delete files to free space.\n" +
+        "Run a disk usage scan to identify safe cleanup candidates.\n" +
+        "Present the results to the user and WAIT for explicit approval.\n" +
+        "To clear this alert after resolving: delete ~/.claude/.disk-space-alert"
+      );
+    }
+  }
+
+  // Clear alert if command succeeds (user freed space)
+  try {
+    if (existsSync(DISK_SPACE_STATE_FILE)) {
+      const hasError = /error|fail|fatal/i.test(output) && /disk|space|write/i.test(output);
+      if (!hasError) {
+        unlinkSync(DISK_SPACE_STATE_FILE);
+      }
+    }
+  } catch { /* ignore */ }
+
+  return null;
+}
+
+// ── troubleshoot-detector ─────────────────────────────────────────────
+// WHY: Claude tried 3 wrong ways before finding the right pattern. This
+// detects "fail-fail-succeed" cycles and prompts to create a hook module
+// so the solution is enforced permanently.
+
+interface FailRecord {
+  ts: number;
+  cmd: string;
+}
+
+const troubleshootState: { failures: FailRecord[]; lastPrompted: number } = {
+  failures: [],
+  lastPrompted: 0,
+};
+
+const FAIL_THRESHOLD = 2;
+
+function troubleshootDetector(toolName: string, params: Record<string, unknown>, result?: string): string | null {
+  if (toolName !== "Bash") return null;
+
+  const cmd = String(params.command || "");
+  const output = result || "";
+
+  // Detect exit code from output
+  let exitCode = -1;
+  const exitMatch = output.match(/Exit code (\d+)/);
+  if (exitMatch) {
+    exitCode = parseInt(exitMatch[1], 10);
+  } else if (!output.includes("Exit code") && !output.includes("error")) {
+    exitCode = 0;
+  }
+
+  if (exitCode !== 0) {
+    // Record failure
+    troubleshootState.failures.push({ ts: Date.now(), cmd: cmd.substring(0, 200) });
+    // Keep only recent failures (last 5 min)
+    const cutoff = Date.now() - 300000;
+    troubleshootState.failures = troubleshootState.failures.filter(f => f.ts > cutoff);
+    return null;
+  }
+
+  // Success — check if preceded by enough failures
+  const recentFailures = troubleshootState.failures.length;
+  if (recentFailures < FAIL_THRESHOLD) {
+    troubleshootState.failures = [];
+    return null;
+  }
+
+  // Cooldown: don't prompt more than once per 5 minutes
+  if (Date.now() - troubleshootState.lastPrompted < 300000) {
+    troubleshootState.failures = [];
+    return null;
+  }
+
+  const failedCmds = troubleshootState.failures.map(f => f.cmd).join("\n  ");
+  troubleshootState.failures = [];
+  troubleshootState.lastPrompted = Date.now();
+
+  return (
+    "TROUBLESHOOTING CYCLE DETECTED: " + recentFailures + " failed attempts before success.\n" +
+    "Failed commands:\n  " + failedCmds + "\n" +
+    "Successful command: " + cmd.substring(0, 200) + "\n\n" +
+    "You just learned something the hard way. To prevent repeating this:\n" +
+    "1) Create a hook module that catches the bad pattern and suggests the good one\n" +
+    "2) Commit it so it persists across sessions\n" +
+    "3) If this pattern exists in another project, you should have checked there FIRST\n\n" +
+    "Do this NOW before moving on."
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // PLUGIN ENTRY POINT
 // ═══════════════════════════════════════════════════════════════════════════
@@ -863,22 +1199,29 @@ const beforeToolCallGates: Record<string, GateFunction> = {
   "no-focus-steal": noFocusSteal,
   "crlf-ssh-key-check": crlfSshKeyCheck,
   "unresolved-issues-gate": unresolvedIssuesGate,
+  "no-nested-claude": noNestedClaude,
+  "disk-space-guard": diskSpaceGuard,
+  "no-unnecessary-sleep": noUnnecessarySleep,
+  "claude-p-pattern": claudePPattern,
 };
 
-const afterToolCallGates: Record<string, GateFunction> = {
+const afterToolCallGates: Record<string, AfterGateFunction> = {
   "commit-msg-check": commitMsgCheck,
   "crlf-detector": crlfDetector,
   "test-coverage-check": testCoverageCheck,
   "result-review-gate": resultReviewGate,
   "rule-hygiene": ruleHygiene,
+  "empty-output-detector": emptyOutputDetector,
+  "disk-space-detect": diskSpaceDetect,
+  "troubleshoot-detector": troubleshootDetector,
 };
 
 export default definePluginEntry({
   id: "hook-runner-gates",
   name: "Hook Runner Gates",
   description:
-    "18 ported hook-runner gate modules — git safety, secret scanning, code quality, " +
-    "commit hygiene, test coverage, and AI behavioral guardrails.",
+    "25 ported hook-runner gate modules — git safety, secret scanning, code quality, " +
+    "commit hygiene, test coverage, disk safety, and AI behavioral guardrails.",
 
   register(api) {
     const getConfig = (): GateConfig => {
@@ -908,7 +1251,7 @@ export default definePluginEntry({
       for (const [name, fn] of Object.entries(afterToolCallGates)) {
         if (modules[name] === false) continue;
 
-        const reason = fn(event.toolName, event.params || {});
+        const reason = fn(event.toolName, event.params || {}, (event as Record<string, unknown>).result as string | undefined);
         if (reason) {
           return { message: reason };
         }
