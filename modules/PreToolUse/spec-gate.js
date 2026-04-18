@@ -307,12 +307,18 @@ module.exports = function(input) {
   }
 
   // Get current branch for feature matching (prefer shared context from runner)
+  // T469: Prefer non-main branch — worktree CWD may be on a feature branch
+  // while CLAUDE_PROJECT_DIR (main checkout) is on main.
   var branch = (input._git && input._git.branch) || "";
   if (!branch) {
+    var mainFallback = "";
     for (var bi = 0; bi < roots.length; bi++) {
-      branch = getGitBranch(roots[bi]);
-      if (branch) break;
+      var b = getGitBranch(roots[bi]);
+      if (!b) continue;
+      if (b !== "main" && b !== "master" && b !== "HEAD") { branch = b; break; }
+      if (!mainFallback) mainFallback = b;
     }
+    if (!branch) branch = mainFallback;
   }
   var featureWords = branchFeatureWords(branch);
   var taskId = branchTaskId(branch); // T321: e.g. "T319"
