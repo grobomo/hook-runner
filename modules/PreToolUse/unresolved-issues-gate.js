@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, gsd
 // WHY: Claude commits code while TODO.md or report data still has unresolved FAIL, timeout,
 // MISMATCH, or WARN entries. Bugs ship because the commit focused on what worked and skipped

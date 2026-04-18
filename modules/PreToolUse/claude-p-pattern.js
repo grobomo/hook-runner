@@ -1,3 +1,4 @@
+// TOOLS: Bash, Edit
 // WORKFLOW: shtd, gsd
 // WHY: Claude tried 3 wrong ways to call claude -p (--no-input, pipe via
 // echo, timeout with arg) and then tried to use ANTHROPIC_API_KEY / SDK

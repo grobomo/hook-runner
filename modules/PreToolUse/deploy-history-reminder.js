@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, gsd
 // WHY: Claude repeats failed deploy approaches because it doesn't check git
 // history first. Each E2E cycle is 10+ minutes. Checking recent commits takes
