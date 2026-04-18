@@ -1270,11 +1270,11 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 
 **Session 10:**
 - [x] T481: v2.29.0 release — T475 e2e fix + T479 CHANGELOG corrections + T480 branch cleanup (PR #371, GitHub release)
+- [x] T482: Test suite per-test timeouts — 60s per-test timeouts, TIMEOUT vs FAIL distinction, --js-only/--sh-only/--skip-wsl/--timeout flags (PR #373, v2.30.0)
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
 - [ ] Port more OpenClaw modules beyond 3 pilot gates (42 directly portable per T472 mapping)
-- [ ] Test suite parallelization — bash tests hang when run sequentially due to WSL latency; add per-test timeouts
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
