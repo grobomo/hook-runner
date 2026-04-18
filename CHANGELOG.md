@@ -2,6 +2,18 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.28.0] — 2026-04-17
+
+### Fixed
+- **Worktree branch detection** (T477) — `run-pretooluse.js` shared context always read branch from `CLAUDE_PROJECT_DIR` (main checkout = "main"), causing spec-gate to block commands in worktree sessions. Now reads CWD `.git` first via `readBranchFromDir` with worktree gitdir support. 5-test suite.
+- **Spec-gate bash allowlist** (T477) — Added 9 read-only `setup.js` flags (`--perf`, `--stats`, `--health`, `--list`, `--version`, `--help`, `--report`, `--export`, `--snapshot`). 4 new tests (23 total).
+
+### Performance
+- **preserve-iterated-content cache** (T478) — File-based cache for `git rev-list --count` results. First call: 1122ms, cache hit: 7ms (160x faster). Cache keyed by HEAD SHA + file path with 1hr TTL. Worktree HEAD resolution via `commondir`.
+
+### Maintenance
+- **Stale branch cleanup** (T460) — Deleted 17 merged remote branches + 3 stale local worktree branches.
+
 ## [2.27.0] — 2026-04-17
 
 ### Added
