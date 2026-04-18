@@ -437,8 +437,38 @@ module.exports = function(input) {
     }
   }
   if (taskFoundIn === "TODO") {
-    // Task is in TODO.md, not in any spec — skip fuzzy spec matching
-    // (fuzzy could match the wrong spec and block on its completed tasks)
+    // Task is in TODO.md, not in any spec.
+    // T484: But if a spec dir fuzzy-matches the branch, enforce its chain.
+    // This prevents bypassing the spec pipeline by adding tasks to TODO.md
+    // when a matching spec directory already exists (even if incomplete).
+    if (featureWords.length > 0 && specEntries.length > 0) {
+      var todoFuzzyMatch = null;
+      var todoFuzzyScore = 0;
+      for (var tfi = 0; tfi < specEntries.length; tfi++) {
+        if (specEntries[tfi].score > todoFuzzyScore) {
+          todoFuzzyScore = specEntries[tfi].score;
+          todoFuzzyMatch = specEntries[tfi];
+        }
+      }
+      if (todoFuzzyMatch && todoFuzzyScore >= 1) {
+        // Matching spec dir exists — enforce structural chain (spec.md → tasks.md).
+        // Only block on INCOMPLETE chain (missing tasks.md). If tasks.md exists
+        // (even with all tasks done), the spec is structurally complete and the
+        // TODO.md task is likely separate work — allow it.
+        if (todoFuzzyMatch.hasSpec && !todoFuzzyMatch.hasTasks) {
+          return {
+            decision: "block",
+            reason: "SPEC GATE: specs/" + todoFuzzyMatch.dir + "/tasks.md missing.\n" +
+              "WHY: " + taskId + " is in TODO.md, but specs/" + todoFuzzyMatch.dir + "/ also matches your branch.\n" +
+              "The SHTD pipeline requires: spec.md → tasks.md → code. Complete the spec chain.\n" +
+              "FIX: Create tasks with /speckit.tasks from specs/" + todoFuzzyMatch.dir + "/spec.md" +
+              SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
+              "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
+          };
+        }
+      }
+    }
+    // No fuzzy match or no spec dirs — TODO.md alone is sufficient
     if (isTestFile) return null;
     return null;
   }
