@@ -1302,7 +1302,7 @@ requires building a full plugin, not just a hook script.
   - **Hook structure**: HOOK.md (YAML frontmatter) + handler.ts (TypeScript ESM, `export default handler`)
   - **Plugin structure**: `openclaw.plugin.json` + `index.ts` using `definePluginEntry({register(api){...}})`
 
-- [ ] T471: Research tool:before/tool:after availability
+- [x] T471: Research tool:before/tool:after availability (PR #354)
   - **Answer**: `before_tool_call` IS available — but ONLY through Plugin SDK, not standalone hooks
   - Production coconut-guardrails plugin already uses it successfully
   - Standalone hook events limited to: message:sent, message:received, command:*, agent:bootstrap, gateway:startup
