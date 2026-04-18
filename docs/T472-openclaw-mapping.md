@@ -206,3 +206,38 @@ These three cover different patterns:
 3. Module dispatch inside the plugin mirrors hook-runner's `load-modules.js` pattern
 4. Config file (`modules.yaml` equivalent) controls which modules are active
 5. SessionStart/Stop modules can be standalone hooks using `agent:bootstrap`/`command:stop`
+
+## Ported Modules (T487)
+
+18 modules ported to `openclaw-plugin/index.ts` (plugin v0.2.0):
+
+### before_tool_call (13)
+| Module | Status | Original |
+|---|---|---|
+| `force-push-gate` | T473 pilot | PreToolUse |
+| `secret-scan-gate` | T473 pilot | PreToolUse |
+| `commit-quality-gate` | T473 pilot | PreToolUse |
+| `git-destructive-guard` | T487 batch | PreToolUse |
+| `archive-not-delete` | T487 batch | PreToolUse |
+| `git-rebase-safety` | T487 batch | PreToolUse |
+| `no-hardcoded-paths` | T487 batch | PreToolUse |
+| `victory-declaration-gate` | T487 batch | PreToolUse |
+| `root-cause-gate` | T487 batch | PreToolUse |
+| `no-fragile-heuristics` | T487 batch | PreToolUse |
+| `no-focus-steal` | T487 batch | PreToolUse |
+| `crlf-ssh-key-check` | T487 batch | PreToolUse |
+| `unresolved-issues-gate` | T487 batch | PreToolUse |
+
+### after_tool_call (5)
+| Module | Status | Original |
+|---|---|---|
+| `commit-msg-check` | T487 batch | PostToolUse |
+| `crlf-detector` | T487 batch | PostToolUse |
+| `test-coverage-check` | T487 batch | PostToolUse |
+| `result-review-gate` | T487 batch | PostToolUse |
+| `rule-hygiene` | T487 batch | PostToolUse |
+
+### Remaining portable (not yet ported)
+- PreToolUse: `aws-tagging-gate`, `block-local-docker`, `deploy-gate`, `deploy-history-reminder`, `disk-space-guard`, `env-var-check`, `messaging-safety-gate`, `no-adhoc-commands`, `preserve-iterated-content`, `pr-per-task-gate`
+- SessionStart: `backup-check`, `drift-check`, `load-instructions`, `project-health`, `session-cleanup`, `session-collision-detector`, `terminal-title`
+- Stop: `auto-continue`, `chat-export`, `log-gotchas`, `mark-turn-complete`, `never-give-up`, `push-unpushed`, `test-before-done`, `unresolved-issues-check`

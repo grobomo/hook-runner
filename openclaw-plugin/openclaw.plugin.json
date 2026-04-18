@@ -1,24 +1,39 @@
 {
   "id": "hook-runner-gates",
   "name": "Hook Runner Gates",
-  "description": "Ported hook-runner gate modules for OpenClaw. Enforces commit quality, secret scanning, and force-push protection via before_tool_call.",
-  "version": "0.1.0",
+  "description": "18 ported hook-runner gate modules for OpenClaw. Git safety, secret scanning, code quality, commit hygiene, test coverage, and AI behavioral guardrails.",
+  "version": "0.2.0",
   "author": "grobomo",
   "license": "MIT",
   "openclaw": {
     "minVersion": "2026.4.0"
   },
-  "hooks": ["before_tool_call"],
+  "hooks": ["before_tool_call", "after_tool_call"],
   "configSchema": {
     "type": "object",
     "properties": {
       "modules": {
         "type": "object",
-        "description": "Enable/disable individual gate modules",
+        "description": "Enable/disable individual gate modules. All enabled by default.",
         "properties": {
           "force-push-gate": { "type": "boolean", "default": true },
           "secret-scan-gate": { "type": "boolean", "default": true },
-          "commit-quality-gate": { "type": "boolean", "default": true }
+          "commit-quality-gate": { "type": "boolean", "default": true },
+          "git-destructive-guard": { "type": "boolean", "default": true },
+          "archive-not-delete": { "type": "boolean", "default": true },
+          "git-rebase-safety": { "type": "boolean", "default": true },
+          "no-hardcoded-paths": { "type": "boolean", "default": true },
+          "victory-declaration-gate": { "type": "boolean", "default": true },
+          "root-cause-gate": { "type": "boolean", "default": true },
+          "no-fragile-heuristics": { "type": "boolean", "default": true },
+          "no-focus-steal": { "type": "boolean", "default": true },
+          "crlf-ssh-key-check": { "type": "boolean", "default": true },
+          "unresolved-issues-gate": { "type": "boolean", "default": true },
+          "commit-msg-check": { "type": "boolean", "default": true },
+          "crlf-detector": { "type": "boolean", "default": true },
+          "test-coverage-check": { "type": "boolean", "default": true },
+          "result-review-gate": { "type": "boolean", "default": true },
+          "rule-hygiene": { "type": "boolean", "default": true }
         }
       }
     }
@@ -27,7 +42,22 @@
     "modules": {
       "force-push-gate": true,
       "secret-scan-gate": true,
-      "commit-quality-gate": true
+      "commit-quality-gate": true,
+      "git-destructive-guard": true,
+      "archive-not-delete": true,
+      "git-rebase-safety": true,
+      "no-hardcoded-paths": true,
+      "victory-declaration-gate": true,
+      "root-cause-gate": true,
+      "no-fragile-heuristics": true,
+      "no-focus-steal": true,
+      "crlf-ssh-key-check": true,
+      "unresolved-issues-gate": true,
+      "commit-msg-check": true,
+      "crlf-detector": true,
+      "test-coverage-check": true,
+      "result-review-gate": true,
+      "rule-hygiene": true
     }
   }
 }
