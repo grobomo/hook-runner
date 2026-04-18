@@ -116,8 +116,19 @@ function autoActivateShtd(projectDir) {
 
 function getGitBranch(gitRoot) {
   try {
+    var dotGit = path.join(gitRoot, ".git");
+    var headPath;
+    // T469: Handle worktrees — .git is a file containing "gitdir: /path/..."
+    var stat = fs.statSync(dotGit);
+    if (stat.isFile()) {
+      var gitdir = fs.readFileSync(dotGit, "utf-8").trim().replace(/^gitdir:\s*/, "");
+      if (!path.isAbsolute(gitdir)) gitdir = path.join(gitRoot, gitdir);
+      headPath = path.join(gitdir, "HEAD");
+    } else {
+      headPath = path.join(dotGit, "HEAD");
+    }
     // Read .git/HEAD directly — avoids spawning git (slow on Windows, can timeout)
-    var head = fs.readFileSync(path.join(gitRoot, ".git", "HEAD"), "utf-8").trim();
+    var head = fs.readFileSync(headPath, "utf-8").trim();
     // "ref: refs/heads/main" → "main", detached HEAD → "HEAD"
     if (head.indexOf("ref: refs/heads/") === 0) return head.slice(16);
     return "HEAD";
@@ -280,6 +291,19 @@ module.exports = function(input) {
   var roots = [];
   if (projectDir) roots.push(projectDir);
 
+  // T469: Also check CWD if it's a worktree of the same project.
+  // Worktrees have `.git` as a file (not directory) and live inside the project dir.
+  // Only add when both conditions are true to avoid contaminating test environments.
+  if (projectDir) {
+    var cwdRoot = findGitRoot(process.cwd());
+    if (cwdRoot && roots.indexOf(cwdRoot) === -1 &&
+        cwdRoot.replace(/\\/g, "/").indexOf(projectDir) === 0) {
+      try {
+        if (fs.statSync(path.join(cwdRoot, ".git")).isFile()) roots.push(cwdRoot);
+      } catch (e) { /* not a worktree, skip */ }
+    }
+  }
+
   if (!isBash && targetFile) {
     var fileGitRoot = findGitRoot(path.dirname(targetFile));
     if (fileGitRoot && roots.indexOf(fileGitRoot) === -1) roots.push(fileGitRoot);
@@ -292,12 +316,18 @@ module.exports = function(input) {
   }
 
   // Get current branch for feature matching (prefer shared context from runner)
+  // T469: Prefer non-main branch — worktree CWD may be on a feature branch
+  // while CLAUDE_PROJECT_DIR (main checkout) is on main.
   var branch = (input._git && input._git.branch) || "";
   if (!branch) {
+    var mainFallback = "";
     for (var bi = 0; bi < roots.length; bi++) {
-      branch = getGitBranch(roots[bi]);
-      if (branch) break;
+      var b = getGitBranch(roots[bi]);
+      if (!b) continue;
+      if (b !== "main" && b !== "master" && b !== "HEAD") { branch = b; break; }
+      if (!mainFallback) mainFallback = b;
     }
+    if (!branch) branch = mainFallback;
   }
   var featureWords = branchFeatureWords(branch);
   var taskId = branchTaskId(branch); // T321: e.g. "T319"
