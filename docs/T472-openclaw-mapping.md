@@ -102,6 +102,7 @@ OpenClaw handles differently.
 | `troubleshoot-detector` | PostToolUse | after_tool_call | Pattern tracking across calls |
 | `empty-output-detector` | PostToolUse | after_tool_call | Output analysis |
 | `update-stale-docs` | PostToolUse | after_tool_call | Doc freshness detection |
+| `settings-audit-log` | PostToolUse | after_tool_call | Config audit trail |
 
 ### Not Portable (23) — Hook-runner meta, Claude Code specific, or infra-specific
 
