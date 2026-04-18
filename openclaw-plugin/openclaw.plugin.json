@@ -1,8 +1,8 @@
 {
   "id": "hook-runner-gates",
   "name": "Hook Runner Gates",
-  "description": "18 ported hook-runner gate modules for OpenClaw. Git safety, secret scanning, code quality, commit hygiene, test coverage, and AI behavioral guardrails.",
-  "version": "0.2.0",
+  "description": "25 ported hook-runner gate modules for OpenClaw. Git safety, secret scanning, code quality, commit hygiene, test coverage, disk safety, and AI behavioral guardrails.",
+  "version": "0.3.0",
   "author": "grobomo",
   "license": "MIT",
   "openclaw": {
@@ -29,11 +29,18 @@
           "no-focus-steal": { "type": "boolean", "default": true },
           "crlf-ssh-key-check": { "type": "boolean", "default": true },
           "unresolved-issues-gate": { "type": "boolean", "default": true },
+          "no-nested-claude": { "type": "boolean", "default": true },
+          "disk-space-guard": { "type": "boolean", "default": true },
+          "no-unnecessary-sleep": { "type": "boolean", "default": true },
+          "claude-p-pattern": { "type": "boolean", "default": true },
           "commit-msg-check": { "type": "boolean", "default": true },
           "crlf-detector": { "type": "boolean", "default": true },
           "test-coverage-check": { "type": "boolean", "default": true },
           "result-review-gate": { "type": "boolean", "default": true },
-          "rule-hygiene": { "type": "boolean", "default": true }
+          "rule-hygiene": { "type": "boolean", "default": true },
+          "empty-output-detector": { "type": "boolean", "default": true },
+          "disk-space-detect": { "type": "boolean", "default": true },
+          "troubleshoot-detector": { "type": "boolean", "default": true }
         }
       }
     }
@@ -53,11 +60,18 @@
       "no-focus-steal": true,
       "crlf-ssh-key-check": true,
       "unresolved-issues-gate": true,
+      "no-nested-claude": true,
+      "disk-space-guard": true,
+      "no-unnecessary-sleep": true,
+      "claude-p-pattern": true,
       "commit-msg-check": true,
       "crlf-detector": true,
       "test-coverage-check": true,
       "result-review-gate": true,
-      "rule-hygiene": true
+      "rule-hygiene": true,
+      "empty-output-detector": true,
+      "disk-space-detect": true,
+      "troubleshoot-detector": true
     }
   }
 }
