@@ -1310,12 +1310,11 @@ requires building a full plugin, not just a hook script.
     - Map each PreToolUse module to a `before_tool_call` handler inside the plugin
     - Reuse return value format (block/reason → block/blockReason)
 
-- [ ] T472: Map hook-runner modules to OpenClaw hook equivalents
-  - For each PreToolUse module: identify OpenClaw event + handler pattern
-  - For each PostToolUse module: identify OpenClaw event + handler pattern
-  - For Stop modules: map to command:stop event
-  - For SessionStart modules: map to agent:bootstrap or gateway:startup
-  - Categorize: direct port, needs adaptation, not portable
+- [x] T472: Map hook-runner modules to OpenClaw hook equivalents (docs/T472-openclaw-mapping.md)
+  - 94 modules mapped: 42 portable, 24 adaptable, 28 not portable (70% transferable)
+  - PreToolUse → Plugin SDK `before_tool_call`, PostToolUse → `after_tool_call`
+  - SessionStart → `agent:bootstrap`, Stop → `command:stop`
+  - Pilot picks: force-push-gate, secret-scan-gate, commit-quality-gate
 
 - [ ] T473: Port 3 pilot modules to OpenClaw hook format
   - Pick 3 high-value modules (e.g., publish-json-guard, force-push-gate, spec-gate)
