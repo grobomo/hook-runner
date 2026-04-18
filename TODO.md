@@ -1231,7 +1231,7 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 ## Remaining Tasks
 
 - [x] T460: Clean up stale branches — 17 remote + 3 local worktree branches deleted, 5 unmerged remote kept
-- [ ] T462: Marketplace sync for T458-T469+ changes — delegated to claude-code-skills T004
+- [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006 (T004 covered v2.26.0, T006 covers v2.28.0)
 - [x] T477: Fix runner worktree branch detection — readBranchFromDir prefers CWD worktree over CLAUDE_PROJECT_DIR. Spec-gate allowlist expanded with 9 read-only setup.js flags. 28/28 tests pass (23 bash + 5 worktree). (PR #362)
 - [x] T478: Performance — preserve-iterated-content cache (1122ms→7ms), commit-counter-gate 4→1 git spawns, TOOLS tags on 7 modules (Read loads 35→28). PRs #363, #365, #366.
 
