@@ -1264,7 +1264,14 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - T475: Fixed e2e tsx harness — rewrote to use real OpenClaw Plugin SDK register(api)/api.on("before_tool_call") pattern instead of broken plugin.hooks.before_tool_call(). 31/31 tests pass across 3 phases.
 
 **Remaining:**
-1. T462: Marketplace sync (delegated to claude-code-skills T004) — only open task
+1. T462: Marketplace sync for v2.28.0 (delegated to claude-code-skills T006)
+2. T479: CHANGELOG accuracy — v2.27.0 T475 count corrected (30→31), v2.28.0 added commit-counter + TOOLS tag entries
+3. T480: Stale branch cleanup — deleted 6 merged remote branches (237-bookkeeping, 253-T001, 253-T009, 350-T460, feat/event/T001, worktree-T462)
+
+## Future (backlog)
+- [ ] Port more OpenClaw modules beyond 3 pilot gates (42 directly portable per T472 mapping)
+- [ ] Test suite parallelization — bash tests hang when run sequentially due to WSL latency; add per-test timeouts
+- [ ] v2.29.0 — bundle T475 e2e fix + CHANGELOG corrections
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
