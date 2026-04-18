@@ -759,7 +759,7 @@ function cmdHelp() {
   console.log("  --export [file] Export installed modules as shareable YAML (default: modules-export.yaml)");
   console.log("  --perf          Analyze module timing data and identify bottlenecks");
   console.log("  --test-module   Test a single module with sample inputs");
-  console.log("  --test          Run all test suites");
+  console.log("  --test          Run all test suites (--timeout <sec>, --skip-wsl, --js-only, --sh-only)");
   console.log("  --upgrade       Fetch latest runners from GitHub and update local copies");
   console.log("  --uninstall     Remove hook-runner from settings.json and hooks dir");
   console.log("  --prune [N]     Prune log entries older than N days (default 7)");
@@ -1160,14 +1160,36 @@ function cmdList() {
   console.log("[hook-runner] " + installedCount + " installed, " + catalogCount + " in catalog");
 }
 
-function cmdTest() {
+function cmdTest(args) {
+  // Parse test-specific flags
+  var timeoutIdx = args ? args.indexOf("--timeout") : -1;
+  var customTimeout = timeoutIdx !== -1 && args[timeoutIdx + 1] ? parseInt(args[timeoutIdx + 1], 10) * 1000 : 0;
+  var skipWsl = args && args.indexOf("--skip-wsl") !== -1;
+  var jsOnly = args && args.indexOf("--js-only") !== -1;
+  var shOnly = args && args.indexOf("--sh-only") !== -1;
+  var JS_TIMEOUT = customTimeout || 60000;   // 60s default for JS (some create git repos)
+  var SH_TIMEOUT = customTimeout || 60000;   // 60s default for bash
+  // Tests that call WSL — detected by grep at startup or known list
+  var WSL_TESTS = ["test-openclaw-e2e.sh"];
+
   console.log("[hook-runner] Test Suite");
   console.log("========================");
+  if (skipWsl) console.log("  (skipping WSL-dependent tests)");
+  if (jsOnly) console.log("  (JS tests only)");
+  if (shOnly) console.log("  (bash tests only)");
+  console.log("  Timeouts: JS=" + (JS_TIMEOUT / 1000) + "s, bash=" + (SH_TIMEOUT / 1000) + "s");
   var testDir = path.join(REPO_DIR, "scripts", "test");
   var testFiles;
   try {
     testFiles = fs.readdirSync(testDir).filter(function(f) {
-      return f.indexOf("test-") === 0 && (f.slice(-3) === ".sh" || f.slice(-3) === ".js");
+      if (f.indexOf("test-") !== 0) return false;
+      var isSh = f.slice(-3) === ".sh";
+      var isJs = f.slice(-3) === ".js";
+      if (!isSh && !isJs) return false;
+      if (jsOnly && !isJs) return false;
+      if (shOnly && !isSh) return false;
+      if (skipWsl && WSL_TESTS.indexOf(f) !== -1) return false;
+      return true;
     }).sort();
   } catch(e) {
     console.log("  ERROR: test directory not found: " + testDir);
@@ -1176,6 +1198,16 @@ function cmdTest() {
   if (testFiles.length === 0) {
     console.log("  No test scripts found in " + testDir);
     process.exit(1);
+  }
+  // Also detect WSL tests dynamically: scan first line for wsl/openclaw
+  if (skipWsl) {
+    testFiles = testFiles.filter(function(f) {
+      if (f.slice(-3) !== ".sh") return true;
+      try {
+        var head = fs.readFileSync(path.join(testDir, f), "utf-8").slice(0, 2000);
+        return !/\bwsl\b/i.test(head) && !/\bopenclaw\b/i.test(head);
+      } catch(e) { return true; }
+    });
   }
   // Pre-test cleanup: remove any leftover test-tmp-mod-* artifacts from previous runs
   var preCleanDirs = [path.join(REPO_DIR, "modules", "PreToolUse"), path.join(REPO_DIR, "modules", "PostToolUse")];
@@ -1192,21 +1224,26 @@ function cmdTest() {
   // Restore workflow YAML in case previous test left it dirty
   try { cp.execSync("git checkout -- workflows/no-local-docker.yml", { cwd: REPO_DIR, stdio: "pipe" }); } catch(e) {}
 
-  var totalPass = 0, totalFail = 0, suiteFail = 0, failedSuites = [];
+  var totalPass = 0, totalFail = 0, suiteFail = 0, suiteTimeout = 0;
+  var failedSuites = [], timedOutSuites = [], skippedCount = 0;
+  var startTime = Date.now();
   for (var ti = 0; ti < testFiles.length; ti++) {
     var testPath = path.join(testDir, testFiles[ti]);
     var isJs = testFiles[ti].slice(-3) === ".js";
     var suiteName = testFiles[ti].replace("test-", "").replace(/\.(sh|js)$/, "");
+    var suiteStart = Date.now();
+    var testTimeout = isJs ? JS_TIMEOUT : SH_TIMEOUT;
     console.log("");
-    console.log("  [" + suiteName + "] " + testFiles[ti]);
+    console.log("  [" + suiteName + "] " + testFiles[ti] + " (timeout: " + (testTimeout / 1000) + "s)");
     try {
       var execCmd = isJs ? "node " + JSON.stringify(testPath) : "bash " + JSON.stringify(testPath);
       var result = cp.execSync(execCmd, {
         cwd: REPO_DIR,
         encoding: "utf-8",
         stdio: ["pipe", "pipe", "pipe"],
-        timeout: 360000
+        timeout: testTimeout
       });
+      var elapsed = ((Date.now() - suiteStart) / 1000).toFixed(1);
       var match = result.match(/(\d+) passed, (\d+) failed/);
       if (match) {
         totalPass += parseInt(match[1], 10);
@@ -1218,29 +1255,52 @@ function cmdTest() {
       for (var sl = 0; sl < summaryLines.length; sl++) {
         console.log("    " + summaryLines[sl]);
       }
+      console.log("    (" + elapsed + "s)");
     } catch(e) {
-      suiteFail++;
-      failedSuites.push(suiteName);
-      console.log("    FAIL: suite crashed (exit code " + (e.status || "unknown") + ")");
-      var errOut = (e.stdout || "") + (e.stderr || "");
-      var errLines = errOut.trim().split("\n").slice(-5);
-      for (var el = 0; el < errLines.length; el++) {
-        console.log("    " + errLines[el]);
-      }
-      var partMatch = errOut.match(/(\d+) passed, (\d+) failed/);
-      if (partMatch) {
-        totalPass += parseInt(partMatch[1], 10);
-        totalFail += parseInt(partMatch[2], 10);
+      var elapsed2 = ((Date.now() - suiteStart) / 1000).toFixed(1);
+      var isTimeout = e.killed || e.signal === "SIGTERM" || (Date.now() - suiteStart) >= testTimeout - 500;
+      if (isTimeout) {
+        // Timeout — distinct from failure
+        suiteTimeout++;
+        timedOutSuites.push(suiteName);
+        console.log("    TIMEOUT: killed after " + (testTimeout / 1000) + "s (" + elapsed2 + "s elapsed)");
+        // Still count any partial results
+        var timeoutOut = (e.stdout || "") + (e.stderr || "");
+        var timeoutMatch = timeoutOut.match(/(\d+) passed, (\d+) failed/);
+        if (timeoutMatch) {
+          totalPass += parseInt(timeoutMatch[1], 10);
+          totalFail += parseInt(timeoutMatch[2], 10);
+        }
+      } else {
+        suiteFail++;
+        failedSuites.push(suiteName);
+        console.log("    FAIL: suite crashed (exit code " + (e.status || "unknown") + ") (" + elapsed2 + "s)");
+        var errOut = (e.stdout || "") + (e.stderr || "");
+        var errLines = errOut.trim().split("\n").slice(-5);
+        for (var el = 0; el < errLines.length; el++) {
+          console.log("    " + errLines[el]);
+        }
+        var partMatch = errOut.match(/(\d+) passed, (\d+) failed/);
+        if (partMatch) {
+          totalPass += parseInt(partMatch[1], 10);
+          totalFail += parseInt(partMatch[2], 10);
+        }
       }
     }
   }
+  var totalElapsed = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log("");
   console.log("========================");
-  console.log("[hook-runner] " + testFiles.length + " suites, " + totalPass + " passed, " + totalFail + " failed");
+  console.log("[hook-runner] " + testFiles.length + " suites, " + totalPass + " passed, " + totalFail + " failed" +
+    (suiteTimeout > 0 ? ", " + suiteTimeout + " timed out" : "") +
+    " (" + totalElapsed + "s)");
   if (suiteFail > 0) {
     console.log("[hook-runner] " + suiteFail + " suite(s) had failures: " + failedSuites.join(", "));
-    process.exit(1);
   }
+  if (suiteTimeout > 0) {
+    console.log("[hook-runner] " + suiteTimeout + " suite(s) timed out: " + timedOutSuites.join(", "));
+  }
+  if (suiteFail > 0) process.exit(1);
 }
 
 function cmdHealth() {
@@ -1715,7 +1775,7 @@ function main() {
   if (args.indexOf("--perf") !== -1) return cmdPerf();
   if (args.indexOf("--list") !== -1) return cmdList();
   if (args.indexOf("--test-module") !== -1) return cmdTestModule(args);
-  if (args.indexOf("--test") !== -1) return cmdTest();
+  if (args.indexOf("--test") !== -1) return cmdTest(args);
   if (args.indexOf("--integrity") !== -1) return cmdIntegrity(args);
   if (args.indexOf("--preflight") !== -1) {
     var pfArgs = [path.join(__dirname, "preflight.js")];

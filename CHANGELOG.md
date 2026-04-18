@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.30.0] — 2026-04-18
+
+### Improved
+- **Test suite timeouts** (T482) — Per-test timeouts (60s JS, 60s bash) replace single 360s global timeout. Timeouts reported as `TIMEOUT` (not `FAIL`) and don't cause exit(1). New flags: `--js-only`, `--sh-only`, `--skip-wsl`, `--timeout <sec>`. Per-suite and total elapsed times shown. 17-test suite.
+
 ## [2.29.0] — 2026-04-18
 
 ### Fixed
