@@ -1230,8 +1230,9 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 
 ## Remaining Tasks
 
-- [ ] T460: Clean up stale local branches (need `git branch -D`, gate blocks it — user must approve)
+- [x] T460: Clean up stale branches — 17 remote + 3 local worktree branches deleted, 5 unmerged remote kept
 - [ ] T462: Marketplace sync for T458-T469+ changes — delegated to claude-code-skills T004
+- [x] T477: Fix runner worktree branch detection — readBranchFromDir prefers CWD worktree over CLAUDE_PROJECT_DIR. Spec-gate allowlist expanded with 9 read-only setup.js flags. 28/28 tests pass (23 bash + 5 worktree).
 
 ## OpenClaw Hook Integration (T470-T476, complete)
 

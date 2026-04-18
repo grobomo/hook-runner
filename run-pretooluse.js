@@ -30,10 +30,36 @@ if (input && input.tool_input && typeof input.tool_input.path === "string") {
 // Shared context saves ~110ms per tool invocation (branch + tracking in one place).
 try {
   var cp = require("child_process");
-  // Read .git/HEAD directly — avoids spawning git (~40ms savings on Windows)
   var projectDir = (process.env.CLAUDE_PROJECT_DIR || "").replace(/\\/g, "/");
-  var gitHead = fs.readFileSync(path.join(projectDir, ".git", "HEAD"), "utf-8").trim();
-  var branch = gitHead.indexOf("ref: refs/heads/") === 0 ? gitHead.slice(16) : "";
+
+  // T477: Read branch from CWD first (worktree), fall back to CLAUDE_PROJECT_DIR.
+  // Worktrees have .git as a file ("gitdir: ...") pointing to the real gitdir.
+  // Without this, worktree sessions always see "main" from the main checkout.
+  function readBranchFromDir(dir) {
+    var dotGit = path.join(dir, ".git");
+    var headPath;
+    try {
+      var stat = fs.statSync(dotGit);
+      if (stat.isFile()) {
+        var gitdir = fs.readFileSync(dotGit, "utf-8").trim().replace(/^gitdir:\s*/, "");
+        if (!path.isAbsolute(gitdir)) gitdir = path.join(dir, gitdir);
+        headPath = path.join(gitdir, "HEAD");
+      } else {
+        headPath = path.join(dotGit, "HEAD");
+      }
+    } catch (e) { return ""; }
+    try {
+      var head = fs.readFileSync(headPath, "utf-8").trim();
+      return head.indexOf("ref: refs/heads/") === 0 ? head.slice(16) : "";
+    } catch (e) { return ""; }
+  }
+
+  // Prefer CWD branch (worktree) over projectDir branch (main checkout)
+  var cwd = process.cwd().replace(/\\/g, "/");
+  var branch = "";
+  if (cwd !== projectDir) branch = readBranchFromDir(cwd);
+  if (!branch) branch = readBranchFromDir(projectDir);
+
   if (branch) {
     if (!input._git) input._git = {};
     input._git.branch = branch;
