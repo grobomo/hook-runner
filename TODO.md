@@ -1289,7 +1289,7 @@ requires building a full plugin, not just a hook script.
   - Verify health check passes
   - Document setup in _grobomo project CLAUDE.md
 
-- [ ] T470: Analyze _tmemu/openclaw existing hooks (READ ONLY)
+- [x] T470: Analyze _tmemu/openclaw existing hooks (PR #354)
   - OpenClaw 2026.4.14 (323493f) installed
   - **3 hooks** in `~/.openclaw/hooks/`:
     - `channel-topic-guard` — LLM (Haiku) reviews outbound msgs vs channel rules (event: `message:sent`)
