@@ -22,7 +22,7 @@ function assert(cond, msg) {
 }
 
 function loadGuard() {
-  var modPath = path.resolve(__dirname, "../../modules/PreToolUse/openclaw-tmemu-guard.js");
+  var modPath = path.resolve(__dirname, "../../modules/PreToolUse/openclaw/tmemu-guard.js");
   delete require.cache[require.resolve(modPath)];
   return require(modPath);
 }
