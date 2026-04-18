@@ -1280,7 +1280,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T486: Inter-project TODO priority system — audit logger, SessionStart P0 injection, PreToolUse priority gate, CLI dashboard (PR #377, v2.32.0)
 
 **Session 12:**
-- [ ] T487: Batch port 15 universally-useful modules to OpenClaw plugin (beyond 3 pilots)
+- [x] T487: Batch port 15 modules to OpenClaw plugin v0.2.0 — 18 total (13 before_tool_call + 5 after_tool_call), 49/49 tests (PR #379)
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
