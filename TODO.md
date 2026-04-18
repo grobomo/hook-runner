@@ -1322,11 +1322,10 @@ requires building a full plugin, not just a hook script.
   - 24-test suite validates gate logic and format conversion
   - README with install guide and hook-runner→OpenClaw conversion table
 
-- [ ] T474: Build openclaw-hooks/ directory in hook-runner repo
-  - New directory: `openclaw-hooks/<hook-name>/HOOK.md + handler.ts`
-  - Install script: copies hooks to ~/.openclaw/hooks/ in WSL
-  - Test runner: validates hooks against test openclaw instance
-  - README: mapping table (hook-runner module → openclaw hook)
+- [x] T474: Build openclaw-plugin/ with install script + 11-test suite
+  - Adapted from standalone hooks to plugin approach (Plugin SDK required)
+  - `install.sh` deploys to `~/.openclaw/plugins/hook-runner-gates/`
+  - Supports `--uninstall`, OPENCLAW_HOME override, graceful error on missing dir
 
 - [ ] T475: End-to-end test — verify ported hooks block/allow correctly
   - Spin up test openclaw instance
