@@ -634,7 +634,9 @@ function noNestedClaude(toolName: string, params: Record<string, unknown>): stri
   if (isSearchPattern) return null;
 
   // Skip git/gh commands — "claude" appears in paths and commit messages
-  if (/^\s*(git\s|gh\s)/.test(cmd)) return null;
+  // WHY: Use \b word boundary instead of ^ anchor to handle `cd ... && git commit` chains
+  if (/\b(git\s+(commit|push|pull|fetch|log|diff|status|add|tag|branch|merge|rebase|stash|show|remote|config|checkout))\b/.test(cmd)) return null;
+  if (/\bgh\s/.test(cmd)) return null;
 
   // Match: claude -p, claude --print, claude -m, or piped into claude
   if (/\bclaude\s+(-p|--print|-m|--message)\b/.test(cmd) ||

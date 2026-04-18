@@ -20,9 +20,13 @@ module.exports = function(input) {
 
     // Skip git/gh_auto commands — "claude" appears in paths (e.g. ~/.claude/hooks)
     // and commit messages but these aren't running claude as a subprocess.
-    // FP incident: `git commit -m "$(cat <<'EOF'\nT32..."` blocked because
+    // FP incident 1: `git commit -m "$(cat <<'EOF'\nT32..."` blocked because
     // the heredoc contained "claude" in a path reference.
-    if (/^\s*(git\s|gh_auto\s)/.test(cmd)) return null;
+    // FP incident 2: `cd /project && git commit -m "..."` blocked because the
+    // `cd` prefix meant the `^\s*git` anchor missed the git command.
+    // WHY: Use \b word boundary instead of ^ anchor to handle chained commands.
+    if (/\b(git\s+(commit|push|pull|fetch|log|diff|status|add|tag|branch|merge|rebase|stash|show|remote|config|checkout))\b/.test(cmd)) return null;
+    if (/\bgh_auto\s/.test(cmd)) return null;
 
     // Match: claude -p, claude --print, claude -m, or piped into claude
     if (/\bclaude\s+(-p|--print|-m|--message)\b/.test(cmd) ||
