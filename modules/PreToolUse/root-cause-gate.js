@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: shtd, gsd
 // WHY: Claude masked bugs with cleanup instead of fixing root causes.
 // Root cause gate: block retry/cleanup patterns without diagnosis

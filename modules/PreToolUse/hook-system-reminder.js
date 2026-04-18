@@ -1,3 +1,4 @@
+// TOOLS: Edit, Write
 // WORKFLOW: shtd, gsd
 // WHY: Claude repeatedly tries to create .claude/rules/ files despite being
 // told dozens of times across dozens of sessions. This hook fires when Claude

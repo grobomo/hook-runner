@@ -1,3 +1,4 @@
+// TOOLS: Bash
 // WORKFLOW: dispatcher-worker
 // WHY: Workers in the CCC fleet would create PRs before tests passed,
 // then merge from mobile without verifying. This gate blocks PR creation

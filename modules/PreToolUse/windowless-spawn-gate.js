@@ -1,3 +1,4 @@
+// TOOLS: Edit, Write
 // WORKFLOW: shtd, starter
 // WHY: Hook modules using execSync("git ...") spawn cmd.exe on Windows,
 // creating visible console popups that steal focus. Every tool call fires

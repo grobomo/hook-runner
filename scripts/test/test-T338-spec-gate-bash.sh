@@ -216,6 +216,22 @@ else
   fail "node setup.js --snapshot should be allowed: $OUTPUT"
 fi
 
+# --- T488: sync/upgrade commands always allowed ---
+
+OUTPUT=$(run_bash_gate "$PROJ" "node setup.js --sync")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "node setup.js --sync allowed (operational)"
+else
+  fail "node setup.js --sync should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "node setup.js --upgrade")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "node setup.js --upgrade allowed (operational)"
+else
+  fail "node setup.js --upgrade should be allowed: $OUTPUT"
+fi
+
 # --- Piped commands check the first command ---
 
 OUTPUT=$(run_bash_gate "$PROJ" "jq '.name' package.json | head -1")
