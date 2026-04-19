@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 "use strict";
+// TIMEOUT: 90
 // Tests for commit-counter-gate.js — T466 branch-file mismatch + worktree enforcement
 var path = require("path");
 var fs = require("fs");

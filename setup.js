@@ -1235,7 +1235,13 @@ function cmdTest(args) {
     var isJs = testFiles[ti].slice(-3) === ".js";
     var suiteName = testFiles[ti].replace("test-", "").replace(/\.(sh|js)$/, "");
     var suiteStart = Date.now();
+    // Per-file timeout: read "// TIMEOUT: N" or "# TIMEOUT: N" from first 5 lines
     var testTimeout = isJs ? JS_TIMEOUT : SH_TIMEOUT;
+    try {
+      var head = fs.readFileSync(testPath, "utf-8").slice(0, 500);
+      var tmMatch = head.match(/(?:\/\/|#)\s*TIMEOUT:\s*(\d+)/);
+      if (tmMatch) testTimeout = parseInt(tmMatch[1], 10) * 1000;
+    } catch(e2) {}
     console.log("");
     console.log("  [" + suiteName + "] " + testFiles[ti] + " (timeout: " + (testTimeout / 1000) + "s)");
     try {
