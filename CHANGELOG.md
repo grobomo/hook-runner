@@ -2,6 +2,13 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.54.0] — 2026-04-19
+
+### Added
+- **`--demo-html` in docs** (T536) — README, CLAUDE.md, and SKILL.md now document the `--demo-html` command alongside the existing `--demo` entry.
+- **Demo HTML test coverage** (T537) — 12 new checks in `test-T519-demo.sh` verify HTML generation, content structure (DOCTYPE, title, scenarios, badges, block reasons, workflows, footer), and `--demo-html` routing through `setup.js`. Total demo tests: 26/26.
+- **SKILL.md sync** (T537) — Local skill copy updated with gsd workflow, demo commands, correct module counts, and `--demo-html`.
+
 ## [2.53.0] — 2026-04-19
 
 ### Added
