@@ -43,6 +43,9 @@ modules:
   - disk-space-detect
   - crlf-ssh-key-check
   - crlf-detector
+  # Inter-project coordination
+  - inter-project-audit
+  - inter-project-priority
   # Session lifecycle — context and continuity
   - auto-continue
   - never-give-up
