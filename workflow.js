@@ -144,6 +144,7 @@ function loadWorkflow(yamlPath) {
       };
     }),
     modules: modules,
+    extends: parsed.extends || null,
     _path: yamlPath,
   };
 }

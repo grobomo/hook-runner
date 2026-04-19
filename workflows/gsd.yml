@@ -61,6 +61,8 @@ modules:
   - task-completion-gate
   - test-before-done
   - test-checkpoint-gate
+  - gsd-gate
+  - e2e-self-report-gate
   - unresolved-issues-check
   - why-reminder
   - workflow-gate
@@ -133,6 +135,7 @@ modules:
   - auto-continue
   - inter-project-priority
   - backup-check
+  - drift-check
   - chat-export
   - config-sync
   - load-instructions
