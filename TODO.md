@@ -1350,7 +1350,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T533: Version bump to v2.52.0 — CHANGELOG for T532 (PR #427)
 
 **Session 23:**
-- [ ] T534: Demo as static HTML export — shareable demo without npx, `node demo.js --html`
+- [x] T534: Demo as static HTML export — shareable demo without npx, `node demo.js --html` (PR #428)
+- [ ] T535: Version bump to v2.53.0 — CHANGELOG for T534
 
 ## Next session priorities
 - Marketplace sync to claude-code-skills (T462 — delegated to claude-code-skills TODO.md as T012, v2.32.0→v2.50.0)

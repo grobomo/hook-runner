@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.53.0] — 2026-04-19
+
+### Added
+- **Static HTML demo export** (T534) — `node demo.js --html` generates a standalone HTML page with the same 6 scenarios as the terminal demo. Dark GitHub-style theme with stat cards, scenario results, block reasons, workflow overview, and getting started section. Also accessible via `node setup.js --demo-html`. Shareable via email/Slack without requiring `npx`.
+
 ## [2.52.0] — 2026-04-19
 
 ### Fixed
