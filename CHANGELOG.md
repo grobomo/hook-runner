@@ -2,6 +2,13 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.48.0] — 2026-04-18
+
+### Fixed
+- **npx --demo broken** (T523) — `demo.js` was missing from package.json `files` array, so `npx grobomo/hook-runner --demo` would fail.
+- **Stale SKILL.md** (T522) — Updated module counts (starter 11→42, shtd 90→101), added demo custom_command.
+- **README --demo** (T521) — Added demo callout to Quick Start and CLI Reference sections.
+
 ## [2.47.0] — 2026-04-18
 
 ### Added
