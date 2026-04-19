@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.49.0] — 2026-04-18
+
+### Fixed
+- **Missing gsd workflow in docs** (T524) — `gsd` (101 modules, phase-driven development) was defined in `workflows/gsd.yml` but missing from README Built-in Workflows table and SKILL.md keywords/listing.
+
 ## [2.48.0] — 2026-04-18
 
 ### Fixed
