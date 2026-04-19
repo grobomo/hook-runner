@@ -1317,7 +1317,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T508: Version bump to v2.41.0 — CHANGELOG for T507 (PR #402)
 - [x] T509: Add TOOLS tags to 11 modules — perf optimization (~5ms/module per non-matching call) (PR #403)
 - [x] T510: Version bump to v2.42.0 — CHANGELOG for T509 (PR #404)
-- [x] T511: Fix commit-counter-gate worktree detection — isInWorktree() and getBranch() now fall back to CWD when CLAUDE_PROJECT_DIR has no .git
+- [x] T511: Fix commit-counter-gate worktree detection — CWD fallback (PR #405)
+- [x] T512: Version bump to v2.43.0 — CHANGELOG for T511
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
