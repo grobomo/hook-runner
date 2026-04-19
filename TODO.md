@@ -1357,7 +1357,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 
 **Session 24:**
 - [x] T538: Version bump to v2.54.0 — CHANGELOG for T536-T537 (PR #432)
-- [ ] T539: Fix preserve-iterated-content perf — 30min TTL, skip save on hit, new-file fast path
+- [x] T539: Fix preserve-iterated-content perf — 30min TTL, skip save on hit, new-file fast path (PR #433)
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync — delegated to claude-code-skills T012 (v2.32.0→v2.53.0)
