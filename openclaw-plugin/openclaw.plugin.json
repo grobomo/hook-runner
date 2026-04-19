@@ -1,14 +1,14 @@
 {
   "id": "hook-runner-gates",
   "name": "Hook Runner Gates",
-  "description": "25 ported hook-runner gate modules for OpenClaw. Git safety, secret scanning, code quality, commit hygiene, test coverage, disk safety, and AI behavioral guardrails.",
-  "version": "0.3.0",
+  "description": "27 ported hook-runner gate modules for OpenClaw. Git safety, secret scanning, code quality, commit hygiene, test coverage, disk safety, AI behavioral guardrails, auto-continue enforcement, and session start reminders.",
+  "version": "0.4.0",
   "author": "grobomo",
   "license": "MIT",
   "openclaw": {
     "minVersion": "2026.4.0"
   },
-  "hooks": ["before_tool_call", "after_tool_call"],
+  "hooks": ["before_tool_call", "after_tool_call", "before_agent_reply", "session_start", "before_agent_start"],
   "configSchema": {
     "type": "object",
     "properties": {
@@ -40,7 +40,9 @@
           "rule-hygiene": { "type": "boolean", "default": true },
           "empty-output-detector": { "type": "boolean", "default": true },
           "disk-space-detect": { "type": "boolean", "default": true },
-          "troubleshoot-detector": { "type": "boolean", "default": true }
+          "troubleshoot-detector": { "type": "boolean", "default": true },
+          "auto-continue": { "type": "boolean", "default": true },
+          "session-start-reminder": { "type": "boolean", "default": true }
         }
       }
     }
@@ -71,7 +73,9 @@
       "rule-hygiene": true,
       "empty-output-detector": true,
       "disk-space-detect": true,
-      "troubleshoot-detector": true
+      "troubleshoot-detector": true,
+      "auto-continue": true,
+      "session-start-reminder": true
     }
   }
 }

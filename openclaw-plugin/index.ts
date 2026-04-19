@@ -1,7 +1,7 @@
 /**
  * hook-runner-gates — Ported hook-runner gate modules for OpenClaw
  *
- * 25 modules ported from hook-runner's CommonJS format to OpenClaw Plugin SDK.
+ * 27 modules ported from hook-runner's CommonJS format to OpenClaw Plugin SDK.
  *
  * before_tool_call gates (17):
  *   force-push-gate, secret-scan-gate, commit-quality-gate,
@@ -16,8 +16,14 @@
  *   result-review-gate, rule-hygiene, empty-output-detector,
  *   disk-space-detect, troubleshoot-detector
  *
+ * before_agent_reply gates (1):
+ *   auto-continue — blocks lazy stops (listing options, asking permission)
+ *
+ * session_start modules (1):
+ *   session-start-reminder — injects TODO.md instructions at session start
+ *
  * Ported from: https://github.com/grobomo/hook-runner
- * Original format: CommonJS (PreToolUse/PostToolUse gates)
+ * Original format: CommonJS (PreToolUse/PostToolUse/Stop/SessionStart)
  * OpenClaw format: Plugin SDK (definePluginEntry + api.on events)
  */
 
@@ -1218,18 +1224,95 @@ const afterToolCallGates: Record<string, AfterGateFunction> = {
   "troubleshoot-detector": troubleshootDetector,
 };
 
+// ═══════════════════════════════════════════════════════════════════════════
+// AUTO-CONTINUE (Stop → before_agent_reply)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// WHY: Claude stops and lists options instead of doing the work.
+// The message text in stop-message.txt was iterated over 15+ versions by the user.
+// DO NOT rewrite, condense, or rephrase it. It is a user-authored artifact.
+// If you need to change behavior, modify THIS CODE, not the message file.
+
+let _stopMessage: string | null = null;
+function getStopMessage(): string {
+  if (!_stopMessage) {
+    try {
+      _stopMessage = readFileSync(join(__dirname, "stop-message.txt"), "utf-8").trim();
+    } catch {
+      _stopMessage = "DO NOT STOP. Check TODO.md for pending tasks and do the next one.";
+    }
+  }
+  return _stopMessage;
+}
+
+// Lazy-stop patterns — agent is wrapping up instead of doing work
+const LAZY_STOP_PATTERNS = [
+  /\bwant me to\b/i,
+  /\bwould you like me to\b/i,
+  /\bshould i\b/i,
+  /\blet me know if you(?:'d)? (?:like|want|prefer)\b/i,
+  /\bhere are (?:some |your |the )?options\b/i,
+  /\bhere(?:'s| is) what (?:i |we )?(?:can|could) do\b/i,
+  /\bdo you want me to\b/i,
+  /\bshall i\b/i,
+];
+
+function detectLazyStop(content: string): boolean {
+  if (!content || content.length < 30) return false;
+
+  let matches = 0;
+  for (const pattern of LAZY_STOP_PATTERNS) {
+    if (pattern.test(content)) matches++;
+  }
+
+  if (matches === 0) return false;
+  if (matches >= 2) return true;
+
+  // Single match + ends with question = lazy stop
+  const trimmed = content.trim();
+  if (trimmed.endsWith("?")) return true;
+
+  // Single match + numbered list = listing options
+  if (/\n\s*\d+[.)]\s/m.test(content)) return true;
+
+  return false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SESSION START REMINDER (SessionStart → session_start)
+// ═══════════════════════════════════════════════════════════════════════════
+
+// WHY: Important operational context was missing at session start.
+// Inject working instructions at start of every session.
+
+const SESSION_START_TEXT =
+  "SESSION START INSTRUCTIONS: Check TODO.md in the workspace for pending tasks. " +
+  "If tasks remain, do the next one. Review recent conversation history for incomplete " +
+  "tangents from previous sessions. Organize, optimize, secure the project. Then zoom out " +
+  "and expand. Always write plans to TODO.md before executing. Save state to TODO.md before " +
+  "context resets.\n\n" +
+  "IMPORTANT: If TODO.md has a session handoff from a previous session, read it FIRST — " +
+  "it tells you what was done and what matters next. Mindset: be slow and systematic. " +
+  "Build repeatable, modular code with excellent user experience. No rush.";
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PLUGIN ENTRY POINT
+// ═══════════════════════════════════════════════════════════════════════════
+
 export default definePluginEntry({
   id: "hook-runner-gates",
   name: "Hook Runner Gates",
   description:
-    "25 ported hook-runner gate modules — git safety, secret scanning, code quality, " +
-    "commit hygiene, test coverage, disk safety, and AI behavioral guardrails.",
+    "27 ported hook-runner gate modules — git safety, secret scanning, code quality, " +
+    "commit hygiene, test coverage, disk safety, AI behavioral guardrails, " +
+    "auto-continue enforcement, and session start reminders.",
 
   register(api) {
     const getConfig = (): GateConfig => {
       return (api.pluginConfig as GateConfig) || {};
     };
 
+    // ── before_tool_call (PreToolUse) ────────────────────────────────────
     api.on("before_tool_call", async (event, _ctx) => {
       const config = getConfig();
       const modules = config.modules ?? {};
@@ -1246,6 +1329,7 @@ export default definePluginEntry({
       return undefined;
     });
 
+    // ── after_tool_call (PostToolUse) ────────────────────────────────────
     api.on("after_tool_call", async (event, _ctx) => {
       const config = getConfig();
       const modules = config.modules ?? {};
@@ -1260,6 +1344,50 @@ export default definePluginEntry({
       }
 
       return undefined;
+    });
+
+    // ── before_agent_reply (Stop → auto-continue) ───────────────────────
+    // Blocks lazy stops: when the agent tries to reply with options/questions
+    // instead of doing the work, replace the reply with the stop-message.
+    api.on("before_agent_reply", async (event, _ctx) => {
+      const config = getConfig();
+      if (config.modules?.["auto-continue"] === false) return undefined;
+
+      const body = event.cleanedBody || "";
+      if (detectLazyStop(body)) {
+        return {
+          handled: true,
+          reply: { text: getStopMessage() },
+          reason: "auto-continue: lazy stop detected — blocking and injecting continuation prompt",
+        };
+      }
+
+      return undefined;
+    });
+
+    // ── session_start (SessionStart → session-start-reminder) ───────────
+    // Injects TODO.md instructions at the start of every session.
+    api.on("session_start", async (_event, _ctx) => {
+      const config = getConfig();
+      if (config.modules?.["session-start-reminder"] === false) return;
+
+      // Log the injection so it's visible in hook logs
+      console.log("[hook-runner-gates] session_start: injecting session start instructions");
+      // The session_start hook is informational — the text gets injected
+      // via the plugin's prompt injection mechanism. For now, we log it.
+      // The actual injection happens through before_prompt_build or
+      // before_agent_start if needed.
+    });
+
+    // ── before_agent_start (SessionStart → prompt injection) ────────────
+    // Actually injects the session start text into the agent's context.
+    api.on("before_agent_start", async (_event, _ctx) => {
+      const config = getConfig();
+      if (config.modules?.["session-start-reminder"] === false) return undefined;
+
+      return {
+        systemPromptSuffix: SESSION_START_TEXT,
+      };
     });
   },
 });
