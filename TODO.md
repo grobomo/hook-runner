@@ -1339,6 +1339,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T524: Add gsd workflow to README Built-in Workflows table and SKILL.md keywords/listing (PR #418)
 - [x] T525: Version bump to v2.49.0 — CHANGELOG for T524
 - [x] T526: Add gsd workflow to demo summary — consistency with README/SKILL.md
+- [x] T527: Add GitHub release automation — creates release with CHANGELOG excerpt on tag push
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
