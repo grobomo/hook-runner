@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.40.0] — 2026-04-18
+
+### Fixed
+- **Stale sync entries** (T504) — `gsd-gate` and `e2e-self-report-gate` were renamed to `test-checkpoint-gate` but still referenced in `modules.yaml`. Created alias modules that delegate to the real implementation. `--sync` now completes with 0 errors.
+- **README module count** (T505) — Added alias module entries to README PreToolUse table. Fixes T094-module-docs test failure.
+
 ## [2.39.0] — 2026-04-18
 
 ### Added
