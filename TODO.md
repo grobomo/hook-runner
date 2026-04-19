@@ -1329,7 +1329,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T518: Version bump to v2.46.0 — CHANGELOG for T517, README counts updated (PR #412)
 
 **Session 20:**
-- [x] T519: Add --demo CLI command — interactive showcase with real module gates, 6 scenarios, ANSI color
+- [x] T519: Add --demo CLI command — interactive showcase with real module gates, 6 scenarios, ANSI color (PR #413)
+- [x] T520: Version bump to v2.47.0 — CHANGELOG for T519
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006

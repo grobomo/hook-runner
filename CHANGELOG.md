@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.47.0] — 2026-04-18
+
+### Added
+- **Interactive demo command** (T519) — `node setup.js --demo` showcases hook-runner without a live Claude Code session. Simulates 6 scenarios using real modules (force push, destructive git, rm -rf, vague commits, normal ops). ANSI color output, `--fast` flag. Also runnable standalone via `node demo.js`.
+
 ## [2.46.0] — 2026-04-18
 
 ### Improved
