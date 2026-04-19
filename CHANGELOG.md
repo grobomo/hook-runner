@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.44.0] — 2026-04-18
+
+### Fixed
+- **README module counts** (T513) — Updated stale workflow module counts: starter 11→40, shtd 90→95, total 80+→115+.
+
 ## [2.43.0] — 2026-04-18
 
 ### Fixed
