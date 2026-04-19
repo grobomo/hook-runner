@@ -1308,7 +1308,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 
 **Session 17:**
 - [x] T503: Version bump to v2.39.0 — CHANGELOG for T502 (PR #397)
-- [ ] T504: Remove stale module aliases — gsd-gate and e2e-self-report-gate renamed to test-checkpoint-gate
+- [x] T504: Alias modules for stale sync entries — gsd-gate and e2e-self-report-gate delegate to test-checkpoint-gate (PR #398)
+- [ ] T505: Fix README module count — update after T504 alias additions
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
