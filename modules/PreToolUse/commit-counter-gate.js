@@ -63,34 +63,53 @@ function getGitStatus() {
 }
 
 // Get current branch name
+// T511: Check CLAUDE_PROJECT_DIR first, fall back to CWD when no .git at project dir.
 function getBranch(input) {
   if (input && input._git && input._git.branch) return input._git.branch;
-  try {
-    var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
-    var gitPath = path.join(projectDir, ".git");
-    // In worktrees .git is a file pointing to the real git dir
-    var gitStat = fs.statSync(gitPath);
-    var headFile;
-    if (gitStat.isFile()) {
-      // Worktree: .git is a file like "gitdir: /path/to/.git/worktrees/name"
-      var gitdir = fs.readFileSync(gitPath, "utf-8").trim().replace(/^gitdir:\s*/, "");
-      headFile = path.join(gitdir, "HEAD");
-    } else {
-      headFile = path.join(gitPath, "HEAD");
-    }
-    var head = fs.readFileSync(headFile, "utf-8").trim();
-    if (head.indexOf("ref: refs/heads/") === 0) return head.slice(16);
-    return "";
-  } catch(e) { return ""; }
+  var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
+  var dirs = projectDir ? [projectDir, process.cwd()] : [process.cwd()];
+  for (var d = 0; d < dirs.length; d++) {
+    try {
+      var gitPath = path.join(dirs[d], ".git");
+      var gitStat = fs.statSync(gitPath);
+      var headFile;
+      if (gitStat.isFile()) {
+        var gitdir = fs.readFileSync(gitPath, "utf-8").trim().replace(/^gitdir:\s*/, "");
+        headFile = path.join(gitdir, "HEAD");
+      } else {
+        headFile = path.join(gitPath, "HEAD");
+      }
+      var head = fs.readFileSync(headFile, "utf-8").trim();
+      if (head.indexOf("ref: refs/heads/") === 0) return head.slice(16);
+    } catch(e) { /* try next dir */ }
+  }
+  return "";
 }
 
 // Check if we're in a worktree (vs main checkout)
+// T511: Also check CWD when CLAUDE_PROJECT_DIR has no .git — EnterWorktree
+// changes CWD but not CLAUDE_PROJECT_DIR. Only fall back to CWD when
+// CLAUDE_PROJECT_DIR's .git doesn't exist (e.g. tests set it to a temp dir).
 function isInWorktree() {
   var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
+  // Check CLAUDE_PROJECT_DIR first
+  if (projectDir) {
+    try {
+      var gitPath = path.join(projectDir, ".git");
+      var stat = fs.statSync(gitPath);
+      // .git exists at CLAUDE_PROJECT_DIR — use it as the authority
+      return stat.isFile(); // file = worktree, dir = main checkout
+    } catch(e) { /* no .git at CLAUDE_PROJECT_DIR — fall through to CWD */ }
+  }
+
+  // Fallback: check CWD (covers when CLAUDE_PROJECT_DIR is unset or has no .git)
   try {
-    var gitPath = path.join(projectDir, ".git");
-    return fs.statSync(gitPath).isFile(); // .git file = worktree, .git dir = main checkout
-  } catch(e) { return false; }
+    var cwd = process.cwd();
+    var cwdGit = path.join(cwd, ".git");
+    if (fs.statSync(cwdGit).isFile()) return true;
+  } catch(e) { /* no .git at cwd either */ }
+
+  return false;
 }
 
 // Extract meaningful keywords from a branch name
