@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.52.0] — 2026-04-19
+
+### Fixed
+- **isInWorktree() false negative** (T532) — `commit-counter-gate` failed to detect worktree sessions when `CLAUDE_PROJECT_DIR` pointed to the main checkout (.git = directory). The function now falls through to check CWD's .git, which is a file in worktrees. Eliminates stale `worktreeRequired` flags that blocked commits/edits in worktree sessions. Updated 3 tests to match.
+
 ## [2.51.0] — 2026-04-19
 
 ### Performance
