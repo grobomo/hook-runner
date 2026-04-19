@@ -1303,8 +1303,11 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 **Session 16:**
 - [x] T499: SessionStart perf — replace tasklist with process.kill(0) in _is-pid-running (374ms→14ms), replace require() with accessSync in project-health (358ms→45ms). Net ~670ms saved per session (PR #393)
 - [x] T500: --audit-project --json — machine-readable JSON output for programmatic consumption (PR #394)
-- [x] T501: Version bump to v2.38.0 — CHANGELOG for T499-T500
-- [ ] T502: OpenClaw plugin — port auto-continue and session-start-reminder (prior session work)
+- [x] T501: Version bump to v2.38.0 — CHANGELOG for T499-T500 (PR #395)
+- [x] T502: OpenClaw plugin — port auto-continue and session-start-reminder (PR #396)
+
+**Session 17:**
+- [ ] T503: Version bump to v2.39.0 — CHANGELOG for T502
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
