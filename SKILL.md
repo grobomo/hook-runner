@@ -37,6 +37,9 @@ custom_commands:
   - name: test
     command: "node $SKILL_DIR/setup.js --test"
     description: "Run all test suites"
+  - name: demo
+    command: "node $SKILL_DIR/setup.js --demo --fast"
+    description: "Interactive demo — see hook-runner in action"
 ---
 
 # hook-runner
@@ -59,7 +62,7 @@ node setup.js --workflow audit     # coverage report
 node setup.js --workflow query Edit  # which workflows affect Edit?
 ```
 
-Built-in: `starter` (safe defaults, 11 modules), `shtd` (full development pipeline, 90 modules), `customer-data-guard`, `no-local-docker`, `cross-project-reset`.
+Built-in: `starter` (safe defaults, 42 modules), `shtd` (full development pipeline, 101 modules), `customer-data-guard`, `no-local-docker`, `cross-project-reset`.
 
 ## Module Contract
 
@@ -90,5 +93,6 @@ node setup.js --stats             # hook activity summary
 node setup.js --perf              # timing analysis
 node setup.js --workflow <cmd>    # workflow management
 node setup.js --test              # run all tests
+node setup.js --demo [--fast]     # interactive demo (no install needed)
 node setup.js --uninstall --confirm  # restore original settings
 ```
