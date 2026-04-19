@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.45.0] — 2026-04-18
+
+### Fixed
+- **Workflow YAML ↔ tag sync** (T515) — Added 5 modules missing from workflow YAMLs (inter-project-priority-gate, inter-project-audit, inter-project-priority, gsd-gate, e2e-self-report-gate). Fixed auto-continue and never-give-up tags from `starter` to `shtd, gsd, starter`. Workflow audit now clean for shtd (100) and starter (42).
+
 ## [2.44.0] — 2026-04-18
 
 ### Fixed
