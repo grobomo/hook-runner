@@ -60,6 +60,11 @@ node setup.js --workflow enable shtd    # 101 modules: spec-first, test-first, P
 
 To undo everything: `node setup.js --uninstall --confirm`
 
+**Want to see it in action first?** Run the interactive demo — no install needed:
+```bash
+npx grobomo/hook-runner --demo
+```
+
 ## What does a block look like?
 
 When Claude tries something a module blocks, the hook fires and Claude sees the block reason inline. Two examples from the `starter` workflow:
@@ -298,7 +303,8 @@ node setup.js --integrity [--json]     # verify live modules match repo
 node setup.js --report --analyze       # heuristic quality analysis
 node setup.js --prune [N]             # prune log entries older than N days
 
-# Development
+# Demo & Development
+node setup.js --demo [--fast]          # interactive demo (no install needed)
 node setup.js --test-module <file> [--input <json>]  # test one module
 node setup.js --test                   # run all test suites
 node setup.js --version                # show version
