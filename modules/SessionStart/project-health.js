@@ -28,12 +28,18 @@ module.exports = function(input) {
     warnings.push("Missing runners: " + missingRunners.join(", ") + ". Run `node setup.js` to reinstall.");
   }
 
-  // 2. Check module directories exist and modules load
+  // 2. Check module directories exist and modules are readable
+  // T499: replaced require() with fs.accessSync() — loading 60+ modules cost ~350ms.
+  // Syntax/dep errors surface when modules actually run and get logged by the runner.
   var events = ["PreToolUse", "PostToolUse", "Stop", "SessionStart", "UserPromptSubmit"];
-  var loadErrors = [];
+  var missingDirs = [];
+  var unreadable = [];
   for (var ei = 0; ei < events.length; ei++) {
     var modDir = path.join(hooksDir, "run-modules", events[ei]);
-    if (!fs.existsSync(modDir)) continue;
+    if (!fs.existsSync(modDir)) {
+      missingDirs.push(events[ei]);
+      continue;
+    }
     var files;
     try { files = fs.readdirSync(modDir); } catch(e) { continue; }
     for (var fi = 0; fi < files.length; fi++) {
@@ -41,30 +47,31 @@ module.exports = function(input) {
       var stat;
       try { stat = fs.statSync(fPath); } catch(e) { continue; }
       if (stat.isDirectory()) {
-        // skip archive directories — contain superseded modules with stale deps
         if (files[fi] === "archive") continue;
-        // project-scoped modules
         var subFiles;
         try { subFiles = fs.readdirSync(fPath); } catch(e) { continue; }
         for (var si = 0; si < subFiles.length; si++) {
           if (subFiles[si].indexOf(".js", subFiles[si].length - 3) === -1) continue;
           try {
-            require(path.join(fPath, subFiles[si]));
+            fs.accessSync(path.join(fPath, subFiles[si]), fs.constants.R_OK);
           } catch(e) {
-            loadErrors.push(events[ei] + "/" + files[fi] + "/" + subFiles[si] + ": " + e.message);
+            unreadable.push(events[ei] + "/" + files[fi] + "/" + subFiles[si]);
           }
         }
       } else if (files[fi].indexOf(".js", files[fi].length - 3) !== -1) {
         try {
-          require(fPath);
+          fs.accessSync(fPath, fs.constants.R_OK);
         } catch(e) {
-          loadErrors.push(events[ei] + "/" + files[fi] + ": " + e.message);
+          unreadable.push(events[ei] + "/" + files[fi]);
         }
       }
     }
   }
-  if (loadErrors.length > 0) {
-    warnings.push("Module load errors:\n  " + loadErrors.join("\n  "));
+  if (missingDirs.length > 0) {
+    warnings.push("Missing module dirs: " + missingDirs.join(", ") + ". Run `node setup.js --sync`.");
+  }
+  if (unreadable.length > 0) {
+    warnings.push("Unreadable modules:\n  " + unreadable.join("\n  "));
   }
 
   // 3. Check settings.json has hooks
