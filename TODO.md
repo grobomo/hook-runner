@@ -1320,6 +1320,9 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T511: Fix commit-counter-gate worktree detection — CWD fallback (PR #405)
 - [x] T512: Version bump to v2.43.0 — CHANGELOG for T511
 
+**Session 19:**
+- [x] T513: Fix stale README workflow module counts — starter 11→40, shtd 90→95, total 80+→115+
+
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
 - [ ] Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
