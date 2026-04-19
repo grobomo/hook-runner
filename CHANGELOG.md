@@ -2,6 +2,14 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.38.0] — 2026-04-18
+
+### Added
+- **`--audit-project --json`** (T500) — Machine-readable JSON output for `--audit-project`. Includes events, blocks with samples, coverage gaps, timing, and summary. Enables programmatic consumption by scripts and dashboards.
+
+### Improved
+- **SessionStart perf** (T499) — Replaced Windows `tasklist` (~200ms/call) with `process.kill(pid, 0)` (<1ms) in `_is-pid-running`. Replaced `require()` module validation with `fs.accessSync()` in `project-health`. Net: session-cleanup 374ms→14ms, project-health 358ms→45ms (~670ms saved per session start).
+
 ## [2.37.0] — 2026-04-18
 
 ### Added
