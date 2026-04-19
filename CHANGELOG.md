@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.43.0] — 2026-04-18
+
+### Fixed
+- **commit-counter-gate worktree detection** (T511) — `isInWorktree()` and `getBranch()` only checked `CLAUDE_PROJECT_DIR`, which doesn't update when `EnterWorktree` switches the CWD. Now falls back to CWD when `CLAUDE_PROJECT_DIR` has no `.git`, fixing the stuck `worktreeRequired` flag.
+
 ## [2.42.0] — 2026-04-18
 
 ### Improved
