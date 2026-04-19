@@ -18,7 +18,7 @@ hook-runner replaces direct `settings.json` editing. After install, you never to
 
 **1. Modules over shell commands.** Each rule is a `.js` file that receives structured input (tool name, file path, command) and returns a decision. Modules are testable, documented, and version-controlled. Drop a file in a folder and it runs — remove it and it stops.
 
-**2. Workflows over individual modules.** You don't think "I need to enable spec-gate, branch-gate, test-checkpoint-gate, and worker-loop." You think "I want the SHTD development pipeline." Workflows group related modules so you enable one name and get a complete enforcement regime. Disable it and they all go silent. This is how you manage 80+ modules without losing track.
+**2. Workflows over individual modules.** You don't think "I need to enable spec-gate, branch-gate, test-checkpoint-gate, and worker-loop." You think "I want the SHTD development pipeline." Workflows group related modules so you enable one name and get a complete enforcement regime. Disable it and they all go silent. This is how you manage 115+ modules without losing track.
 
 **3. Portability.** Export your module config as YAML (`--export`), sync it to another machine (`--sync`), or share a workflow definition. Workflows also make it easy to switch contexts — enable `customer-data-guard` during incident response, disable it after.
 
