@@ -1,4 +1,4 @@
-// WORKFLOW: starter
+// WORKFLOW: shtd, gsd, starter
 // WHY: Claude declares things "impossible" after one failed attempt.
 // Past examples: "can't screenshot VM" (solved by Azure Boot Diagnostics),
 // "can't send email" (solved by SMTP relay). Research before giving up.

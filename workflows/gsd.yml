@@ -101,9 +101,11 @@ modules:
   - hook-autocommit
   - no-adhoc-commands
   - cross-project-todo-gate
+  - inter-project-priority-gate
   - cwd-drift-detector
   - no-focus-steal
   - settings-audit-log
+  - inter-project-audit
   - settings-change-gate
   - settings-hooks-gate
   # Messaging safety
@@ -129,6 +131,7 @@ modules:
   - lesson-effectiveness
   # Session lifecycle
   - auto-continue
+  - inter-project-priority
   - backup-check
   - chat-export
   - config-sync
