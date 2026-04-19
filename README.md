@@ -62,7 +62,8 @@ To undo everything: `node setup.js --uninstall --confirm`
 
 **Want to see it in action first?** Run the interactive demo — no install needed:
 ```bash
-npx grobomo/hook-runner --demo
+npx grobomo/hook-runner --demo          # terminal demo
+npx grobomo/hook-runner --demo-html     # shareable HTML page
 ```
 
 ## What does a block look like?
@@ -306,6 +307,7 @@ node setup.js --prune [N]             # prune log entries older than N days
 
 # Demo & Development
 node setup.js --demo [--fast]          # interactive demo (no install needed)
+node setup.js --demo-html              # generate standalone HTML demo page
 node setup.js --test-module <file> [--input <json>]  # test one module
 node setup.js --test                   # run all test suites
 node setup.js --version                # show version

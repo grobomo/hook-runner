@@ -59,6 +59,7 @@ node setup.js --snapshot drift  # detect drift from last snapshot
 node setup.js --snapshot backup # copy to git repo, commit, push
 node setup.js --snapshot restore # clone repo, restore files
 node setup.js --demo         # interactive demo (--fast to skip animation)
+node setup.js --demo-html    # generate standalone HTML demo page
 node setup.js --version      # show version
 node setup.js --help         # show all commands
 ```
