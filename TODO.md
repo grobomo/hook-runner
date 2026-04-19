@@ -1335,6 +1335,9 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T522: Fix stale SKILL.md — update module counts (11→42, 90→101), add --demo command (PR #416)
 - [x] T523: Fix npx --demo + version bump to v2.48.0 — add demo.js to files array, CHANGELOG for T521-T523
 
+**Session 21:**
+- [x] T524: Add gsd workflow to README Built-in Workflows table and SKILL.md keywords/listing
+
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
 - [ ] Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)

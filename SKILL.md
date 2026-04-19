@@ -14,6 +14,7 @@ keywords:
   - gate
   - module
   - shtd
+  - gsd
   - starter
 custom_commands:
   - name: setup
@@ -62,7 +63,7 @@ node setup.js --workflow audit     # coverage report
 node setup.js --workflow query Edit  # which workflows affect Edit?
 ```
 
-Built-in: `starter` (safe defaults, 42 modules), `shtd` (full development pipeline, 101 modules), `customer-data-guard`, `no-local-docker`, `cross-project-reset`.
+Built-in: `starter` (safe defaults, 42 modules), `shtd` (spec-driven pipeline, 101 modules), `gsd` (phase-driven pipeline, 101 modules), `customer-data-guard`, `no-local-docker`, `cross-project-reset`.
 
 ## Module Contract
 
