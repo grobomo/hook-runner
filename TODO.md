@@ -1295,7 +1295,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T494: --audit-project command — per-project hook audit from hook-log.jsonl (fired modules, blocks, coverage gaps, timing)
 
 **Session 15:**
-- [x] T495: spec-gate allowlist — add --audit-project, --manifest, --analyze, --workflow to read-only Bash command allowlist (was blocking operational commands on main)
+- [x] T495: spec-gate allowlist — add --audit-project, --manifest, --analyze, --workflow to read-only Bash command allowlist (PR #389)
+- [x] T496: preserve-iterated-content perf — switch cache from headSha:path to path-only with 5min TTL (663ms→4ms cache hit)
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
