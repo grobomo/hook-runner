@@ -1343,6 +1343,13 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T528: Version bump to v2.50.0 — CHANGELOG for T526-T527, test release automation
 - [x] T529: Fix stale README "80+ modules" → "115+" + backfill GitHub releases for v2.47-v2.49
 
+**Session 22:**
+- [x] T530: Fix perf spikes in high-frequency modules — secret-scan-gate fast path + workflow-compliance-gate cache
+
+## Next session priorities
+- Marketplace sync to claude-code-skills (T462 — delegated to claude-code-skills TODO.md as T012, v2.32.0→v2.50.0)
+- Consider: demo as static HTML export for email sharing
+
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
 - [ ] Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
