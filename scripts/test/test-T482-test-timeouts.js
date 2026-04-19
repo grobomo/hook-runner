@@ -123,7 +123,29 @@ test("help text mentions new flags", function() {
   assert(setupSrc.indexOf("--sh-only") !== -1, "help should mention --sh-only");
 });
 
-// Test 17: verify test directory has both .js and .sh files (for filter logic to matter)
+// Test 17: per-file TIMEOUT comment support in setup.js
+test("per-file TIMEOUT comment parsing in test runner", function() {
+  assert(setupSrc.indexOf("TIMEOUT:") !== -1, "should parse TIMEOUT comment");
+  assert(setupSrc.indexOf("tmMatch") !== -1, "should store timeout match");
+});
+
+// Test 18: commit-counter-gate has TIMEOUT: 90 comment
+test("commit-counter-gate has per-file timeout override", function() {
+  var ccg = fs.readFileSync(path.join(REPO_DIR, "scripts/test/test-commit-counter-gate.js"), "utf-8").slice(0, 200);
+  var m = ccg.match(/\/\/\s*TIMEOUT:\s*(\d+)/);
+  assert(m, "should have // TIMEOUT: N comment");
+  assert(parseInt(m[1], 10) >= 90, "timeout should be at least 90s, got " + m[1]);
+});
+
+// Test 19: per-file timeout regex matches both JS and bash comments
+test("timeout regex handles JS and bash comment styles", function() {
+  var re = /(?:\/\/|#)\s*TIMEOUT:\s*(\d+)/;
+  assert(re.test("// TIMEOUT: 90"), "should match JS comment");
+  assert(re.test("# TIMEOUT: 120"), "should match bash comment");
+  assert(!re.test("var TIMEOUT = 60"), "should NOT match variable assignment");
+});
+
+// Test 20: verify test directory has both .js and .sh files (for filter logic to matter)
 test("test directory has both JS and bash tests", function() {
   var testDir = path.join(REPO_DIR, "scripts", "test");
   var files = fs.readdirSync(testDir).filter(function(f) { return f.indexOf("test-") === 0; });
