@@ -276,8 +276,11 @@ function runDemo() {
   console.log("           Blocks: force push, destructive git, secret commits, rm -rf");
   console.log("           Adds: commit quality, test reminders, session context");
   console.log("");
-  console.log("  " + C.yellow + "shtd" + C.reset + "     101 modules — full development discipline");
+  console.log("  " + C.yellow + "shtd" + C.reset + "     101 modules — spec-driven development discipline");
   console.log("           Adds: spec-first, test-first, PR workflow, code quality");
+  console.log("");
+  console.log("  " + C.yellow + "gsd" + C.reset + "      101 modules — phase-driven development discipline");
+  console.log("           Like shtd but uses .planning/ phases instead of specs");
   console.log("");
   console.log(C.bold + "  Get started:" + C.reset);
   console.log("");
