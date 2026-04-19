@@ -771,6 +771,7 @@ function cmdHelp() {
   console.log("  --snapshot drift   Detect drift from last snapshot (--json for machine output)");
   console.log("  --snapshot backup  Copy files to git repo, commit, push");
   console.log("  --snapshot restore Clone repo and copy files back into place");
+  console.log("  --audit-project <name>  Audit hook activity for a specific project (blocks, gaps, timeline)");
   console.log("  --xref          Show inter-project TODO dashboard (audit log + pending items)");
   console.log("  --help, -h      Show this help");
   console.log("");
@@ -1560,6 +1561,292 @@ function cmdPerf() {
   console.log("");
 }
 
+// T494: Per-project hook audit — fired modules, blocks, coverage gaps, timing
+function cmdAuditProject(args) {
+  var projIdx = args.indexOf("--audit-project");
+  var projName = projIdx >= 0 && args[projIdx + 1] ? args[projIdx + 1] : "";
+  if (!projName || projName.indexOf("--") === 0) {
+    console.log("Usage: node setup.js --audit-project <name>");
+    console.log("  Filters hook log by project name (fuzzy match).");
+    console.log("  Shows: blocks, passes, coverage gaps, timeline.");
+    console.log("  Example: node setup.js --audit-project dd-lab");
+    return;
+  }
+
+  console.log("[hook-runner] Project Audit: " + projName);
+  console.log("========================");
+
+  // Read all log entries matching project name
+  var entries = [];
+  function readLogFile(logFile) {
+    if (!fs.existsSync(logFile)) return;
+    try {
+      var lines = fs.readFileSync(logFile, "utf-8").split("\n");
+      for (var i = 0; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        try {
+          var obj = JSON.parse(lines[i]);
+          var proj = String(obj.project || "");
+          if (proj.toLowerCase().indexOf(projName.toLowerCase()) !== -1) entries.push(obj);
+        } catch (e) {}
+      }
+    } catch (e) {}
+  }
+  readLogFile(HOOK_LOG_PATH + ".1");
+  readLogFile(HOOK_LOG_PATH);
+
+  if (entries.length === 0) {
+    console.log("  No log entries found for '" + projName + "'.");
+    console.log("  Run a session in that project to generate hook activity.");
+    return;
+  }
+
+  // Aggregate
+  var byModule = {}, byEvent = {}, blocks = [], firstTs = "", lastTs = "";
+  for (var i = 0; i < entries.length; i++) {
+    var e = entries[i];
+    var key = e.event + "/" + e.module;
+    if (!byModule[key]) byModule[key] = { pass: 0, block: 0, error: 0, total: 0, msTotal: 0, msCount: 0, msMax: 0 };
+    byModule[key].total++;
+    var r = e.result || "pass";
+    if (r === "pass" || r === "text") byModule[key].pass++;
+    else if (r === "block" || r === "deny") byModule[key].block++;
+    else if (r === "error") byModule[key].error++;
+    byEvent[e.event] = (byEvent[e.event] || 0) + 1;
+    var ts = e.ts || "";
+    if (ts && (!firstTs || ts < firstTs)) firstTs = ts;
+    if (ts && ts > lastTs) lastTs = ts;
+    if (typeof e.ms === "number") { byModule[key].msTotal += e.ms; byModule[key].msCount++; if (e.ms > byModule[key].msMax) byModule[key].msMax = e.ms; }
+    if (r === "block" || r === "deny") {
+      blocks.push({ ts: e.ts || "", module: e.module || "", event: e.event || "", tool: e.tool || "", reason: String(e.reason || "").substring(0, 120) });
+    }
+  }
+
+  // Summary
+  var totalPass = 0, totalBlock = 0;
+  var modKeys = Object.keys(byModule).sort();
+  modKeys.forEach(function(k) { totalPass += byModule[k].pass; totalBlock += byModule[k].block; });
+
+  console.log("  Entries: " + entries.length + " (" + (firstTs ? firstTs.substring(0, 10) : "?") + " to " + (lastTs ? lastTs.substring(0, 10) : "?") + ")");
+  console.log("  Pass: " + totalPass + "  Block: " + totalBlock);
+  console.log("");
+
+  // By event
+  console.log("  By event:");
+  Object.keys(byEvent).sort().forEach(function(ev) { console.log("    " + ev + ": " + byEvent[ev]); });
+  console.log("");
+
+  // Blocks detail
+  if (blocks.length > 0) {
+    console.log("  Blocks (" + blocks.length + "):");
+    blocks.forEach(function(b) {
+      console.log("    [" + (b.ts ? b.ts.substring(0, 19) : "?") + "] " + b.module + " (" + b.tool + ")");
+      if (b.reason) console.log("      " + b.reason);
+    });
+    console.log("");
+  }
+
+  // Coverage gaps — installed modules that never fired for this project
+  var firedSet = {};
+  modKeys.forEach(function(k) { firedSet[k] = true; });
+  var gaps = [];
+  var modEvents = ["PreToolUse", "PostToolUse", "SessionStart", "Stop"];
+  modEvents.forEach(function(evt) {
+    var modDir = path.join(HOOKS_DIR, "run-modules", evt);
+    if (!fs.existsSync(modDir)) return;
+    try {
+      fs.readdirSync(modDir).forEach(function(f) {
+        if (!f.endsWith(".js") || f.startsWith("_")) return;
+        var modName = evt + "/" + f.replace(".js", "");
+        if (!firedSet[modName]) gaps.push(modName);
+      });
+    } catch (e) {}
+  });
+
+  var installedCount = modEvents.reduce(function(sum, evt) {
+    var d = path.join(HOOKS_DIR, "run-modules", evt);
+    try { return sum + fs.readdirSync(d).filter(function(f) { return f.endsWith(".js") && !f.startsWith("_"); }).length; } catch(e) { return sum; }
+  }, 0);
+
+  console.log("  Module coverage:");
+  console.log("    Installed: " + installedCount + "  Fired: " + modKeys.length + "  Gaps: " + gaps.length);
+  if (gaps.length > 0 && gaps.length <= 40) {
+    var gByEvt = {};
+    gaps.forEach(function(g) { var ev = g.split("/")[0]; if (!gByEvt[ev]) gByEvt[ev] = []; gByEvt[ev].push(g.split("/").slice(1).join("/")); });
+    Object.keys(gByEvt).sort().forEach(function(ev) { console.log("    [" + ev + "] " + gByEvt[ev].join(", ")); });
+  }
+  console.log("");
+
+  // Timing top 10
+  var timed = modKeys.filter(function(k) { return byModule[k].msCount > 0; })
+    .map(function(k) { var m = byModule[k]; return { key: k, avg: Math.round(m.msTotal / m.msCount), max: m.msMax, count: m.msCount }; })
+    .sort(function(a, b) { return b.avg - a.avg; }).slice(0, 10);
+  if (timed.length > 0) {
+    console.log("  Timing (top 10 slowest):");
+    timed.forEach(function(t) {
+      var note = t.max > 100 ? "  *** spike " + t.max + "ms" : "";
+      console.log("    " + t.key + "  avg:" + t.avg + "ms  (" + t.count + " calls)" + note);
+    });
+    console.log("");
+  }
+
+  // Verdict
+  var blockRate = entries.length > 0 ? Math.round(totalBlock / entries.length * 100) : 0;
+  console.log("  Verdict:");
+  console.log("    Block rate: " + blockRate + "% (" + totalBlock + "/" + entries.length + ")");
+  if (gaps.length > installedCount * 0.5) console.log("    WARNING: >50% modules never fired — session may be too short for coverage");
+  if (blockRate > 20) console.log("    NOTE: High block rate — check workflow config for this project");
+  else if (totalBlock === 0) console.log("    OK: No blocks — hooks are passing cleanly");
+  console.log("");
+}
+
+// T494: Per-project hook audit — shows what fired, what blocked, gaps, timing
+function cmdAuditProject(args) {
+  var idx = args.indexOf("--audit-project");
+  var projectName = (idx !== -1 && args[idx + 1]) ? args[idx + 1] : "";
+  if (!projectName || projectName.indexOf("--") === 0) {
+    console.log("Usage: node setup.js --audit-project <project-name>");
+    console.log("  Audits hook activity for a specific project from hook-log.jsonl.");
+    console.log("  Example: node setup.js --audit-project dd-lab");
+    return;
+  }
+
+  console.log("[hook-runner] Project Audit: " + projectName);
+  console.log("========================\n");
+
+  // Read all log entries for this project (fuzzy match on path)
+  var entries = [];
+  [HOOK_LOG_PATH + ".1", HOOK_LOG_PATH].forEach(function(logFile) {
+    if (!fs.existsSync(logFile)) return;
+    try {
+      var lines = fs.readFileSync(logFile, "utf-8").split("\n");
+      for (var i = 0; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        try {
+          var e = JSON.parse(lines[i]);
+          var proj = (e.project || "").split("\\").join("/");
+          if (proj.toLowerCase().indexOf(projectName.toLowerCase()) !== -1) entries.push(e);
+        } catch(err) {}
+      }
+    } catch(err) {}
+  });
+
+  if (entries.length === 0) {
+    console.log("  No log entries found for project '" + projectName + "'.");
+    console.log("  Run a Claude Code session in that project to generate hook data.");
+    return;
+  }
+
+  // Time range
+  var firstTs = entries[0].ts || "";
+  var lastTs = entries[entries.length - 1].ts || "";
+  console.log("  Period: " + (firstTs ? firstTs.slice(0, 19) : "?") + " to " + (lastTs ? lastTs.slice(0, 19) : "?"));
+  console.log("  Total entries: " + entries.length);
+
+  // By event
+  var byEvent = {};
+  entries.forEach(function(e) {
+    var evt = e.event || "unknown";
+    if (!byEvent[evt]) byEvent[evt] = { total: 0, pass: 0, block: 0 };
+    byEvent[evt].total++;
+    if (e.result === "block" || e.result === "deny") byEvent[evt].block++;
+    else byEvent[evt].pass++;
+  });
+  console.log("\n  By event:");
+  Object.keys(byEvent).sort().forEach(function(evt) {
+    var ev = byEvent[evt];
+    console.log("    " + evt + ": " + ev.total + " (" + ev.pass + " pass, " + ev.block + " block)");
+  });
+
+  // By module
+  var byModule = {};
+  entries.forEach(function(e) {
+    var key = (e.event || "?") + "/" + (e.module || "?");
+    if (!byModule[key]) byModule[key] = { total: 0, pass: 0, block: 0, msTotal: 0, msCount: 0, msMax: 0, blocks: [] };
+    var m = byModule[key];
+    m.total++;
+    if (e.result === "block" || e.result === "deny") {
+      m.block++;
+      if (m.blocks.length < 3) {
+        m.blocks.push({ ts: e.ts || "", tool: e.tool || "", reason: (e.reason || "").substring(0, 120) });
+      }
+    } else { m.pass++; }
+    if (typeof e.ms === "number") { m.msTotal += e.ms; m.msCount++; if (e.ms > m.msMax) m.msMax = e.ms; }
+  });
+
+  // Blocks
+  var blockModules = Object.keys(byModule).filter(function(k) { return byModule[k].block > 0; });
+  if (blockModules.length > 0) {
+    console.log("\n  Blocks:");
+    blockModules.sort(function(a, b) { return byModule[b].block - byModule[a].block; }).forEach(function(k) {
+      var m = byModule[k];
+      console.log("    " + k + ": " + m.block + " block(s)");
+      m.blocks.forEach(function(b) {
+        console.log("      [" + (b.ts ? b.ts.slice(11, 19) : "?") + "] " + b.tool);
+        if (b.reason) console.log("        " + b.reason);
+      });
+    });
+  } else { console.log("\n  Blocks: none"); }
+
+  // Coverage gaps
+  var installedModules = {};
+  var modsDir = path.join(HOOKS_DIR, "run-modules");
+  ["PreToolUse", "PostToolUse", "Stop", "SessionStart", "UserPromptSubmit"].forEach(function(evt) {
+    var evDir = path.join(modsDir, evt);
+    if (!fs.existsSync(evDir)) return;
+    try {
+      fs.readdirSync(evDir).forEach(function(f) {
+        if (f.endsWith(".js") && !f.startsWith("_")) installedModules[evt + "/" + f.replace(".js", "")] = true;
+        var sub = path.join(evDir, f);
+        try {
+          if (fs.statSync(sub).isDirectory() && !f.startsWith("_") && f !== "archive") {
+            fs.readdirSync(sub).forEach(function(sf) {
+              if (sf.endsWith(".js")) installedModules[evt + "/" + f + "/" + sf.replace(".js", "")] = true;
+            });
+          }
+        } catch(err) {}
+      });
+    } catch(err) {}
+  });
+  var neverFired = Object.keys(installedModules).filter(function(k) { return !byModule[k]; });
+  console.log("\n  Module coverage:");
+  console.log("    Installed: " + Object.keys(installedModules).length);
+  console.log("    Fired: " + Object.keys(byModule).length);
+  console.log("    Never fired: " + neverFired.length);
+  if (neverFired.length > 0 && neverFired.length <= 30) {
+    var nfByEvent = {};
+    neverFired.forEach(function(k) { var evt = k.split("/")[0]; if (!nfByEvent[evt]) nfByEvent[evt] = []; nfByEvent[evt].push(k.split("/").slice(1).join("/")); });
+    Object.keys(nfByEvent).sort().forEach(function(evt) { console.log("    [" + evt + "] " + nfByEvent[evt].join(", ")); });
+  }
+
+  // Timing
+  var timedMods = Object.keys(byModule).filter(function(k) { return byModule[k].msCount > 0; })
+    .map(function(k) { var m = byModule[k]; return { key: k, avg: Math.round(m.msTotal / m.msCount), max: m.msMax, count: m.msCount }; })
+    .sort(function(a, b) { return b.avg - a.avg; }).slice(0, 10);
+  if (timedMods.length > 0) {
+    console.log("\n  Timing (top 10 slowest):");
+    timedMods.forEach(function(t) {
+      var note = t.max > 100 ? "  *** spike " + t.max + "ms" : "";
+      console.log("    " + t.key + "  avg:" + t.avg + "ms  (" + t.count + " calls)" + note);
+    });
+  }
+
+  // Verdict
+  var totalBlocks = entries.filter(function(e) { return e.result === "block" || e.result === "deny"; }).length;
+  var blockRate = entries.length > 0 ? Math.round(totalBlocks / entries.length * 100) : 0;
+  console.log("\n  Summary:");
+  console.log("    Block rate: " + blockRate + "% (" + totalBlocks + "/" + entries.length + ")");
+  if (neverFired.length > Object.keys(installedModules).length * 0.5) {
+    console.log("    WARNING: >50% modules never fired — session may have been too short");
+  }
+  if (blockRate > 20) {
+    console.log("    NOTE: High block rate — check workflow config for this project");
+  } else if (totalBlocks === 0) {
+    console.log("    OK: No blocks — hooks are passing cleanly");
+  }
+  console.log("");
+}
+
 function cmdExport(args) {
   var outFile = null;
   for (var i = 0; i < args.length; i++) {
@@ -1887,6 +2174,8 @@ function main() {
     process.exit(snapResult.status || 0);
   }
   if (args.indexOf("--health") !== -1) return cmdHealth();
+  if (args.indexOf("--audit-project") !== -1) return cmdAuditProject(args);
+  if (args.indexOf("--audit-project") !== -1) return cmdAuditProject(args);
   if (args.indexOf("--xref") !== -1) return cmdXref();
   if (args.indexOf("--sync") !== -1) return cmdSync(dryRun);
 
