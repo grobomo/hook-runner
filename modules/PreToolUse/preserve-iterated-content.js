@@ -9,6 +9,8 @@
 // T496: Switched cache key from headSha:path to path-only with 5min TTL.
 // headSha-based keys invalidated on every commit, causing constant cache misses
 // (663ms avg, 1556ms spikes). Commit counts change rarely — TTL is sufficient.
+// T539: Three perf fixes — 30min TTL (was 5min), skip saveCache on hits,
+// fs.existsSync fast path for new files. Avg 291ms → <5ms on cache hits.
 "use strict";
 var cp = require("child_process");
 var path = require("path");
@@ -18,11 +20,12 @@ var os = require("os");
 // Commit count threshold — files with this many+ commits are "iterated"
 var ITERATION_THRESHOLD = 5;
 
-// T496: File-based cache keyed by normalized file path with per-entry TTL.
-// Avoids git rev-list spawns (~800ms each on Windows). Persists across invocations.
+// T539: 30min entry TTL (was 5min). Commit counts change at most once per commit,
+// and Write calls to the same file are typically minutes apart. 30min eliminates
+// nearly all cache misses within a session while still picking up new commits.
 var CACHE_FILE = path.join(os.tmpdir(), "hook-runner-iterated-cache.json");
-var CACHE_MAX_AGE = 3600000; // 1 hour — evict entire cache file
-var ENTRY_TTL = 300000;      // 5 minutes — per-entry staleness
+var CACHE_MAX_AGE = 3600000;  // 1 hour — evict entire cache file
+var ENTRY_TTL = 1800000;      // 30 minutes — per-entry staleness
 
 function loadCache() {
   try {
@@ -34,6 +37,17 @@ function loadCache() {
 
 function saveCache(cache) {
   try { fs.writeFileSync(CACHE_FILE, JSON.stringify(cache)); } catch (e) { /* best effort */ }
+}
+
+function blockMsg(count, filePath) {
+  return {
+    decision: "block",
+    reason: "CAUTION: Write (full rewrite) on a file with " + count +
+      " commits of history. This file has been iterated — a rewrite may " +
+      "discard carefully refined content. Use Edit for surgical changes instead. " +
+      "If a full rewrite is truly needed, the user must explicitly approve it. " +
+      "File: " + path.basename(filePath)
+  };
 }
 
 module.exports = function(input) {
@@ -51,23 +65,18 @@ module.exports = function(input) {
   }
   if (!isWatched) return null;
 
-  // T496: Check cache by normalized path with TTL (no headSha dependency)
+  // T539: New files can't have commit history — skip entirely
+  if (!fs.existsSync(filePath)) return null;
+
   var dir = path.dirname(filePath);
   var now = Date.now();
   var cache = loadCache();
   var cached = cache[norm];
 
   if (cached && (now - cached.ts) < ENTRY_TTL) {
-    // Cache hit — use stored count (no git spawn needed)
+    // T539: Cache hit — no git spawn, no saveCache (no mutation needed)
     if (cached.count < ITERATION_THRESHOLD) return null;
-    return {
-      decision: "block",
-      reason: "CAUTION: Write (full rewrite) on a file with " + cached.count +
-        " commits of history. This file has been iterated — a rewrite may " +
-        "discard carefully refined content. Use Edit for surgical changes instead. " +
-        "If a full rewrite is truly needed, the user must explicitly approve it. " +
-        "File: " + path.basename(filePath)
-    };
+    return blockMsg(cached.count, filePath);
   }
 
   // Cache miss or stale — run git rev-list
@@ -83,14 +92,7 @@ module.exports = function(input) {
     saveCache(cache);
 
     if (commitCount >= ITERATION_THRESHOLD) {
-      return {
-        decision: "block",
-        reason: "CAUTION: Write (full rewrite) on a file with " + commitCount +
-          " commits of history. This file has been iterated — a rewrite may " +
-          "discard carefully refined content. Use Edit for surgical changes instead. " +
-          "If a full rewrite is truly needed, the user must explicitly approve it. " +
-          "File: " + path.basename(filePath)
-      };
+      return blockMsg(commitCount, filePath);
     }
   } catch (e) {
     // Not in a git repo or git error — allow
