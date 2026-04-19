@@ -1294,6 +1294,9 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T493: Convert test-modules.sh to JS — eliminates ~218 node spawns, fixes 60s timeout (436 tests, <5s)
 - [x] T494: --audit-project command — per-project hook audit from hook-log.jsonl (fired modules, blocks, coverage gaps, timing)
 
+**Session 15:**
+- [x] T495: spec-gate allowlist — add --audit-project, --manifest, --analyze, --workflow to read-only Bash command allowlist (was blocking operational commands on main)
+
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
 - [ ] Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
