@@ -1326,7 +1326,10 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T515: Sync workflow YAML ↔ module tags — 5 modules added to YAMLs, 2 tags fixed (PR #409)
 - [x] T516: Version bump to v2.45.0 — CHANGELOG for T515 (PR #410)
 - [x] T517: Workflow audit extends-aware — count parent tags, add drift-check/config-sync/aliases to YAMLs (PR #411)
-- [x] T518: Version bump to v2.46.0 — CHANGELOG for T517, README counts updated
+- [x] T518: Version bump to v2.46.0 — CHANGELOG for T517, README counts updated (PR #412)
+
+**Session 20:**
+- [x] T519: Add --demo CLI command — interactive showcase with real module gates, 6 scenarios, ANSI color
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
