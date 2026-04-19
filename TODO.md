@@ -1318,7 +1318,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T509: Add TOOLS tags to 11 modules — perf optimization (~5ms/module per non-matching call) (PR #403)
 - [x] T510: Version bump to v2.42.0 — CHANGELOG for T509 (PR #404)
 - [x] T511: Fix commit-counter-gate worktree detection — CWD fallback (PR #405)
-- [x] T512: Version bump to v2.43.0 — CHANGELOG for T511
+- [x] T512: Version bump to v2.43.0 — CHANGELOG for T511 (PR #406)
 
 **Session 19:**
 - [x] T513: Fix stale README workflow module counts — starter 11→40, shtd 90→95, total 80+→115+ (PR #407)
@@ -1333,18 +1333,18 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T520: Version bump to v2.47.0 — CHANGELOG for T519 (PR #414)
 - [x] T521: Add --demo to README Quick Start and CLI Reference sections (PR #415)
 - [x] T522: Fix stale SKILL.md — update module counts (11→42, 90→101), add --demo command (PR #416)
-- [x] T523: Fix npx --demo + version bump to v2.48.0 — add demo.js to files array, CHANGELOG for T521-T523
+- [x] T523: Fix npx --demo + version bump to v2.48.0 — add demo.js to files array, CHANGELOG for T521-T523 (PR #417)
 
 **Session 21:**
 - [x] T524: Add gsd workflow to README Built-in Workflows table and SKILL.md keywords/listing (PR #418)
-- [x] T525: Version bump to v2.49.0 — CHANGELOG for T524
-- [x] T526: Add gsd workflow to demo summary — consistency with README/SKILL.md
-- [x] T527: Add GitHub release automation — creates release with CHANGELOG excerpt on tag push
-- [x] T528: Version bump to v2.50.0 — CHANGELOG for T526-T527, test release automation
-- [x] T529: Fix stale README "80+ modules" → "115+" + backfill GitHub releases for v2.47-v2.49
+- [x] T525: Version bump to v2.49.0 — CHANGELOG for T524 (PR #419)
+- [x] T526: Add gsd workflow to demo summary (PR #420)
+- [x] T527: Add GitHub release automation — creates release with CHANGELOG excerpt on tag push (PR #421)
+- [x] T528: Version bump to v2.50.0 — CHANGELOG for T526-T527 (PR #422)
+- [x] T529: Fix stale README "80+" → "115+" + backfill GitHub releases v2.47-v2.49 (PR #423)
 
 **Session 22:**
-- [x] T530: Fix perf spikes in high-frequency modules — secret-scan-gate fast path + workflow-compliance-gate cache
+- [x] T530: Fix perf spikes in high-frequency modules — secret-scan-gate fast path + workflow-compliance-gate cache (PR #424)
 
 ## Next session priorities
 - Marketplace sync to claude-code-skills (T462 — delegated to claude-code-skills TODO.md as T012, v2.32.0→v2.50.0)
