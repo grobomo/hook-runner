@@ -2,6 +2,21 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.37.0] — 2026-04-18
+
+### Added
+- **`--audit-project` CLI** (T494) — Per-project hook audit from hook-log.jsonl. Shows fired modules, blocks with samples, coverage gaps, timing analysis with spike detection, and a verdict. Usage: `node setup.js --audit-project <name>`
+
+### Fixed
+- **spec-gate allowlist** (T495) — Added `--audit-project`, `--manifest`, `--analyze`, `--workflow` to Bash allowlist. These read-only/operational commands were blocked on main branch.
+- **preserve-iterated-content cache** (T496) — Cache was keyed by `headSha:filePath`, invalidating all entries on every commit. Switched to path-only keys with 5-minute TTL. Cache hit: 663ms → 4ms. Removed unused `getHeadSha`/`findGitRoot` functions.
+- **commit-counter-gate metadata dirs** (T497) — Metadata directories (`.claude`, `.coconut`, `.github`, `.planning`, `.vscode`, `specs`, `node_modules`) excluded from branch-file mismatch detection. Prevents false "WRONG BRANCH" blocks in worktrees.
+- **2 pre-existing test failures** (T492) — T112 why-gate WORKFLOW tag check, T094 module-docs missing 3 T486 modules in README.
+- **no-nested-claude false positive** (T490) — Chained `cd && git commit` with "claude" in heredoc was blocked.
+
+### Improved
+- **test-modules.sh → JS** (T493) — Converted shell-based module tests to pure JS. Eliminates ~218 node process spawns, fixes 60s timeout. 436 tests in <5s (was 45s+).
+
 ## [2.36.0] — 2026-04-18
 
 ### Improved
