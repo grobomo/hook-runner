@@ -348,10 +348,12 @@ Full catalog in `modules/` directory:
 | `deploy-gate` | Blocks deploy commands when git tree is dirty |
 | `deploy-history-reminder` | Shows last 5 commits before deploy — prevents repeating failed approaches |
 | `disk-space-guard` | Blocks destructive commands after disk space errors |
+| `e2e-self-report-gate` | Alias → `test-checkpoint-gate` (legacy name) |
 | `enforcement-gate` | Requires git repo + TODO.md before edits |
 | `env-var-check` | Blocks edits if required env vars missing |
 | `force-push-gate` | Blocks git push --force to main/master |
 | `gh-auto-gate` | Forces gh_auto wrapper for all gh/git push commands (EMU account safety) |
+| `gsd-gate` | Alias → `test-checkpoint-gate` (legacy name) |
 | `gsd-branch-gate` | Enforces GSD branch naming (seq-phase-N-slug) for new branches |
 | `gsd-plan-gate` | Blocks code edits without a phase plan in GSD workflow |
 | `gsd-pr-gate` | Validates PR creation follows GSD conventions |
