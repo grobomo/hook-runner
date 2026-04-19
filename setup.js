@@ -775,6 +775,7 @@ function cmdHelp() {
   console.log("                          Add --json for machine-readable output");
   console.log("  --xref          Show inter-project TODO dashboard (audit log + pending items)");
   console.log("  --demo          Interactive demo — see hook-runner in action (--fast to skip animation)");
+  console.log("  --demo-html     Generate standalone HTML demo page (opens in browser)");
   console.log("  --help, -h      Show this help");
   console.log("");
   console.log("Options:");
@@ -2187,6 +2188,7 @@ function main() {
   if (args.indexOf("--uninstall") !== -1) return cmdUninstall(args, dryRun);
   if (args.indexOf("--prune") !== -1) return cmdPrune(args, dryRun);
   if (args.indexOf("--lessons") !== -1) return cmdLessons(args);
+  if (args.indexOf("--demo-html") !== -1) return require(path.join(__dirname, "demo.js")).runHtmlDemo();
   if (args.indexOf("--demo") !== -1) return require(path.join(__dirname, "demo.js"))();
   if (args.indexOf("--stats") !== -1) return cmdStats();
   if (args.indexOf("--export") !== -1) return cmdExport(args);
