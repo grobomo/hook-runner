@@ -11,6 +11,7 @@
  * Usage: node setup.js --demo
  *        node demo.js
  *        node demo.js --fast     (skip typing animation)
+ *        node demo.js --html     (generate standalone HTML file)
  */
 
 var fs = require("fs");
@@ -293,6 +294,194 @@ function runDemo() {
   console.log("");
 }
 
-module.exports = runDemo;
+// ============================================================
+// HTML Export
+// ============================================================
 
-if (require.main === module) runDemo();
+function escHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function runScenarios() {
+  var results = [];
+  for (var i = 0; i < scenarios.length; i++) {
+    var s = scenarios[i];
+    var mod = loadModule(s.event, s.module);
+    var result = null;
+    var elapsed = 0;
+    if (mod) {
+      var start = Date.now();
+      try { result = mod(s.input); } catch (e) { result = null; }
+      elapsed = Date.now() - start;
+    }
+    results.push({
+      title: s.title,
+      description: s.description,
+      label: s.label,
+      tool: s.input.tool_name,
+      module: s.module,
+      blocked: !!(result && result.decision === "block"),
+      reason: result && result.reason ? result.reason : "",
+      elapsed: elapsed
+    });
+  }
+  return results;
+}
+
+function generateHtml() {
+  var moduleCount = countModules();
+  var workflowCount = countWorkflows();
+  var results = runScenarios();
+  var blocked = results.filter(function(r) { return r.blocked; }).length;
+  var passed = results.length - blocked;
+
+  var html = [];
+  html.push('<!DOCTYPE html>');
+  html.push('<html lang="en"><head><meta charset="utf-8">');
+  html.push('<meta name="viewport" content="width=device-width, initial-scale=1">');
+  html.push('<title>hook-runner v' + escHtml(VERSION) + ' — Demo</title>');
+  html.push('<style>');
+  html.push(':root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;--dim:#8b949e;--red:#f85149;--green:#3fb950;--yellow:#d29922;--blue:#58a6ff;--cyan:#39d2c0;--magenta:#bc8cff;--code-bg:#1c2128}');
+  html.push('*{margin:0;padding:0;box-sizing:border-box}');
+  html.push('body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;line-height:1.6;padding:2rem;max-width:900px;margin:0 auto}');
+  html.push('h1{color:var(--blue);font-size:1.8rem;margin-bottom:.25rem}');
+  html.push('.subtitle{color:var(--dim);font-size:.95rem;margin-bottom:2rem}');
+  html.push('.intro{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin-bottom:2rem}');
+  html.push('.intro h2{font-size:1.1rem;margin-bottom:.75rem}');
+  html.push('.intro p{color:var(--dim);margin-bottom:.5rem}');
+  html.push('.intro strong{color:var(--text)}');
+  html.push('.divider{border:0;border-top:1px solid var(--border);margin:1.5rem 0}');
+  html.push('.scenario{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin-bottom:1rem;transition:border-color .2s}');
+  html.push('.scenario:hover{border-color:var(--dim)}');
+  html.push('.scenario-title{color:var(--magenta);font-weight:600;font-size:1.05rem}');
+  html.push('.scenario-desc{color:var(--dim);font-size:.9rem;margin:.25rem 0 .75rem}');
+  html.push('.command{font-family:"SF Mono",SFMono-Regular,Consolas,"Liberation Mono",Menlo,monospace;background:var(--code-bg);padding:.75rem 1rem;border-radius:6px;margin-bottom:.75rem}');
+  html.push('.command-label{color:var(--cyan);font-weight:600;font-size:.85rem;margin-bottom:.25rem}');
+  html.push('.command-text{color:var(--text);font-size:.95rem}');
+  html.push('.command-tool{color:var(--dim);font-size:.8rem}');
+  html.push('.result{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .75rem;border-radius:4px;font-weight:600;font-size:.9rem}');
+  html.push('.result-blocked{background:rgba(248,81,73,.15);color:var(--red);border:1px solid rgba(248,81,73,.3)}');
+  html.push('.result-pass{background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.3)}');
+  html.push('.result-module{font-weight:400;color:var(--dim);font-size:.85rem}');
+  html.push('.result-time{font-weight:400;color:var(--dim);font-size:.8rem}');
+  html.push('.block-reason{background:rgba(248,81,73,.08);border-left:3px solid var(--red);padding:.75rem 1rem;margin-top:.75rem;border-radius:0 6px 6px 0;font-family:"SF Mono",SFMono-Regular,Consolas,monospace;font-size:.85rem;color:var(--red);white-space:pre-wrap;line-height:1.5}');
+  html.push('.self-correct{color:var(--yellow);font-size:.85rem;margin-top:.5rem;font-style:italic}');
+  html.push('.stats{display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap}');
+  html.push('.stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;flex:1;min-width:120px;text-align:center}');
+  html.push('.stat-value{font-size:1.8rem;font-weight:700}');
+  html.push('.stat-label{color:var(--dim);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}');
+  html.push('.how{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin-top:2rem}');
+  html.push('.how h2{font-size:1.1rem;margin-bottom:1rem}');
+  html.push('.how ol{padding-left:1.5rem;margin-bottom:1.5rem}');
+  html.push('.how li{margin-bottom:.5rem;color:var(--dim)}');
+  html.push('.how li strong{color:var(--cyan)}');
+  html.push('.workflow{display:flex;gap:.75rem;align-items:baseline;margin-bottom:.75rem}');
+  html.push('.wf-name{font-weight:700;min-width:70px}');
+  html.push('.wf-starter{color:var(--green)}');
+  html.push('.wf-advanced{color:var(--yellow)}');
+  html.push('.wf-desc{color:var(--dim);font-size:.9rem}');
+  html.push('.get-started{background:var(--code-bg);border-radius:6px;padding:1rem;margin-top:1rem;font-family:"SF Mono",SFMono-Regular,Consolas,monospace;font-size:.85rem;line-height:2}');
+  html.push('.get-started .cmd{color:var(--text)}');
+  html.push('.get-started .comment{color:var(--dim)}');
+  html.push('.footer{text-align:center;color:var(--dim);font-size:.8rem;margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border)}');
+  html.push('</style></head><body>');
+
+  // Header
+  html.push('<h1>hook-runner v' + escHtml(VERSION) + '</h1>');
+  html.push('<p class="subtitle">' + moduleCount + ' modules &middot; ' + workflowCount + ' workflows &middot; 5 event types</p>');
+
+  // Stats
+  html.push('<div class="stats">');
+  html.push('<div class="stat"><div class="stat-value" style="color:var(--blue)">' + results.length + '</div><div class="stat-label">Scenarios</div></div>');
+  html.push('<div class="stat"><div class="stat-value" style="color:var(--red)">' + blocked + '</div><div class="stat-label">Blocked</div></div>');
+  html.push('<div class="stat"><div class="stat-value" style="color:var(--green)">' + passed + '</div><div class="stat-label">Passed</div></div>');
+  html.push('</div>');
+
+  // Intro
+  html.push('<div class="intro">');
+  html.push('<h2>What is hook-runner?</h2>');
+  html.push('<p>Claude Code hooks let you run scripts before/after every tool call. hook-runner turns this into a <strong>module system</strong> \u2014 drop a .js file in a folder, it runs automatically. <strong>Workflows</strong> group modules into pipelines.</p>');
+  html.push('<p>When a module blocks an action, Claude reads the block reason and <strong>adjusts its approach</strong> \u2014 no human intervention needed.</p>');
+  html.push('</div>');
+
+  // Scenarios
+  for (var i = 0; i < results.length; i++) {
+    var r = results[i];
+    html.push('<div class="scenario">');
+    html.push('<div class="scenario-title">' + escHtml(r.title) + '</div>');
+    html.push('<div class="scenario-desc">' + escHtml(r.description) + '</div>');
+    html.push('<div class="command">');
+    html.push('<div class="command-label">Claude wants to run:</div>');
+    html.push('<div class="command-text">' + escHtml(r.label) + '</div>');
+    html.push('<div class="command-tool">Tool: ' + escHtml(r.tool) + '</div>');
+    html.push('</div>');
+    if (r.blocked) {
+      html.push('<span class="result result-blocked">BLOCKED</span>');
+      html.push(' <span class="result-module">by ' + escHtml(r.module) + '</span>');
+      html.push(' <span class="result-time">(' + r.elapsed + 'ms)</span>');
+      html.push('<div class="block-reason">' + escHtml(r.reason) + '</div>');
+      html.push('<div class="self-correct">\u2192 Claude reads this message and adjusts its approach.</div>');
+    } else {
+      html.push('<span class="result result-pass">PASS</span>');
+      html.push(' <span class="result-module">' + escHtml(r.module) + '</span>');
+      html.push(' <span class="result-time">(' + r.elapsed + 'ms)</span>');
+    }
+    html.push('</div>');
+  }
+
+  // How it works + workflows
+  html.push('<div class="how">');
+  html.push('<h2>How it works</h2>');
+  html.push('<ol>');
+  html.push('<li><strong>Install</strong> \u2014 <code>npx grobomo/hook-runner --yes</code></li>');
+  html.push('<li><strong>Modules run</strong> \u2014 Automatically on every tool call</li>');
+  html.push('<li><strong>Blocks fire</strong> \u2014 Claude sees the reason and self-corrects</li>');
+  html.push('<li><strong>Passes are silent</strong> \u2014 zero overhead on normal work</li>');
+  html.push('</ol>');
+  html.push('<h2>Workflows</h2>');
+  html.push('<div class="workflow"><span class="wf-name wf-starter">starter</span><span class="wf-desc">42 modules \u2014 safe defaults for any user. Blocks: force push, destructive git, secret commits, rm -rf</span></div>');
+  html.push('<div class="workflow"><span class="wf-name wf-advanced">shtd</span><span class="wf-desc">101 modules \u2014 spec-driven development discipline. Adds: spec-first, test-first, PR workflow</span></div>');
+  html.push('<div class="workflow"><span class="wf-name wf-advanced">gsd</span><span class="wf-desc">101 modules \u2014 phase-driven development discipline. Uses .planning/ phases instead of specs</span></div>');
+  html.push('<h2 style="margin-top:1rem">Get started</h2>');
+  html.push('<div class="get-started">');
+  html.push('<span class="cmd">npx grobomo/hook-runner --yes</span> <span class="comment"># install + enable starter</span><br>');
+  html.push('<span class="cmd">node setup.js --workflow enable shtd</span> <span class="comment"># upgrade to full pipeline</span><br>');
+  html.push('<span class="cmd">node setup.js --health</span> <span class="comment"># verify everything works</span><br>');
+  html.push('<span class="cmd">node setup.js --report --open</span> <span class="comment"># visual HTML dashboard</span>');
+  html.push('</div>');
+  html.push('</div>');
+
+  // Footer
+  html.push('<div class="footer">Generated by hook-runner v' + escHtml(VERSION) + ' on ' + new Date().toISOString().slice(0, 10) + '</div>');
+  html.push('</body></html>');
+
+  return html.join("\n");
+}
+
+function runHtmlDemo() {
+  var os = require("os");
+  var html = generateHtml();
+  var outDir = path.join(os.homedir(), ".claude", "reports");
+  try { fs.mkdirSync(outDir, { recursive: true }); } catch (e) {}
+  var outPath = path.join(outDir, "hook-runner-demo.html");
+  fs.writeFileSync(outPath, html);
+  console.log("Demo HTML written to: " + outPath);
+
+  // Open in browser
+  try {
+    var cp = require("child_process");
+    var plat = process.platform;
+    if (plat === "win32") cp.execSync('start "" "' + outPath + '"', { stdio: "ignore", shell: true });
+    else if (plat === "darwin") cp.execSync('open "' + outPath + '"', { stdio: "ignore" });
+    else cp.execSync('xdg-open "' + outPath + '"', { stdio: "ignore" });
+  } catch (e) { /* browser open is best-effort */ }
+}
+
+module.exports = runDemo;
+module.exports.generateHtml = generateHtml;
+module.exports.runHtmlDemo = runHtmlDemo;
+
+if (require.main === module) {
+  if (process.argv.indexOf("--html") !== -1) runHtmlDemo();
+  else runDemo();
+}

@@ -1349,9 +1349,11 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T532: Fix isInWorktree() false negative — CWD check now runs when CLAUDE_PROJECT_DIR is main checkout (PR #426)
 - [x] T533: Version bump to v2.52.0 — CHANGELOG for T532 (PR #427)
 
+**Session 23:**
+- [ ] T534: Demo as static HTML export — shareable demo without npx, `node demo.js --html`
+
 ## Next session priorities
 - Marketplace sync to claude-code-skills (T462 — delegated to claude-code-skills TODO.md as T012, v2.32.0→v2.50.0)
-- Consider: demo as static HTML export for email sharing
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
