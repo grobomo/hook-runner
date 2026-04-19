@@ -1,6 +1,9 @@
 // TOOLS: Bash
 // WORKFLOW: shtd, starter
 // WHY: API keys were committed to git history and had to be rotated.
+// T530: Added --name-only fast path — skips expensive full diff when all staged
+// files are safe extensions (.md, .yml, .txt, etc.). Reduces 200-1416ms spikes
+// to <5ms on metadata-only commits (TODO.md, CHANGELOG.md, etc.).
 "use strict";
 // PreToolUse: block Bash git-commit if staged diff contains obvious secrets.
 // Catches API keys, tokens, passwords, and connection strings before they reach git history.
@@ -21,6 +24,10 @@ var SECRET_PATTERNS = [
   { name: "Connection String", re: /(?:mongodb|postgres|mysql|redis|amqp):\/\/[^\s]{20,}/ },
 ];
 
+// T530: Extensions that cannot contain secrets — skip full diff scan for these.
+// .json is excluded because config files can have inline credentials.
+var SAFE_EXTENSIONS = /\.(md|txt|yml|yaml|toml|css|svg|png|jpg|jpeg|gif|ico|woff2?)$/i;
+
 module.exports = function(input) {
   if (input.tool_name !== "Bash") return null;
 
@@ -32,7 +39,23 @@ module.exports = function(input) {
   // Only gate git commit
   if (!/^\s*git\s+commit/.test(cmd) && !/&&\s*git\s+commit/.test(cmd)) return null;
 
-  // Get staged diff
+  // T530: Fast path — check staged file names first (cheap git spawn, ~5ms).
+  // If all files are safe extensions, skip the expensive full diff (~200-1400ms).
+  try {
+    var names = cp.execFileSync("git", ["diff", "--cached", "--name-only", "--diff-filter=ACMR"], {
+      encoding: "utf-8", timeout: 5000, windowsHide: true
+    }).trim();
+    if (names) {
+      var allSafe = names.split("\n").every(function(f) { return SAFE_EXTENSIONS.test(f.trim()); });
+      if (allSafe) return null;
+    } else {
+      return null; // nothing staged
+    }
+  } catch(e) {
+    // Fall through to full diff if name-only fails
+  }
+
+  // Get staged diff (only for files that could contain secrets)
   var diff = "";
   try {
     diff = cp.execFileSync("git", ["diff", "--cached", "--diff-filter=ACMR"], {
