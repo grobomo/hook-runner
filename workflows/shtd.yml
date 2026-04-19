@@ -147,6 +147,7 @@ modules:
   - auto-continue
   - inter-project-priority
   - backup-check
+  - drift-check
   - chat-export
   - config-sync
   - load-instructions

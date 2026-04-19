@@ -196,6 +196,36 @@ function cmdWorkflow(args) {
       }
     }
 
+    // Build extends map: child → parent (e.g. gsd → starter, shtd → starter)
+    var extendsMap = {};
+    for (var exi = 0; exi < workflows.length; exi++) {
+      if (workflows[exi].extends) extendsMap[workflows[exi].name] = workflows[exi].extends;
+    }
+
+    // Effective tag counts: include parent workflow tags for workflows with extends
+    var effectiveTagCounts = {};
+    for (var etk in tagCounts) effectiveTagCounts[etk] = tagCounts[etk];
+    // Count unique modules per workflow (including inherited from parent)
+    for (var ewi = 0; ewi < workflows.length; ewi++) {
+      var ewn = workflows[ewi].name;
+      if (!extendsMap[ewn]) continue;
+      // Collect unique module names tagged with this workflow OR any ancestor
+      var effectiveModules = {};
+      for (var eti = 0; eti < tagged.length; eti++) {
+        var etTags = tagged[eti].tags || [];
+        for (var etgi = 0; etgi < etTags.length; etgi++) {
+          if (etTags[etgi] === ewn) { effectiveModules[tagged[eti].name] = true; break; }
+          // Walk the extends chain: if this tag is an ancestor of ewn, count it
+          var cur = ewn;
+          while (extendsMap[cur]) {
+            cur = extendsMap[cur];
+            if (etTags[etgi] === cur) { effectiveModules[tagged[eti].name] = true; break; }
+          }
+        }
+      }
+      effectiveTagCounts[ewn] = Object.keys(effectiveModules).length;
+    }
+
     // Coverage summary
     console.log("=== Workflow Audit ===");
     console.log("");
@@ -208,8 +238,9 @@ function cmdWorkflow(args) {
     for (var wi = 0; wi < wfNames.length; wi++) {
       var wn = wfNames[wi];
       var yamlCount = yamlModules[wn].length;
-      var actualCount = tagCounts[wn] || 0;
-      console.log("  " + wn + ": " + actualCount + " modules — " + (yamlCount === actualCount ? "OK (matches YAML)" : actualCount + " actual vs " + yamlCount + " in YAML"));
+      var actualCount = effectiveTagCounts[wn] || 0;
+      var suffix = extendsMap[wn] ? " (includes " + extendsMap[wn] + ")" : "";
+      console.log("  " + wn + ": " + actualCount + " modules — " + (yamlCount === actualCount ? "OK (matches YAML)" + suffix : actualCount + " actual vs " + yamlCount + " in YAML" + suffix));
     }
 
     // Orphan tags: modules tagged with a workflow that has no YAML
