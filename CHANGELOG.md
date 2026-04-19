@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.41.0] — 2026-04-18
+
+### Added
+- **Per-file test timeout** (T507) — Test files can now declare `// TIMEOUT: N` (seconds) in their first 5 lines to override the default 60s timeout. Applied to `test-commit-counter-gate.js` (90s) which needs extra time for git repo creation on Windows.
+
 ## [2.40.0] — 2026-04-18
 
 ### Fixed
