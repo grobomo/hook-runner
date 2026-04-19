@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.42.0] — 2026-04-18
+
+### Improved
+- **TOOLS tag coverage** (T509) — Added `// TOOLS:` tags to 11 modules (1 PreToolUse, 10 PostToolUse) that were loading on every tool call. Modules now skip loading when the current tool doesn't match, saving ~5ms per skip. Only 4 modules intentionally remain untagged (they inspect all tools).
+
 ## [2.41.0] — 2026-04-18
 
 ### Added
