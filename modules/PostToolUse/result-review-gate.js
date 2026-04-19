@@ -1,4 +1,5 @@
 // WORKFLOW: shtd, gsd
+// TOOLS: Read
 // WHY: Claude reads test reports and PDFs, sees mostly-green results, and immediately
 // commits without enumerating every FAIL/WARN/timeout. Hours wasted in E2E cycles
 // when bugs shipped because the report "looked fine" at a glance.

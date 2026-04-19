@@ -1,4 +1,5 @@
 // WORKFLOW: shtd, gsd
+// TOOLS: Bash
 // WHY: Claude tried 3 wrong ways to call claude -p before finding the right
 // pattern in an existing project. The troubleshooting cycle wasted time and
 // the lesson was almost lost. This module detects "fail-fail-succeed" patterns

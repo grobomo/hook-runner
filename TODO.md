@@ -1314,7 +1314,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T507: Per-file test timeout — read `// TIMEOUT: N` from test files, fixes commit-counter-gate 60s timeout (PR #401)
 
 **Session 18:**
-- [x] T508: Version bump to v2.41.0 — CHANGELOG for T507
+- [x] T508: Version bump to v2.41.0 — CHANGELOG for T507 (PR #402)
+- [x] T509: Add TOOLS tags to 11 modules — perf optimization (~5ms/module per non-matching call)
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006

@@ -1,4 +1,5 @@
 // WORKFLOW: shtd, gsd
+// TOOLS: Edit, Write
 // WHY: Dead code references and stale docs accumulate silently. When Claude
 // edits code that removes or renames something, the docs and rules that
 // reference the old thing become misleading for future sessions.
