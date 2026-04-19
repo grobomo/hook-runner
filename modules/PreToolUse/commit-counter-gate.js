@@ -88,8 +88,11 @@ function getBranch(input) {
 
 // Check if we're in a worktree (vs main checkout)
 // T511: Also check CWD when CLAUDE_PROJECT_DIR has no .git — EnterWorktree
-// changes CWD but not CLAUDE_PROJECT_DIR. Only fall back to CWD when
-// CLAUDE_PROJECT_DIR's .git doesn't exist (e.g. tests set it to a temp dir).
+// changes CWD but not CLAUDE_PROJECT_DIR.
+// T532: Also check CWD when CLAUDE_PROJECT_DIR's .git is a directory (main checkout).
+// EnterWorktree changes CWD to the worktree but CLAUDE_PROJECT_DIR stays pointing at
+// the main checkout. The old code returned false immediately when .git was a dir,
+// never reaching the CWD check. Now: if CLAUDE_PROJECT_DIR is main, fall through to CWD.
 function isInWorktree() {
   var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
   // Check CLAUDE_PROJECT_DIR first
@@ -97,12 +100,13 @@ function isInWorktree() {
     try {
       var gitPath = path.join(projectDir, ".git");
       var stat = fs.statSync(gitPath);
-      // .git exists at CLAUDE_PROJECT_DIR — use it as the authority
-      return stat.isFile(); // file = worktree, dir = main checkout
+      if (stat.isFile()) return true; // .git file = worktree at CLAUDE_PROJECT_DIR
+      // .git is a directory (main checkout) — fall through to CWD check
+      // because EnterWorktree may have moved CWD to a worktree
     } catch(e) { /* no .git at CLAUDE_PROJECT_DIR — fall through to CWD */ }
   }
 
-  // Fallback: check CWD (covers when CLAUDE_PROJECT_DIR is unset or has no .git)
+  // Fallback: check CWD (covers worktree sessions + unset/missing CLAUDE_PROJECT_DIR)
   try {
     var cwd = process.cwd();
     var cwdGit = path.join(cwd, ".git");
