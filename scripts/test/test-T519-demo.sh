@@ -58,6 +58,36 @@ echo "$OUT" | grep -q "git-destructive-guard" && check "git-destructive-guard me
 echo "$OUT" | grep -q "archive-not-delete" && check "archive-not-delete mentioned" || { echo "  FAIL: no archive-not-delete"; FAIL=$((FAIL+1)); }
 echo "$OUT" | grep -q "commit-quality-gate" && check "commit-quality-gate mentioned" || { echo "  FAIL: no commit-quality-gate"; FAIL=$((FAIL+1)); }
 
+echo "[11] --demo-html generates HTML file"
+HTML_OUT=$(node "$REPO_DIR/demo.js" --html 2>&1)
+# Extract path from output: "Demo HTML written to: <path>"
+HTML_FILE=$(echo "$HTML_OUT" | grep -oP '(?<=written to: ).*')
+[ -f "$HTML_FILE" ] && check "--demo-html creates file" || { echo "  FAIL: no HTML file at $HTML_FILE"; FAIL=$((FAIL+1)); }
+
+echo "[12] HTML has correct structure"
+if [ -f "$HTML_FILE" ]; then
+  grep -q "<!DOCTYPE html>" "$HTML_FILE" && check "has DOCTYPE" || { echo "  FAIL: no DOCTYPE"; FAIL=$((FAIL+1)); }
+  grep -q "hook-runner v" "$HTML_FILE" && check "has version" || { echo "  FAIL: no version"; FAIL=$((FAIL+1)); }
+  grep -q "Scenario 1" "$HTML_FILE" && check "has scenario 1" || { echo "  FAIL: no scenario 1"; FAIL=$((FAIL+1)); }
+  grep -q "Scenario 6" "$HTML_FILE" && check "has scenario 6" || { echo "  FAIL: no scenario 6"; FAIL=$((FAIL+1)); }
+  grep -q "force-push-gate" "$HTML_FILE" && check "has module names" || { echo "  FAIL: no module names"; FAIL=$((FAIL+1)); }
+  grep -q "BLOCKED" "$HTML_FILE" && check "has BLOCKED text" || { echo "  FAIL: no BLOCKED"; FAIL=$((FAIL+1)); }
+  grep -q "Get started" "$HTML_FILE" && check "has get-started" || { echo "  FAIL: no get-started"; FAIL=$((FAIL+1)); }
+fi
+
+echo "[13] HTML is self-contained"
+if [ -f "$HTML_FILE" ]; then
+  ! grep -q 'link.*rel.*stylesheet' "$HTML_FILE" && check "no external CSS" || { echo "  FAIL: external CSS found"; FAIL=$((FAIL+1)); }
+  ! grep -q 'script.*src=' "$HTML_FILE" && check "no external JS" || { echo "  FAIL: external JS found"; FAIL=$((FAIL+1)); }
+fi
+
+echo "[14] --demo-html in help text"
+HELP=$(node "$REPO_DIR/setup.js" --help 2>&1)
+echo "$HELP" | grep -q "\-\-demo-html" && check "--demo-html in help" || { echo "  FAIL: --demo-html not in help"; FAIL=$((FAIL+1)); }
+
+echo "[15] --demo-html runs via setup.js"
+node "$REPO_DIR/setup.js" --demo-html 2>&1 | grep -q "Demo HTML written" && check "--demo-html via setup.js" || { echo "  FAIL: setup.js --demo-html broken"; FAIL=$((FAIL+1)); }
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1
