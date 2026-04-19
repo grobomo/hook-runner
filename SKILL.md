@@ -95,5 +95,6 @@ node setup.js --perf              # timing analysis
 node setup.js --workflow <cmd>    # workflow management
 node setup.js --test              # run all tests
 node setup.js --demo [--fast]     # interactive demo (no install needed)
+node setup.js --demo-html         # generate shareable HTML demo page
 node setup.js --uninstall --confirm  # restore original settings
 ```
