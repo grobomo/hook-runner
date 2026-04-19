@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.39.0] — 2026-04-18
+
+### Added
+- **OpenClaw plugin — auto-continue + session-start-reminder** (T502) — Ported two modules to the OpenClaw plugin: `auto-continue` injects a stop message forcing Claude to continue working instead of stopping, `session-start-reminder` injects session instructions at plugin startup. Includes `stop-message.txt` for customizable stop prompt.
+
 ## [2.38.0] — 2026-04-18
 
 ### Added
