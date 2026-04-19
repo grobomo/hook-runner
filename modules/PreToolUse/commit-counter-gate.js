@@ -108,13 +108,31 @@ function branchKeywords(branch) {
     });
 }
 
+// T497: Metadata directories that change regardless of branch — exclude from mismatch detection.
+// Incident: .claude/ and .coconut/ files triggered "WRONG BRANCH" in worktrees because
+// these directories never match branch keywords like "audit", "deploy", etc.
+// T497: Include both dotted and undotted variants because git status --porcelain
+// prefix length varies (` M ` vs `M `), and slice(3) can clip the leading dot.
+var METADATA_DIRS = {
+  ".claude": true, "claude": true,
+  ".coconut": true, "coconut": true,
+  ".git": true, ".github": true, "github": true,
+  ".planning": true, "planning": true,
+  ".specify": true, "specify": true,
+  ".vscode": true, "vscode": true,
+  "node_modules": true, "specs": true,
+};
+
 // Extract directory segments from changed file paths (NOT filename stems —
 // filenames like deploy.sh, main.tf, config.json are too generic and cause false matches)
 // "labs/dd-lab/terraform/main.tf" → ["labs", "dd-lab", "terraform"]
+// T497: Skip entire file if top-level dir is metadata (e.g. .claude/worktrees/foo/bar.js → skip all)
 function fileKeywords(files) {
   var dirs = {};
   files.forEach(function(f) {
     var parts = f.replace(/\\/g, "/").split("/");
+    // Skip files rooted in metadata directories
+    if (parts.length > 0 && METADATA_DIRS[parts[0].toLowerCase()]) return;
     // Only directory segments, skip the filename
     for (var i = 0; i < parts.length - 1; i++) {
       var seg = parts[i].toLowerCase();

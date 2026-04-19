@@ -358,6 +358,44 @@ test("T485: worktreeRequired cleared on commit inside worktree", function() {
   cleanupRepo(dir);
 });
 
+test("T497: metadata-only changes don't trigger WRONG BRANCH", function() {
+  // Branch about audit, but only .claude/ and .coconut/ files changed
+  var dir = createTempRepo("worktree-T494-audit-project-cmd", [
+    ".claude/worktrees/foo/bar.js",
+    ".coconut/STATUS_REPORT.md",
+    ".github/workflows/ci.yml"
+  ]);
+  process.env.CLAUDE_PROJECT_DIR = dir;
+  setCounter(14);
+
+  var gate = loadGate();
+  var r = gate({ tool_name: "Edit", tool_input: { file_path: path.join(dir, ".coconut/STATUS_REPORT.md"), old_string: "a", new_string: "b" } });
+  // Should NOT say WRONG BRANCH — metadata dirs are excluded from keyword matching
+  assert(r === null || r.reason.indexOf("WRONG BRANCH") === -1,
+    "metadata-only changes should not trigger WRONG BRANCH, got: " + (r ? r.reason.substring(0, 80) : "null"));
+
+  cleanupRepo(dir);
+});
+
+test("T497: real files + metadata files still detect mismatch", function() {
+  // Branch about deploy, but real files are in labs/ (mismatch), plus metadata
+  var dir = createTempRepo("001-T001-deploy-nfs-datasec", [
+    "labs/dd-lab/main.tf",
+    ".claude/hooks/foo.js",
+    ".coconut/STATUS_REPORT.md"
+  ]);
+  process.env.CLAUDE_PROJECT_DIR = dir;
+  setCounter(14);
+
+  var gate = loadGate();
+  var r = gate({ tool_name: "Edit", tool_input: { file_path: path.join(dir, "labs/dd-lab/main.tf"), old_string: "a", new_string: "b" } });
+  // labs/dd-lab doesn't match deploy/nfs/datasec → should still detect mismatch
+  assert(r !== null && r.reason.indexOf("WRONG BRANCH") !== -1,
+    "should still detect mismatch when real files don't match branch");
+
+  cleanupRepo(dir);
+});
+
 // --- Cleanup ---
 process.env.CLAUDE_PROJECT_DIR = origProjectDir || "";
 process.env.HOOK_RUNNER_TEST = origTestEnv || "";

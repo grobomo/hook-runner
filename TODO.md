@@ -1297,6 +1297,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 **Session 15:**
 - [x] T495: spec-gate allowlist — add --audit-project, --manifest, --analyze, --workflow to read-only Bash command allowlist (PR #389)
 - [x] T496: preserve-iterated-content perf — switch cache from headSha:path to path-only with 5min TTL (663ms→4ms cache hit)
+- [x] T497: commit-counter-gate false positive — metadata dirs (.claude, .coconut, etc.) excluded from branch-file mismatch detection
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync for T458-T478 changes — delegated to claude-code-skills T006
