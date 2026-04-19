@@ -200,10 +200,14 @@ test("main checkout without worktree: enforces worktree", function() {
   // Branch keyword "src" matches file dir "src" so mismatch won't fire
   var dir = createTempRepo("build-src-utils", ["src/app.js"]);
   process.env.CLAUDE_PROJECT_DIR = dir;
+  // T532: Also chdir to the temp dir — isInWorktree() now checks CWD too
+  var origCwd = process.cwd();
+  process.chdir(dir);
   setCounter(14);
 
   var gate = loadGate();
   var r = gate({ tool_name: "Edit", tool_input: { file_path: path.join(dir, "src/app.js"), old_string: "a", new_string: "b" } });
+  process.chdir(origCwd);
   assert(r !== null, "should block");
   assert(r.reason.indexOf("main checkout") !== -1,
     "should mention not being in a worktree, got: " + r.reason.substring(0, 150));
@@ -278,11 +282,15 @@ test("T485: git commit blocked when worktreeRequired flag is set (not in worktre
   // Simulate: counter has worktreeRequired=true, session tries git commit
   var dir = createTempRepo("main", ["src/app.js"]);
   process.env.CLAUDE_PROJECT_DIR = dir;
+  // T532: Also chdir to the temp dir — isInWorktree() now checks CWD too
+  var origCwd = process.cwd();
+  process.chdir(dir);
   // Write counter with worktreeRequired flag
   fs.writeFileSync(COUNTER_FILE, JSON.stringify({ count: 15, ts: new Date().toISOString(), worktreeRequired: true }));
 
   var gate = loadGate();
   var r = gate({ tool_name: "Bash", tool_input: { command: "git commit -m 'sneaky commit'" } });
+  process.chdir(origCwd);
   assert(r !== null, "should block git commit");
   assert(r.decision === "block", "should be block decision");
   assert(r.reason.indexOf("WORKTREE REQUIRED") !== -1, "should mention WORKTREE REQUIRED");
@@ -324,10 +332,14 @@ test("T485: WRONG BRANCH sets worktreeRequired flag", function() {
 test("T485: not-in-worktree block sets worktreeRequired flag", function() {
   var dir = createTempRepo("build-src-utils", ["src/utils.js"]);
   process.env.CLAUDE_PROJECT_DIR = dir;
+  // T532: Also chdir to the temp dir — isInWorktree() now checks CWD too
+  var origCwd = process.cwd();
+  process.chdir(dir);
   setCounter(14);
 
   var gate = loadGate();
   var r = gate({ tool_name: "Edit", tool_input: { file_path: path.join(dir, "src/utils.js"), old_string: "a", new_string: "b" } });
+  process.chdir(origCwd);
   assert(r !== null && r.reason.indexOf("main checkout") !== -1, "should enforce worktree");
   var data = JSON.parse(fs.readFileSync(COUNTER_FILE, "utf-8"));
   assert(data.worktreeRequired === true, "worktreeRequired flag should be set");
