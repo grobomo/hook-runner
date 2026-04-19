@@ -1344,7 +1344,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T529: Fix stale README "80+ modules" → "115+" + backfill GitHub releases for v2.47-v2.49
 
 **Session 22:**
-- [x] T530: Fix perf spikes in high-frequency modules — secret-scan-gate fast path + workflow-compliance-gate cache
+- [x] T530: Fix perf spikes in high-frequency modules — secret-scan-gate fast path + workflow-compliance-gate cache (PR #424)
+- [x] T531: Version bump to v2.51.0 — CHANGELOG for T530
 
 ## Next session priorities
 - Marketplace sync to claude-code-skills (T462 — delegated to claude-code-skills TODO.md as T012, v2.32.0→v2.50.0)
