@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.51.0] — 2026-04-19
+
+### Performance
+- **secret-scan-gate fast path** (T530) — Added `--name-only` pre-check before expensive `git diff --cached`. When all staged files are safe extensions (.md, .yml, .txt, etc.), skips the full diff entirely. Reduces 200–1416ms spikes to ~5ms on metadata-only commits.
+- **workflow-compliance-gate cache** (T530) — Replaced `require(workflow.js)` + `require(hook-log.js)` with direct JSON file reads + file-based cache with mtime key. hook-log.js only loaded on block/exception (rare), not the common pass path. Saves ~14ms per tool call across 936+ calls/session.
+
 ## [2.50.0] — 2026-04-18
 
 ### Added
