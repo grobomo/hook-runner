@@ -2,6 +2,11 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.46.0] — 2026-04-18
+
+### Improved
+- **Workflow audit extends-aware** (T517) — Audit now counts parent workflow tags toward child workflows (gsd/shtd extend starter). Added drift-check to shtd/gsd YAMLs, alias modules to gsd.yml, fixed config-sync tag. All 7 workflows now show OK. Updated README counts: starter 42, shtd 101.
+
 ## [2.45.0] — 2026-04-18
 
 ### Fixed
