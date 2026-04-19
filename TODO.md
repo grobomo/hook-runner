@@ -1355,9 +1355,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T536: Add --demo-html to README, CLAUDE.md, SKILL.md docs (PR #430)
 - [x] T537: Sync stale local skill SKILL.md + add --demo-html test coverage (PR #431)
 
-## Next session priorities
-- Version bump to v2.54.0 for T536-T537 (docs + tests)
-- Marketplace sync to claude-code-skills — v2.32.0 is 22 versions behind v2.53.0
+**Session 24:**
+- [ ] T538: Version bump to v2.54.0 — CHANGELOG for T536-T537 (docs + tests)
 
 ## Future (backlog)
 - [ ] T462: Marketplace sync — delegated to claude-code-skills T012 (v2.32.0→v2.53.0)
