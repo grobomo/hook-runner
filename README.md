@@ -51,11 +51,11 @@ The setup wizard will:
 1. Scan your current hooks and generate a styled HTML report
 2. Back up existing hooks to `~/.claude/hooks/archive/`
 3. Install the runner system
-4. Enable the `starter` workflow (with `--yes`) — 40 universally useful modules
+4. Enable the `starter` workflow (with `--yes`) — 42 universally useful modules
 
 Ready for more? Enable the full development pipeline:
 ```bash
-node setup.js --workflow enable shtd    # 95 modules: spec-first, test-first, PR discipline
+node setup.js --workflow enable shtd    # 101 modules: spec-first, test-first, PR discipline
 ```
 
 To undo everything: `node setup.js --uninstall --confirm`
@@ -98,8 +98,8 @@ node setup.js --workflow query Edit        # which workflows affect Edit?
 
 | Workflow | Modules | What it enforces |
 |----------|---------|-----------------|
-| `starter` | 40 | **Start here.** Safe defaults for any user — blocks force-push, destructive git, secret commits, file deletion. Adds commit quality checks, test reminders, and session context. |
-| `shtd` | 95 | Spec-Hook-Test-Driven — the full development pipeline. Enforces spec → branch → test → implement → PR, plus code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement. |
+| `starter` | 42 | **Start here.** Safe defaults for any user — blocks force-push, destructive git, secret commits, file deletion. Adds commit quality checks, test reminders, and session context. |
+| `shtd` | 101 | Spec-Hook-Test-Driven — the full development pipeline. Enforces spec → branch → test → implement → PR, plus code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement. |
 | `customer-data-guard` | 3 | Read-only incident response — blocks env changes, data exfil, and V1 modifications. |
 | `dispatcher-worker` | 3 | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
 | `no-local-docker` | 1 | Blocks local Docker commands, forces remote infrastructure. |
