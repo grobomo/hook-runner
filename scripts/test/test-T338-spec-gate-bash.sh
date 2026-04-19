@@ -232,6 +232,43 @@ else
   fail "node setup.js --upgrade should be allowed: $OUTPUT"
 fi
 
+# --- T495: audit-project, manifest, analyze, workflow commands always allowed ---
+
+OUTPUT=$(run_bash_gate "$PROJ" "node setup.js --audit-project dd-lab")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "node setup.js --audit-project allowed (read-only)"
+else
+  fail "node setup.js --audit-project should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "node setup.js --manifest")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "node setup.js --manifest allowed (read-only)"
+else
+  fail "node setup.js --manifest should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "node setup.js --analyze")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "node setup.js --analyze allowed (read-only)"
+else
+  fail "node setup.js --analyze should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "node setup.js --workflow list")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "node setup.js --workflow allowed (operational)"
+else
+  fail "node setup.js --workflow should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "cd /some/project && node setup.js --audit-project myproj")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "cd + audit-project allowed (read-only after cd)"
+else
+  fail "cd + audit-project should be allowed: $OUTPUT"
+fi
+
 # --- Piped commands check the first command ---
 
 OUTPUT=$(run_bash_gate "$PROJ" "jq '.name' package.json | head -1")
