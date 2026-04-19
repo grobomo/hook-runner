@@ -2,6 +2,12 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.50.0] — 2026-04-18
+
+### Added
+- **GitHub release automation** (T527) — New `.github/workflows/release.yml` creates a GitHub release with CHANGELOG excerpt whenever a version tag (`v*`) is pushed. Releases appear on the repo sidebar with full release notes.
+- **gsd workflow in demo** (T526) — Demo summary now shows the `gsd` workflow alongside `starter` and `shtd`.
+
 ## [2.49.0] — 2026-04-18
 
 ### Fixed
