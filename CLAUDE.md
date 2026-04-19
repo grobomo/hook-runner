@@ -21,7 +21,8 @@ Modular hook runner for Claude Code. Workflows group modules into enforceable pi
 - `modules/` — distributable module catalog organized by event type
 - `workflows/` — built-in workflow definitions (YAML)
 - `specs/` — feature specs with tasks and checkpoints
-- `scripts/test/` — test scripts (51 suites)
+- `demo.js` — interactive demo (simulates module gates against realistic scenarios)
+- `scripts/test/` — test scripts (52 suites)
 - `package.json` — npm package (enables `npx grobomo/hook-runner`)
 
 ## Testing
@@ -57,6 +58,7 @@ node setup.js --snapshot     # SHA256 snapshot of current state
 node setup.js --snapshot drift  # detect drift from last snapshot
 node setup.js --snapshot backup # copy to git repo, commit, push
 node setup.js --snapshot restore # clone repo, restore files
+node setup.js --demo         # interactive demo (--fast to skip animation)
 node setup.js --version      # show version
 node setup.js --help         # show all commands
 ```
