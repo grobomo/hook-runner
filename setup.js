@@ -756,6 +756,8 @@ function cmdHelp() {
   console.log("  --stats         Quick text summary of hook log activity");
   console.log("  --lessons       Show self-analysis lessons (--project <name>, --date YYYY-MM-DD)");
   console.log("  --workflow      Manage enforceable step pipelines (list|start|status|complete|reset)");
+  console.log("  --groups        List all workflow groups with enabled/disabled status");
+  console.log("  --toggle <name> Toggle a workflow group on/off (--global for global scope)");
   console.log("  --export [file] Export installed modules as shareable YAML (default: modules-export.yaml)");
   console.log("  --perf          Analyze module timing data and identify bottlenecks");
   console.log("  --test-module   Test a single module with sample inputs");
@@ -2176,6 +2178,172 @@ function cmdXref() {
   console.log("[hook-runner] " + totalPending + " P0 items pending, " + auditEntries.length + " audit entries");
 }
 
+// ============================================================
+// Workflow Groups — list and toggle workflow groups
+// ============================================================
+
+function cmdGroups(args) {
+  var loadMods = require(path.join(__dirname, "load-modules"));
+  var projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+  var groups = loadMods.loadWorkflowGroups(projectDir);
+
+  var home = os.homedir();
+  var dirs = [
+    path.join(projectDir, "workflows"),
+    path.join(home, ".claude", "hooks", "workflows"),
+    path.join(__dirname, "workflows"),
+  ];
+  var workflows = [];
+  var seen = {};
+  for (var d = 0; d < dirs.length; d++) {
+    if (!fs.existsSync(dirs[d])) continue;
+    var files;
+    try { files = fs.readdirSync(dirs[d]); } catch (e) { continue; }
+    for (var f = 0; f < files.length; f++) {
+      if (!(files[f].slice(-4) === ".yml" || files[f].slice(-5) === ".yaml")) continue;
+      try {
+        var content = fs.readFileSync(path.join(dirs[d], files[f]), "utf-8");
+        var nameMatch = content.match(/^name:\s*(\S+)/m);
+        if (!nameMatch) continue;
+        var name = nameMatch[1];
+        if (seen[name]) continue;
+        seen[name] = true;
+        var descMatch = content.match(/^description:\s*(.+)/m);
+        var desc = descMatch ? descMatch[1].trim() : "";
+        // Count modules listed in the YAML
+        var moduleCount = 0;
+        var inModules = false;
+        var clines = content.split("\n");
+        for (var cl = 0; cl < clines.length; cl++) {
+          var cline = clines[cl];
+          if (/^modules:\s*$/.test(cline.replace(/\s+$/, ""))) { inModules = true; continue; }
+          if (inModules) {
+            if (cline.trim().indexOf("- ") === 0) { moduleCount++; }
+            else if (cline.trim() && cline.charAt(0) !== " " && cline.charAt(0) !== "\t") { inModules = false; }
+          }
+        }
+        var effectiveEnabled = !!groups.enabled[name] && !groups.disabled[name];
+        workflows.push({
+          name: name,
+          description: desc,
+          enabled: effectiveEnabled,
+          modules: moduleCount,
+          path: path.join(dirs[d], files[f]),
+        });
+      } catch (e) { /* skip */ }
+    }
+  }
+
+  // Add workflows only defined in workflow-config.json (no YAML)
+  var allGroupNames = Object.keys(groups.enabled).concat(Object.keys(groups.disabled));
+  for (var gn = 0; gn < allGroupNames.length; gn++) {
+    if (!seen[allGroupNames[gn]]) {
+      var gName = allGroupNames[gn];
+      workflows.push({
+        name: gName,
+        description: "(defined in workflow-config.json only)",
+        enabled: !!groups.enabled[gName] && !groups.disabled[gName],
+        modules: 0,
+        path: null,
+      });
+    }
+  }
+
+  if (workflows.length === 0) {
+    console.log("No workflow groups found.");
+    return;
+  }
+
+  console.log("Workflow Groups:");
+  console.log("================");
+  for (var w = 0; w < workflows.length; w++) {
+    var wf = workflows[w];
+    var icon = wf.enabled ? "[+]" : "[-]";
+    console.log(icon + " " + wf.name + Array(Math.max(0, 25 - wf.name.length) + 1).join(" ") + "(" + wf.modules + " modules) " + wf.description);
+  }
+  console.log("");
+  console.log("Toggle: node setup.js --toggle <workflow-name>");
+}
+
+function cmdToggle(args) {
+  var idx = args.indexOf("--toggle");
+  var name = args[idx + 1];
+  if (!name) {
+    console.error("Usage: --toggle <workflow-name>");
+    console.error("Example: --toggle messaging-safety");
+    process.exit(1);
+  }
+
+  var dryRun = args.indexOf("--dry-run") !== -1;
+  var isGlobal = args.indexOf("--global") !== -1;
+  var home = os.homedir();
+  var projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+
+  var loadMods = require(path.join(__dirname, "load-modules"));
+  var groups = loadMods.loadWorkflowGroups(projectDir);
+  var allKnown = Object.keys(groups.enabled).concat(Object.keys(groups.disabled));
+  if (allKnown.indexOf(name) === -1) {
+    console.error('Workflow "' + name + '" not found.');
+    console.error("Available workflows:");
+    for (var a = 0; a < allKnown.length; a++) {
+      console.error("  " + allKnown[a]);
+    }
+    process.exit(1);
+  }
+
+  var currentlyEnabled = !!groups.enabled[name] && !groups.disabled[name];
+  var newState = !currentlyEnabled;
+
+  if (dryRun) {
+    console.log('[dry-run] Would ' + (newState ? 'enable' : 'disable') + ' workflow "' + name + '"');
+    return;
+  }
+
+  var configDir = isGlobal ? path.join(home, ".claude", "hooks") : projectDir;
+  var configPath = path.join(configDir, "workflow-config.json");
+  var config = {};
+  try { config = JSON.parse(fs.readFileSync(configPath, "utf-8")); } catch(e) {}
+  config[name] = newState;
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
+
+  var scope = isGlobal ? " (global)" : "";
+  console.log((newState ? "Enabled" : "Disabled") + ' workflow group "' + name + '"' + scope);
+  console.log("  " + configPath);
+
+  // Show affected modules from YAML if available
+  var dirs = [
+    path.join(projectDir, "workflows"),
+    path.join(home, ".claude", "hooks", "workflows"),
+    path.join(__dirname, "workflows"),
+  ];
+  for (var d = 0; d < dirs.length; d++) {
+    var candidates = [name + ".yml", name + ".yaml"];
+    for (var c = 0; c < candidates.length; c++) {
+      var p = path.join(dirs[d], candidates[c]);
+      if (fs.existsSync(p)) {
+        try {
+          var content = fs.readFileSync(p, "utf-8");
+          var modules = [];
+          var inModules = false;
+          var lines = content.split("\n");
+          for (var li = 0; li < lines.length; li++) {
+            if (/^modules:\s*$/.test(lines[li].replace(/\s+$/, ""))) { inModules = true; continue; }
+            if (inModules) {
+              var mm = lines[li].trim().match(/^-\s+(\S+)/);
+              if (mm) modules.push(mm[1]);
+              else if (lines[li].trim() && lines[li].charAt(0) !== " " && lines[li].charAt(0) !== "\t") break;
+            }
+          }
+          if (modules.length > 0) {
+            console.log("  Affected modules: " + modules.join(", "));
+          }
+        } catch(e) {}
+        return;
+      }
+    }
+  }
+}
+
 function main() {
   var args = process.argv.slice(2);
   var dryRun = args.indexOf("--dry-run") !== -1;
@@ -2183,6 +2351,8 @@ function main() {
 
   if (args.indexOf("--help") !== -1 || args.indexOf("-h") !== -1) return cmdHelp();
   if (args.indexOf("--version") !== -1 || args.indexOf("-v") !== -1) { console.log("hook-runner v" + VERSION); return; }
+  if (args.indexOf("--groups") !== -1) return cmdGroups(args);
+  if (args.indexOf("--toggle") !== -1) return cmdToggle(args);
   if (args.indexOf("--workflow") !== -1) return cmdWorkflow(args);
   if (args.indexOf("--upgrade") !== -1) return cmdUpgrade(args, dryRun);
   if (args.indexOf("--uninstall") !== -1) return cmdUninstall(args, dryRun);

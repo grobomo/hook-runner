@@ -117,53 +117,126 @@ function parseWorkflowTag(filePath) {
   return tags.length > 0 ? tags[0] : null;
 }
 
+// Cache workflow groups for 30s to avoid re-reading YAML on every hook invocation
+var _groupsCache = null;
+var _groupsCacheTime = 0;
+var _groupsCacheKey = "";
+var GROUPS_CACHE_TTL = 30000;
+
+/**
+ * Build the set of enabled/disabled workflow group names.
+ *
+ * Reads THREE sources (merged in order, later wins):
+ *   1. Workflow YAML files — `enabled: true/false` field (default true if omitted)
+ *   2. workflow-config.json — `{"name": true/false}` (project-level overrides global)
+ *   3. .workflow-state.json — legacy step-based active workflow (always enabled)
+ *
+ * YAML search order (first found wins per name):
+ *   1. $CLAUDE_PROJECT_DIR/workflows/*.yml
+ *   2. ~/.claude/hooks/workflows/*.yml
+ *   3. <hook-runner>/workflows/*.yml
+ *
+ * JSON search order (merged, project overrides global):
+ *   1. ~/.claude/hooks/workflow-config.json (global)
+ *   2. $CLAUDE_PROJECT_DIR/workflow-config.json (project override)
+ *
+ * Returns { enabled: {name: true}, disabled: {name: true} }
+ */
+function loadWorkflowGroups(projectDir) {
+  var now = Date.now();
+  if (_groupsCache && (now - _groupsCacheTime) < GROUPS_CACHE_TTL && _groupsCacheKey === projectDir) {
+    return _groupsCache;
+  }
+  var home = process.env.HOME || process.env.USERPROFILE || "";
+  var enabled = {};
+  var disabled = {};
+
+  // 1. Read workflow YAMLs for `enabled:` field
+  var dirs = [
+    path.join(projectDir, "workflows"),
+    path.join(home, ".claude", "hooks", "workflows"),
+    path.join(__dirname, "workflows"),
+  ];
+  var seen = {};
+  for (var d = 0; d < dirs.length; d++) {
+    if (!fs.existsSync(dirs[d])) continue;
+    var files;
+    try { files = fs.readdirSync(dirs[d]); } catch (e) { continue; }
+    for (var f = 0; f < files.length; f++) {
+      if (!(files[f].slice(-4) === ".yml" || files[f].slice(-5) === ".yaml")) continue;
+      try {
+        var content = fs.readFileSync(path.join(dirs[d], files[f]), "utf-8");
+        var nameMatch = content.match(/^name:\s*(\S+)/m);
+        if (!nameMatch) continue;
+        var name = nameMatch[1];
+        if (seen[name]) continue;
+        seen[name] = true;
+        var enabledMatch = content.match(/^enabled:\s*(true|false)/m);
+        var isEnabled = enabledMatch ? enabledMatch[1] === "true" : true;
+        if (isEnabled) {
+          enabled[name] = true;
+        } else {
+          disabled[name] = true;
+        }
+      } catch (e) { /* skip unreadable */ }
+    }
+  }
+
+  // 2. Read workflow-config.json (global then project — project overrides)
+  var configPaths = [
+    path.join(home, ".claude", "hooks", "workflow-config.json"),
+    path.join(projectDir, "workflow-config.json"),
+  ];
+  for (var ci = 0; ci < configPaths.length; ci++) {
+    try {
+      var config = JSON.parse(fs.readFileSync(configPaths[ci], "utf-8"));
+      var keys = Object.keys(config);
+      for (var ki = 0; ki < keys.length; ki++) {
+        if (config[keys[ki]] === true) {
+          enabled[keys[ki]] = true;
+          delete disabled[keys[ki]];
+        } else if (config[keys[ki]] === false) {
+          disabled[keys[ki]] = true;
+          delete enabled[keys[ki]];
+        }
+      }
+    } catch (e) { /* no config or parse error */ }
+  }
+
+  // 3. Legacy: .workflow-state.json active workflow (always counts as enabled)
+  try {
+    var statePath = path.join(projectDir, ".workflow-state.json");
+    if (fs.existsSync(statePath)) {
+      var state = JSON.parse(fs.readFileSync(statePath, "utf-8"));
+      if (state && state.workflow) {
+        enabled[state.workflow] = true;
+        delete disabled[state.workflow];
+      }
+    }
+  } catch (e) { /* ignore */ }
+
+  var result = { enabled: enabled, disabled: disabled };
+  _groupsCache = result;
+  _groupsCacheTime = now;
+  _groupsCacheKey = projectDir;
+  return result;
+}
+
 /**
  * Filter out modules tagged with a WORKFLOW that isn't currently enabled.
  * Modules without a WORKFLOW tag always pass.
  *
- * Checks two sources (either enables the module):
- *   1. workflow-config.json: explicit enable/disable per workflow name
- *   2. .workflow-state.json: legacy step-based active workflow
+ * Rules:
+ *   - Modules WITHOUT a // WORKFLOW: tag always run (global, ungrouped)
+ *   - Modules WITH a tag run only if that workflow group is enabled
+ *   - A workflow group is enabled if its YAML has `enabled: true` (or omits the field)
+ *   - A workflow group is disabled if its YAML has `enabled: false`
+ *   - workflow-config.json overrides YAML (project overrides global)
+ *   - If a module's workflow has NO YAML at all, the module is included (fail-open)
  */
 function filterByWorkflow(modulePaths) {
   var projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
-  var wf = null;
-  try {
-    var candidates = [
-      path.join(__dirname, "workflow.js"),
-      path.join(path.dirname(__dirname), "workflow.js"),
-    ];
-    for (var c = 0; c < candidates.length; c++) {
-      if (fs.existsSync(candidates[c])) { wf = require(candidates[c]); break; }
-    }
-  } catch (e) { /* no workflow engine */ }
-
-  if (!wf) return modulePaths;
-
-  // Build set of enabled workflow names from both sources
-  var home = process.env.HOME || process.env.USERPROFILE || "";
-  var globalDir = path.join(home, ".claude", "hooks");
-
-  // 1. workflow-config.json (project-level overrides global)
-  var enabledSet = {};
-  var disabledSet = {};
-  var globalConfig = wf.readConfig(globalDir);
-  var projectConfig = wf.readConfig(projectDir);
-  // Merge: global first, project overrides
-  var merged = {};
-  var gk = Object.keys(globalConfig);
-  for (var gi = 0; gi < gk.length; gi++) merged[gk[gi]] = globalConfig[gk[gi]];
-  var pk = Object.keys(projectConfig);
-  for (var pi = 0; pi < pk.length; pi++) merged[pk[pi]] = projectConfig[pk[pi]];
-  var mk = Object.keys(merged);
-  for (var mi = 0; mi < mk.length; mi++) {
-    if (merged[mk[mi]] === true) enabledSet[mk[mi]] = true;
-    else if (merged[mk[mi]] === false) disabledSet[mk[mi]] = true;
-  }
-
-  // 2. Legacy: .workflow-state.json active workflow
-  var state = wf.readState(projectDir);
-  if (state && state.workflow) enabledSet[state.workflow] = true;
+  var groups = loadWorkflowGroups(projectDir);
 
   var result = [];
   for (var i = 0; i < modulePaths.length; i++) {
@@ -174,7 +247,9 @@ function filterByWorkflow(modulePaths) {
       // Module passes if ANY of its workflow tags is enabled and not disabled
       var anyEnabled = false;
       for (var ti = 0; ti < tags.length; ti++) {
-        if (enabledSet[tags[ti]] && !disabledSet[tags[ti]]) {
+        if (groups.disabled[tags[ti]]) continue; // explicitly disabled
+        if (groups.enabled[tags[ti]] || (!groups.disabled[tags[ti]] && !groups.enabled[tags[ti]])) {
+          // Enabled, or unknown workflow (fail-open)
           anyEnabled = true;
           break;
         }
@@ -266,5 +341,6 @@ module.exports.validateDeps = validateDeps;
 module.exports.parseWorkflowTag = parseWorkflowTag;
 module.exports.parseWorkflowTags = parseWorkflowTags;
 module.exports.filterByWorkflow = filterByWorkflow;
+module.exports.loadWorkflowGroups = loadWorkflowGroups;
 module.exports.parseToolTags = parseToolTags;
 module.exports.filterByTool = filterByTool;
