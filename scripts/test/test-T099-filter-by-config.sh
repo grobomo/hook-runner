@@ -37,7 +37,7 @@ FAKE_HOME="$TMPDIR/fakehome"
 mkdir -p "$FAKE_HOME/.claude/hooks"
 
 # Test: no config file → only untagged modules pass (tagged ones need explicit enable)
-RESULT=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" node -e "
+RESULT=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" HOOKRUNNER_NO_BUILTIN=1 node -e "
   var lm = require('$REPO_DIR/load-modules.js');
   var mods = lm('$TMPDIR/run-modules/PreToolUse');
   console.log(mods.map(function(m) { return require('path').basename(m, '.js'); }).sort().join(','));
@@ -49,7 +49,7 @@ node -e "
   var wf = require('$REPO_DIR/workflow.js');
   wf.enableWorkflow('shtd', '$TMPDIR');
 "
-RESULT2=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" node -e "
+RESULT2=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" HOOKRUNNER_NO_BUILTIN=1 node -e "
   delete require.cache[require.resolve('$REPO_DIR/load-modules.js')];
   delete require.cache[require.resolve('$REPO_DIR/workflow.js')];
   var lm = require('$REPO_DIR/load-modules.js');
@@ -63,7 +63,7 @@ node -e "
   var wf = require('$REPO_DIR/workflow.js');
   wf.enableWorkflow('code-quality', '$TMPDIR');
 "
-RESULT3=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" node -e "
+RESULT3=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" HOOKRUNNER_NO_BUILTIN=1 node -e "
   delete require.cache[require.resolve('$REPO_DIR/load-modules.js')];
   delete require.cache[require.resolve('$REPO_DIR/workflow.js')];
   var lm = require('$REPO_DIR/load-modules.js');
@@ -77,7 +77,7 @@ node -e "
   var wf = require('$REPO_DIR/workflow.js');
   wf.disableWorkflow('shtd', '$TMPDIR');
 "
-RESULT4=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" node -e "
+RESULT4=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" HOOKRUNNER_NO_BUILTIN=1 node -e "
   delete require.cache[require.resolve('$REPO_DIR/load-modules.js')];
   delete require.cache[require.resolve('$REPO_DIR/workflow.js')];
   var lm = require('$REPO_DIR/load-modules.js');
@@ -98,7 +98,7 @@ node -e "
   wf.disableWorkflow('code-quality', '$TMPDIR');
   wf.enableWorkflow('starter', '$TMPDIR');
 "
-RESULT5=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" node -e "
+RESULT5=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" HOOKRUNNER_NO_BUILTIN=1 node -e "
   delete require.cache[require.resolve('$REPO_DIR/load-modules.js')];
   delete require.cache[require.resolve('$REPO_DIR/workflow.js')];
   var lm = require('$REPO_DIR/load-modules.js');
@@ -112,7 +112,7 @@ node -e "
   var wf = require('$REPO_DIR/workflow.js');
   wf.enableWorkflow('shtd', '$TMPDIR');
 "
-RESULT6=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" node -e "
+RESULT6=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" HOOKRUNNER_NO_BUILTIN=1 node -e "
   delete require.cache[require.resolve('$REPO_DIR/load-modules.js')];
   delete require.cache[require.resolve('$REPO_DIR/workflow.js')];
   var lm = require('$REPO_DIR/load-modules.js');

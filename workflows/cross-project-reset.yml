@@ -1,6 +1,7 @@
 name: cross-project-reset
 description: Safely switch context between projects with state preservation
 version: 1
+enabled: true
 steps:
   - id: save-state
     name: Save current project state to TODO.md

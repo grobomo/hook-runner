@@ -29,6 +29,9 @@ custom_commands:
   - name: workflow
     command: "node $SKILL_DIR/setup.js --workflow list"
     description: "List workflows with enabled state"
+  - name: groups
+    command: "node $SKILL_DIR/setup.js --groups"
+    description: "List workflow groups with ON/OFF status"
   - name: audit
     command: "node $SKILL_DIR/setup.js --workflow audit"
     description: "Audit workflow coverage and orphan modules"
@@ -65,6 +68,18 @@ node setup.js --workflow query Edit  # which workflows affect Edit?
 
 Built-in: `starter` (safe defaults, 42 modules), `shtd` (spec-driven pipeline, 101 modules), `gsd` (phase-driven pipeline, 101 modules), `customer-data-guard`, `no-local-docker`, `cross-project-reset`.
 
+## Workflow Groups
+
+Each workflow YAML can declare `enabled: true/false`. Combined with `workflow-config.json` overrides, this gives layered control:
+
+```
+node setup.js --groups             # see all groups with ON/OFF status
+node setup.js --toggle starter     # flip a group on/off
+node setup.js --toggle shtd --global  # toggle globally
+```
+
+Priority: YAML `enabled:` field < global `workflow-config.json` < project `workflow-config.json`. Modules tagged with a disabled workflow are skipped. Untagged modules always run.
+
 ## Module Contract
 
 ```javascript
@@ -93,6 +108,8 @@ node setup.js --sync              # sync from GitHub
 node setup.js --stats             # hook activity summary
 node setup.js --perf              # timing analysis
 node setup.js --workflow <cmd>    # workflow management
+node setup.js --groups            # list workflow groups with status
+node setup.js --toggle <name>    # toggle workflow group on/off
 node setup.js --test              # run all tests
 node setup.js --demo [--fast]     # interactive demo (no install needed)
 node setup.js --demo-html         # generate shareable HTML demo page

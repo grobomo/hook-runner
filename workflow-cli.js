@@ -476,6 +476,33 @@ function cmdWorkflow(args) {
     return;
   }
 
+  if (sub === "groups") {
+    // Delegate to setup.js --groups for consistent output
+    var groupsResult = require("child_process").spawnSync(process.execPath,
+      [path.join(__dirname, "setup.js"), "--groups"],
+      { stdio: "inherit", windowsHide: true, env: process.env });
+    process.exit(groupsResult.status || 0);
+  }
+
+  if (sub === "enable-all" || sub === "disable-all") {
+    var bulkArgs = [path.join(__dirname, "setup.js"), sub === "enable-all" ? "--enable-all" : "--disable-all"];
+    if (args.indexOf("--global") !== -1) bulkArgs.push("--global");
+    if (args.indexOf("--dry-run") !== -1) bulkArgs.push("--dry-run");
+    var bulkResult = require("child_process").spawnSync(process.execPath,
+      bulkArgs, { stdio: "inherit", windowsHide: true, env: process.env });
+    process.exit(bulkResult.status || 0);
+  }
+
+  if (sub === "toggle") {
+    var toggleName = args[args.indexOf("toggle") + 1];
+    if (!toggleName) { console.error("Usage: --workflow toggle <name> [--global]"); process.exit(1); }
+    var toggleArgs = [path.join(__dirname, "setup.js"), "--toggle", toggleName];
+    if (args.indexOf("--global") !== -1) toggleArgs.push("--global");
+    var toggleResult = require("child_process").spawnSync(process.execPath,
+      toggleArgs, { stdio: "inherit", windowsHide: true, env: process.env });
+    process.exit(toggleResult.status || 0);
+  }
+
   if (sub === "sync-live") {
     // WHY: After editing modules/workflows in the repo, the live hooks dir
     // needs to be updated. This copies all workflow YAMLs and tagged modules.
@@ -535,7 +562,7 @@ function cmdWorkflow(args) {
   }
 
   console.error("Unknown workflow subcommand: " + sub);
-  console.error("Usage: --workflow [list|audit|query|create|add-module|sync-live|enable|disable|start|status|complete|reset]");
+  console.error("Usage: --workflow [list|groups|toggle|audit|query|create|add-module|sync-live|enable|disable|start|status|complete|reset]");
   process.exit(1);
 }
 

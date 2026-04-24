@@ -1,6 +1,7 @@
 name: gsd
 description: GSD-driven development discipline. Enforces .planning/ → ROADMAP.md → phase plan → branch → execute → PR pipeline. Replaces shtd's spec-based flow with GSD's phase-based flow while keeping all safety, quality, and session lifecycle modules.
 version: 2
+enabled: true
 extends: starter
 steps:
   - id: plan

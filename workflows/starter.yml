@@ -1,6 +1,7 @@
 name: starter
 description: Safe defaults for any Claude Code user. Blocks common mistakes (force push, destructive git, rm -rf, secret commits) and adds helpful guardrails (commit quality, test reminders). Start here, then enable shtd when you want full development discipline.
 version: 2
+enabled: true
 steps:
   - id: ready
     name: Ready to work

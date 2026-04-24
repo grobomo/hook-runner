@@ -4,6 +4,7 @@ description: >
   acceptance tests, creates branches, and distributes. Workers receive tasks,
   implement, run tests, and PR. Roles are set via CLAUDE_ROLE env var.
 version: 1
+enabled: true
 
 # Roles:
 #   CLAUDE_ROLE=dispatcher — plans, specs, distributes, monitors, merges

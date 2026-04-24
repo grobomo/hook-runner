@@ -1,6 +1,7 @@
 name: no-local-docker
 description: Block local Docker commands — force containerized workloads to run on remote infrastructure
 version: 1
+enabled: true
 steps:
   - id: active
     name: Workflow is active — all local docker/docker-compose commands are blocked
