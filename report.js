@@ -980,6 +980,9 @@ function generateReport(scan, outputPath, hookStats, options) {
   h.push('.wf-card-count{font-size:.75rem;color:#8b949e;background:#21262d;padding:.1rem .4rem;border-radius:3px}');
   h.push('.wf-card-modules{display:flex;flex-wrap:wrap;gap:.3rem}');
   h.push('.wf-card-mod{font-size:.7rem;color:#8b949e;background:#161b22;padding:.15rem .4rem;border-radius:3px;border:1px solid #21262d}');
+  h.push('.wf-card-disabled{opacity:.5;border-style:dashed}');
+  h.push('.wf-status-on{font-size:.65rem;padding:.1rem .4rem;border-radius:3px;background:#238636;color:#fff;font-weight:600}');
+  h.push('.wf-status-off{font-size:.65rem;padding:.1rem .4rem;border-radius:3px;background:#da3633;color:#fff;font-weight:600}');
   // Workflow filter buttons
   h.push('.wf-filters{display:flex;gap:.4rem;flex-wrap:wrap}');
   h.push('.wf-filter-btn{background:#21262d;border:1px solid #30363d;border-radius:10px;padding:.3rem .7rem;color:#8b949e;font-size:.75rem;cursor:pointer;transition:all .15s}');
@@ -1109,6 +1112,16 @@ function generateReport(scan, outputPath, hookStats, options) {
     return a < b ? -1 : 1;
   });
 
+  // Load workflow group enabled/disabled status
+  var wfGroups = { enabled: {}, disabled: {} };
+  try {
+    var lm = require(path.join(__dirname, "load-modules.js"));
+    if (lm.loadWorkflowGroups) {
+      var projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+      wfGroups = lm.loadWorkflowGroups(projectDir);
+    }
+  } catch (e) { /* load-modules not available */ }
+
   // Workflow summary section
   if (workflowNames.length > 0) {
     h.push('<div class="wf-summary"><h2>Workflows (' + workflowNames.length + ')</h2>');
@@ -1116,8 +1129,12 @@ function generateReport(scan, outputPath, hookStats, options) {
     for (var wsi = 0; wsi < workflowNames.length; wsi++) {
       var wn = workflowNames[wsi];
       var wd = workflowMap[wn];
-      h.push('<div class="wf-card" onclick="filterByWorkflow(\'' + escHtml(wn) + '\')">');
+      var wfIsEnabled = wn === "(untagged)" || (!wfGroups.disabled[wn]);
+      var wfStatusClass = wfIsEnabled ? "wf-status-on" : "wf-status-off";
+      var wfStatusLabel = wn === "(untagged)" ? "" : (wfIsEnabled ? "ON" : "OFF");
+      h.push('<div class="wf-card' + (wfIsEnabled ? '' : ' wf-card-disabled') + '" onclick="filterByWorkflow(\'' + escHtml(wn) + '\')">');
       h.push('<div class="wf-card-name"><span class="wf-badge wf-' + escHtml(wn.replace(/[^a-z0-9-]/g, "-")) + '">' + escHtml(wn) + '</span>');
+      if (wfStatusLabel) h.push('<span class="' + wfStatusClass + '">' + wfStatusLabel + '</span>');
       h.push('<span class="wf-card-count">' + wd.modules.length + ' module' + (wd.modules.length !== 1 ? 's' : '') + '</span>');
       if (wd.blocks > 0) h.push('<span class="stat-block" style="font-size:.7rem;padding:.1rem .4rem">' + wd.blocks + ' blocked</span>');
       h.push('</div>');
