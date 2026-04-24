@@ -1,6 +1,7 @@
 name: customer-data-guard
 description: Prevents modification of customer cloud environments during incident response — read-only V1, no data exfil, no env changes
 version: 1
+enabled: true
 steps:
   - id: investigate
     name: Read-only investigation phase

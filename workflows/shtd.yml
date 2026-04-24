@@ -1,6 +1,7 @@
 name: shtd
 description: Spec-Hook-Test-Driven — all development discipline in one workflow. Enforces spec → branch → test → implement → PR pipeline, code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement.
 version: 3
+enabled: true
 extends: starter
 steps:
   - id: spec
