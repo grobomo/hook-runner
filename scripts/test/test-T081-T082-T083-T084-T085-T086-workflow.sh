@@ -169,7 +169,8 @@ MODEOF
 # Reset state first to ensure no active workflow
 node -e "var wf = require('$REPO_DIR/workflow.js'); wf.resetState('$WFTMP_WIN');" 2>/dev/null
 
-RESULT=$(node -e "
+FAKE_WF_HOME="$WFTMP/fakehome"; mkdir -p "$FAKE_WF_HOME/.claude/hooks"
+RESULT=$(HOME="$FAKE_WF_HOME" USERPROFILE="$FAKE_WF_HOME" HOOKRUNNER_NO_BUILTIN=1 node -e "
   process.env.CLAUDE_PROJECT_DIR = '$WFTMP_WIN';
   delete require.cache[require.resolve('$REPO_DIR/load-modules.js')];
   var lm = require('$REPO_DIR/load-modules.js');
