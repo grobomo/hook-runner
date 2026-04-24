@@ -33,7 +33,7 @@ check "add-module succeeds" 'echo "$ADD_OUT" | grep -qi "created"'
 check "module file created" '[ -f "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" ]'
 
 # Module has WORKFLOW tag
-check "module has WORKFLOW tag" 'head -1 "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" | grep -q "WORKFLOW: no-local-docker"'
+check "module has WORKFLOW tag" 'head -1 "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" | tr -d "\r" | grep -q "WORKFLOW: no-local-docker"'
 
 # Module has WHY stub
 check "module has WHY stub" 'grep -q "WHY: TODO" "$REPO_DIR/modules/PreToolUse/$TMPMOD.js"'
