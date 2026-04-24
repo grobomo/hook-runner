@@ -7,7 +7,7 @@ REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"
 PASS=0; FAIL=0
 check() {
   if eval "$2"; then PASS=$((PASS+1)); echo "  PASS: $1"
-  else FAIL=$((FAIL+1)); echo "  FAIL: $1"; fi
+  else FAIL=$((FAIL+1)); echo "  FAIL: $1"; echo "  FAIL: $1" >&2; fi
 }
 echo "=== hook-runner: workflow add-module ==="
 
@@ -27,6 +27,7 @@ cleanup_t114() {
 trap cleanup_t114 EXIT
 
 ADD_OUT=$(cd "$REPO_DIR" && node setup.js --workflow add-module no-local-docker "$TMPMOD" 2>&1) || true
+echo "  [debug] add-module output: $(echo "$ADD_OUT" | head -3 | tr '\n' ' ')" >&2
 check "add-module succeeds" 'echo "$ADD_OUT" | grep -qi "created"'
 
 # Module file exists
