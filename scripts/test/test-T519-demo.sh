@@ -44,7 +44,7 @@ echo "$OUT" | grep -q "Interactive Demo" && check "standalone runs" || { echo " 
 echo "[8] Module counts are non-zero"
 OUT=$(node "$REPO_DIR/demo.js" --fast 2>&1)
 # Extract module count — expect "NNN modules"
-COUNT=$(echo "$OUT" | grep -oP '\d+ modules' | head -1 | grep -oP '\d+')
+COUNT=$(echo "$OUT" | grep -o '[0-9]* modules' | head -1 | grep -o '[0-9]*')
 [ "${COUNT:-0}" -gt 50 ] && check "module count > 50 ($COUNT)" || { echo "  FAIL: module count too low ($COUNT)"; FAIL=$((FAIL+1)); }
 
 echo "[9] --demo in help text"
@@ -61,7 +61,7 @@ echo "$OUT" | grep -q "commit-quality-gate" && check "commit-quality-gate mentio
 echo "[11] --demo-html generates HTML file"
 HTML_OUT=$(node "$REPO_DIR/demo.js" --html 2>&1)
 # Extract path from output: "Demo HTML written to: <path>"
-HTML_FILE=$(echo "$HTML_OUT" | grep -oP '(?<=written to: ).*')
+HTML_FILE=$(echo "$HTML_OUT" | sed -n 's/.*written to: //p' | tr -d '\r')
 [ -f "$HTML_FILE" ] && check "--demo-html creates file" || { echo "  FAIL: no HTML file at $HTML_FILE"; FAIL=$((FAIL+1)); }
 
 echo "[12] HTML has correct structure"

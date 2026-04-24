@@ -14,7 +14,7 @@ trap 'rm -rf "$TMPDIR"' EXIT
 # Create a "main" repo on branch main
 MAIN_REPO="$TMPDIR/main-repo"
 mkdir -p "$MAIN_REPO"
-git init -q "$MAIN_REPO"
+git init -q -b main "$MAIN_REPO"
 (cd "$MAIN_REPO" && git config user.email "test@test" && git config user.name "test")
 echo "x" > "$MAIN_REPO/file.txt"
 (cd "$MAIN_REPO" && git add -A && git commit -q -m "init" 2>/dev/null) || true

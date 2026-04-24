@@ -433,7 +433,7 @@ function cmdWorkflow(args) {
     var wfDir2 = path.join(__dirname, "workflows");
     var wfPath2 = path.join(wfDir2, addWfName + ".yml");
     if (fs.existsSync(wfPath2)) {
-      var content = fs.readFileSync(wfPath2, "utf-8");
+      var content = fs.readFileSync(wfPath2, "utf-8").replace(/\r\n/g, "\n");
       if (content.indexOf("  - " + addModName) === -1) {
         // Add module to modules list
         if (content.indexOf("modules:") === -1) {

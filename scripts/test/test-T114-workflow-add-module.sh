@@ -7,7 +7,7 @@ REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"
 PASS=0; FAIL=0
 check() {
   if eval "$2"; then PASS=$((PASS+1)); echo "  PASS: $1"
-  else FAIL=$((FAIL+1)); echo "  FAIL: $1"; fi
+  else FAIL=$((FAIL+1)); echo "  FAIL: $1"; echo "  FAIL: $1" >&2; fi
 }
 echo "=== hook-runner: workflow add-module ==="
 
@@ -27,19 +27,22 @@ cleanup_t114() {
 trap cleanup_t114 EXIT
 
 ADD_OUT=$(cd "$REPO_DIR" && node setup.js --workflow add-module no-local-docker "$TMPMOD" 2>&1) || true
+echo "  [debug] add-module output: $(echo "$ADD_OUT" | head -3 | tr '\n' ' ')" >&2
 check "add-module succeeds" 'echo "$ADD_OUT" | grep -qi "created"'
 
 # Module file exists
 check "module file created" '[ -f "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" ]'
 
 # Module has WORKFLOW tag
-check "module has WORKFLOW tag" 'head -1 "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" | grep -q "WORKFLOW: no-local-docker"'
+check "module has WORKFLOW tag" 'head -1 "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" | tr -d "\r" | grep -q "WORKFLOW: no-local-docker"'
 
 # Module has WHY stub
-check "module has WHY stub" 'grep -q "WHY: TODO" "$REPO_DIR/modules/PreToolUse/$TMPMOD.js"'
+check "module has WHY stub" 'tr -d "\r" < "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" | grep -q "WHY: TODO"'
 
 # Module added to YAML
-check "module in YAML" 'grep -q "$TMPMOD" "$REPO_DIR/workflows/no-local-docker.yml"'
+echo "  [debug] TMPMOD=$TMPMOD" >&2
+echo "  [debug] YAML tail: $(tail -3 "$REPO_DIR/workflows/no-local-docker.yml" | tr '\r\n' '|')" >&2
+check "module in YAML" 'tr -d "\r" < "$REPO_DIR/workflows/no-local-docker.yml" | grep -q "$TMPMOD"'
 
 # No arg shows usage
 NOARG_OUT=$(cd "$REPO_DIR" && node setup.js --workflow add-module 2>&1) || true

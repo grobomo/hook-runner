@@ -6,6 +6,12 @@
 #   Phase 3: Cross-validate — OpenClaw plugin vs hook-runner originals (Node.js)
 set -euo pipefail
 
+# Requires WSL with a working distro and local OpenClaw instance
+if ! command -v wsl &>/dev/null || ! wsl -e echo ok &>/dev/null; then
+  echo "SKIP: WSL not available or no distro configured"
+  exit 0
+fi
+
 REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"
 PASS=0
 FAIL=0
