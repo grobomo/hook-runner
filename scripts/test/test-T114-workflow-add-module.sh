@@ -40,6 +40,8 @@ check "module has WORKFLOW tag" 'head -1 "$REPO_DIR/modules/PreToolUse/$TMPMOD.j
 check "module has WHY stub" 'tr -d "\r" < "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" | grep -q "WHY: TODO"'
 
 # Module added to YAML
+echo "  [debug] TMPMOD=$TMPMOD" >&2
+echo "  [debug] YAML tail: $(tail -3 "$REPO_DIR/workflows/no-local-docker.yml" | tr '\r\n' '|')" >&2
 check "module in YAML" 'tr -d "\r" < "$REPO_DIR/workflows/no-local-docker.yml" | grep -q "$TMPMOD"'
 
 # No arg shows usage
