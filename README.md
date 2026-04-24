@@ -144,12 +144,29 @@ modules:
 
 Tag modules with `// WORKFLOW: my-workflow` in the first 5 lines.
 
+### Workflow Templates
+
+Start from a curated template instead of a blank scaffold:
+
+```bash
+node setup.js --workflow templates                              # list available templates
+node setup.js --workflow create my-sec --from-template security # pre-populated with 10 modules
+```
+
+| Template | Modules | Focus |
+|----------|---------|-------|
+| `security` | 10 | Git safety, secret scanning, account protection |
+| `quality` | 9 | Code quality, testing discipline, commit hygiene |
+| `lifecycle` | 11 | Session management, continuity, health monitoring |
+| `minimal` | 3 | Absolute minimum safety (force-push, destructive-git, secrets) |
+
 ### Workflow CRUD
 
 ```bash
-node setup.js --workflow create my-flow    # generate YAML + stubs
-node setup.js --workflow add-module my-flow my-gate  # create tagged module
-node setup.js --workflow sync-live         # copy to live hooks dir
+node setup.js --workflow create my-flow                         # blank scaffold
+node setup.js --workflow create my-flow --from-template quality # from template
+node setup.js --workflow add-module my-flow my-gate             # create tagged module
+node setup.js --workflow sync-live                              # copy to live hooks dir
 ```
 
 ### Relaxed SHTD Mode
