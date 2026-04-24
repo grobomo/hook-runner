@@ -23,8 +23,10 @@ var catalogDir = path.join(runnerDir, "modules");
 var passed = 0, failed = 0;
 
 // Create isolated temp environment for a test
-function createIsolatedEnv(modules) {
+function createIsolatedEnv(modules, opts) {
   // modules: [{event: "PreToolUse", name: "git-destructive-guard.js"}, ...]
+  // opts.branch: override the git HEAD branch (default: "test-branch")
+  opts = opts || {};
   var tmpBase = path.join(os.tmpdir(), "e2e-" + process.pid + "-" + Date.now());
   var modulesDir = path.join(tmpBase, "run-modules");
   var projectDir = path.join(tmpBase, "project");
@@ -39,7 +41,7 @@ function createIsolatedEnv(modules) {
   // Create a minimal .git/HEAD so git-related checks don't crash
   var gitDir = path.join(projectDir, ".git");
   fs.mkdirSync(gitDir, { recursive: true });
-  fs.writeFileSync(path.join(gitDir, "HEAD"), "ref: refs/heads/test-branch\n");
+  fs.writeFileSync(path.join(gitDir, "HEAD"), "ref: refs/heads/" + (opts.branch || "test-branch") + "\n");
 
   // Create TODO.md with an unchecked task (so spec-gate doesn't block)
   fs.writeFileSync(path.join(projectDir, "TODO.md"), "- [ ] T999: Test task\n");
@@ -78,7 +80,7 @@ function test(name, opts) {
   var input = JSON.stringify(opts.input);
 
   // Create isolated environment
-  var isolated = createIsolatedEnv(opts.modules || []);
+  var isolated = createIsolatedEnv(opts.modules || [], { branch: opts.branch });
 
   // Build clean env
   var env = {};
@@ -96,6 +98,7 @@ function test(name, opts) {
   var result = cp.spawnSync(process.execPath, [runner], {
     input: input,
     env: env,
+    cwd: isolated.projectDir,
     timeout: 10000,
     windowsHide: true,
     maxBuffer: 1024 * 1024
@@ -234,6 +237,7 @@ test("no-rules-gate: blocks creating rules files", {
 test("branch-pr-gate: blocks Edit on main", {
   runner: "run-pretooluse.js",
   modules: [{ event: "PreToolUse", name: "branch-pr-gate.js" }],
+  branch: "main",
   input: {
     tool_name: "Edit",
     tool_input: {

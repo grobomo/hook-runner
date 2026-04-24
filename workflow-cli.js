@@ -9,6 +9,44 @@ var path = require("path");
 
 var HOME = process.env.HOME || process.env.USERPROFILE || "";
 
+// Curated workflow templates — pre-populated module sets for common use cases.
+// Each template has a description and a categorized module list.
+var TEMPLATES = {
+  security: {
+    description: "Git safety, secret scanning, account protection, credential guards",
+    modules: [
+      { comment: "Git safety", names: ["force-push-gate", "git-destructive-guard", "secret-scan-gate"] },
+      { comment: "Account and platform safety", names: ["gh-auto-gate", "publish-json-guard", "settings-change-gate", "settings-hooks-gate"] },
+      { comment: "Communication guards", names: ["messaging-safety-gate", "no-hook-bypass"] },
+      { comment: "Environment checks", names: ["env-var-check"] },
+    ]
+  },
+  quality: {
+    description: "Code quality, testing discipline, commit hygiene",
+    modules: [
+      { comment: "Commit quality", names: ["commit-quality-gate", "commit-msg-check"] },
+      { comment: "Code quality", names: ["no-hardcoded-paths", "preserve-iterated-content", "crlf-detector"] },
+      { comment: "Testing", names: ["test-coverage-check", "test-before-done", "empty-output-detector"] },
+      { comment: "Review", names: ["result-review-gate"] },
+    ]
+  },
+  lifecycle: {
+    description: "Session management, continuity, health monitoring",
+    modules: [
+      { comment: "Session continuity", names: ["auto-continue", "never-give-up", "backup-check", "drift-check"] },
+      { comment: "Project health", names: ["project-health", "load-instructions", "session-cleanup"] },
+      { comment: "Monitoring", names: ["hook-health-monitor", "session-collision-detector", "workflow-summary"] },
+      { comment: "Logging", names: ["prompt-logger"] },
+    ]
+  },
+  minimal: {
+    description: "Absolute minimum safety — just the essentials",
+    modules: [
+      { comment: "Core safety", names: ["force-push-gate", "git-destructive-guard", "secret-scan-gate"] },
+    ]
+  }
+};
+
 function cmdWorkflow(args) {
   var wf;
   try { wf = require(path.join(__dirname, "workflow.js")); } catch(e) {
@@ -358,9 +396,27 @@ function cmdWorkflow(args) {
     return;
   }
 
+  if (sub === "templates") {
+    var tplNames = Object.keys(TEMPLATES);
+    console.log("Available workflow templates:");
+    console.log("");
+    for (var ti = 0; ti < tplNames.length; ti++) {
+      var tpl = TEMPLATES[tplNames[ti]];
+      var tplModCount = 0;
+      for (var tg = 0; tg < tpl.modules.length; tg++) tplModCount += tpl.modules[tg].names.length;
+      console.log("  " + tplNames[ti] + " (" + tplModCount + " modules) — " + tpl.description);
+      for (var tg2 = 0; tg2 < tpl.modules.length; tg2++) {
+        console.log("    # " + tpl.modules[tg2].comment + ": " + tpl.modules[tg2].names.join(", "));
+      }
+    }
+    console.log("");
+    console.log("Usage: --workflow create <name> --from-template <template>");
+    return;
+  }
+
   if (sub === "create") {
     var createName = args[args.indexOf("create") + 1];
-    if (!createName) { console.error("Usage: --workflow create <name> [--dir <path>]"); process.exit(1); }
+    if (!createName) { console.error("Usage: --workflow create <name> [--from-template <template>] [--dir <path>]"); process.exit(1); }
     // WHY: Manual workflow creation requires editing YAML, module files, and live copies.
     // This command generates a complete scaffold so workflows are a first-class CLI citizen.
     var dirIdx = args.indexOf("--dir");
@@ -372,27 +428,69 @@ function cmdWorkflow(args) {
       console.error('Workflow "' + createName + '" already exists at ' + wfPath);
       process.exit(1);
     }
-    var yaml = [
-      "name: " + createName,
-      "description: TODO — explain WHY this workflow exists and what problem it solves",
-      "version: 1",
-      "steps:",
-      "  - id: active",
-      "    name: Workflow is active",
-      "    gate:",
-      "      require_files: []",
-      "    completion:",
-      "      require_files: []",
-      "",
-      "modules: []",
-      "",
-    ].join("\n");
+    // Check for --from-template flag
+    var tplIdx = args.indexOf("--from-template");
+    var tplName = tplIdx !== -1 ? args[tplIdx + 1] : null;
+    var yaml;
+    if (tplName) {
+      if (!TEMPLATES[tplName]) {
+        console.error('Unknown template: "' + tplName + '". Available: ' + Object.keys(TEMPLATES).join(", "));
+        process.exit(1);
+      }
+      var tmpl = TEMPLATES[tplName];
+      var lines = [
+        "name: " + createName,
+        "description: " + tmpl.description,
+        "version: 1",
+        "enabled: true",
+        "steps:",
+        "  - id: active",
+        "    name: Workflow is active",
+        "    gate:",
+        "      require_files: []",
+        "    completion:",
+        "      require_files: []",
+        "",
+        "modules:",
+      ];
+      for (var gi = 0; gi < tmpl.modules.length; gi++) {
+        lines.push("  # " + tmpl.modules[gi].comment);
+        for (var mi4 = 0; mi4 < tmpl.modules[gi].names.length; mi4++) {
+          lines.push("  - " + tmpl.modules[gi].names[mi4]);
+        }
+      }
+      lines.push("");
+      yaml = lines.join("\n");
+    } else {
+      yaml = [
+        "name: " + createName,
+        "description: TODO — explain WHY this workflow exists and what problem it solves",
+        "version: 1",
+        "steps:",
+        "  - id: active",
+        "    name: Workflow is active",
+        "    gate:",
+        "      require_files: []",
+        "    completion:",
+        "      require_files: []",
+        "",
+        "modules: []",
+        "",
+      ].join("\n");
+    }
     fs.writeFileSync(wfPath, yaml);
     console.log('Created workflow "' + createName + '" at ' + wfPath);
-    console.log("Next steps:");
-    console.log("  1. Edit description to explain WHY this workflow exists");
-    console.log("  2. Add modules: --workflow add-module " + createName + " <module-name>");
-    console.log("  3. Enable: --workflow enable " + createName);
+    if (tplName) {
+      console.log('Template "' + tplName + '" applied.');
+      console.log("Next steps:");
+      console.log("  1. Review and customize modules for your needs");
+      console.log("  2. Enable: --workflow enable " + createName);
+    } else {
+      console.log("Next steps:");
+      console.log("  1. Edit description to explain WHY this workflow exists");
+      console.log("  2. Add modules: --workflow add-module " + createName + " <module-name>");
+      console.log("  3. Enable: --workflow enable " + createName);
+    }
     return;
   }
 
@@ -562,7 +660,7 @@ function cmdWorkflow(args) {
   }
 
   console.error("Unknown workflow subcommand: " + sub);
-  console.error("Usage: --workflow [list|groups|toggle|audit|query|create|add-module|sync-live|enable|disable|start|status|complete|reset]");
+  console.error("Usage: --workflow [list|templates|groups|toggle|audit|query|create|add-module|sync-live|enable|disable|start|status|complete|reset]");
   process.exit(1);
 }
 
