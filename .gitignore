@@ -16,3 +16,5 @@ SESSION_STATE.md
 workflow-config.json
 scripts/test/archive/
 run-modules/
+.coconut/
+scripts/hermes-message.json
