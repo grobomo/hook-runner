@@ -37,7 +37,7 @@ FAKE_HOME="$TMPDIR/fakehome"
 mkdir -p "$FAKE_HOME/.claude/hooks"
 
 # Test: no config file → only untagged modules pass (tagged ones need explicit enable)
-RESULT=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" node -e "
+RESULT=$(HOME="$FAKE_HOME" USERPROFILE="$FAKE_HOME" CLAUDE_PROJECT_DIR="$TMPDIR" HOOKRUNNER_NO_BUILTIN=1 node -e "
   var lm = require('$REPO_DIR/load-modules.js');
   var mods = lm('$TMPDIR/run-modules/PreToolUse');
   console.log(mods.map(function(m) { return require('path').basename(m, '.js'); }).sort().join(','));

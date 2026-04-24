@@ -155,8 +155,10 @@ function loadWorkflowGroups(projectDir) {
   var dirs = [
     path.join(projectDir, "workflows"),
     path.join(home, ".claude", "hooks", "workflows"),
-    path.join(__dirname, "workflows"),
   ];
+  if (!process.env.HOOKRUNNER_NO_BUILTIN) {
+    dirs.push(path.join(__dirname, "workflows"));
+  }
   var seen = {};
   for (var d = 0; d < dirs.length; d++) {
     if (!fs.existsSync(dirs[d])) continue;
@@ -232,7 +234,7 @@ function loadWorkflowGroups(projectDir) {
  *   - A workflow group is enabled if its YAML has `enabled: true` (or omits the field)
  *   - A workflow group is disabled if its YAML has `enabled: false`
  *   - workflow-config.json overrides YAML (project overrides global)
- *   - If a module's workflow has NO YAML at all, the module is included (fail-open)
+ *   - If a module's workflow has NO YAML at all, the module is excluded (fail-closed)
  */
 function filterByWorkflow(modulePaths) {
   var projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
@@ -248,8 +250,7 @@ function filterByWorkflow(modulePaths) {
       var anyEnabled = false;
       for (var ti = 0; ti < tags.length; ti++) {
         if (groups.disabled[tags[ti]]) continue; // explicitly disabled
-        if (groups.enabled[tags[ti]] || (!groups.disabled[tags[ti]] && !groups.enabled[tags[ti]])) {
-          // Enabled, or unknown workflow (fail-open)
+        if (groups.enabled[tags[ti]]) {
           anyEnabled = true;
           break;
         }
