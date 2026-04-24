@@ -36,10 +36,10 @@ check "module file created" '[ -f "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" ]'
 check "module has WORKFLOW tag" 'head -1 "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" | tr -d "\r" | grep -q "WORKFLOW: no-local-docker"'
 
 # Module has WHY stub
-check "module has WHY stub" 'grep -q "WHY: TODO" "$REPO_DIR/modules/PreToolUse/$TMPMOD.js"'
+check "module has WHY stub" 'tr -d "\r" < "$REPO_DIR/modules/PreToolUse/$TMPMOD.js" | grep -q "WHY: TODO"'
 
 # Module added to YAML
-check "module in YAML" 'grep -q "$TMPMOD" "$REPO_DIR/workflows/no-local-docker.yml"'
+check "module in YAML" 'tr -d "\r" < "$REPO_DIR/workflows/no-local-docker.yml" | grep -q "$TMPMOD"'
 
 # No arg shows usage
 NOARG_OUT=$(cd "$REPO_DIR" && node setup.js --workflow add-module 2>&1) || true
