@@ -758,6 +758,8 @@ function cmdHelp() {
   console.log("  --workflow      Manage enforceable step pipelines (list|start|status|complete|reset)");
   console.log("  --groups        List all workflow groups with enabled/disabled status");
   console.log("  --toggle <name> Toggle a workflow group on/off (--global for global scope)");
+  console.log("  --enable-all    Enable all workflow groups (--global for global scope)");
+  console.log("  --disable-all   Disable all workflow groups (--global for global scope)");
   console.log("  --export [file] Export installed modules as shareable YAML (default: modules-export.yaml)");
   console.log("  --perf          Analyze module timing data and identify bottlenecks");
   console.log("  --test-module   Test a single module with sample inputs");
@@ -2344,6 +2346,51 @@ function cmdToggle(args) {
   }
 }
 
+function cmdBulkToggle(args, enable) {
+  var dryRun = args.indexOf("--dry-run") !== -1;
+  var isGlobal = args.indexOf("--global") !== -1;
+  var home = os.homedir();
+  var projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+
+  var loadMods = require(path.join(__dirname, "load-modules"));
+  var groups = loadMods.loadWorkflowGroups(projectDir);
+  var allNames = Object.keys(groups.enabled).concat(Object.keys(groups.disabled));
+  // Deduplicate
+  var seen = {};
+  var unique = [];
+  for (var i = 0; i < allNames.length; i++) {
+    if (!seen[allNames[i]]) { seen[allNames[i]] = true; unique.push(allNames[i]); }
+  }
+
+  if (unique.length === 0) {
+    console.log("No workflow groups found.");
+    return;
+  }
+
+  var verb = enable ? "enable" : "disable";
+  if (dryRun) {
+    console.log("[dry-run] Would " + verb + " " + unique.length + " workflow groups:");
+    for (var d = 0; d < unique.length; d++) console.log("  " + unique[d]);
+    return;
+  }
+
+  var configDir = isGlobal ? path.join(home, ".claude", "hooks") : projectDir;
+  var configPath = path.join(configDir, "workflow-config.json");
+  var config = {};
+  try { config = JSON.parse(fs.readFileSync(configPath, "utf-8")); } catch(e) {}
+  for (var j = 0; j < unique.length; j++) {
+    config[unique[j]] = enable;
+  }
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
+
+  var scope = isGlobal ? " (global)" : "";
+  console.log((enable ? "Enabled" : "Disabled") + " " + unique.length + " workflow groups" + scope + ":");
+  for (var k = 0; k < unique.length; k++) {
+    console.log("  " + (enable ? "[+]" : "[-]") + " " + unique[k]);
+  }
+  console.log("  Config: " + configPath);
+}
+
 function main() {
   var args = process.argv.slice(2);
   var dryRun = args.indexOf("--dry-run") !== -1;
@@ -2352,6 +2399,8 @@ function main() {
   if (args.indexOf("--help") !== -1 || args.indexOf("-h") !== -1) return cmdHelp();
   if (args.indexOf("--version") !== -1 || args.indexOf("-v") !== -1) { console.log("hook-runner v" + VERSION); return; }
   if (args.indexOf("--groups") !== -1) return cmdGroups(args);
+  if (args.indexOf("--enable-all") !== -1) return cmdBulkToggle(args, true);
+  if (args.indexOf("--disable-all") !== -1) return cmdBulkToggle(args, false);
   if (args.indexOf("--toggle") !== -1) return cmdToggle(args);
   if (args.indexOf("--workflow") !== -1) return cmdWorkflow(args);
   if (args.indexOf("--upgrade") !== -1) return cmdUpgrade(args, dryRun);
