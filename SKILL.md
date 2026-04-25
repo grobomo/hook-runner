@@ -18,31 +18,31 @@ keywords:
   - starter
 custom_commands:
   - name: setup
-    command: "node $SKILL_DIR/setup.js"
+    command: "node \"$SKILL_DIR/setup.js\""
     description: "Run setup wizard — scan, report, backup, install"
   - name: report
-    command: "node $SKILL_DIR/setup.js --report --open"
+    command: "node \"$SKILL_DIR/setup.js\" --report --open"
     description: "Generate and open HTML hooks report"
   - name: health
-    command: "node $SKILL_DIR/setup.js --health"
+    command: "node \"$SKILL_DIR/setup.js\" --health"
     description: "Verify runners, modules, and settings"
   - name: workflow
-    command: "node $SKILL_DIR/setup.js --workflow list"
+    command: "node \"$SKILL_DIR/setup.js\" --workflow list"
     description: "List workflows with enabled state"
   - name: groups
-    command: "node $SKILL_DIR/setup.js --groups"
+    command: "node \"$SKILL_DIR/setup.js\" --groups"
     description: "List workflow groups with ON/OFF status"
   - name: audit
-    command: "node $SKILL_DIR/setup.js --workflow audit"
+    command: "node \"$SKILL_DIR/setup.js\" --workflow audit"
     description: "Audit workflow coverage and orphan modules"
   - name: stats
-    command: "node $SKILL_DIR/setup.js --stats"
+    command: "node \"$SKILL_DIR/setup.js\" --stats"
     description: "Quick text summary of hook activity"
   - name: test
-    command: "node $SKILL_DIR/setup.js --test"
+    command: "node \"$SKILL_DIR/setup.js\" --test"
     description: "Run all test suites"
   - name: demo
-    command: "node $SKILL_DIR/setup.js --demo --fast"
+    command: "node \"$SKILL_DIR/setup.js\" --demo --fast"
     description: "Interactive demo — see hook-runner in action"
 ---
 
@@ -53,17 +53,19 @@ Modular hook runner for Claude Code. Workflows group related modules into enforc
 ## Quick Start
 
 ```
-npx grobomo/hook-runner --yes    # install + enable default workflows
-node setup.js --uninstall --confirm  # clean removal, restore original settings
+npx grobomo/hook-runner --yes       # install + enable default workflows
+/hook-runner setup                  # re-run setup wizard anytime
 ```
+
+To uninstall: `/hook-runner setup` then pass `--uninstall --confirm`.
+
+> **Note:** Slash commands require installation first (`npx grobomo/hook-runner --yes`), which copies setup.js and all modules into the skill directory.
 
 ## Workflows
 
 ```
-/hook-runner workflow              # list available workflows
-node setup.js --workflow enable shtd --global
-node setup.js --workflow audit     # coverage report
-node setup.js --workflow query Edit  # which workflows affect Edit?
+/hook-runner workflow               # list available workflows
+/hook-runner audit                  # coverage report
 ```
 
 Built-in: `starter` (safe defaults, 42 modules), `shtd` (spec-driven pipeline, 101 modules), `gsd` (phase-driven pipeline, 101 modules), `customer-data-guard`, `no-local-docker`, `cross-project-reset`.
@@ -73,8 +75,8 @@ Built-in: `starter` (safe defaults, 42 modules), `shtd` (spec-driven pipeline, 1
 Create workflows from curated templates instead of empty scaffolds:
 
 ```
-node setup.js --workflow templates                              # list available templates
-node setup.js --workflow create my-wf --from-template security  # create from template
+/hook-runner setup                  # then pass: --workflow templates
+/hook-runner setup                  # then pass: --workflow create my-wf --from-template security
 ```
 
 Templates: `security` (10 modules), `quality` (9), `lifecycle` (11), `minimal` (3).
@@ -84,9 +86,7 @@ Templates: `security` (10 modules), `quality` (9), `lifecycle` (11), `minimal` (
 Each workflow YAML can declare `enabled: true/false`. Combined with `workflow-config.json` overrides, this gives layered control:
 
 ```
-node setup.js --groups             # see all groups with ON/OFF status
-node setup.js --toggle starter     # flip a group on/off
-node setup.js --toggle shtd --global  # toggle globally
+/hook-runner groups                 # see all groups with ON/OFF status
 ```
 
 Priority: YAML `enabled:` field < global `workflow-config.json` < project `workflow-config.json`. Modules tagged with a disabled workflow are skipped. Untagged modules always run.
@@ -104,25 +104,20 @@ module.exports = function(input) {
 
 - Return `null` to pass, `{decision: "block"}` to block
 - Sync or async (4s timeout for async)
-- `// WORKFLOW: name` restricts to that workflow (multi: `// WORKFLOW: shtd, starter`)
+- `// WORKFLOW: name` restricts to that workflow
 - `// requires: mod1` for dependencies
 
 ## CLI
 
+All commands are available as `/hook-runner <name>` slash commands (see custom_commands above). For advanced use, the full CLI:
+
 ```
-node setup.js                     # setup wizard
-node setup.js --yes               # non-interactive + default workflows
-node setup.js --report [--open]   # HTML report
-node setup.js --health            # verify installation
-node setup.js --list              # catalog vs installed
-node setup.js --sync              # sync from GitHub
-node setup.js --stats             # hook activity summary
-node setup.js --perf              # timing analysis
-node setup.js --workflow <cmd>    # workflow management
-node setup.js --groups            # list workflow groups with status
-node setup.js --toggle <name>    # toggle workflow group on/off
-node setup.js --test              # run all tests
-node setup.js --demo [--fast]     # interactive demo (no install needed)
-node setup.js --demo-html         # generate shareable HTML demo page
-node setup.js --uninstall --confirm  # restore original settings
+/hook-runner setup                # setup wizard (--yes for non-interactive)
+/hook-runner report               # HTML report
+/hook-runner health               # verify installation
+/hook-runner workflow             # workflow management
+/hook-runner groups               # list workflow groups with status
+/hook-runner stats                # hook activity summary
+/hook-runner test                 # run all tests
+/hook-runner demo                 # interactive demo (no install needed)
 ```
