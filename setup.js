@@ -2441,7 +2441,6 @@ function main() {
   }
   if (args.indexOf("--health") !== -1) return cmdHealth();
   if (args.indexOf("--audit-project") !== -1) return cmdAuditProject(args);
-  if (args.indexOf("--audit-project") !== -1) return cmdAuditProject(args);
   if (args.indexOf("--xref") !== -1) return cmdXref();
   if (args.indexOf("--sync") !== -1) return cmdSync(dryRun);
 
@@ -2850,6 +2849,35 @@ function healthCheck() {
       if (baseNameMap[bk[bki]].length > 1) {
         results.push({ check: "duplicate", file: ddEvt + "/" + baseNameMap[bk[bki]].join(", "), status: "warning", detail: "possible duplicates — similar base name '" + bk[bki] + "'" });
       }
+    }
+  }
+
+  // 8. Install drift — compare repo version with installed skill copy
+  var skillDir = path.join(os.homedir(), ".claude", "skills", "hook-runner");
+  var skillPkg = path.join(skillDir, "package.json");
+  if (fs.existsSync(skillPkg)) {
+    try {
+      var installedVersion = JSON.parse(fs.readFileSync(skillPkg, "utf-8")).version;
+      if (installedVersion === VERSION) {
+        results.push({ check: "install-version", file: "package.json", status: "ok", detail: "v" + VERSION });
+      } else {
+        results.push({ check: "install-version", file: "package.json", status: "warning", detail: "installed v" + installedVersion + ", repo v" + VERSION + " — run: npx grobomo/hook-runner --yes" });
+      }
+    } catch(e) {
+      results.push({ check: "install-version", file: "package.json", status: "warning", detail: "cannot read installed version" });
+    }
+    // Check for missing JS files in skill copy
+    var repoJsFiles = fs.readdirSync(__dirname).filter(function(f) { return f.slice(-3) === ".js"; });
+    var missingJs = [];
+    for (var mji = 0; mji < repoJsFiles.length; mji++) {
+      if (!fs.existsSync(path.join(skillDir, repoJsFiles[mji]))) {
+        missingJs.push(repoJsFiles[mji]);
+      }
+    }
+    if (missingJs.length > 0) {
+      results.push({ check: "install-files", file: "skill copy", status: "warning", detail: missingJs.length + " missing: " + missingJs.slice(0, 5).join(", ") + (missingJs.length > 5 ? "..." : "") });
+    } else {
+      results.push({ check: "install-files", file: "skill copy", status: "ok", detail: repoJsFiles.length + " JS files synced" });
     }
   }
 
