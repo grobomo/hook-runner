@@ -2,6 +2,21 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.59.0] — 2026-04-25
+
+### Fixed
+- **commit-counter-gate worktree deadlock** (T540) — keyword mismatch in worktrees blocked edits with "use EnterWorktree" even when already in a worktree. Now skips mismatch enforcement when in a worktree, giving standard commit guidance instead. 1 new test (20 total).
+
+### Docs
+- **CHANGELOG.md** (T039) — added 4 missing version entries (v2.55.0–v2.58.0).
+- **CLAUDE.md** — fixed marketplace ref, test count (52→85 suites), sync path.
+- **ENFORCEMENT.md** — regenerated (100→118 modules).
+- **TODO.md** — fixed marketplace ref, closed stale T462/T479.
+
+### Stats
+- 85 suites, 1207 tests, 0 failures
+- 118 modules, 13 workflows, 4 templates
+
 ## [2.58.0] — 2026-04-24
 
 ### Added
