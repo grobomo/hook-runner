@@ -1230,7 +1230,7 @@ Replace: spec-gate, spec-before-code-gate, gsd-gate → new gsd-plan-gate.
 
 ## Remaining Tasks
 
-- [ ] T479: Port workflow groups from skill copy — add YAML `enabled:` field support, `loadWorkflowGroups()` with 30s cache, `--groups`/`--toggle` CLI, update SKILL.md docs
+- [x] T479: Port workflow groups from skill copy — done in PR #434 (v2.55.0)
 - [x] T460: Clean up stale branches — 17 remote + 3 local worktree branches deleted, 5 unmerged remote kept
 - [x] T462: Marketplace sync — obsolete (claude-code-skills replaced by ai-skill-marketplace PR #164)
 - [x] T477: Fix runner worktree branch detection — readBranchFromDir prefers CWD worktree over CLAUDE_PROJECT_DIR. Spec-gate allowlist expanded with 9 read-only setup.js flags. 28/28 tests pass (23 bash + 5 worktree). (PR #362)
@@ -1362,7 +1362,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 
 ## Future (backlog)
 - [x] T462: Marketplace sync — obsolete (claude-code-skills replaced by ai-skill-marketplace PR #164)
-- [ ] T540: Fix commit-counter-gate deadlock in worktrees — keyword mismatch sets worktreeRequired=true which blocks commits, but commits are the only way to reset the counter. In a worktree (already isolated), mismatch should be advisory not blocking. Reproduce: branch `fix-server-bugs` with files in `patches/` — keywords don't overlap, gate blocks everything. Fix: when inWorktree is true, skip mismatch enforcement and show standard "commit now" guidance. Reported from teams-webhooks project.
+- [x] T540: Fix commit-counter-gate deadlock in worktrees — skip mismatch enforcement when already in a worktree. 1 new test (20 total). Synced to live hooks.
 - [ ] Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
 
 ## Architecture Notes
