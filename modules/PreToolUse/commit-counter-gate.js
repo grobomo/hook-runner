@@ -254,9 +254,11 @@ module.exports = function(input) {
     // Check for branch-file mismatch
     var mismatch = checkBranchFileMismatch(branch, files);
 
-    if (mismatch) {
+    if (mismatch && !inWorktree) {
       // WRONG BRANCH — changed files don't relate to this branch at all
       // T485: Set worktreeRequired flag so git commit is also blocked
+      // T540: Only enforce on main checkout. In worktrees, mismatch is advisory —
+      // you're already isolated and can't EnterWorktree from within a worktree.
       writeCounter(count, true);
       var topDirs = [];
       var seen = {};

@@ -409,6 +409,48 @@ test("T497: real files + metadata files still detect mismatch", function() {
   cleanupRepo(dir);
 });
 
+test("T540: mismatch in worktree gives commit guidance, not WRONG BRANCH", function() {
+  // Branch about server-bugs, files in patches/ — mismatch, but we're in a worktree
+  // Worktrees are already isolated, so mismatch should be advisory not blocking
+  var dir = createTempRepo("fix-server-bugs", [
+    "patches/hotfix-1.diff",
+    "patches/hotfix-2.diff"
+  ]);
+  process.env.CLAUDE_PROJECT_DIR = dir;
+
+  // Convert .git dir to a file (simulating worktree)
+  var gitDir = path.join(dir, ".git");
+  var realGitDir = path.join(os.tmpdir(), "fake-git-t540-" + Date.now());
+  fs.mkdirSync(realGitDir, { recursive: true });
+  fs.cpSync(path.join(gitDir, "HEAD"), path.join(realGitDir, "HEAD"));
+  // Copy refs so git status works
+  try { fs.cpSync(path.join(gitDir, "refs"), path.join(realGitDir, "refs"), { recursive: true }); } catch(e) {}
+  try { fs.cpSync(path.join(gitDir, "objects"), path.join(realGitDir, "objects"), { recursive: true }); } catch(e) {}
+  try { fs.cpSync(path.join(gitDir, "config"), path.join(realGitDir, "config")); } catch(e) {}
+  fs.rmSync(gitDir, { recursive: true, force: true });
+  fs.writeFileSync(gitDir, "gitdir: " + realGitDir);
+
+  setCounter(14);
+
+  var gate = loadGate();
+  var r = gate({ tool_name: "Edit", tool_input: { file_path: path.join(dir, "patches/hotfix-1.diff"), old_string: "a", new_string: "b" } });
+  // In a worktree, even with mismatch, should NOT get WRONG BRANCH — should get standard commit guidance or pass
+  if (r !== null) {
+    assert(r.reason.indexOf("WRONG BRANCH") === -1,
+      "worktree mismatch should NOT say WRONG BRANCH, got: " + r.reason.substring(0, 150));
+    assert(r.reason.indexOf("EnterWorktree") === -1,
+      "should not recommend EnterWorktree when already in one");
+  }
+
+  // worktreeRequired should NOT be set
+  var data = JSON.parse(fs.readFileSync(COUNTER_FILE, "utf-8"));
+  assert(data.worktreeRequired !== true,
+    "worktreeRequired should not be set in a worktree");
+
+  fs.rmSync(realGitDir, { recursive: true, force: true });
+  cleanupRepo(dir);
+});
+
 // --- Cleanup ---
 process.env.CLAUDE_PROJECT_DIR = origProjectDir || "";
 process.env.HOOK_RUNNER_TEST = origTestEnv || "";
