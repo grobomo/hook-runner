@@ -428,19 +428,39 @@ function cmdWorkflow(args) {
       console.error('Workflow "' + createName + '" already exists at ' + wfPath);
       process.exit(1);
     }
-    // Check for --from-template flag
+    // Check for --from-template flag (supports comma-separated: security,quality)
     var tplIdx = args.indexOf("--from-template");
-    var tplName = tplIdx !== -1 ? args[tplIdx + 1] : null;
+    var tplArg = tplIdx !== -1 ? args[tplIdx + 1] : null;
     var yaml;
-    if (tplName) {
-      if (!TEMPLATES[tplName]) {
-        console.error('Unknown template: "' + tplName + '". Available: ' + Object.keys(TEMPLATES).join(", "));
-        process.exit(1);
+    if (tplArg) {
+      var tplNames = tplArg.split(",");
+      for (var tni = 0; tni < tplNames.length; tni++) {
+        if (!TEMPLATES[tplNames[tni]]) {
+          console.error('Unknown template: "' + tplNames[tni] + '". Available: ' + Object.keys(TEMPLATES).join(", "));
+          process.exit(1);
+        }
       }
-      var tmpl = TEMPLATES[tplName];
+      // Merge templates — combine descriptions, deduplicate modules
+      var descriptions = [];
+      var allGroups = [];
+      var seenModules = {};
+      for (var tmi = 0; tmi < tplNames.length; tmi++) {
+        var tmpl = TEMPLATES[tplNames[tmi]];
+        descriptions.push(tmpl.description);
+        for (var mgi = 0; mgi < tmpl.modules.length; mgi++) {
+          var dedupedNames = [];
+          for (var mni = 0; mni < tmpl.modules[mgi].names.length; mni++) {
+            var mn = tmpl.modules[mgi].names[mni];
+            if (!seenModules[mn]) { seenModules[mn] = true; dedupedNames.push(mn); }
+          }
+          if (dedupedNames.length > 0) {
+            allGroups.push({ comment: tmpl.modules[mgi].comment, names: dedupedNames });
+          }
+        }
+      }
       var lines = [
         "name: " + createName,
-        "description: " + tmpl.description,
+        "description: " + descriptions.join(" + "),
         "version: 1",
         "enabled: true",
         "steps:",
@@ -453,10 +473,10 @@ function cmdWorkflow(args) {
         "",
         "modules:",
       ];
-      for (var gi = 0; gi < tmpl.modules.length; gi++) {
-        lines.push("  # " + tmpl.modules[gi].comment);
-        for (var mi4 = 0; mi4 < tmpl.modules[gi].names.length; mi4++) {
-          lines.push("  - " + tmpl.modules[gi].names[mi4]);
+      for (var gi = 0; gi < allGroups.length; gi++) {
+        lines.push("  # " + allGroups[gi].comment);
+        for (var mi4 = 0; mi4 < allGroups[gi].names.length; mi4++) {
+          lines.push("  - " + allGroups[gi].names[mi4]);
         }
       }
       lines.push("");
@@ -480,8 +500,31 @@ function cmdWorkflow(args) {
     }
     fs.writeFileSync(wfPath, yaml);
     console.log('Created workflow "' + createName + '" at ' + wfPath);
-    if (tplName) {
-      console.log('Template "' + tplName + '" applied.');
+    if (tplArg) {
+      console.log('Template "' + tplArg + '" applied.');
+      // Validate that template modules exist in the catalog
+      var catalogBase = path.join(__dirname, "modules");
+      var liveBase = path.join(HOME, ".claude", "hooks", "run-modules");
+      var missing = [];
+      for (var vgi = 0; vgi < allGroups.length; vgi++) {
+        for (var vmi = 0; vmi < allGroups[vgi].names.length; vmi++) {
+          var modName = allGroups[vgi].names[vmi];
+          var found = false;
+          var vEvents = ["PreToolUse", "PostToolUse", "SessionStart", "Stop", "UserPromptSubmit"];
+          for (var ve = 0; ve < vEvents.length; ve++) {
+            if (fs.existsSync(path.join(catalogBase, vEvents[ve], modName + ".js")) ||
+                fs.existsSync(path.join(liveBase, vEvents[ve], modName + ".js"))) {
+              found = true; break;
+            }
+          }
+          if (!found) missing.push(modName);
+        }
+      }
+      if (missing.length > 0) {
+        console.log("  Warning: " + missing.length + " module(s) not found in catalog or live hooks:");
+        console.log("    " + missing.join(", "));
+        console.log("  Install hook-runner first: npx grobomo/hook-runner --yes");
+      }
       console.log("Next steps:");
       console.log("  1. Review and customize modules for your needs");
       console.log("  2. Enable: --workflow enable " + createName);
