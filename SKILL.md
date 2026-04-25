@@ -68,6 +68,17 @@ node setup.js --workflow query Edit  # which workflows affect Edit?
 
 Built-in: `starter` (safe defaults, 42 modules), `shtd` (spec-driven pipeline, 101 modules), `gsd` (phase-driven pipeline, 101 modules), `customer-data-guard`, `no-local-docker`, `cross-project-reset`.
 
+## Workflow Templates
+
+Create workflows from curated templates instead of empty scaffolds:
+
+```
+node setup.js --workflow templates                              # list available templates
+node setup.js --workflow create my-wf --from-template security  # create from template
+```
+
+Templates: `security` (10 modules), `quality` (9), `lifecycle` (11), `minimal` (3).
+
 ## Workflow Groups
 
 Each workflow YAML can declare `enabled: true/false`. Combined with `workflow-config.json` overrides, this gives layered control:
