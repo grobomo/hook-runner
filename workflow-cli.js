@@ -482,6 +482,29 @@ function cmdWorkflow(args) {
     console.log('Created workflow "' + createName + '" at ' + wfPath);
     if (tplName) {
       console.log('Template "' + tplName + '" applied.');
+      // Validate that template modules exist in the catalog
+      var catalogBase = path.join(__dirname, "modules");
+      var liveBase = path.join(HOME, ".claude", "hooks", "run-modules");
+      var missing = [];
+      for (var vgi = 0; vgi < tmpl.modules.length; vgi++) {
+        for (var vmi = 0; vmi < tmpl.modules[vgi].names.length; vmi++) {
+          var modName = tmpl.modules[vgi].names[vmi];
+          var found = false;
+          var events = ["PreToolUse", "PostToolUse", "SessionStart", "Stop", "UserPromptSubmit"];
+          for (var ve = 0; ve < events.length; ve++) {
+            if (fs.existsSync(path.join(catalogBase, events[ve], modName + ".js")) ||
+                fs.existsSync(path.join(liveBase, events[ve], modName + ".js"))) {
+              found = true; break;
+            }
+          }
+          if (!found) missing.push(modName);
+        }
+      }
+      if (missing.length > 0) {
+        console.log("  Warning: " + missing.length + " module(s) not found in catalog or live hooks:");
+        console.log("    " + missing.join(", "));
+        console.log("  Install hook-runner first: npx grobomo/hook-runner --yes");
+      }
       console.log("Next steps:");
       console.log("  1. Review and customize modules for your needs");
       console.log("  2. Enable: --workflow enable " + createName);

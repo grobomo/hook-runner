@@ -56,6 +56,10 @@ check "invalid template does not create file" '[ ! -f "$TMPDIR/workflows/bad-wf.
 NOARG_OUT=$(cd "$REPO_DIR" && node setup.js --from-template security 2>&1) || true
 check "from-template alone shows usage" 'echo "$NOARG_OUT" | grep -qi "usage\|create\|template"'
 
+# 8. Module validation — security template modules should all exist in catalog or live hooks
+SEC_VALID_OUT=$(cd "$REPO_DIR" && node setup.js --workflow create val-test --from-template security --dir "$TMPDIR" 2>&1) || true
+check "no missing modules warning for security" '! echo "$SEC_VALID_OUT" | grep -qi "not found in catalog"'
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ]
