@@ -2,6 +2,72 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.58.0] — 2026-04-24
+
+### Added
+- **Install drift detection** in `--health` (T034) — detects version mismatch and missing JS files between repo and skill copy. Two new checks: `install-version` and `install-files`.
+- **SKILL.md slash-command sync** (T032) — all `node setup.js` references replaced with `/hook-runner` slash commands to match marketplace format.
+
+### Fixed
+- **README marketplace reference** (T038) — corrected repo name from `claude-code-skills` to `ai-skill-marketplace` and commit-counter-gate description (5→15 edits).
+
+### Removed
+- 136 lines of duplicate `cmdAuditProject` dead code (T034).
+
+### Stats
+- 85 suites, 1206 tests, 0 failures
+- 137 health checks OK, 0 warnings, 0 failures
+- 120 modules, 13 workflows, 4 templates
+
+## [2.57.0] — 2026-04-24
+
+### Added
+- **Template module validation** (T028) — after creating a workflow from a template, validates all referenced modules exist in the catalog. Warns about missing modules.
+- **Template composition** (T029) — combine multiple templates: `--from-template security,quality`. Automatic deduplication when templates share modules.
+
+### Fixed
+- **`--from-template` arg edge case** (T030) — reject flags (strings starting with `-`) as template names instead of silently failing.
+
+### Stats
+- 120 modules, 13 workflows, 4 templates
+- 1200 tests, 0 failures
+
+## [2.56.0] — 2026-04-24
+
+### Added
+- **Workflow templates** (T024) — create workflows from curated module sets instead of empty scaffolds.
+  - `--workflow templates` — list available templates with categorized module breakdowns.
+  - `--workflow create <name> --from-template <template>` — create a workflow pre-populated with template modules.
+  - 4 built-in templates: `security` (10 modules), `quality` (9), `lifecycle` (11), `minimal` (3).
+
+### Fixed
+- E2E enforcement test isolation — branch-pr-gate test now runs in isolated CWD (was inheriting repo branch).
+
+### Stats
+- 120 modules, 13 workflows, 4 templates
+- 1192 tests, 0 failures
+
+## [2.55.0] — 2026-04-24
+
+### Added
+- **Workflow groups** (T005) — YAML `enabled:` field controls group on/off state.
+- **`--groups` CLI** — list all workflow groups with ON/OFF status and module counts.
+- **`--toggle <name>`** — flip a workflow group on/off in its YAML definition.
+- **`--enable-all` / `--disable-all`** (T006) — bulk toggle all workflow groups.
+- **HTML report badges** (T007) — ON/OFF badges on workflow cards, disabled cards visually dimmed.
+- **30s cache** in `loadWorkflowGroups()` for performance.
+
+### Fixed
+- All 4 CI checks green for the first time (T011):
+  - T477: `git init -b main` for CI runners with `master` default.
+  - T114: CRLF normalization in workflow-cli.js YAML reader.
+  - T519: Replace `grep -oP` with POSIX alternatives for Windows CI.
+- **preserve-iterated-content perf** (T539) — 291ms avg → <5ms with caching.
+
+### Stats
+- 120 modules, 13 workflows, 1174 tests
+- All 4 CI checks green (secret-scan, test, test-windows, install-test)
+
 ## [2.54.0] — 2026-04-19
 
 ### Added
