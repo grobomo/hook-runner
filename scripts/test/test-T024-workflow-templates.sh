@@ -60,6 +60,25 @@ check "from-template alone shows usage" 'echo "$NOARG_OUT" | grep -qi "usage\|cr
 SEC_VALID_OUT=$(cd "$REPO_DIR" && node setup.js --workflow create val-test --from-template security --dir "$TMPDIR" 2>&1) || true
 check "no missing modules warning for security" '! echo "$SEC_VALID_OUT" | grep -qi "not found in catalog"'
 
+# 9. Template composition — combine multiple templates
+COMBO_OUT=$(cd "$REPO_DIR" && node setup.js --workflow create combo-test --from-template security,quality --dir "$TMPDIR" 2>&1) || true
+check "composition creates workflow" 'echo "$COMBO_OUT" | grep -qi "created"'
+check "composition YAML exists" '[ -f "$TMPDIR/workflows/combo-test.yml" ]'
+check "composition has security module" 'grep -q "force-push-gate" "$TMPDIR/workflows/combo-test.yml"'
+check "composition has quality module" 'grep -q "test-coverage-check" "$TMPDIR/workflows/combo-test.yml"'
+check "composition deduplicates" '
+  COUNT=$(grep -c "force-push-gate" "$TMPDIR/workflows/combo-test.yml" || true)
+  [ "$COUNT" -eq 1 ]
+'
+
+# 10. Composition with minimal+security should deduplicate shared modules
+DEDUP_OUT=$(cd "$REPO_DIR" && node setup.js --workflow create dedup-test --from-template minimal,security --dir "$TMPDIR" 2>&1) || true
+check "dedup creates workflow" 'echo "$DEDUP_OUT" | grep -qi "created"'
+check "dedup has no duplicate force-push-gate" '
+  COUNT=$(grep -c "force-push-gate" "$TMPDIR/workflows/dedup-test.yml" || true)
+  [ "$COUNT" -eq 1 ]
+'
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ]
