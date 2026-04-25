@@ -79,6 +79,14 @@ check "dedup has no duplicate force-push-gate" '
   [ "$COUNT" -eq 1 ]
 '
 
+# 11. --from-template with no value shows usage error
+EDGE_OUT=$(cd "$REPO_DIR" && node setup.js --workflow create test-edge --from-template --dir "$TMPDIR" 2>&1) || true
+check "edge: --from-template with no value" 'echo "$EDGE_OUT" | grep -qi "usage"'
+
+# 12. --from-template at end of args shows usage error
+EDGE2_OUT=$(cd "$REPO_DIR" && node setup.js --workflow create test-edge2 --from-template 2>&1) || true
+check "edge: --from-template at end" 'echo "$EDGE2_OUT" | grep -qi "usage"'
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ]
