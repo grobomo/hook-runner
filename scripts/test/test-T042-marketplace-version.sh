@@ -11,6 +11,13 @@ failed=0
 pass() { echo "OK: $1"; passed=$((passed + 1)); }
 fail() { echo "FAIL: $1"; failed=$((failed + 1)); }
 
+# Skip if marketplace repo not cloned (CI environments)
+if [ ! -d "$MARKETPLACE_DIR" ]; then
+  echo "SKIP: marketplace repo not present (CI)"
+  echo "  0 passed, 0 failed (skipped)"
+  exit 0
+fi
+
 # Test 1: plugin.json exists
 if [ -f "$MARKETPLACE_DIR/.claude-plugin/plugin.json" ]; then
   pass "plugin.json exists"
