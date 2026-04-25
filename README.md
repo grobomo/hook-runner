@@ -32,7 +32,7 @@ hook-runner is one piece of a larger Claude Code tooling ecosystem. Here's how t
 
 - **mcp-manager** — MCP servers provide Claude with tools (browser automation, API access). hook-runner gates *which* tools Claude can use and *how*. For example, a PreToolUse module can block `Bash` commands that hit production endpoints, while mcp-manager provides the staging endpoint via an MCP tool.
 
-- **claude-code-skills marketplace** — hook-runner is published to `grobomo/claude-code-skills`. Install the skill to get `--workflow`, `--report`, and the full module catalog. The marketplace copy stays in sync with this repo.
+- **emu skill marketplace** — hook-runner is available on the [emu skill marketplace](https://github.com/trend-ai-taskforce/ai-skill-marketplace). Install the skill to get `--workflow`, `--report`, and the full module catalog. The marketplace copy stays in sync with this repo.
 
 - **OpenClaw** — hook-runner gates are portable to [OpenClaw](https://openclaw.ai) via the Plugin SDK. The `openclaw-plugin/` directory contains a ready-to-install plugin with 3 ported gates (force-push, secret-scan, commit-quality). Install with `bash openclaw-plugin/install.sh`. See [openclaw-plugin/README.md](openclaw-plugin/README.md) for the conversion table.
 
@@ -364,7 +364,7 @@ Full catalog in `modules/` directory:
 | `blueprint-no-sleep` | Blocks sleep between Blueprint MCP calls (pages load during prompt processing) |
 | `branch-pr-gate` | Enforces feature branch → task branch → PR workflow |
 | `claude-p-pattern` | Enforces correct `claude -p` invocation pattern |
-| `commit-counter-gate` | Forces commit after every 5 edits — prevents losing work on context reset |
+| `commit-counter-gate` | Forces commit after every 15 edits — prevents losing work on context reset |
 | `commit-quality-gate` | Blocks generic commit messages (< 5 words, "fix"/"update" without detail) |
 | `victory-declaration-gate` | Blocks vague success claims in commit titles ("all tests pass", "all green", "100%") |
 | `unresolved-issues-gate` | Scans TODO.md for unchecked FAIL/WARN/timeout tasks before allowing commit |
