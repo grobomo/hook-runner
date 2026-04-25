@@ -4,7 +4,7 @@ Modular hook runner for Claude Code. Workflows group modules into enforceable pi
 
 ## Repo
 - **Account**: grobomo (public)
-- **Marketplace**: grobomo/claude-code-skills → plugins/hook-runner
+- **Marketplace**: trend-ai-taskforce/ai-skill-marketplace → plugins/hook-runner (PR #164 pending)
 - **Local skill**: ~/.claude/skills/hook-runner/
 - **Live hooks**: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
@@ -22,7 +22,7 @@ Modular hook runner for Claude Code. Workflows group modules into enforceable pi
 - `workflows/` — built-in workflow definitions (YAML)
 - `specs/` — feature specs with tasks and checkpoints
 - `demo.js` — interactive demo (simulates module gates against realistic scenarios)
-- `scripts/test/` — test scripts (52 suites)
+- `scripts/test/` — test scripts (85 suites, 1206 tests)
 - `package.json` — npm package (enables `npx grobomo/hook-runner`)
 
 ## Testing
@@ -85,7 +85,7 @@ This is a grobomo repo. Before pushing:
 2. Push
 3. Sync to marketplace:
    ```bash
-   DEST=../claude-code-skills/plugins/hook-runner
+   DEST=../ai-skill-marketplace/plugins/hook-runner
    # Core files
    cp setup.js report.js load-modules.js workflow.js workflow-cli.js hook-log.js run-async.js constants.js package.json CHANGELOG.md README.md CLAUDE.md "$DEST/"
    # Modules — use /* to copy contents INTO existing dir (not nested modules/modules/)
