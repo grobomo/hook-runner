@@ -430,7 +430,12 @@ function cmdWorkflow(args) {
     }
     // Check for --from-template flag (supports comma-separated: security,quality)
     var tplIdx = args.indexOf("--from-template");
-    var tplArg = tplIdx !== -1 ? args[tplIdx + 1] : null;
+    var tplRaw = tplIdx !== -1 ? args[tplIdx + 1] : null;
+    var tplArg = tplRaw && tplRaw.indexOf("--") !== 0 ? tplRaw : null;
+    if (tplIdx !== -1 && !tplArg) {
+      console.error("Usage: --from-template <name> (e.g. security, quality, security,quality)");
+      process.exit(1);
+    }
     var yaml;
     if (tplArg) {
       var tplNames = tplArg.split(",");
