@@ -364,7 +364,7 @@ Full catalog in `modules/` directory:
 | `blueprint-no-sleep` | Blocks sleep between Blueprint MCP calls (pages load during prompt processing) |
 | `branch-pr-gate` | Enforces feature branch → task branch → PR workflow |
 | `claude-p-pattern` | Enforces correct `claude -p` invocation pattern |
-| `commit-counter-gate` | Forces commit after every 5 edits — prevents losing work on context reset |
+| `commit-counter-gate` | Forces commit after every 15 edits — prevents losing work on context reset |
 | `commit-quality-gate` | Blocks generic commit messages (< 5 words, "fix"/"update" without detail) |
 | `victory-declaration-gate` | Blocks vague success claims in commit titles ("all tests pass", "all green", "100%") |
 | `unresolved-issues-gate` | Scans TODO.md for unchecked FAIL/WARN/timeout tasks before allowing commit |
