@@ -1575,144 +1575,6 @@ function cmdPerf() {
 }
 
 // T494: Per-project hook audit — fired modules, blocks, coverage gaps, timing
-function cmdAuditProject(args) {
-  var projIdx = args.indexOf("--audit-project");
-  var projName = projIdx >= 0 && args[projIdx + 1] ? args[projIdx + 1] : "";
-  if (!projName || projName.indexOf("--") === 0) {
-    console.log("Usage: node setup.js --audit-project <name>");
-    console.log("  Filters hook log by project name (fuzzy match).");
-    console.log("  Shows: blocks, passes, coverage gaps, timeline.");
-    console.log("  Example: node setup.js --audit-project dd-lab");
-    return;
-  }
-
-  console.log("[hook-runner] Project Audit: " + projName);
-  console.log("========================");
-
-  // Read all log entries matching project name
-  var entries = [];
-  function readLogFile(logFile) {
-    if (!fs.existsSync(logFile)) return;
-    try {
-      var lines = fs.readFileSync(logFile, "utf-8").split("\n");
-      for (var i = 0; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
-        try {
-          var obj = JSON.parse(lines[i]);
-          var proj = String(obj.project || "");
-          if (proj.toLowerCase().indexOf(projName.toLowerCase()) !== -1) entries.push(obj);
-        } catch (e) {}
-      }
-    } catch (e) {}
-  }
-  readLogFile(HOOK_LOG_PATH + ".1");
-  readLogFile(HOOK_LOG_PATH);
-
-  if (entries.length === 0) {
-    console.log("  No log entries found for '" + projName + "'.");
-    console.log("  Run a session in that project to generate hook activity.");
-    return;
-  }
-
-  // Aggregate
-  var byModule = {}, byEvent = {}, blocks = [], firstTs = "", lastTs = "";
-  for (var i = 0; i < entries.length; i++) {
-    var e = entries[i];
-    var key = e.event + "/" + e.module;
-    if (!byModule[key]) byModule[key] = { pass: 0, block: 0, error: 0, total: 0, msTotal: 0, msCount: 0, msMax: 0 };
-    byModule[key].total++;
-    var r = e.result || "pass";
-    if (r === "pass" || r === "text") byModule[key].pass++;
-    else if (r === "block" || r === "deny") byModule[key].block++;
-    else if (r === "error") byModule[key].error++;
-    byEvent[e.event] = (byEvent[e.event] || 0) + 1;
-    var ts = e.ts || "";
-    if (ts && (!firstTs || ts < firstTs)) firstTs = ts;
-    if (ts && ts > lastTs) lastTs = ts;
-    if (typeof e.ms === "number") { byModule[key].msTotal += e.ms; byModule[key].msCount++; if (e.ms > byModule[key].msMax) byModule[key].msMax = e.ms; }
-    if (r === "block" || r === "deny") {
-      blocks.push({ ts: e.ts || "", module: e.module || "", event: e.event || "", tool: e.tool || "", reason: String(e.reason || "").substring(0, 120) });
-    }
-  }
-
-  // Summary
-  var totalPass = 0, totalBlock = 0;
-  var modKeys = Object.keys(byModule).sort();
-  modKeys.forEach(function(k) { totalPass += byModule[k].pass; totalBlock += byModule[k].block; });
-
-  console.log("  Entries: " + entries.length + " (" + (firstTs ? firstTs.substring(0, 10) : "?") + " to " + (lastTs ? lastTs.substring(0, 10) : "?") + ")");
-  console.log("  Pass: " + totalPass + "  Block: " + totalBlock);
-  console.log("");
-
-  // By event
-  console.log("  By event:");
-  Object.keys(byEvent).sort().forEach(function(ev) { console.log("    " + ev + ": " + byEvent[ev]); });
-  console.log("");
-
-  // Blocks detail
-  if (blocks.length > 0) {
-    console.log("  Blocks (" + blocks.length + "):");
-    blocks.forEach(function(b) {
-      console.log("    [" + (b.ts ? b.ts.substring(0, 19) : "?") + "] " + b.module + " (" + b.tool + ")");
-      if (b.reason) console.log("      " + b.reason);
-    });
-    console.log("");
-  }
-
-  // Coverage gaps — installed modules that never fired for this project
-  var firedSet = {};
-  modKeys.forEach(function(k) { firedSet[k] = true; });
-  var gaps = [];
-  var modEvents = ["PreToolUse", "PostToolUse", "SessionStart", "Stop"];
-  modEvents.forEach(function(evt) {
-    var modDir = path.join(HOOKS_DIR, "run-modules", evt);
-    if (!fs.existsSync(modDir)) return;
-    try {
-      fs.readdirSync(modDir).forEach(function(f) {
-        if (!f.endsWith(".js") || f.startsWith("_")) return;
-        var modName = evt + "/" + f.replace(".js", "");
-        if (!firedSet[modName]) gaps.push(modName);
-      });
-    } catch (e) {}
-  });
-
-  var installedCount = modEvents.reduce(function(sum, evt) {
-    var d = path.join(HOOKS_DIR, "run-modules", evt);
-    try { return sum + fs.readdirSync(d).filter(function(f) { return f.endsWith(".js") && !f.startsWith("_"); }).length; } catch(e) { return sum; }
-  }, 0);
-
-  console.log("  Module coverage:");
-  console.log("    Installed: " + installedCount + "  Fired: " + modKeys.length + "  Gaps: " + gaps.length);
-  if (gaps.length > 0 && gaps.length <= 40) {
-    var gByEvt = {};
-    gaps.forEach(function(g) { var ev = g.split("/")[0]; if (!gByEvt[ev]) gByEvt[ev] = []; gByEvt[ev].push(g.split("/").slice(1).join("/")); });
-    Object.keys(gByEvt).sort().forEach(function(ev) { console.log("    [" + ev + "] " + gByEvt[ev].join(", ")); });
-  }
-  console.log("");
-
-  // Timing top 10
-  var timed = modKeys.filter(function(k) { return byModule[k].msCount > 0; })
-    .map(function(k) { var m = byModule[k]; return { key: k, avg: Math.round(m.msTotal / m.msCount), max: m.msMax, count: m.msCount }; })
-    .sort(function(a, b) { return b.avg - a.avg; }).slice(0, 10);
-  if (timed.length > 0) {
-    console.log("  Timing (top 10 slowest):");
-    timed.forEach(function(t) {
-      var note = t.max > 100 ? "  *** spike " + t.max + "ms" : "";
-      console.log("    " + t.key + "  avg:" + t.avg + "ms  (" + t.count + " calls)" + note);
-    });
-    console.log("");
-  }
-
-  // Verdict
-  var blockRate = entries.length > 0 ? Math.round(totalBlock / entries.length * 100) : 0;
-  console.log("  Verdict:");
-  console.log("    Block rate: " + blockRate + "% (" + totalBlock + "/" + entries.length + ")");
-  if (gaps.length > installedCount * 0.5) console.log("    WARNING: >50% modules never fired — session may be too short for coverage");
-  if (blockRate > 20) console.log("    NOTE: High block rate — check workflow config for this project");
-  else if (totalBlock === 0) console.log("    OK: No blocks — hooks are passing cleanly");
-  console.log("");
-}
-
 // T494: Per-project hook audit — shows what fired, what blocked, gaps, timing
 // T500: Added --json output mode for programmatic consumption
 function cmdAuditProject(args) {
@@ -2441,7 +2303,6 @@ function main() {
   }
   if (args.indexOf("--health") !== -1) return cmdHealth();
   if (args.indexOf("--audit-project") !== -1) return cmdAuditProject(args);
-  if (args.indexOf("--audit-project") !== -1) return cmdAuditProject(args);
   if (args.indexOf("--xref") !== -1) return cmdXref();
   if (args.indexOf("--sync") !== -1) return cmdSync(dryRun);
 
@@ -2850,6 +2711,35 @@ function healthCheck() {
       if (baseNameMap[bk[bki]].length > 1) {
         results.push({ check: "duplicate", file: ddEvt + "/" + baseNameMap[bk[bki]].join(", "), status: "warning", detail: "possible duplicates — similar base name '" + bk[bki] + "'" });
       }
+    }
+  }
+
+  // 8. Install drift — compare repo version with installed skill copy
+  var skillDir = path.join(os.homedir(), ".claude", "skills", "hook-runner");
+  var skillPkg = path.join(skillDir, "package.json");
+  if (fs.existsSync(skillPkg)) {
+    try {
+      var installedVersion = JSON.parse(fs.readFileSync(skillPkg, "utf-8")).version;
+      if (installedVersion === VERSION) {
+        results.push({ check: "install-version", file: "package.json", status: "ok", detail: "v" + VERSION });
+      } else {
+        results.push({ check: "install-version", file: "package.json", status: "warning", detail: "installed v" + installedVersion + ", repo v" + VERSION + " — run: npx grobomo/hook-runner --yes" });
+      }
+    } catch(e) {
+      results.push({ check: "install-version", file: "package.json", status: "warning", detail: "cannot read installed version" });
+    }
+    // Check for missing JS files in skill copy
+    var repoJsFiles = fs.readdirSync(__dirname).filter(function(f) { return f.slice(-3) === ".js"; });
+    var missingJs = [];
+    for (var mji = 0; mji < repoJsFiles.length; mji++) {
+      if (!fs.existsSync(path.join(skillDir, repoJsFiles[mji]))) {
+        missingJs.push(repoJsFiles[mji]);
+      }
+    }
+    if (missingJs.length > 0) {
+      results.push({ check: "install-files", file: "skill copy", status: "warning", detail: missingJs.length + " missing: " + missingJs.slice(0, 5).join(", ") + (missingJs.length > 5 ? "..." : "") });
+    } else {
+      results.push({ check: "install-files", file: "skill copy", status: "ok", detail: repoJsFiles.length + " JS files synced" });
     }
   }
 
