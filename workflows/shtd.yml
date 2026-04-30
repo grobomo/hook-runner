@@ -83,6 +83,7 @@ modules:
   - gh-auto-gate
   - no-hook-bypass
   - no-nested-claude
+  - no-playwright-direct
   - publish-json-guard
   # Code quality
   - archive-not-delete
