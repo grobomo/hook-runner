@@ -35,23 +35,35 @@ try {
   // T477: Read branch from CWD first (worktree), fall back to CLAUDE_PROJECT_DIR.
   // Worktrees have .git as a file ("gitdir: ...") pointing to the real gitdir.
   // Without this, worktree sessions always see "main" from the main checkout.
+  // T543: Walk up directory tree to find .git (handles subdirectories of repos).
+  // Previously only checked dir/.git, missing repos where projectDir is a subdirectory.
   function readBranchFromDir(dir) {
-    var dotGit = path.join(dir, ".git");
-    var headPath;
-    try {
-      var stat = fs.statSync(dotGit);
-      if (stat.isFile()) {
-        var gitdir = fs.readFileSync(dotGit, "utf-8").trim().replace(/^gitdir:\s*/, "");
-        if (!path.isAbsolute(gitdir)) gitdir = path.join(dir, gitdir);
-        headPath = path.join(gitdir, "HEAD");
-      } else {
-        headPath = path.join(dotGit, "HEAD");
+    var current = dir;
+    for (var walk = 0; walk < 20; walk++) {
+      var dotGit = path.join(current, ".git");
+      var headPath;
+      try {
+        var stat = fs.statSync(dotGit);
+        if (stat.isFile()) {
+          var gitdir = fs.readFileSync(dotGit, "utf-8").trim().replace(/^gitdir:\s*/, "");
+          if (!path.isAbsolute(gitdir)) gitdir = path.join(current, gitdir);
+          headPath = path.join(gitdir, "HEAD");
+        } else {
+          headPath = path.join(dotGit, "HEAD");
+        }
+        // Found .git — read HEAD
+        try {
+          var head = fs.readFileSync(headPath, "utf-8").trim();
+          return head.indexOf("ref: refs/heads/") === 0 ? head.slice(16) : "";
+        } catch (e) { return ""; }
+      } catch (e) {
+        // No .git here — walk up
+        var parent = path.dirname(current);
+        if (parent === current) break;
+        current = parent;
       }
-    } catch (e) { return ""; }
-    try {
-      var head = fs.readFileSync(headPath, "utf-8").trim();
-      return head.indexOf("ref: refs/heads/") === 0 ? head.slice(16) : "";
-    } catch (e) { return ""; }
+    }
+    return "";
   }
 
   // Prefer CWD branch (worktree) over projectDir branch (main checkout)

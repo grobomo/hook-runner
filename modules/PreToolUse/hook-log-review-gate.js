@@ -16,16 +16,19 @@ var MODULE_PATTERNS = [
   /[\/\\]run-modules[\/\\](PreToolUse|PostToolUse|SessionStart|Stop|UserPromptSubmit)[\/\\]/,
 ];
 
-// Flag file: set by the module itself when review is confirmed
-// Per-session (includes ppid) so each session must do its own review
+// Flag file: time-based validity (4 hours). No ppid — it changes per invocation.
 var FLAG_DIR = path.join(
   process.env.HOME || process.env.USERPROFILE || "/tmp",
   ".claude", "hooks"
 );
+var REVIEW_FLAG = path.join(FLAG_DIR, ".hook-log-reviewed");
+var FLAG_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
 
-function getFlagPath(moduleName) {
-  var ppid = process.ppid || "0";
-  return path.join(FLAG_DIR, ".hook-log-reviewed-" + ppid + "-" + moduleName);
+function isReviewFresh() {
+  try {
+    var stat = fs.statSync(REVIEW_FLAG);
+    return (Date.now() - stat.mtimeMs) < FLAG_TTL_MS;
+  } catch (e) { return false; }
 }
 
 // Extract the module name being created/edited from the file path
@@ -58,21 +61,8 @@ module.exports = function(input) {
   var moduleName = extractModuleName(filePath);
   if (!moduleName) return null;
 
-  // Check if review flag exists for this module in this session
-  var flagPath = getFlagPath(moduleName);
-  if (fs.existsSync(flagPath)) return null;
-
-  // Check if hook-log.jsonl was read recently (within last 5 tool calls)
-  // We can't track tool history here, so we use a flag file approach:
-  // The flag is set when Claude reads hook-log.jsonl via a PostToolUse module.
-  // For now, block and instruct Claude to review logs first.
-  var reviewFlagPath = path.join(FLAG_DIR, ".hook-log-reviewed-" + (process.ppid || "0"));
-  if (fs.existsSync(reviewFlagPath)) {
-    // General review done this session — allow
-    // Touch the per-module flag so we don't re-check
-    try { fs.writeFileSync(flagPath, Date.now() + "\n"); } catch (e) {}
-    return null;
-  }
+  // Check if hook-log review was done recently (within 4 hours)
+  if (isReviewFresh()) return null;
 
   return {
     decision: "block",
@@ -84,7 +74,7 @@ module.exports = function(input) {
       "  2. Identify the ACTUAL commands/scenarios that triggered the issue\n" +
       "  3. Only then create/edit the module with the real evidence\n" +
       "After reviewing, run:\n" +
-      "  touch " + reviewFlagPath.replace(/\\/g, "/") + "\n" +
-      "to confirm review is done (once per session, covers all modules)."
+      "  touch " + REVIEW_FLAG.replace(/\\/g, "/") + "\n" +
+      "to confirm review is done (valid for 4 hours)."
   };
 };

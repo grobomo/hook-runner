@@ -16,9 +16,14 @@ function fail(name) { console.log("  FAIL: " + name); failed++; }
 
 // Clean up any stale flags from previous test runs
 var flagDir = path.join(os.homedir(), ".claude", "hooks");
-var ppid = process.ppid || "0";
-var reviewFlag = path.join(flagDir, ".hook-log-reviewed-" + ppid);
-try { fs.unlinkSync(reviewFlag); } catch (e) {}
+var reviewFlag = path.join(flagDir, ".hook-log-reviewed");
+// Save and remove the flag temporarily for testing
+var savedFlag = false;
+try {
+  var flagStat = fs.statSync(reviewFlag);
+  savedFlag = true;
+  fs.renameSync(reviewFlag, reviewFlag + ".test-save");
+} catch (e) {}
 
 console.log("=== hook-log-review-gate tests (T542) ===");
 
@@ -65,11 +70,6 @@ else fail("Module creation should pass after review: " + JSON.stringify(r));
 
 // 9. SessionStart modules also caught
 try { fs.unlinkSync(reviewFlag); } catch (e) {}
-// Clean per-module flag too
-try {
-  var perModFlag = path.join(flagDir, ".hook-log-reviewed-" + ppid + "-new-gate");
-  fs.unlinkSync(perModFlag);
-} catch (e) {}
 r = mod({ tool_name: "Write", tool_input: { file_path: "/proj/modules/SessionStart/check.js", content: "x" } });
 if (r && r.decision === "block") pass("SessionStart module blocked without review");
 else fail("SessionStart module should block: " + JSON.stringify(r));
