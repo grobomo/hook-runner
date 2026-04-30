@@ -1189,6 +1189,200 @@ function troubleshootDetector(toolName: string, params: Record<string, unknown>,
   );
 }
 
+// ── deploy-gate ─────────────────────────────────────────────────────────
+// WHY: E2E deploy cycles take 10+ minutes. When deployed from a dirty tree,
+// results can't be traced to a specific commit SHA.
+
+const DEPLOY_PATTERNS = [
+  /terraform\s+apply/,
+  /aws\s+(?:s3\s+cp|lambda\s+update|ecs\s+update|deploy)/,
+  /kubectl\s+apply/,
+  /docker\s+push/,
+  /scp\s+.*:/,
+  /rsync\s+.*:/,
+  /upload-and-run/,
+  /quick-sync/,
+];
+
+function deployGate(toolName: string, params: Record<string, unknown>): string | null {
+  if (toolName !== "Bash") return null;
+  const cmd = String(params.command || "");
+
+  let matched = false;
+  for (const pat of DEPLOY_PATTERNS) {
+    if (pat.test(cmd)) { matched = true; break; }
+  }
+  if (!matched) return null;
+
+  let status = "";
+  try {
+    status = execFileSync("git", ["status", "--porcelain"], {
+      encoding: "utf-8", timeout: 5000,
+    }).trim();
+  } catch {
+    return null; // Not a git repo — allow
+  }
+
+  if (!status) return null; // Clean tree
+  const lines = status.split("\n");
+  return (
+    "DEPLOY GATE: " + lines.length + " uncommitted change(s) detected. " +
+    "Commit before deploying so results are tied to a known git SHA.\n" +
+    "Run: git add <files> && git commit -m 'describe what changed'\n" +
+    "Changed files:\n" + lines.slice(0, 10).join("\n") +
+    (lines.length > 10 ? "\n... and " + (lines.length - 10) + " more" : "")
+  );
+}
+
+// ── cwd-drift-detector ──────────────────────────────────────────────────
+// WHY: AI drifts into another project's files (cd, edit, read) instead of
+// staying in the current workspace. This causes tracking and context issues.
+
+function cwdDriftDetector(toolName: string, params: Record<string, unknown>): string | null {
+  const projectDir = (process.env.CLAUDE_PROJECT_DIR || process.cwd() || "").replace(/\\/g, "/");
+  const projectsRoot = (
+    process.env.CLAUDE_PROJECTS_ROOT ||
+    (process.env.CLAUDE_PROJECT_DIR ? dirname(process.env.CLAUDE_PROJECT_DIR) : "")
+  ).replace(/\\/g, "/");
+
+  if (!projectsRoot) return null;
+
+  // Extract target path from tool call
+  let targetPath: string | null = null;
+
+  if (toolName === "Bash") {
+    const cmd = String(params.command || "");
+    const cdMatch = cmd.match(/\bcd\s+["']?([^\s"';&|]+)/);
+    if (cdMatch) targetPath = cdMatch[1];
+    if (!targetPath) {
+      const escaped = projectsRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const pathMatch = cmd.match(new RegExp("(" + escaped + "/[^\\s\"';&|]+)"));
+      if (pathMatch) targetPath = pathMatch[1];
+    }
+  } else if (["Read", "Write", "Edit", "Glob", "Grep"].includes(toolName)) {
+    targetPath = String(params.file_path || params.path || "");
+  }
+
+  if (!targetPath) return null;
+  const tp = targetPath.replace(/\\/g, "/");
+
+  // Extract project name from path
+  const escaped = projectsRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const projMatch = tp.match(new RegExp(escaped + "/([^/]+)"));
+  if (!projMatch) return null;
+
+  const targetProject = projectsRoot + "/" + projMatch[1];
+  const currentMatch = projectDir.match(new RegExp(escaped + "/([^/]+)"));
+  const currentProject = currentMatch ? projectsRoot + "/" + currentMatch[1] : projectDir;
+
+  if (targetProject === currentProject) return null;
+
+  // Allow TODO.md and SESSION_STATE.md writes (handoff files)
+  if (["Write", "Edit", "Read"].includes(toolName)) {
+    const bn = basename(String(params.file_path || ""));
+    if (bn === "TODO.md" || bn === "SESSION_STATE.md") return null;
+  }
+
+  const targetName = basename(targetProject);
+  const currentName = basename(currentProject);
+  return (
+    "CWD DRIFT: You're in " + currentName + " but tried to access " + targetName + ".\n" +
+    "Stay in the current project. If you need to do work in " + targetName + ",\n" +
+    "write tasks to " + targetProject + "/TODO.md and handle it in a separate session."
+  );
+}
+
+// ── messaging-safety-gate ───────────────────────────────────────────────
+// WHY: AI autonomously sent messages to real people during testing.
+// Blocks all outbound messaging unless the command targets a known safe ID.
+
+const SEND_PATTERNS = [
+  /teams_chat\.py\s+send/,
+  /graph_post.*messages/,
+  /graph_post.*sendMail/,
+  /graph_post.*events/,
+  /schedule\.py\s+create/,
+  /smtp.*send/i,
+  /sendmail/i,
+  /mail\s+-s/,
+];
+
+function messagingSafetyGate(toolName: string, params: Record<string, unknown>): string | null {
+  if (toolName !== "Bash") return null;
+  const cmd = String(params.command || "");
+
+  for (const pat of SEND_PATTERNS) {
+    if (pat.test(cmd)) {
+      return (
+        "MESSAGING GATE: This command sends a message to a real person/chat. " +
+        "Outbound messaging is blocked by default. " +
+        "Get explicit user permission before sending any message."
+      );
+    }
+  }
+  return null;
+}
+
+// ── commit-counter-gate ─────────────────────────────────────────────────
+// WHY: AI makes 20+ file changes without committing, then context resets
+// and all work is lost or untraceable. Every 15 edits, force a commit.
+
+const FILE_MODIFY_PATTERNS = [
+  /\bsed\s+-i/, /\bawk\s+-i/, /\becho\s+.*>/, /\bcat\s+\S+\s+>/,
+  /\btee\s/, /\bprintf\s+.*>/, /\bcp\s+/, /\bmv\s+/,
+];
+
+let commitCounter = { count: 0, ts: Date.now() };
+const MAX_EDITS = 15;
+
+function commitCounterGate(toolName: string, params: Record<string, unknown>): string | null {
+  const cmd = String(params.command || "");
+
+  // Reset counter on git commit
+  if (toolName === "Bash" && /git\s+commit/.test(cmd)) {
+    commitCounter = { count: 0, ts: Date.now() };
+    return null;
+  }
+
+  // Detect file modifications
+  let isFileModify = false;
+  if (toolName === "Edit" || toolName === "Write") {
+    isFileModify = true;
+  } else if (toolName === "Bash") {
+    for (const pat of FILE_MODIFY_PATTERNS) {
+      if (pat.test(cmd)) { isFileModify = true; break; }
+    }
+  }
+
+  if (!isFileModify) return null;
+  commitCounter.count++;
+
+  if (commitCounter.count < MAX_EDITS) return null;
+
+  // Check actual git state
+  let gitCount = 0;
+  try {
+    const out = execFileSync("git", ["status", "--porcelain"], {
+      encoding: "utf-8", timeout: 5000,
+    }).trim();
+    if (out) gitCount = out.split("\n").length;
+  } catch {
+    return null;
+  }
+
+  if (gitCount === 0) {
+    commitCounter = { count: 0, ts: Date.now() };
+    return null;
+  }
+
+  return (
+    "COMMIT COUNTER: " + commitCounter.count + " file modifications since last commit " +
+    "(" + gitCount + " files changed in git).\n" +
+    "Commit now with a descriptive message before continuing.\n" +
+    "Run: git add <files> && git commit -m 'describe what changed and why'"
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // PLUGIN ENTRY POINT
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1211,6 +1405,10 @@ const beforeToolCallGates: Record<string, GateFunction> = {
   "disk-space-guard": diskSpaceGuard,
   "no-unnecessary-sleep": noUnnecessarySleep,
   "claude-p-pattern": claudePPattern,
+  "deploy-gate": deployGate,
+  "cwd-drift-detector": cwdDriftDetector,
+  "messaging-safety-gate": messagingSafetyGate,
+  "commit-counter-gate": commitCounterGate,
 };
 
 const afterToolCallGates: Record<string, AfterGateFunction> = {

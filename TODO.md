@@ -1370,7 +1370,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T543: Fix nested-repo branch detection — runner `readBranchFromDir` walks up to find `.git`, spec-gate adds parent git root to `roots[]`. 3 tests. (PR #453, v2.61.0)
 - [x] T544: Fix 3 pre-existing test failures — T094 (README missing 2 modules), T204 (ProjectsCL1 in comment), commit-counter-gate (worktree CWD pollution). T042 marketplace version deferred to marketplace repo sync.
 - [ ] T545: Auto-sync skill package.json during setup.js install — fixes T034 install-drift test failure
-- [ ] Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
+- [ ] T546: Port 5 high-value modules to OpenClaw plugin v0.5.0 — deploy-gate, cwd-drift-detector, messaging-safety-gate, commit-counter-gate (simplified), push-unpushed. Brings plugin from 27→32 modules.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
