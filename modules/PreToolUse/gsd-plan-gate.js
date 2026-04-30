@@ -21,12 +21,12 @@ var ALLOW_PATTERNS = [
   /scripts\/test\//, /[\/\\]tests?[\/\\]/, /\.test\.[jt]s$/, /\.spec\.[jt]s$/,
 ];
 
-// Bash commands that are read-only — always allowed
+// Bash commands that are read-only — fast-path allow
 var BASH_ALLOW_PATTERNS = [
   /^\s*git\b/, /^\s*gh\b/, /^\s*gh_auto\b/,
   /^\s*ls\b/, /^\s*dir\b/, /^\s*cat\b/, /^\s*head\b/, /^\s*tail\b/,
   /^\s*grep\b/, /^\s*rg\b/, /^\s*find\b/, /^\s*fd\b/,
-  /^\s*wc\b/, /^\s*diff\b/, /^\s*echo\b/, /^\s*printf\b/,
+  /^\s*wc\b/, /^\s*diff\b/,
   /^\s*pwd\b/, /^\s*env\b/, /^\s*which\b/, /^\s*type\b/, /^\s*where\b/,
   /^\s*file\b/, /^\s*stat\b/, /^\s*du\b/, /^\s*df\b/,
   /^\s*cd\b/, /^\s*readlink\b/, /^\s*realpath\b/,
@@ -39,6 +39,10 @@ var BASH_ALLOW_PATTERNS = [
   /^\s*node\s+setup\.js\s+--test/,
   /^\s*curl\s/,
 ];
+
+// T542: Write-pattern detection. Only commands matching these patterns require
+// plan/TODO check. Everything else is allowed as exploration.
+var BASH_WRITE_PATTERNS = require("./_bash-write-patterns");
 
 // Cache for ROADMAP.md parsing (per process — each hook invocation is fresh)
 var _cache = {};
@@ -157,7 +161,14 @@ module.exports = function(input) {
     for (var bai = 0; bai < BASH_ALLOW_PATTERNS.length; bai++) {
       if (BASH_ALLOW_PATTERNS[bai].test(firstCmd)) return null;
     }
-    // Non-read-only Bash falls through to plan check
+
+    // T542: Check write patterns. Only writes require plan/TODO check.
+    var isWrite = false;
+    for (var wi = 0; wi < BASH_WRITE_PATTERNS.length; wi++) {
+      if (BASH_WRITE_PATTERNS[wi].test(cmd)) { isWrite = true; break; }
+    }
+    if (!isWrite) return null;
+    // Write command falls through to plan check
   }
 
   // For Edit/Write: check file path allowlist

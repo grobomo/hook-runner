@@ -67,13 +67,18 @@ function createEnv(opts) {
     }
   }
 
-  // Copy gsd-plan-gate module
+  // Copy gsd-plan-gate module and shared helpers
   var eventDir = path.join(modulesDir, "PreToolUse");
   fs.mkdirSync(eventDir, { recursive: true });
   fs.copyFileSync(
     path.join(catalogDir, "PreToolUse", "gsd-plan-gate.js"),
     path.join(eventDir, "gsd-plan-gate.js")
   );
+  // T542: Copy _bash-write-patterns.js helper (required by gsd-plan-gate)
+  var helperSrc = path.join(catalogDir, "PreToolUse", "_bash-write-patterns.js");
+  if (fs.existsSync(helperSrc)) {
+    fs.copyFileSync(helperSrc, path.join(eventDir, "_bash-write-patterns.js"));
+  }
 
   return { tmpBase: tmpBase, modulesDir: modulesDir, projectDir: projectDir };
 }
@@ -279,7 +284,7 @@ test("blocks state-changing bash without plan", {
   env: { hasRoadmap: false, hasTodo: false },
   input: {
     tool_name: "Bash",
-    tool_input: { command: "npm run build" },
+    tool_input: { command: "cp src/app.js src/backup.js" },
     _git: { branch: "test-branch", tracking: true }
   },
   expectBlock: true,
@@ -303,6 +308,57 @@ test("allows test file edits", {
   input: {
     tool_name: "Write",
     tool_input: { file_path: "/tmp/project/scripts/test/test-foo.js", content: "test" },
+    _git: { branch: "test-branch", tracking: true }
+  },
+  expectBlock: false
+});
+
+// 13. T542: Exploratory Bash passes without plan
+test("allows exploratory bash without plan (powershell)", {
+  env: { hasRoadmap: false, hasTodo: false },
+  input: {
+    tool_name: "Bash",
+    tool_input: { command: "powershell -Command \"[ZipFile]::OpenRead('test.zip')\"" },
+    _git: { branch: "test-branch", tracking: true }
+  },
+  expectBlock: false
+});
+
+test("allows exploratory bash without plan (python script)", {
+  env: { hasRoadmap: false, hasTodo: false },
+  input: {
+    tool_name: "Bash",
+    tool_input: { command: "python scripts/lab-control.py status" },
+    _git: { branch: "test-branch", tracking: true }
+  },
+  expectBlock: false
+});
+
+test("allows exploratory bash without plan (wsl)", {
+  env: { hasRoadmap: false, hasTodo: false },
+  input: {
+    tool_name: "Bash",
+    tool_input: { command: "wsl -e bash -c 'python3 checkin.py done summary'" },
+    _git: { branch: "test-branch", tracking: true }
+  },
+  expectBlock: false
+});
+
+test("allows exploratory bash without plan (npm test)", {
+  env: { hasRoadmap: false, hasTodo: false },
+  input: {
+    tool_name: "Bash",
+    tool_input: { command: "npm test" },
+    _git: { branch: "test-branch", tracking: true }
+  },
+  expectBlock: false
+});
+
+test("allows exploratory bash without plan (docker ps)", {
+  env: { hasRoadmap: false, hasTodo: false },
+  input: {
+    tool_name: "Bash",
+    tool_input: { command: "docker ps" },
     _git: { branch: "test-branch", tracking: true }
   },
   expectBlock: false

@@ -140,11 +140,11 @@ else
   fail "rm should be blocked: $OUTPUT"
 fi
 
-OUTPUT=$(run_bash_gate "$PROJ" "python setup.py install")
+OUTPUT=$(run_bash_gate "$PROJ" "pip install flask")
 if [ "$OUTPUT" = "BLOCKED" ]; then
-  pass "python setup.py blocked (state-changing)"
+  pass "pip install blocked (state-changing)"
 else
-  fail "python setup.py should be blocked: $OUTPUT"
+  fail "pip install should be blocked: $OUTPUT"
 fi
 
 # --- State-changing commands should PASS with open tasks ---
@@ -276,6 +276,94 @@ if [ "$OUTPUT" = "PASSED" ]; then
   pass "jq piped to head allowed (read-only)"
 else
   fail "jq pipe should be allowed: $OUTPUT"
+fi
+
+# --- T542: Previously-blocked exploratory commands now allowed ---
+
+OUTPUT=$(run_bash_gate "$PROJ" "powershell -Command \"[System.IO.Compression.ZipFile]::OpenRead('test.zip')\"")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "powershell OpenRead allowed (read-only exploration)"
+else
+  fail "powershell OpenRead should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "python scripts/lab-control.py status")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "python script.py allowed (read-only exploration)"
+else
+  fail "python script.py should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "wsl -e bash -c 'python3 openclaw-checkin.py done summary'")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "wsl session command allowed (exploration)"
+else
+  fail "wsl session command should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "python stale-audit.py --summary")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "python audit script allowed (exploration)"
+else
+  fail "python audit script should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "tree src/")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "tree allowed (exploration)"
+else
+  fail "tree should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "docker ps")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "docker ps allowed (read-only)"
+else
+  fail "docker ps should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "npm test")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "npm test allowed (exploration)"
+else
+  fail "npm test should be allowed: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "node analyze.js")
+if [ "$OUTPUT" = "PASSED" ]; then
+  pass "node script allowed (exploration)"
+else
+  fail "node script should be allowed: $OUTPUT"
+fi
+
+# --- T542: Write patterns still blocked without tasks ---
+
+OUTPUT=$(run_bash_gate "$PROJ" "sed -i 's/foo/bar/' src/app.js")
+if [ "$OUTPUT" = "BLOCKED" ]; then
+  pass "sed -i blocked (write pattern)"
+else
+  fail "sed -i should be blocked: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "mv src/app.js src/old.js")
+if [ "$OUTPUT" = "BLOCKED" ]; then
+  pass "mv blocked (write pattern)"
+else
+  fail "mv should be blocked: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "mkdir -p src/new")
+if [ "$OUTPUT" = "BLOCKED" ]; then
+  pass "mkdir blocked (write pattern)"
+else
+  fail "mkdir should be blocked: $OUTPUT"
+fi
+
+OUTPUT=$(run_bash_gate "$PROJ" "echo 'test' > src/new.js")
+if [ "$OUTPUT" = "BLOCKED" ]; then
+  pass "echo redirect blocked (write pattern)"
+else
+  fail "echo redirect should be blocked: $OUTPUT"
 fi
 
 echo ""
