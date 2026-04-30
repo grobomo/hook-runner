@@ -79,11 +79,10 @@ r = mod({ tool_name: "Write", tool_input: { file_path: "/proj/modules/UserPrompt
 if (r && r.decision === "block") pass("UserPromptSubmit module blocked without review");
 else fail("UserPromptSubmit module should block: " + JSON.stringify(r));
 
-// Cleanup
+// Cleanup — restore saved flag
 try { fs.unlinkSync(reviewFlag); } catch (e) {}
-var cleanupNames = ["new-gate", "some-check", "spec-gate", "check", "logger"];
-for (var ci = 0; ci < cleanupNames.length; ci++) {
-  try { fs.unlinkSync(path.join(flagDir, ".hook-log-reviewed-" + ppid + "-" + cleanupNames[ci])); } catch (e) {}
+if (savedFlag) {
+  try { fs.renameSync(reviewFlag + ".test-save", reviewFlag); } catch (e) {}
 }
 
 console.log("\n=== Results: " + passed + " passed, " + failed + " failed ===");
