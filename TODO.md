@@ -1369,6 +1369,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T542: Flip spec-gate and gsd-plan-gate Bash from default-deny to write-pattern detection. New `_bash-write-patterns.js` shared helper (30 patterns). New `hook-log-review-gate` module enforces evidence-based hook design (4hr TTL flag). 42+17+10 tests. (PR #453, v2.61.0)
 - [x] T543: Fix nested-repo branch detection — runner `readBranchFromDir` walks up to find `.git`, spec-gate adds parent git root to `roots[]`. 3 tests. (PR #453, v2.61.0)
 - [x] T544: Fix 3 pre-existing test failures — T094 (README missing 2 modules), T204 (ProjectsCL1 in comment), commit-counter-gate (worktree CWD pollution). T042 marketplace version deferred to marketplace repo sync.
+- [ ] T545: Auto-sync skill package.json during setup.js install — fixes T034 install-drift test failure
 - [ ] Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
 
 ## Architecture Notes

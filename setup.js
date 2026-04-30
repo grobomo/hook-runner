@@ -1426,7 +1426,25 @@ function cmdWizard(reportOnly, dryRun, openMode, autoYes, analyzeMode, deepMode,
   console.log("  Report: " + afterReport);
   if (openMode) openFile(afterReport);
 
-  // Step 7: Enable default workflows (if --yes or interactive)
+  // Step 7: Sync skill copy — keep ~/.claude/skills/hook-runner/ in sync with repo
+  // T545: Health check warned about version drift but nothing auto-fixed it.
+  // Copy core JS files + package.json so the skill install matches the repo.
+  var skillDir = path.join(os.homedir(), ".claude", "skills", "hook-runner");
+  if (fs.existsSync(skillDir)) {
+    var coreFiles = fs.readdirSync(__dirname).filter(function(f) {
+      return f.slice(-3) === ".js" || f === "package.json";
+    });
+    var synced = 0;
+    for (var si = 0; si < coreFiles.length; si++) {
+      try {
+        fs.copyFileSync(path.join(__dirname, coreFiles[si]), path.join(skillDir, coreFiles[si]));
+        synced++;
+      } catch(e) {}
+    }
+    console.log("  Skill synced: " + synced + " files → ~/.claude/skills/hook-runner/");
+  }
+
+  // Step 8: Enable default workflows (if --yes or interactive)
   // WHY: New users don't know which workflows to enable. "starter" provides
   // safe defaults (force-push, secret-scan, archive-not-delete) without
   // overwhelming them with 90 shtd modules. Users enable shtd manually later.
