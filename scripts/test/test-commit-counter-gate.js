@@ -165,10 +165,14 @@ test("WRONG BRANCH: detects mismatch between branch and changed files", function
     "labs/dd-lab/scripts/deploy.sh"
   ]);
   process.env.CLAUDE_PROJECT_DIR = dir;
+  // T544: chdir to temp repo so isInWorktree() checks temp .git (dir), not CWD worktree (.git file)
+  var origCwd = process.cwd();
+  process.chdir(dir);
   setCounter(14);
 
   var gate = loadGate();
   var r = gate({ tool_name: "Edit", tool_input: { file_path: path.join(dir, "labs/dd-lab/terraform/main.tf"), old_string: "a", new_string: "b" } });
+  process.chdir(origCwd);
   assert(r !== null, "should block");
   assert(r.decision === "block");
   assert(r.reason.indexOf("WRONG BRANCH") !== -1, "should say WRONG BRANCH, got: " + r.reason.substring(0, 100));
@@ -318,10 +322,14 @@ test("T485: WRONG BRANCH sets worktreeRequired flag", function() {
     "labs/dd-lab/scripts/setup.sh"
   ]);
   process.env.CLAUDE_PROJECT_DIR = dir;
+  // T544: chdir to temp repo so isInWorktree() returns false
+  var origCwd = process.cwd();
+  process.chdir(dir);
   setCounter(14);
 
   var gate = loadGate();
   var r = gate({ tool_name: "Edit", tool_input: { file_path: path.join(dir, "labs/dd-lab/terraform/main.tf"), old_string: "a", new_string: "b" } });
+  process.chdir(origCwd);
   assert(r !== null && r.reason.indexOf("WRONG BRANCH") !== -1, "should detect wrong branch");
   var data = JSON.parse(fs.readFileSync(COUNTER_FILE, "utf-8"));
   assert(data.worktreeRequired === true, "worktreeRequired flag should be set");
@@ -398,10 +406,14 @@ test("T497: real files + metadata files still detect mismatch", function() {
     ".coconut/STATUS_REPORT.md"
   ]);
   process.env.CLAUDE_PROJECT_DIR = dir;
+  // T544: chdir to temp repo so isInWorktree() returns false
+  var origCwd = process.cwd();
+  process.chdir(dir);
   setCounter(14);
 
   var gate = loadGate();
   var r = gate({ tool_name: "Edit", tool_input: { file_path: path.join(dir, "labs/dd-lab/main.tf"), old_string: "a", new_string: "b" } });
+  process.chdir(origCwd);
   // labs/dd-lab doesn't match deploy/nfs/datasec → should still detect mismatch
   assert(r !== null && r.reason.indexOf("WRONG BRANCH") !== -1,
     "should still detect mismatch when real files don't match branch");
