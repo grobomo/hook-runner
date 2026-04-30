@@ -47,6 +47,7 @@ modules:
   - continuous-claude-gate
   - drift-review
   - hook-editing-gate
+  - hook-log-review-gate
   - hook-integrity-monitor
   - workflow-compliance-gate
   - pr-per-task-gate

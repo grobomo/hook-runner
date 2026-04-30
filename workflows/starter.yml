@@ -25,6 +25,7 @@ modules:
   - preserve-iterated-content
   # Hook system protection — prevent self-sabotage
   - hook-editing-gate
+  - hook-log-review-gate
   - no-hook-bypass
   - no-rules-gate
   - hook-autocommit
