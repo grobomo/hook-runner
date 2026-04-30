@@ -37,6 +37,7 @@ modules:
   - settings-hooks-gate
   - messaging-safety-gate
   - no-nested-claude
+  - no-playwright-direct
   - no-focus-steal
   - windowless-spawn-gate
   # Infrastructure — disk, CRLF, SSH
