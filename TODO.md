@@ -1360,6 +1360,9 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T538: Version bump to v2.54.0 — CHANGELOG for T536-T537 (PR #432)
 - [x] T539: Fix preserve-iterated-content perf — 30min TTL, skip save on hit, new-file fast path (PR #433)
 
+## From v1-helper (2026-04-30)
+- [x] T541: Create no-playwright-direct.js PreToolUse module — blocks all `mcp__playwright__*` tool calls. Added to starter, shtd, gsd workflows. 12 tests. (PR #451, v2.60.0)
+
 ## Future (backlog)
 - [x] T462: Marketplace sync — obsolete (claude-code-skills replaced by ai-skill-marketplace PR #164)
 - [x] T540: Fix commit-counter-gate deadlock in worktrees — skip mismatch enforcement when already in a worktree. 1 new test (20 total). Synced to live hooks.

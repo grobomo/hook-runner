@@ -2,6 +2,15 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.60.0] — 2026-04-30
+
+### Added
+- **no-playwright-direct gate** (T541) — blocks all `mcp__playwright__*` tool calls. Claude must use Blueprint Extra MCP via mcp-manager instead (session management, tab lifecycle, SSO handling). Added to starter, shtd, and gsd workflows. 12 tests.
+
+### Stats
+- 88 suites, 1227 tests
+- 119 modules, 13 workflows, 4 templates
+
 ## [2.59.0] — 2026-04-25
 
 ### Fixed
