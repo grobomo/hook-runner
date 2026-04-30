@@ -386,6 +386,7 @@ Full catalog in `modules/` directory:
 | `git-destructive-guard` | Blocks git reset --hard, checkout ., clean -f without diagnosis |
 | `git-rebase-safety` | Warns about reversed --ours/--theirs during rebase |
 | `hook-editing-gate` | Enforces WORKFLOW tag, WHY comment, exit(1) in hook files |
+| `hook-log-review-gate` | Requires hook-log.jsonl review before creating/editing hook modules |
 | `instruction-to-hook-gate` | Converts user directives into hook modules |
 | `messaging-safety-gate` | Blocks outbound messaging unless authorized |
 | `cross-project-todo-gate` | Blocks writing cross-project TODOs into local TODO.md |
@@ -397,6 +398,7 @@ Full catalog in `modules/` directory:
 | `no-hook-bypass` | Blocks Bash cat/echo writes when Write/Edit is gated |
 | `no-nested-claude` | Blocks nested claude -p calls (use context-reset for cross-project) |
 | `no-passive-rules` | Blocks .md rules when a hook module is better |
+| `no-playwright-direct` | Blocks raw mcp__playwright__* calls, requires Blueprint Extra MCP |
 | `no-rules-gate` | Blocks creation of ~/.claude/rules/ files (use hook modules instead) |
 | `hook-system-reminder` | Reminds Claude that enforcement is ONLY via hook-runner modules |
 | `inter-project-priority-gate` | Blocks non-XREF work when P0 inter-project TODOs are pending |

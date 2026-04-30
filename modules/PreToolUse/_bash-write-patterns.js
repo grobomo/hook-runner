@@ -6,7 +6,7 @@
 // scripts, and wsl session management — all clearly not code changes.
 // Real incidents from hook-log.jsonl (2026-04-30):
 //   - powershell "[System.IO.Compression.ZipFile]::OpenRead(...)" blocked in dd-lab
-//   - python stale-audit.py --summary blocked in ProjectsCL1
+//   - python stale-audit.py --summary blocked in projects directory
 //   - wsl -e bash -c 'python3 openclaw-checkin.py' blocked in dd-lab
 // T542: Flip from default-deny allowlist to write-pattern detection.
 "use strict";
