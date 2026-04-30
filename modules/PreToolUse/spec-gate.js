@@ -199,12 +199,12 @@ var CROSS_PROJECT_HINT = "\nCROSS-PROJECT? If this file belongs to another proje
   "  2) Spawn a new session there: python context_reset.py --project-dir /path/to/project\n" +
   "  3) Resume your own work here";
 
-// T338: Bash commands that are read-only/exploration — always allowed
+// T338: Bash commands that are read-only/exploration — fast-path allow
 var BASH_ALLOW_PATTERNS = [
   /^\s*git\b/, /^\s*gh\b/, /^\s*gh_auto\b/,
   /^\s*ls\b/, /^\s*dir\b/, /^\s*cat\b/, /^\s*head\b/, /^\s*tail\b/,
   /^\s*grep\b/, /^\s*rg\b/, /^\s*find\b/, /^\s*fd\b/,
-  /^\s*wc\b/, /^\s*diff\b/, /^\s*echo\b/, /^\s*printf\b/,
+  /^\s*wc\b/, /^\s*diff\b/,
   /^\s*pwd\b/, /^\s*env\b/, /^\s*which\b/, /^\s*type\b/, /^\s*where\b/,
   /^\s*file\b/, /^\s*stat\b/, /^\s*du\b/, /^\s*df\b/,
   /^\s*cd\b/, /^\s*readlink\b/, /^\s*realpath\b/, /^\s*wsl\b/,
@@ -222,9 +222,10 @@ var BASH_ALLOW_PATTERNS = [
   /^\s*curl\s/, // HTTP requests (read-only, no local state change)
 ];
 
-// T338: Default-deny. If a Bash command is NOT in the allowlist above,
-// it requires spec chain. This catches cp, mv, sed, tee, redirects,
-// build commands, deploy commands — everything that modifies state.
+// T542: Write-pattern detection. Only commands matching these patterns require
+// spec chain. Everything else (powershell reads, python scripts, wsl, etc.)
+// is allowed as exploration. Replaces T338 default-deny approach.
+var BASH_WRITE_PATTERNS = require("./_bash-write-patterns");
 
 module.exports = function(input) {
   var tool = input.tool_name;
@@ -246,13 +247,21 @@ module.exports = function(input) {
     // Also handle piped commands — check the first command in the pipeline
     var firstCmd = realCmd.split("|")[0].trim();
 
-    // Check allowlist first
+    // Fast-path: known read-only commands
     for (var bai = 0; bai < BASH_ALLOW_PATTERNS.length; bai++) {
       if (BASH_ALLOW_PATTERNS[bai].test(firstCmd)) return null;
     }
 
-    // Default-deny: not in allowlist → requires spec chain
-    // Falls through to spec chain check below
+    // T542: Check if command matches write patterns. Only writes require spec chain.
+    // This replaces default-deny — commands like powershell OpenRead, python scripts,
+    // wsl session management are allowed as exploration.
+    var isWrite = false;
+    for (var wi = 0; wi < BASH_WRITE_PATTERNS.length; wi++) {
+      if (BASH_WRITE_PATTERNS[wi].test(cmd)) { isWrite = true; break; }
+    }
+    if (!isWrite) return null;
+
+    // Write command: falls through to spec chain check below
   }
 
   var targetFile = "";
