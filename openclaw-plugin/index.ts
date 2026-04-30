@@ -1,22 +1,25 @@
 /**
  * hook-runner-gates — Ported hook-runner gate modules for OpenClaw
  *
- * 27 modules ported from hook-runner's CommonJS format to OpenClaw Plugin SDK.
+ * 32 modules ported from hook-runner's CommonJS format to OpenClaw Plugin SDK.
  *
- * before_tool_call gates (17):
+ * before_tool_call gates (21):
  *   force-push-gate, secret-scan-gate, commit-quality-gate,
  *   git-destructive-guard, archive-not-delete, git-rebase-safety,
  *   no-hardcoded-paths, victory-declaration-gate, root-cause-gate,
  *   no-fragile-heuristics, no-focus-steal, crlf-ssh-key-check,
  *   unresolved-issues-gate, no-nested-claude, disk-space-guard,
- *   no-unnecessary-sleep, claude-p-pattern
+ *   no-unnecessary-sleep, claude-p-pattern,
+ *   deploy-gate, cwd-drift-detector, messaging-safety-gate,
+ *   commit-counter-gate
  *
  * after_tool_call gates (8):
  *   commit-msg-check, crlf-detector, test-coverage-check,
  *   result-review-gate, rule-hygiene, empty-output-detector,
  *   disk-space-detect, troubleshoot-detector
  *
- * before_agent_reply gates (1):
+ * before_agent_reply gates (2):
+ *   push-unpushed — blocks stopping with unpushed commits
  *   auto-continue — blocks lazy stops (listing options, asking permission)
  *
  * session_start modules (1):
@@ -1501,8 +1504,9 @@ export default definePluginEntry({
   id: "hook-runner-gates",
   name: "Hook Runner Gates",
   description:
-    "27 ported hook-runner gate modules — git safety, secret scanning, code quality, " +
+    "32 ported hook-runner gate modules — git safety, secret scanning, code quality, " +
     "commit hygiene, test coverage, disk safety, AI behavioral guardrails, " +
+    "deploy safety, cross-project drift detection, messaging safety, " +
     "auto-continue enforcement, and session start reminders.",
 
   register(api) {
@@ -1544,20 +1548,59 @@ export default definePluginEntry({
       return undefined;
     });
 
-    // ── before_agent_reply (Stop → auto-continue) ───────────────────────
-    // Blocks lazy stops: when the agent tries to reply with options/questions
-    // instead of doing the work, replace the reply with the stop-message.
+    // ── before_agent_reply (Stop gates) ─────────────────────────────────
+
     api.on("before_agent_reply", async (event, _ctx) => {
       const config = getConfig();
-      if (config.modules?.["auto-continue"] === false) return undefined;
+      const modules = config.modules ?? {};
 
-      const body = event.cleanedBody || "";
-      if (detectLazyStop(body)) {
-        return {
-          handled: true,
-          reply: { text: getStopMessage() },
-          reason: "auto-continue: lazy stop detected — blocking and injecting continuation prompt",
-        };
+      // push-unpushed: block stopping if there are unpushed commits
+      if (modules["push-unpushed"] !== false) {
+        try {
+          const branch = execFileSync("git", ["branch", "--show-current"], {
+            encoding: "utf-8", timeout: 5000,
+          }).trim();
+          if (branch && branch !== "main" && branch !== "master") {
+            let remote = "";
+            try {
+              remote = execFileSync("git", ["config", "--get", "branch." + branch + ".remote"], {
+                encoding: "utf-8", timeout: 5000,
+              }).trim();
+            } catch { /* no tracking */ }
+
+            if (!remote) {
+              return {
+                handled: true,
+                reply: { text: "Branch '" + branch + "' has no remote tracking. Push first: git push -u origin " + branch },
+                reason: "push-unpushed: no remote tracking branch",
+              };
+            }
+
+            const unpushed = execFileSync("git", ["log", remote + "/" + branch + "..HEAD", "--oneline"], {
+              encoding: "utf-8", timeout: 5000, stdio: ["pipe", "pipe", "pipe"],
+            }).trim();
+            if (unpushed) {
+              const count = unpushed.split("\n").length;
+              return {
+                handled: true,
+                reply: { text: count + " unpushed commit(s) on " + branch + ". Push before stopping: git push" },
+                reason: "push-unpushed: " + count + " unpushed commits",
+              };
+            }
+          }
+        } catch { /* not a git repo — skip */ }
+      }
+
+      // auto-continue: block lazy stops
+      if (modules["auto-continue"] !== false) {
+        const body = (event as Record<string, unknown>).cleanedBody as string || "";
+        if (detectLazyStop(body)) {
+          return {
+            handled: true,
+            reply: { text: getStopMessage() },
+            reason: "auto-continue: lazy stop detected — blocking and injecting continuation prompt",
+          };
+        }
       }
 
       return undefined;

@@ -1,8 +1,8 @@
 {
   "id": "hook-runner-gates",
   "name": "Hook Runner Gates",
-  "description": "27 ported hook-runner gate modules for OpenClaw. Git safety, secret scanning, code quality, commit hygiene, test coverage, disk safety, AI behavioral guardrails, auto-continue enforcement, and session start reminders.",
-  "version": "0.4.0",
+  "description": "32 ported hook-runner gate modules for OpenClaw. Git safety, secret scanning, code quality, commit hygiene, test coverage, disk safety, AI behavioral guardrails, deploy safety, cross-project drift detection, messaging safety, auto-continue enforcement, and session start reminders.",
+  "version": "0.5.0",
   "author": "grobomo",
   "license": "MIT",
   "openclaw": {
@@ -41,6 +41,11 @@
           "empty-output-detector": { "type": "boolean", "default": true },
           "disk-space-detect": { "type": "boolean", "default": true },
           "troubleshoot-detector": { "type": "boolean", "default": true },
+          "deploy-gate": { "type": "boolean", "default": true },
+          "cwd-drift-detector": { "type": "boolean", "default": true },
+          "messaging-safety-gate": { "type": "boolean", "default": true },
+          "commit-counter-gate": { "type": "boolean", "default": true },
+          "push-unpushed": { "type": "boolean", "default": true },
           "auto-continue": { "type": "boolean", "default": true },
           "session-start-reminder": { "type": "boolean", "default": true }
         }
@@ -74,6 +79,11 @@
       "empty-output-detector": true,
       "disk-space-detect": true,
       "troubleshoot-detector": true,
+      "deploy-gate": true,
+      "cwd-drift-detector": true,
+      "messaging-safety-gate": true,
+      "commit-counter-gate": true,
+      "push-unpushed": true,
       "auto-continue": true,
       "session-start-reminder": true
     }
