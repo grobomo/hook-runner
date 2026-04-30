@@ -2,6 +2,16 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.62.0] — 2026-04-30
+
+### Fixed
+- **Test suite fixes** (T544) — README missing docs for `hook-log-review-gate` and `no-playwright-direct`. Removed `ProjectsCL1` reference from `_bash-write-patterns.js` comment. Fixed `commit-counter-gate` tests failing in worktree context (CWD `.git` file polluted `isInWorktree()` check).
+- **Skill version drift** (T545) — `setup.js --yes` now auto-syncs core JS files + `package.json` to `~/.claude/skills/hook-runner/`. Previously health check warned about drift but nothing auto-fixed it.
+
+### Stats
+- 90 suites, 1264 tests
+- 115 modules, 13 workflows, 4 templates
+
 ## [2.61.0] — 2026-04-30
 
 ### Changed
