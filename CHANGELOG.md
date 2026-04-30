@@ -2,6 +2,21 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.61.0] — 2026-04-30
+
+### Changed
+- **Write-pattern Bash gates** (T542) — spec-gate and gsd-plan-gate flipped from default-deny allowlist to write-pattern detection. Only 30 definite write patterns (sed -i, cp, mv, rm, npm install, etc.) require spec/plan chain. Exploration commands (powershell, python scripts, wsl, npm test, docker ps) now allowed. New `_bash-write-patterns.js` shared helper.
+
+### Added
+- **hook-log-review-gate** (T542) — blocks creation/editing of hook modules unless hook-log.jsonl has been reviewed. Time-based flag (4hr TTL). Added to starter, shtd, gsd workflows. 10 tests.
+
+### Fixed
+- **Nested-repo branch detection** (T543) — runner `readBranchFromDir` walks up directory tree to find `.git`. spec-gate adds parent git root to `roots[]`. 3 tests.
+
+### Stats
+- 91 suites, 1297 tests
+- 121 modules, 13 workflows, 4 templates
+
 ## [2.60.0] — 2026-04-30
 
 ### Added
