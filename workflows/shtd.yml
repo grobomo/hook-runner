@@ -99,6 +99,7 @@ modules:
   - no-rules-gate
   - rule-hygiene
   - test-coverage-check
+  - test-evidence
   - empty-output-detector
   - result-review-gate
   - update-stale-docs

@@ -15,12 +15,12 @@ var EVIDENCE_PATH = path.join(os.tmpdir(), ".hook-runner-test-evidence.json");
 
 // Patterns that indicate test results with pass/fail counts
 var TEST_PATTERNS = [
-  // "N passed, M failed" (hook-runner, jest, vitest)
-  /(\d+)\s+passed,\s+(\d+)\s+failed/,
+  // "N suites, M passed, K failed" (hook-runner full suite) — must be before generic
+  /(\d+)\s+suites?,\s+(\d+)\s+passed,\s+(\d+)\s+failed/,
   // "Results: N passed, M failed"
   /Results:\s+(\d+)\s+passed,\s+(\d+)\s+failed/,
-  // "N suites, M passed, K failed" (hook-runner full suite)
-  /(\d+)\s+suites?,\s+(\d+)\s+passed,\s+(\d+)\s+failed/,
+  // "N passed, M failed" (hook-runner, jest, vitest) — generic, last
+  /(\d+)\s+passed,\s+(\d+)\s+failed/,
   // "Tests: N passed, M failed" (jest summary)
   /Tests:\s+(\d+)\s+passed,\s+(\d+)\s+failed/,
   // "PASS:" / "FAIL:" count pattern
