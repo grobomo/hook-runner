@@ -1413,7 +1413,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T579: Fix README module counts (starter: 42→47, shtd: 101→103). (PR #490)
 - [x] T581: Add tests for PostToolUse: commit-msg-check (23), empty-output-detector (29), result-review-gate (26), test-evidence (14) + fix commit-msg-check regex bug. (PR #492)
 - [x] T582: Add tests for PostToolUse: rule-hygiene (22), background-task-audit (14), disk-space-detect (16), inter-project-audit (15). (PR #493)
-- [ ] T583: Add tests for PostToolUse: troubleshoot-detector, settings-audit-log, update-stale-docs, crlf-detector.
+- [x] T583: Add tests for PostToolUse: troubleshoot-detector (14), settings-audit-log (21), update-stale-docs (16), crlf-detector (24). (PR #494)
+- [ ] T584: Add tests for Stop modules: test-before-done, log-gotchas, never-give-up, unresolved-issues-check, test-coverage-check (PostToolUse).
 
 ## Session Handoff (2026-05-03, session 2)
 - v2.67.0 released. 115 suites, 1785 tests, 0 real failures. 113 modules, 7 workflows.
