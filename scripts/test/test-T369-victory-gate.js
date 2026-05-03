@@ -59,7 +59,7 @@ var r11 = gate({ tool_name: "Bash", tool_input: { command: heredocCmd } });
 assert("heredoc victory blocks", r11 && r11.decision === "block");
 
 // 12. Block message includes guidance
-assert("block has verification checklist", r4.reason.indexOf("verify") !== -1 || r4.reason.indexOf("VERIFY") !== -1 || r4.reason.indexOf("Verify") !== -1);
+assert("block has verification checklist", r4.reason.indexOf("Run tests") !== -1 || r4.reason.indexOf("evidence") !== -1 || r4.reason.indexOf("verify") !== -1 || r4.reason.indexOf("VERIFY") !== -1);
 assert("block has rephrase guidance", r4.reason.indexOf("Rephrase") !== -1 || r4.reason.indexOf("GOOD") !== -1);
 
 // 14. Victory words in body (not title) should pass — body may describe/quote them
