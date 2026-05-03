@@ -17,7 +17,7 @@ All notable changes to hook-runner are documented here.
 - **README module tables** (T559) — Added missing entries for no-polling-gate and background-task-audit.
 
 ### Stats
-- 96 suites, 1403 tests
+- 96 suites, 1406 tests
 - 113 modules, 7 workflows
 
 ## [2.63.0] — 2026-05-03
