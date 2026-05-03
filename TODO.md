@@ -1399,6 +1399,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T565: Add test coverage for gh-auto-gate (37 tests) and spec-before-code-gate (20 tests). 57 new tests for previously untested critical PreToolUse modules. (PR #473)
 - [x] T566: Add .claude/worktrees/ to .gitignore — stops stale worktree remnants showing as untracked. (PR #475)
 - [x] T567: Add tests for preserve-iterated-content gate — 18 tests covering cache, thresholds, watched dirs. (PR #476)
+- [ ] T568: Version bump to v2.65.0 — CHANGELOG, package.json, GitHub release. 99 suites, 1482 tests.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
