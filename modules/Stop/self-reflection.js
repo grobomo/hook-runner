@@ -532,7 +532,22 @@ function writeReflection(result, gitCtx) {
 // lesson and write it to self-analysis-lessons.jsonl (immediate effect via load-lessons)
 // and corrective-feedback.jsonl (for future brain ingestion when /remember API exists).
 var CORRECTIVE_FEEDBACK_PATH = path.join(HOOKS_DIR, "corrective-feedback.jsonl");
-var LESSONS_FILE = path.join(HOOKS_DIR, "self-analysis-lessons.jsonl");
+var GLOBAL_LESSONS_FILE = path.join(HOOKS_DIR, "self-analysis-lessons.jsonl");
+
+// T558: Write lessons to per-project file when available, global as fallback
+function getLessonsFile() {
+  var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
+  if (projectDir) {
+    var projectLessons = path.join(projectDir, ".claude", "lessons.jsonl");
+    // Ensure .claude dir exists
+    var claudeDir = path.join(projectDir, ".claude");
+    try {
+      if (!fs.existsSync(claudeDir)) fs.mkdirSync(claudeDir, { recursive: true });
+    } catch(e) {}
+    return projectLessons;
+  }
+  return GLOBAL_LESSONS_FILE;
+}
 
 function extractCorrectiveFeedback(result, gitCtx) {
   if (!result || !result.issues || result.issues.length === 0) return;
@@ -574,7 +589,7 @@ function extractCorrectiveFeedback(result, gitCtx) {
         source: "self-reflection-T381",
         project: project
       };
-      fs.appendFileSync(LESSONS_FILE, JSON.stringify(lessonEntry) + "\n");
+      fs.appendFileSync(getLessonsFile(), JSON.stringify(lessonEntry) + "\n");
     } catch (e) {}
   }
 }
@@ -614,7 +629,7 @@ function extractOperationalLessons(result, gitCtx) {
         source: "self-reflection-T350",
         project: project
       };
-      fs.appendFileSync(LESSONS_FILE, JSON.stringify(lessonEntry) + "\n");
+      fs.appendFileSync(getLessonsFile(), JSON.stringify(lessonEntry) + "\n");
     } catch (e) {}
   }
 }
