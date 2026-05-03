@@ -1402,7 +1402,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T568: Version bump to v2.65.0 — CHANGELOG, package.json, GitHub release. 99 suites, 1482 tests. (PR #478)
 - [x] T569: Add tests for reflection-gate (20) and task-completion-gate (15) — hot-path modules. (PR #480)
 - [x] T570: Add tests for settings-hooks-gate (14) and no-hook-bypass (21) — security gates. (PR #481)
-- [ ] T571: Version bump to v2.66.0 — CHANGELOG, package.json, GitHub release.
+- [x] T571: Version bump to v2.66.0 — CHANGELOG, package.json, GitHub release. 103 suites, 1552 tests. (PR #482)
+- [ ] T572: Add tests for messaging-safety-gate, pr-per-task-gate, and no-passive-rules.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
