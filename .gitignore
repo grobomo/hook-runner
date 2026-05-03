@@ -17,4 +17,5 @@ workflow-config.json
 scripts/test/archive/
 run-modules/
 .coconut/
+.claude/worktrees/
 scripts/hermes-message.json
