@@ -40,6 +40,7 @@ modules:
   - no-nested-claude
   - no-playwright-direct
   - no-focus-steal
+  - no-polling-gate
   - windowless-spawn-gate
   # Infrastructure — disk, CRLF, SSH
   - disk-space-guard

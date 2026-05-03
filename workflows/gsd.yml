@@ -69,6 +69,7 @@ modules:
   - why-reminder
   - workflow-gate
   - blueprint-no-sleep
+  - no-polling-gate
   - gh-auto-gate
   - no-hook-bypass
   - no-nested-claude
