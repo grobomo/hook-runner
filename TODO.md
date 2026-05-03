@@ -1404,7 +1404,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T570: Add tests for settings-hooks-gate (14) and no-hook-bypass (21) — security gates. (PR #481)
 - [x] T571: Version bump to v2.66.0 — CHANGELOG, package.json, GitHub release. 103 suites, 1552 tests. (PR #482)
 - [x] T572: Add tests for messaging-safety-gate (19), pr-per-task-gate (16), no-passive-rules (15). (PR #483)
-- [ ] T573: Add tests for no-adhoc-commands and block-local-docker.
+- [x] T573: Add tests for no-adhoc-commands (42) and block-local-docker (27). (PR #484)
+- [ ] T574: Add tests for env-var-check and aws-tagging-gate.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
