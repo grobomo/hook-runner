@@ -15,8 +15,10 @@ module.exports = function(input) {
 
   var targetFile = toolInput.file_path || "";
 
-  // Allow writing TODO.md (bootstrap)
-  if (path.basename(targetFile) === "TODO.md") return null;
+  // Allow writing TODO.md (bootstrap) and .gitignore (T546: chicken-and-egg —
+  // untracked files make tree dirty, but you need .gitignore to ignore them)
+  var basename = path.basename(targetFile);
+  if (basename === "TODO.md" || basename === ".gitignore") return null;
 
   // Allow editing ~/.claude/ (user config, not a project)
   var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
