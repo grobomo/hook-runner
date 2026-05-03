@@ -436,6 +436,7 @@ Full catalog in `modules/` directory:
 ### PostToolUse (checks after tool execution)
 | Module | Description |
 |--------|-------------|
+| `background-task-audit` | Warns when background tasks return zero output — forces root cause investigation |
 | `commit-msg-check` | Blocks WIP/fixup commits and long first lines |
 | `crlf-detector` | Warns when Write/Edit produces CRLF in shell scripts, YAML, Python |
 | `disk-space-detect` | Detects disk space errors in tool output, activates alert mode |
