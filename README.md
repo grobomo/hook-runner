@@ -450,6 +450,7 @@ Full catalog in `modules/` directory:
 | `empty-output-detector` | Warns when ls/cat/find/curl/kubectl/az return empty output |
 | `inter-project-audit` | Logs inter-project TODO writes to JSONL audit trail |
 | `result-review-gate` | Injects review checklist when reading report/PDF/coverage files |
+| `test-evidence` | Records test pass/fail counts to evidence file for victory-gate validation |
 
 ### UserPromptSubmit (processes user prompts)
 | Module | Description |
