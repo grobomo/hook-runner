@@ -200,7 +200,7 @@ module.exports = function(input) {
       }
     }
 
-    var branch = getBranch(input);
+    var branch = getBranch(input, targetFile);
     if (!branch) return null;
 
     if (branch === "main" || branch === "master") {
