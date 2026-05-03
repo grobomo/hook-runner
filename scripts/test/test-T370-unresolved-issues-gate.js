@@ -120,6 +120,31 @@ var notesDir = setupProject("session-notes", "# Notes\n- timeout increased to 36
 var r17 = runGate(notesDir);
 assert("session notes with issue words pass", r17 === null);
 
+// --- T547: false positive tests — "git commit" in heredoc/string bodies ---
+
+function runGateRaw(projectDir, rawCmd) {
+  var origDir = process.env.CLAUDE_PROJECT_DIR;
+  process.env.CLAUDE_PROJECT_DIR = projectDir;
+  delete require.cache[require.resolve(MOD)];
+  var g = require(MOD);
+  var result = g({ tool_name: "Bash", tool_input: { command: rawCmd } });
+  process.env.CLAUDE_PROJECT_DIR = origDir || "";
+  return result;
+}
+
+// 18. gh pr create with "git commit" in heredoc body should NOT trigger
+var fpDir = setupProject("fp-heredoc", "# TODO\n- [ ] T999: FAIL in some test\n");
+var r18 = runGateRaw(fpDir, 'gh pr create --title "T547" --body "$(cat <<\'EOF\'\nExcluding git commit/log/diff from check.\nEOF\n)"');
+assert("T547: gh pr create with heredoc mentioning commits passes", r18 === null);
+
+// 19. node -e with "git commit" in string should NOT trigger
+var r19 = runGateRaw(fpDir, 'node -e "console.log(\'Has git commit exclusion:\', true)"');
+assert("T547: node -e with commit in string passes", r19 === null);
+
+// 20. Actual git commit should still trigger
+var r20 = runGateRaw(fpDir, 'git commit -m "fix something"');
+assert("T547: actual git commit still blocks on FAIL", r20 && r20.decision === "block");
+
 // Cleanup
 try { fs.rmSync(tmpBase, { recursive: true, force: true }); } catch(e) {}
 

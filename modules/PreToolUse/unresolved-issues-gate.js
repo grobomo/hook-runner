@@ -37,7 +37,13 @@ module.exports = function(input) {
     cmd = (typeof input.tool_input === "string" ? JSON.parse(input.tool_input) : input.tool_input || {}).command || "";
   } catch(e) { cmd = (input.tool_input || {}).command || ""; }
 
-  if (!/git\s+commit/.test(cmd)) return null;
+  // T547: Match actual git commit commands, not "git commit" appearing in heredoc bodies,
+  // PR descriptions, or string literals. Extract the first real command (after cd/&&).
+  // Strip heredoc bodies and quoted strings before checking.
+  var cmdForCheck = cmd.replace(/\$\(cat\s+<<'?EOF'?[\s\S]*?EOF\s*\)/g, "")  // remove heredocs
+                       .replace(/"[^"]*"/g, '""')                               // remove double-quoted strings
+                       .replace(/'[^']*'/g, "''");                              // remove single-quoted strings
+  if (!/git\s+commit/.test(cmdForCheck)) return null;
 
   // Find project root (look for .git)
   var projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
