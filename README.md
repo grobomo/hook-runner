@@ -51,11 +51,11 @@ The setup wizard will:
 1. Scan your current hooks and generate a styled HTML report
 2. Back up existing hooks to `~/.claude/hooks/archive/`
 3. Install the runner system
-4. Enable the `starter` workflow (with `--yes`) — 42 universally useful modules
+4. Enable the `starter` workflow (with `--yes`) — 47 universally useful modules
 
 Ready for more? Enable the full development pipeline:
 ```bash
-node setup.js --workflow enable shtd    # 101 modules: spec-first, test-first, PR discipline
+node setup.js --workflow enable shtd    # 103 modules: spec-first, test-first, PR discipline
 ```
 
 To undo everything: `node setup.js --uninstall --confirm`
