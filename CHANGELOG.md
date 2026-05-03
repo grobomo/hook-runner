@@ -2,6 +2,24 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.64.0] — 2026-05-03
+
+### Added
+- **background-task-audit** (T549) — PostToolUse module that blocks when background tasks (TaskOutput) return zero output. Three cases: completed+zero, timeout+zero, repeated not_ready polling with zero. Forces root cause investigation instead of dismissing as "resource contention". 22 tests.
+- **no-polling-gate** (T555) — PreToolUse module that blocks LLM-driven polling patterns: loop+sleep, gh comments GET, log tail/follow, watch, until+sleep. 32 tests.
+- **test-evidence** (T560) — PostToolUse module that records test pass/fail results. Victory-declaration-gate now reads this evidence — allows victory words in commits only with recent 0-failure test evidence. 20 tests.
+- **Per-project lesson files** (T558) — `load-lessons` reads from both global (`~/.claude/hooks/self-analysis-lessons.jsonl`) and per-project (`$CLAUDE_PROJECT_DIR/.claude/lessons.jsonl`). Stops cross-pollination between unrelated projects. 13 tests.
+
+### Fixed
+- **spec-gate checked-off tasks** (T557) — `isTaskChecked()` allows writes when branch task is marked `[x]` in TODO.md (cleanup/PR mode). 77 tests.
+- **Branch-PR-gate cross-worktree** (T554) — `getBranch()` resolves from target file's git root for Edit/Write. 7 tests.
+- **Victory-gate test assertion** (T562) — Updated T369 test to match T560's evidence-based block message.
+- **README module tables** (T559) — Added missing entries for no-polling-gate and background-task-audit.
+
+### Stats
+- 96 suites, 1403 tests
+- 113 modules, 7 workflows
+
 ## [2.63.0] — 2026-05-03
 
 ### Changed
