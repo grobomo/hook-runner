@@ -22,6 +22,7 @@ modules:
   # Code quality — catch common issues
   - no-hardcoded-paths
   - test-coverage-check
+  - test-evidence
   - preserve-iterated-content
   # Hook system protection — prevent self-sabotage
   - hook-editing-gate
