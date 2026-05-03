@@ -2,6 +2,26 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.67.0] — 2026-05-03
+
+### Added
+- **messaging-safety-gate tests** (T572) — 19 tests covering outbound messaging blocks, allowed chat ID passthrough, and edge cases.
+- **pr-per-task-gate tests** (T572) — 16 tests covering task ID enforcement in PR titles and non-PR command passthrough.
+- **no-passive-rules tests** (T572) — 15 tests covering global rules blocked, project-scoped allowed, archive exemption.
+- **no-adhoc-commands tests** (T573) — 42 tests covering AWS, SSH, Docker, kubectl, az, terraform, azcopy, curl, RDP, PowerShell infra blocks and safe tool passthrough.
+- **block-local-docker tests** (T573) — 27 tests covering read-only commands pass, state-changing commands blocked, sudo prefix, docker-compose variants.
+- **env-var-check tests** (T574) — 13 tests covering .env.required parsing, missing/present vars, comments, empty file, no project dir.
+- **aws-tagging-gate tests** (T574) — 19 tests covering hackathon profile enforcement, 8 create patterns, tag format variants.
+- **deploy-gate tests** (T575) — 14 tests covering clean/dirty tree enforcement with temp git repo.
+- **deploy-history-reminder tests** (T575) — 14 tests covering non-blocking advisory for all deploy patterns.
+- **settings-change-gate tests** (T575) — 11 tests covering non-blocking gate, settings file detection, tool filtering.
+- **remote-tracking-gate tests** (T576) — 22 tests covering branch tracking enforcement, config file exemptions, _git input injection.
+- **continuous-claude-gate tests** (T576) — 22 tests covering task tracking enforcement via specs/ and TODO.md, env var bypass, scaffolding exemptions.
+
+### Stats
+- 115 suites, 1785 tests
+- 113 modules, 7 workflows
+
 ## [2.66.0] — 2026-05-03
 
 ### Added
