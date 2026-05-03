@@ -399,6 +399,7 @@ Full catalog in `modules/` directory:
 | `no-nested-claude` | Blocks nested claude -p calls (use context-reset for cross-project) |
 | `no-passive-rules` | Blocks .md rules when a hook module is better |
 | `no-playwright-direct` | Blocks raw mcp__playwright__* calls, requires Blueprint Extra MCP |
+| `no-polling-gate` | Blocks LLM-driven polling (loops+sleep, log tailing, comment watching, watch) |
 | `no-rules-gate` | Blocks creation of ~/.claude/rules/ files (use hook modules instead) |
 | `hook-system-reminder` | Reminds Claude that enforcement is ONLY via hook-runner modules |
 | `inter-project-priority-gate` | Blocks non-XREF work when P0 inter-project TODOs are pending |
