@@ -39,7 +39,7 @@ module.exports = function(input) {
   var firstLine = msg.split("\n")[0];
 
   // Check for WIP/fixup/squash prefixes
-  if (/^(wip|fixup!|squash!|tmp|temp)\b/i.test(firstLine)) {
+  if (/^(wip\b|fixup!|squash!|tmp\b|temp\b)/i.test(firstLine)) {
     warnings.push("Commit message starts with '" + firstLine.split(/\s/)[0] + "' — not suitable for final commits");
   }
 

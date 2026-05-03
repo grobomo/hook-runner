@@ -1411,6 +1411,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T577: Version bump to v2.67.0 — CHANGELOG, package.json, GitHub release. 115 suites, 1785 tests. (PR #488)
 - [ ] T578: Marketplace sync v2.64.0 → v2.67.0 — spawned ai-skill-marketplace session.
 - [x] T579: Fix README module counts (starter: 42→47, shtd: 101→103). (PR #490)
+- [ ] T581: Add tests for PostToolUse modules: commit-msg-check, empty-output-detector, result-review-gate, test-evidence.
 
 ## Session Handoff (2026-05-03, session 2)
 - v2.67.0 released. 115 suites, 1785 tests, 0 real failures. 113 modules, 7 workflows.
