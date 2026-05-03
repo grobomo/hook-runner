@@ -165,6 +165,12 @@ function isTaskUnchecked(content, taskId) {
   return pattern.test(content);
 }
 
+// T557: Check if a task ID is checked (completed) — branch is in cleanup/PR mode
+function isTaskChecked(content, taskId) {
+  var pattern = new RegExp("- \\[x\\] " + taskId + "[a-z]?[:\\s]");
+  return pattern.test(content);
+}
+
 // Score how well a spec dir name matches branch feature words
 function matchScore(specDirName, featureWords) {
   if (featureWords.length === 0) return 0;
@@ -372,11 +378,35 @@ module.exports = function(input) {
     }
 
     if (!taskFoundIn) {
+      // T557: If task is checked (completed), allow — branch is in cleanup/PR mode.
+      // Check TODO.md and specs/*/tasks.md for checked task.
+      var taskCompleted = false;
+      for (var cci = 0; cci < roots.length; cci++) {
+        var ccPath = path.join(roots[cci], "TODO.md");
+        var ccCached = cachedTodoRead(ccPath);
+        if (ccCached && isTaskChecked(ccCached.content, taskId)) { taskCompleted = true; break; }
+      }
+      if (!taskCompleted) {
+        for (var csi = 0; csi < roots.length; csi++) {
+          var csDir = path.join(roots[csi], "specs");
+          var csEntries = cachedSpecScan(csDir);
+          for (var cdi = 0; cdi < csEntries.length; cdi++) {
+            if (!csEntries[cdi].hasTasks) continue;
+            var csContent = cachedReadFile(path.join(csDir, csEntries[cdi].dir, "tasks.md"));
+            if (csContent && isTaskChecked(csContent, taskId)) { taskCompleted = true; break; }
+          }
+          if (taskCompleted) break;
+        }
+      }
+      if (taskCompleted) {
+        // Task is done — allow writes (cleanup, docs, PR prep)
+        return null;
+      }
       return {
         decision: "block",
-        reason: "SPEC GATE: Branch task " + taskId + " is not an unchecked task in TODO.md or specs/*/tasks.md.\n" +
-          "WHY: Your branch '" + branch + "' references " + taskId + " but that task is either\n" +
-          "already completed, doesn't exist, or isn't in a task file.\n" +
+        reason: "SPEC GATE: Branch task " + taskId + " is not a task in TODO.md or specs/*/tasks.md.\n" +
+          "WHY: Your branch '" + branch + "' references " + taskId + " but that task\n" +
+          "doesn't exist in any task file.\n" +
           "FIX: Add `- [ ] " + taskId + ": description` to TODO.md or specs/*/tasks.md" +
           SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
           "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))

@@ -76,7 +76,7 @@ else
   fail "Branch T319 with T319 unchecked should allow: $OUTPUT"
 fi
 
-# 2. Branch T999 with NO T999 in TODO.md — should block
+# 2. Branch T999 with T999 checked in TODO.md — should ALLOW (T557: cleanup/PR mode)
 PROJ2="$TMPDIR/proj-t321-2"
 mkdir -p "$PROJ2/src"
 git init -q "$PROJ2"
@@ -87,10 +87,10 @@ EOF
 echo "x" > "$PROJ2/src/app.js"
 
 OUTPUT=$(run_gate "$PROJ2" "$PROJ2/src/app.js" "200-T999-bogus-branch")
-if echo "$OUTPUT" | grep -q "BLOCKED"; then
-  pass "Branch T999 with T999 already checked blocks edits"
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "T557: Branch T999 with T999 checked allows edits (cleanup/PR mode)"
 else
-  fail "Branch T999 (checked) should block: $OUTPUT"
+  fail "T557: Branch T999 (checked) should allow cleanup: $OUTPUT"
 fi
 
 # 3. Branch T999 with T999 in specs/*/tasks.md unchecked — should pass
@@ -199,7 +199,7 @@ else
   fail "T363: Branch T331 with unchecked subtask T331e should allow: $OUTPUT"
 fi
 
-# 10. Branch T331 with ALL subtasks checked — should block
+# 10. Branch T331 with ALL subtasks checked — should ALLOW (T557: cleanup/PR mode)
 PROJ10="$TMPDIR/proj-t363-2"
 mkdir -p "$PROJ10/specs/brain-bridge" "$PROJ10/src"
 git init -q "$PROJ10"
@@ -218,10 +218,10 @@ echo "x" > "$PROJ10/src/app.js"
 (cd "$PROJ10" && git add -A && git commit -q -m "init") || true
 
 OUTPUT=$(run_gate "$PROJ10" "$PROJ10/src/app.js" "228-T331-version-bump")
-if echo "$OUTPUT" | grep -q "BLOCKED"; then
-  pass "T363: Branch T331 with all subtasks checked blocks edits"
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "T557: Branch T331 with all subtasks checked allows edits (cleanup/PR mode)"
 else
-  fail "T363: Branch T331 with all subtasks checked should block: $OUTPUT"
+  fail "T557: Branch T331 (all done) should allow cleanup: $OUTPUT"
 fi
 
 # --- T374: Task ID match takes priority over fuzzy word matching ---
@@ -275,6 +275,42 @@ if echo "$OUTPUT" | grep -q "PASSED"; then
   pass "T374: Task ID in TODO.md skips fuzzy spec matching"
 else
   fail "T374: Branch T375 (in TODO.md) should skip fuzzy match on code-review-cleanup: $OUTPUT"
+fi
+
+# --- T557: Completed task allows cleanup/PR mode ---
+
+# 13. Branch T888 that doesn't exist anywhere — should block
+PROJ13="$TMPDIR/proj-t557-1"
+mkdir -p "$PROJ13/src"
+git init -q "$PROJ13"
+echo "no tasks here" > "$PROJ13/TODO.md"
+echo "x" > "$PROJ13/src/app.js"
+
+OUTPUT=$(run_gate "$PROJ13" "$PROJ13/src/app.js" "300-T888-ghost-task")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "T557: Nonexistent task T888 (not checked, not unchecked) blocks edits"
+else
+  fail "T557: Nonexistent task T888 should block: $OUTPUT"
+fi
+
+# 14. Branch T777 checked in specs but not in TODO — should allow
+PROJ14="$TMPDIR/proj-t557-2"
+mkdir -p "$PROJ14/specs/feature-x" "$PROJ14/src"
+git init -q "$PROJ14"
+cat > "$PROJ14/specs/feature-x/spec.md" <<'EOF'
+# Feature X spec
+EOF
+cat > "$PROJ14/specs/feature-x/tasks.md" <<'EOF'
+- [x] T777: Build feature X (PR #100)
+EOF
+echo "x" > "$PROJ14/src/app.js"
+(cd "$PROJ14" && git add -A && git commit -q -m "init") || true
+
+OUTPUT=$(run_gate "$PROJ14" "$PROJ14/src/app.js" "100-T777-feature-x")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "T557: Task T777 checked in specs allows edits (cleanup/PR mode)"
+else
+  fail "T557: Task T777 (checked in specs) should allow cleanup: $OUTPUT"
 fi
 
 echo ""
