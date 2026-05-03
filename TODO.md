@@ -1410,6 +1410,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T576: Add tests for remote-tracking-gate (22) and continuous-claude-gate (22) — 100% PreToolUse coverage. (PR #487)
 - [x] T577: Version bump to v2.67.0 — CHANGELOG, package.json, GitHub release. 115 suites, 1785 tests. (PR #488)
 - [ ] T578: Marketplace sync v2.64.0 → v2.67.0 — copy core files + modules + workflows to ai-skill-marketplace.
+- [ ] T579: Fix README module counts (starter: 42→47, shtd: 101→103).
 
 ## Session Handoff (2026-05-03)
 - v2.67.0 released. 115 suites, 1785 tests, 0 real failures. 113 modules, 7 workflows.
