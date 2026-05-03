@@ -1,20 +1,26 @@
 # Coconut Status Report
 
-**Updated:** 2026-04-18 session 10
+**Updated:** 2026-05-03
 
 ## Current Task
-- T481: v2.29.0 release — version bump, CHANGELOG, sync to live, PR + GitHub release
+- Housekeeping session — all numbered tasks complete, investigating test health
 
-## Recent Completions (session 9)
-- T475: Fixed OpenClaw e2e tsx harness — 31/31 tests, 3 phases (PR #368)
-- T479: CHANGELOG accuracy fixes for v2.27.0 and v2.28.0 (PR #370)
-- T480: Cleaned 6 stale remote branches
-- T462: Delegated marketplace sync to claude-code-skills T006
+## Recent Completions
+- T558: Per-project lesson files for self-reflection system (PR #469)
+- T561: Add test-evidence to README PostToolUse table (PR #468)
+- T562: Fix T369 victory-gate test (PR #470)
+- T563: Version bump to v2.64.0 (PR #471)
+- Synced load-lessons + self-reflection modules to live hooks
+- Cleaned 3 stale worktrees (T546, T547, T554)
+
+## Test Suite
+- 96 suites, 1406 passed, 1 failed
+- Only failure: T042 marketplace version drift (source=2.64.0, marketplace=2.59.0)
 
 ## Blockers
-- None
+- Marketplace sync blocked by cwd-drift gate — needs separate session in ai-skill-marketplace repo
 
 ## Next Steps
-1. Version bump to v2.29.0, update CHANGELOG
-2. Sync modules to live hooks
-3. Create PR + GitHub release
+1. T564: Marketplace sync (delegated to marketplace session)
+2. Performance monitoring of hot-path modules
+3. Deferred: Port remaining OpenClaw modules
