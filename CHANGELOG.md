@@ -2,6 +2,18 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.66.0] — 2026-05-03
+
+### Added
+- **reflection-gate tests** (T569) — 20 tests covering exempt files, self-repair paths, severity levels, log age expiry, resolved entries, and block messaging.
+- **task-completion-gate tests** (T569) — 15 tests covering PR reference enforcement, already-completed tasks, multi-task edits, and edge cases.
+- **settings-hooks-gate tests** (T570) — 14 tests covering hook pattern detection, settings.json/local enforcement, removal passthrough, and Windows paths.
+- **no-hook-bypass tests** (T570) — 21 tests covering Bash write detection, bypass language blocking, flag file integration, and allowed hook/rule paths.
+
+### Stats
+- 103 suites, 1552 tests
+- 113 modules, 7 workflows
+
 ## [2.65.0] — 2026-05-03
 
 ### Added
