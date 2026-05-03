@@ -58,5 +58,13 @@ assert("Windows backslash paths blocked", r9 && r9.decision === "block");
 assert("block message mentions hook-runner", r2.reason.indexOf("hook-runner") !== -1);
 assert("block message mentions NEVER CREATE", r2.reason.indexOf("NEVER CREATE") !== -1);
 
+// 12. JSONL data files in ~/.claude/ pass (T552)
+var r12 = gate({ tool_name: "Write", tool_input: { file_path: home + "/.claude/hooks/self-analysis-lessons.jsonl" } });
+assert("JSONL data file passes", r12 === null);
+
+// 13. JSONL in hooks subdir passes
+var r13 = gate({ tool_name: "Edit", tool_input: { file_path: home + "/.claude/hooks/hook-log.jsonl" } });
+assert("JSONL log file passes", r13 === null);
+
 console.log("\n" + pass + "/" + (pass + fail) + " passed");
 process.exit(fail > 0 ? 1 : 0);
