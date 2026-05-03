@@ -7,8 +7,12 @@ All notable changes to hook-runner are documented here.
 ### Changed
 - **Python subprocess detection** (T550) — `windowless-spawn-gate` now covers Python subprocess patterns in addition to JS child_process. Blocks `subprocess.Popen/call/run/check_call/check_output(shell=True)`, `os.system()`, and `os.popen()` in hook `.py` files unless `CREATE_NO_WINDOW`, `creationflags`, or `startupinfo` is present. Language-aware comment skipping and fix suggestions. 32 tests.
 
+### Fixed
+- **JSONL data file blocking** (T552) — `hook-system-reminder` no longer blocks writes to `.jsonl` files in `~/.claude/` (self-analysis-lessons, hook-log). These are data files, not hook code.
+- **Worktree subdir detection** (T553) — `commit-counter-gate` `isInWorktree()` now walks up the directory tree to find `.git` file. Fixes false "not in worktree" lockout when `CLAUDE_PROJECT_DIR` is a subdirectory of a worktree.
+
 ### Stats
-- 91 suites, 1296 tests
+- 91 suites, 1300 tests
 - 115 modules, 7 workflows
 
 ## [2.62.0] — 2026-04-30
