@@ -88,6 +88,7 @@ modules:
   - rule-hygiene
   - test-coverage-check
   - test-evidence
+  - background-task-audit
   - empty-output-detector
   - result-review-gate
   - update-stale-docs

@@ -23,6 +23,7 @@ modules:
   - no-hardcoded-paths
   - test-coverage-check
   - test-evidence
+  - background-task-audit
   - preserve-iterated-content
   # Hook system protection — prevent self-sabotage
   - hook-editing-gate
