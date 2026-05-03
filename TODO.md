@@ -1372,13 +1372,29 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T545: Auto-sync skill package.json during setup.js install — fixes T034 install-drift test failure (PR #456)
 - [x] T546: Exempt .gitignore from dirty-tree check in enforcement-gate (chicken-and-egg fix). (PR #459)
 - [x] T547: Fix worktree detection (walk up dir tree + HMAC counter tampering prevention). 30 tests pass. (PR #459)
-- [ ] T548: (deferred) Create `lab-vm-autostart` SessionStart module
-- [ ] T549: (deferred) Install `background-task-audit` PostToolUse module
+- [x] T548: Removed — user doesn't want this. VM startup is a manual decision, not an auto-hook.
+- [x] T549: Install `background-task-audit` PostToolUse module — 22 tests, added to starter/shtd/gsd workflows, modules.yaml. (PR #467)
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
 - [x] T550: Extend windowless-spawn-gate.js to cover Python subprocess patterns (PR #460)
-- [ ] T551: Bug — context-reset opens Claude in worktree folder directly instead of project folder with worktree active.
-- [x] T552: hook-system-reminder exempts .jsonl data files from ~/.claude/ write block. 13 tests.
-- [x] T553: commit-counter-gate walks up dir tree for worktree detection from subdirectories. 22 tests.
+- [x] T551: Moved to context-reset/TODO.md as T007 — bug belongs in that project.
+- [x] T552: hook-system-reminder exempts .jsonl data files from ~/.claude/ write block. 13 tests. (PR #461)
+- [x] T553: commit-counter-gate walks up dir tree for worktree detection from subdirectories. 22 tests. (PR #461)
+- [x] T554: Fix branch-pr-gate cross-worktree false positive — getBranch() resolves from target file's git root for Edit/Write. 7 tests. (PR #462)
+
+- [x] T555: Create `no-polling-gate.js` PreToolUse module — blocks LLM-driven polling patterns. 5 patterns (loop+sleep, gh comments GET, log tail/follow, watch, until+sleep). 32 tests. Added to starter + shtd + gsd workflows. (PR #463)
+
+- [x] T556: Already fixed — .jsonl files are exempt in both hook-editing-gate (not flagged as protected) and hook-system-reminder (line 30 exempts .jsonl). Verified with unit test.
+- [x] T557: spec-gate allows writes when branch task is checked off [x] — cleanup/PR mode. isTaskChecked() helper. 77 tests across 5 suites. (PR #465)
+- [x] T558: Per-project lesson files — load-lessons reads project `.claude/lessons.jsonl` + global file. self-reflection writes project-specific. 227-line test suite. (PR #469)
+- [x] T561: Add test-evidence to README PostToolUse table. Fixes T094. (PR #468)
+
+- [x] T559: Add no-polling-gate and background-task-audit to README module table. Fixes T094 test failure. (PR #464)
+
+- [x] T560: Victory-declaration-gate validates test evidence. PostToolUse/test-evidence.js writes state file on test pass. Victory gate reads it — allows commit with 0-failure evidence < 10 min. 20/20 tests. (PR #466)
+
+
+- [x] T562: Fix T369 victory-gate test — match T560 evidence message format. (PR #470)
+- [x] T563: Version bump to v2.64.0, CHANGELOG, GitHub release. (PR #471)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
