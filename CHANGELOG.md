@@ -2,6 +2,20 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.65.0] — 2026-05-03
+
+### Added
+- **gh-auto-gate tests** (T565) — 37 tests covering all `gh` subcommands, `git push/pull/fetch`, `gh_auto` passthrough, and edge cases (chained commands, quoted strings, comments).
+- **spec-before-code-gate tests** (T565) — 20 tests covering tool filtering, exempt files, branch detection, and spec directory presence.
+- **preserve-iterated-content tests** (T567) — 18 tests covering git commit counting, cache behavior, threshold logic, and watched directory detection.
+
+### Fixed
+- **.gitignore worktrees** (T566) — Added `.claude/worktrees/` to `.gitignore` to prevent stale worktree remnants from showing as untracked.
+
+### Stats
+- 99 suites, 1482 tests
+- 113 modules, 7 workflows
+
 ## [2.64.0] — 2026-05-03
 
 ### Added
