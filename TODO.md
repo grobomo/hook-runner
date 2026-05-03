@@ -1397,6 +1397,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T563: Version bump to v2.64.0, CHANGELOG, GitHub release. (PR #471)
 - [x] T564: Marketplace sync — completed by spawned ai-skill-marketplace session. T042 now passes (source=2.64.0, marketplace=2.64.0).
 - [x] T565: Add test coverage for gh-auto-gate (37 tests) and spec-before-code-gate (20 tests). 57 new tests for previously untested critical PreToolUse modules. (PR #473)
+- [x] T566: Add .claude/worktrees/ to .gitignore — stops stale worktree remnants showing as untracked. (PR #475)
+- [x] T567: Add tests for preserve-iterated-content gate — 18 tests covering cache, thresholds, watched dirs. (PR #476)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
