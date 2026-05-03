@@ -10,32 +10,64 @@
 // because the gate just said "commit now" without checking branch fitness.
 // Now: detects mismatch → tells Claude to use EnterWorktree instead of committing
 // to the wrong branch. Also enforces worktrees over bare branch checkouts.
+// T547: Fix worktree detection — walk up directory tree from CWD and CLAUDE_PROJECT_DIR
+// instead of only checking immediate .git. EnterWorktree puts CWD inside a worktree
+// subdirectory but CLAUDE_PROJECT_DIR stays at the main checkout.
+// T547: Block state file tampering — Claude used `node -e` to reset the counter file
+// directly, bypassing the gate. Now uses HMAC integrity check + Bash command detection.
 "use strict";
 var fs = require("fs");
 var path = require("path");
 var cp = require("child_process");
 var os = require("os");
+var crypto = require("crypto");
 
 var COUNTER_FILE = path.join(os.homedir(), ".claude", "hooks", ".uncommitted-edit-count");
 var MAX_EDITS = 15;
+// HMAC key derived from machine-specific data (not a secret — just prevents casual resets)
+var HMAC_KEY = "ccg:" + os.hostname() + ":" + os.homedir();
 
 // Patterns indicating file-modifying Bash commands (shared helper — DRY with spec-before-code-gate)
 var FILE_MODIFY_PATTERNS = require("./_file-modify-patterns");
 
+// State file names that are protected from Bash tampering
+var PROTECTED_STATE_FILES = [
+  "uncommitted-edit-count",
+  "spec-before-code-state",
+  "commit-counter-state"
+];
+
+function computeHmac(data) {
+  return crypto.createHmac("sha256", HMAC_KEY)
+    .update(JSON.stringify({ count: data.count, worktreeRequired: !!data.worktreeRequired }))
+    .digest("hex").slice(0, 16);
+}
+
 function readCounter() {
   try {
     var data = JSON.parse(fs.readFileSync(COUNTER_FILE, "utf-8"));
-    return { count: data.count || 0, worktreeRequired: !!data.worktreeRequired };
-  } catch(e) { return { count: 0, worktreeRequired: false }; }
+    // Legacy file without HMAC — trust it but upgrade on next write
+    if (!data.hmac) {
+      return { count: data.count || 0, worktreeRequired: !!data.worktreeRequired, tampered: false };
+    }
+    var expected = computeHmac(data);
+    if (data.hmac !== expected) {
+      // HMAC mismatch — file was tampered with externally
+      return { count: data.count || 0, worktreeRequired: !!data.worktreeRequired, tampered: true };
+    }
+    return { count: data.count || 0, worktreeRequired: !!data.worktreeRequired, tampered: false };
+  } catch(e) { return { count: 0, worktreeRequired: false, tampered: false }; }
 }
 
 function writeCounter(count, worktreeRequired) {
   try {
-    fs.writeFileSync(COUNTER_FILE, JSON.stringify({
+    var data = {
       count: count,
       ts: new Date().toISOString(),
       worktreeRequired: !!worktreeRequired
-    }));
+    };
+    data.hmac = computeHmac(data);
+    fs.writeFileSync(COUNTER_FILE, JSON.stringify(data));
   } catch(e) {}
 }
 
@@ -86,6 +118,25 @@ function getBranch(input) {
   return "";
 }
 
+// T547: Walk up from a directory looking for .git file (worktree marker).
+// Returns true if any ancestor has a .git FILE (not directory).
+// Stops at filesystem root or after 20 levels to avoid infinite loops.
+function findWorktreeGitFile(startDir) {
+  var dir = startDir;
+  for (var i = 0; i < 20; i++) {
+    try {
+      var gitPath = path.join(dir, ".git");
+      var stat = fs.statSync(gitPath);
+      if (stat.isFile()) return true;   // .git file = worktree
+      if (stat.isDirectory()) return false; // .git dir = main checkout, stop walking
+    } catch(e) { /* no .git here, keep walking up */ }
+    var parent = path.dirname(dir);
+    if (parent === dir) break; // filesystem root
+    dir = parent;
+  }
+  return false;
+}
+
 // Check if we're in a worktree (vs main checkout)
 // T511: Also check CWD when CLAUDE_PROJECT_DIR has no .git — EnterWorktree
 // changes CWD but not CLAUDE_PROJECT_DIR.
@@ -93,9 +144,12 @@ function getBranch(input) {
 // EnterWorktree changes CWD to the worktree but CLAUDE_PROJECT_DIR stays pointing at
 // the main checkout. The old code returned false immediately when .git was a dir,
 // never reaching the CWD check. Now: if CLAUDE_PROJECT_DIR is main, fall through to CWD.
+// T547: Walk up directory tree instead of only checking immediate .git.
+// EnterWorktree creates worktrees at CLAUDE_PROJECT_DIR/.claude/worktrees/<name>/
+// but hook process CWD may be a subdirectory. Walking up finds the .git file.
 function isInWorktree() {
   var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
-  // Check CLAUDE_PROJECT_DIR first
+  // Check CLAUDE_PROJECT_DIR first (immediate check for speed)
   if (projectDir) {
     try {
       var gitPath = path.join(projectDir, ".git");
@@ -106,12 +160,22 @@ function isInWorktree() {
     } catch(e) { /* no .git at CLAUDE_PROJECT_DIR — fall through to CWD */ }
   }
 
-  // Fallback: check CWD (covers worktree sessions + unset/missing CLAUDE_PROJECT_DIR)
+  // T547: Walk up from CWD looking for .git file (worktree marker).
+  // Covers: CWD is inside worktree subdir, or CWD IS the worktree root.
   try {
-    var cwd = process.cwd();
-    var cwdGit = path.join(cwd, ".git");
-    if (fs.statSync(cwdGit).isFile()) return true;
-  } catch(e) { /* no .git at cwd either */ }
+    if (findWorktreeGitFile(process.cwd())) return true;
+  } catch(e) { /* cwd inaccessible */ }
+
+  // T547: If CWD is the main checkout but CLAUDE_PROJECT_DIR has worktrees,
+  // check if `git rev-parse --git-dir` reveals a worktree.
+  // This catches the case where the harness CWD hasn't moved but git operations
+  // target a worktree (e.g. via `cd worktree && git commit` in a single Bash call).
+  try {
+    var opts = { encoding: "utf-8", timeout: 3000, windowsHide: true };
+    var gitDir = cp.execFileSync("git", ["rev-parse", "--git-dir"], opts).trim();
+    // In a worktree, --git-dir returns the .git/worktrees/<name> path
+    if (/[\/\\]\.git[\/\\]worktrees[\/\\]/.test(gitDir)) return true;
+  } catch(e) { /* not in a git repo or git not available */ }
 
   return false;
 }
@@ -192,6 +256,17 @@ function checkBranchFileMismatch(branch, files) {
   };
 }
 
+// T547: Detect Bash commands that tamper with gate state files.
+// Incident: Claude used `node -e "fs.writeFileSync(...uncommitted-edit-count...)"` to
+// reset the counter to 0, bypassing the worktreeRequired gate entirely.
+function detectStateTampering(cmd) {
+  if (!cmd) return false;
+  for (var i = 0; i < PROTECTED_STATE_FILES.length; i++) {
+    if (cmd.indexOf(PROTECTED_STATE_FILES[i]) !== -1) return true;
+  }
+  return false;
+}
+
 module.exports = function(input) {
   var cmd = "";
   if (input.tool_name === "Bash") {
@@ -200,11 +275,34 @@ module.exports = function(input) {
     } catch(e) { cmd = (input.tool_input || {}).command || ""; }
   }
 
+  // T547: Block Bash commands that tamper with gate state files
+  // Skip git commit/log/diff — commit messages and diffs may legitimately mention state file names
+  if (input.tool_name === "Bash" && !(/git\s+(commit|log|diff|show|grep)/.test(cmd)) && detectStateTampering(cmd)) {
+    return {
+      decision: "block",
+      reason: "COMMIT COUNTER — STATE TAMPERING BLOCKED: This command references a gate state file.\n" +
+        "WHY: Claude previously used `node -e` to reset the counter file directly,\n" +
+        "bypassing worktree enforcement entirely.\n\n" +
+        "Gate state files are managed exclusively by hook modules.\n" +
+        "To clear the worktreeRequired flag: call EnterWorktree, then commit in the worktree."
+    };
+  }
+
   // Reset counter on git commit — but block if worktree was required
   // T485: Previously, Claude bypassed the worktree enforcement by just committing
   // on the wrong branch. Now: if the gate flagged "worktree required", block commits too.
   if (input.tool_name === "Bash" && /git\s+commit/.test(cmd)) {
     var state = readCounter();
+    // T547: If HMAC check failed, the counter was tampered with — restore worktreeRequired
+    if (state.tampered) {
+      writeCounter(state.count, true); // re-sign with correct HMAC, keep worktreeRequired
+      return {
+        decision: "block",
+        reason: "COMMIT COUNTER — INTEGRITY VIOLATION: The counter state file was modified outside this gate.\n" +
+          "The worktreeRequired flag has been restored.\n" +
+          "REQUIRED: Call EnterWorktree first, then commit in the worktree."
+      };
+    }
     if (state.worktreeRequired && !isInWorktree()) {
       return {
         decision: "block",
@@ -234,6 +332,15 @@ module.exports = function(input) {
   if (!isFileModify) return null;
 
   var counterState = readCounter();
+  // T547: If tampering detected on read, restore with correct HMAC
+  if (counterState.tampered) {
+    writeCounter(counterState.count, true);
+    return {
+      decision: "block",
+      reason: "COMMIT COUNTER — INTEGRITY VIOLATION: The counter state file was modified outside this gate.\n" +
+        "Counter and worktreeRequired flag have been restored. Retry your edit."
+    };
+  }
   var count = counterState.count + 1;
   writeCounter(count, counterState.worktreeRequired);
 

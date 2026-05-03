@@ -463,6 +463,169 @@ test("T540: mismatch in worktree gives commit guidance, not WRONG BRANCH", funct
   cleanupRepo(dir);
 });
 
+// --- T547: State file tampering detection ---
+
+test("T547: blocks Bash commands referencing counter state file", function() {
+  resetCounter();
+  var gate = loadGate();
+  var r = gate({ tool_name: "Bash", tool_input: { command: 'node -e "fs.writeFileSync(...uncommitted-edit-count...)"' } });
+  assert(r !== null, "should block");
+  assert(r.decision === "block", "should be block decision");
+  assert(r.reason.indexOf("STATE TAMPERING") !== -1, "should mention state tampering, got: " + r.reason.substring(0, 100));
+});
+
+test("T547: blocks Bash commands referencing spec-before-code state file", function() {
+  resetCounter();
+  var gate = loadGate();
+  var r = gate({ tool_name: "Bash", tool_input: { command: 'cat ~/.claude/hooks/.spec-before-code-state | jq .' } });
+  assert(r !== null, "should block");
+  assert(r.reason.indexOf("STATE TAMPERING") !== -1, "should mention state tampering");
+});
+
+test("T547: allows Bash commands that don't reference state files", function() {
+  resetCounter();
+  var gate = loadGate();
+  var r = gate({ tool_name: "Bash", tool_input: { command: "git status" } });
+  assert(r === null, "should pass");
+});
+
+test("T547: allows git commit with state file name in message", function() {
+  resetCounter();
+  var gate = loadGate();
+  var r = gate({ tool_name: "Bash", tool_input: { command: "git commit -m 'fix uncommitted-edit-count handling'" } });
+  // git commit is handled by the commit handler, not the tamper detector
+  assert(r === null, "should allow git commit even if message mentions state file");
+});
+
+test("T547: HMAC integrity violation detected on git commit", function() {
+  var dir = createTempRepo("main", []);
+  process.env.CLAUDE_PROJECT_DIR = dir;
+  // Write counter with an HMAC field but wrong value (simulates external tampering)
+  fs.writeFileSync(COUNTER_FILE, JSON.stringify({
+    count: 0, ts: new Date().toISOString(), worktreeRequired: false, hmac: "deadbeef12345678"
+  }));
+
+  var gate = loadGate();
+  var r = gate({ tool_name: "Bash", tool_input: { command: "git commit -m 'after tamper'" } });
+  assert(r !== null, "should block");
+  assert(r.decision === "block", "should be block decision");
+  assert(r.reason.indexOf("INTEGRITY VIOLATION") !== -1,
+    "should mention integrity violation, got: " + r.reason.substring(0, 150));
+
+  cleanupRepo(dir);
+});
+
+test("T547: HMAC integrity violation detected on file edit", function() {
+  // Write counter with bad HMAC at count=0 — the edit should detect tamper on read
+  fs.writeFileSync(COUNTER_FILE, JSON.stringify({
+    count: 0, ts: new Date().toISOString(), worktreeRequired: true, hmac: "baadcafe00000000"
+  }));
+
+  var gate = loadGate();
+  var r = gate({ tool_name: "Edit", tool_input: { file_path: "/tmp/test.js", old_string: "a", new_string: "b" } });
+  assert(r !== null, "should block");
+  assert(r.reason.indexOf("INTEGRITY VIOLATION") !== -1,
+    "should mention integrity violation, got: " + r.reason.substring(0, 150));
+});
+
+test("T547: legacy counter (no HMAC) treated as valid", function() {
+  // Write counter without HMAC field — legacy format should be trusted
+  fs.writeFileSync(COUNTER_FILE, JSON.stringify({
+    count: 5, ts: new Date().toISOString(), worktreeRequired: false
+  }));
+
+  var gate = loadGate();
+  var r = gate({ tool_name: "Edit", tool_input: { file_path: "/tmp/test.js", old_string: "a", new_string: "b" } });
+  assert(r === null, "should pass (legacy counter, count only 6)");
+  var data = JSON.parse(fs.readFileSync(COUNTER_FILE, "utf-8"));
+  assert(data.count === 6, "counter should increment to 6");
+  assert(data.hmac, "should now have HMAC after gate writes");
+});
+
+test("T547: counter written by gate passes HMAC check on re-read", function() {
+  // Let the gate write a counter, then read it back — should not be tampered
+  resetCounter();
+  var gate = loadGate();
+  gate({ tool_name: "Edit", tool_input: { file_path: "/tmp/test.js", old_string: "a", new_string: "b" } });
+  // Now the counter has count=1 with valid HMAC. Another edit should work fine.
+  gate = loadGate();
+  var r = gate({ tool_name: "Edit", tool_input: { file_path: "/tmp/test2.js", old_string: "a", new_string: "b" } });
+  assert(r === null, "should pass (count=2, valid HMAC)");
+  var data = JSON.parse(fs.readFileSync(COUNTER_FILE, "utf-8"));
+  assert(data.count === 2, "counter should be 2");
+});
+
+// --- T547: Walk-up worktree detection ---
+
+test("T547: isInWorktree detects worktree from subdirectory of worktree root", function() {
+  // Create a main checkout, then create a fake worktree as a subdirectory
+  var mainDir = createTempRepo("main", []);
+  var worktreeDir = path.join(mainDir, ".claude", "worktrees", "test-wt");
+  fs.mkdirSync(worktreeDir, { recursive: true });
+  // Make the worktree's .git a file (the worktree marker)
+  var realGitDir = path.join(os.tmpdir(), "fake-git-walk-" + Date.now());
+  fs.mkdirSync(realGitDir, { recursive: true });
+  fs.writeFileSync(path.join(realGitDir, "HEAD"), "ref: refs/heads/test-branch\n");
+  fs.writeFileSync(path.join(worktreeDir, ".git"), "gitdir: " + realGitDir);
+
+  // Create a subdirectory inside the worktree (simulates CWD being deeper)
+  var subDir = path.join(worktreeDir, "src", "components");
+  fs.mkdirSync(subDir, { recursive: true });
+
+  // Point CLAUDE_PROJECT_DIR at main checkout (like real EnterWorktree does)
+  process.env.CLAUDE_PROJECT_DIR = mainDir;
+  var origCwd = process.cwd();
+  // Set CWD to subdirectory of worktree
+  process.chdir(subDir);
+
+  // The counter needs worktreeRequired + high count to trigger isInWorktree check
+  setCounter(14);
+  // Create dirty files in the main repo so git diff > 0
+  fs.mkdirSync(path.join(mainDir, "src"), { recursive: true });
+  fs.writeFileSync(path.join(mainDir, "src/app.js"), "dirty");
+  cp.execFileSync("git", ["add", "src/app.js"], { cwd: mainDir, windowsHide: true });
+
+  var gate = loadGate();
+  // Use git commit which checks isInWorktree via worktreeRequired path
+  fs.writeFileSync(COUNTER_FILE, JSON.stringify({
+    count: 15, ts: new Date().toISOString(), worktreeRequired: true
+  }));
+  var r = gate({ tool_name: "Bash", tool_input: { command: "git commit -m 'test'" } });
+
+  process.chdir(origCwd);
+
+  // Should NOT block — we're in a worktree (walk-up should find .git file)
+  assert(r === null, "should allow commit — walk-up should detect worktree from subdirectory, got: " +
+    (r ? r.reason.substring(0, 150) : "null"));
+
+  fs.rmSync(realGitDir, { recursive: true, force: true });
+  cleanupRepo(mainDir);
+});
+
+test("T547: isInWorktree returns false when CWD is in main checkout subdirectory", function() {
+  // Main checkout with .git directory (not file) — walking up should find .git dir and return false
+  var dir = createTempRepo("build-src-utils", ["src/utils.js"]);
+  process.env.CLAUDE_PROJECT_DIR = dir;
+  var subDir = path.join(dir, "src");
+  var origCwd = process.cwd();
+  process.chdir(subDir);
+
+  // Set worktreeRequired and try to commit
+  fs.writeFileSync(COUNTER_FILE, JSON.stringify({
+    count: 15, ts: new Date().toISOString(), worktreeRequired: true
+  }));
+
+  var gate = loadGate();
+  var r = gate({ tool_name: "Bash", tool_input: { command: "git commit -m 'test'" } });
+  process.chdir(origCwd);
+
+  // Should block — we're in main checkout (walk-up finds .git dir, not file)
+  assert(r !== null, "should block — main checkout subdir is not a worktree");
+  assert(r.reason.indexOf("WORKTREE REQUIRED") !== -1, "should say WORKTREE REQUIRED");
+
+  cleanupRepo(dir);
+});
+
 // --- Cleanup ---
 process.env.CLAUDE_PROJECT_DIR = origProjectDir || "";
 process.env.HOOK_RUNNER_TEST = origTestEnv || "";
