@@ -463,6 +463,56 @@ test("T540: mismatch in worktree gives commit guidance, not WRONG BRANCH", funct
   cleanupRepo(dir);
 });
 
+// --- T553: worktree detection from subdirectory ---
+
+test("T553: isInWorktree detects worktree from subdirectory", function() {
+  // Create a worktree-like structure: dir/.git is a file, subdir/ exists beneath it
+  var dir = createTempRepo("worktree-T553-subdir-test", []);
+  var gitDir = path.join(dir, ".git");
+  var realGitDir = path.join(os.tmpdir(), "fake-git-t553-" + Date.now());
+  fs.mkdirSync(realGitDir, { recursive: true });
+  fs.cpSync(path.join(gitDir, "HEAD"), path.join(realGitDir, "HEAD"));
+  fs.rmSync(gitDir, { recursive: true, force: true });
+  fs.writeFileSync(gitDir, "gitdir: " + realGitDir);
+
+  // Create a subdirectory (simulating labs/dd-lab/ inside the worktree)
+  var subdir = path.join(dir, "labs", "dd-lab");
+  fs.mkdirSync(subdir, { recursive: true });
+
+  // Point CLAUDE_PROJECT_DIR at the subdirectory (the bug scenario)
+  process.env.CLAUDE_PROJECT_DIR = subdir;
+  // Set worktreeRequired + high counter to trigger the commit block path
+  fs.writeFileSync(COUNTER_FILE, JSON.stringify({ count: 15, ts: new Date().toISOString(), worktreeRequired: true }));
+
+  var gate = loadGate();
+  // git commit should be ALLOWED because we're in a worktree (even from subdir)
+  var r = gate({ tool_name: "Bash", tool_input: { command: "git commit -m 'from subdir'" } });
+  assert(r === null, "should detect worktree from subdirectory, got: " + (r ? r.reason.substring(0, 100) : "null"));
+
+  fs.rmSync(realGitDir, { recursive: true, force: true });
+  cleanupRepo(dir);
+});
+
+test("T553: main checkout from subdirectory is still detected as main", function() {
+  // Create a normal repo (not a worktree) with a subdirectory
+  var dir = createTempRepo("main", ["src/app.js"]);
+  var subdir = path.join(dir, "src", "nested");
+  fs.mkdirSync(subdir, { recursive: true });
+
+  process.env.CLAUDE_PROJECT_DIR = subdir;
+  var origCwd = process.cwd();
+  process.chdir(subdir);
+  fs.writeFileSync(COUNTER_FILE, JSON.stringify({ count: 15, ts: new Date().toISOString(), worktreeRequired: true }));
+
+  var gate = loadGate();
+  var r = gate({ tool_name: "Bash", tool_input: { command: "git commit -m 'from subdir of main'" } });
+  process.chdir(origCwd);
+  // Should still block — this is the main checkout, not a worktree
+  assert(r !== null && r.decision === "block", "should still detect main checkout from subdirectory");
+
+  cleanupRepo(dir);
+});
+
 // --- Cleanup ---
 process.env.CLAUDE_PROJECT_DIR = origProjectDir || "";
 process.env.HOOK_RUNNER_TEST = origTestEnv || "";

@@ -55,11 +55,30 @@ module.exports = function(input) {
   try {
     var branch = (input._git && input._git.branch) || "";
     if (!branch) {
-      // Read .git/HEAD directly — avoids spawning git (slow on Windows, can timeout)
-      var headContent = fs.readFileSync(path.join(gitRoot, ".git", "HEAD"), "utf-8").trim();
+      // Read HEAD — handle both regular .git dir and worktree .git file
+      var dotGit = path.join(gitRoot, ".git");
+      var headPath;
+      try {
+        var dotGitStat = fs.statSync(dotGit);
+        if (dotGitStat.isFile()) {
+          var gitdir = fs.readFileSync(dotGit, "utf-8").trim().replace(/^gitdir:\s*/, "");
+          if (!path.isAbsolute(gitdir)) gitdir = path.join(gitRoot, gitdir);
+          headPath = path.join(gitdir, "HEAD");
+        } else {
+          headPath = path.join(dotGit, "HEAD");
+        }
+      } catch (e) { headPath = path.join(dotGit, "HEAD"); }
+      var headContent = fs.readFileSync(headPath, "utf-8").trim();
       branch = headContent.indexOf("ref: refs/heads/") === 0 ? headContent.slice(16) : "HEAD";
     }
-    if (branch === "main" || branch === "master") {
+    // T553: Skip dirty-tree check during active rebase (conflicts are expected)
+    // Rebase state dirs live in the gitdir (which may differ from .git for worktrees)
+    var gitdirForRebase = path.dirname(headPath); // headPath already resolved through worktree .git file
+    var rebaseDir = path.join(gitdirForRebase, "rebase-merge");
+    var rebaseApply = path.join(gitdirForRebase, "rebase-apply");
+    if (fs.existsSync(rebaseDir) || fs.existsSync(rebaseApply)) {
+      // noop — rebase in progress, dirty tree is expected
+    } else if (branch === "main" || branch === "master") {
       var status = child_process.execFileSync("git", ["status", "--porcelain"], {
         cwd: gitRoot, encoding: "utf-8", timeout: 5000, windowsHide: true
       }).trim();

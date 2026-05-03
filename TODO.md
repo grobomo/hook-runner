@@ -1372,11 +1372,13 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T545: Auto-sync skill package.json during setup.js install — fixes T034 install-drift test failure (PR #456)
 - [x] T546: Exempt .gitignore from dirty-tree check in enforcement-gate (chicken-and-egg fix). (PR #459)
 - [x] T547: Fix worktree detection (walk up dir tree + HMAC counter tampering prevention). 30 tests pass. (PR #459)
-- [ ] T548: (deferred) Create `lab-vm-autostart` SessionStart module — detects lab projects (dd-lab, etc.) and injects mandatory "start VMs first" instruction. Claude repeatedly treats "VMs stopped" as a blocker instead of running `lab-control.py start`. User corrected 3+ times. Module should: (1) detect dd-lab via CLAUDE_PROJECT_DIR path, (2) check TODO.md for "VMs stopped/off/down", (3) inject hard instruction to start VMs as FIRST action before any other work. Project-scoped to dd-lab. Also consider a UserPromptSubmit module that warns if response draft mentions "VMs stopped" as a blocker without having started them.
-- [ ] T549: (deferred) Install `background-task-audit` PostToolUse module — module already written to `modules/PostToolUse/background-task-audit.js` and manually copied to `run-modules/`. Needs: (1) add to modules.yaml PostToolUse list, (2) write tests, (3) commit+push. Module blocks when TaskOutput returns zero-output completed/timeout/repeated-poll results. Evidence: dd-lab session 22 tasks bjgkq9h59/batytrlvx returned zero bytes, Claude dismissed as "resource contention" without investigation.
+- [ ] T548: (deferred) Create `lab-vm-autostart` SessionStart module
+- [ ] T549: (deferred) Install `background-task-audit` PostToolUse module
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
-- [x] T550: Extend windowless-spawn-gate.js to cover Python subprocess patterns — block `subprocess.Popen(shell=True)` and `subprocess.call/run/check_call/check_output(shell=True)` and `os.system/os.popen` without `CREATE_NO_WINDOW`/`startupinfo`/`creationflags`. Also checks `.py` files in hook dirs. 32 tests.
-- [ ] T551: Bug — context-reset opens Claude in worktree folder directly instead of project folder with worktree active. Expected: `claude` opens in project root, then `EnterWorktree` activates the worktree. Actual: `claude` opens inside `.claude/worktrees/<name>/` path. This breaks hook-runner path checks that rely on CLAUDE_PROJECT_DIR pointing to the project root. Filed from openclaw T035-watchdog-fixes session.
+- [x] T550: Extend windowless-spawn-gate.js to cover Python subprocess patterns (PR #460)
+- [ ] T551: Bug — context-reset opens Claude in worktree folder directly instead of project folder with worktree active.
+- [x] T552: hook-system-reminder exempts .jsonl data files from ~/.claude/ write block. 13 tests.
+- [x] T553: commit-counter-gate walks up dir tree for worktree detection from subdirectories. 22 tests.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog

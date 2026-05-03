@@ -26,6 +26,9 @@ module.exports = function(input) {
   // Allow settings files (settings.json, settings.local.json)
   if (/settings(\.local)?\.json$/.test(normalized)) return null;
 
+  // Allow data files (JSONL logs/lessons — not code, not enforcement)
+  if (/\.jsonl$/.test(normalized)) return null;
+
   return {
     decision: "block",
     reason: "HOOK-RUNNER SYSTEM REMINDER — Read before proceeding.\n\n" +

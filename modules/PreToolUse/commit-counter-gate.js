@@ -90,28 +90,42 @@ function getBranch(input) {
 // T511: Also check CWD when CLAUDE_PROJECT_DIR has no .git — EnterWorktree
 // changes CWD but not CLAUDE_PROJECT_DIR.
 // T532: Also check CWD when CLAUDE_PROJECT_DIR's .git is a directory (main checkout).
-// EnterWorktree changes CWD to the worktree but CLAUDE_PROJECT_DIR stays pointing at
-// the main checkout. The old code returned false immediately when .git was a dir,
-// never reaching the CWD check. Now: if CLAUDE_PROJECT_DIR is main, fall through to CWD.
+// T553: Walk up directory tree from both CLAUDE_PROJECT_DIR and CWD to find .git.
+// When CLAUDE_PROJECT_DIR is a subdirectory of a worktree (e.g. labs/dd-lab/ inside
+// worktrees/live-test/), the .git file is at the worktree root, not at the subdir.
+function findGitUp(startDir) {
+  var dir = startDir;
+  var prev = "";
+  while (dir && dir !== prev) {
+    try {
+      var gitPath = path.join(dir, ".git");
+      var stat = fs.statSync(gitPath);
+      if (stat.isFile()) return "worktree";
+      if (stat.isDirectory()) return "main";
+    } catch(e) { /* no .git here, keep walking */ }
+    prev = dir;
+    dir = path.dirname(dir);
+  }
+  return null;
+}
+
 function isInWorktree() {
   var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
-  // Check CLAUDE_PROJECT_DIR first
+  // Check CLAUDE_PROJECT_DIR first (walk up to find .git)
   if (projectDir) {
-    try {
-      var gitPath = path.join(projectDir, ".git");
-      var stat = fs.statSync(gitPath);
-      if (stat.isFile()) return true; // .git file = worktree at CLAUDE_PROJECT_DIR
-      // .git is a directory (main checkout) — fall through to CWD check
+    var result = findGitUp(projectDir);
+    if (result === "worktree") return true;
+    if (result === "main") {
+      // Main checkout at CLAUDE_PROJECT_DIR — fall through to CWD check
       // because EnterWorktree may have moved CWD to a worktree
-    } catch(e) { /* no .git at CLAUDE_PROJECT_DIR — fall through to CWD */ }
+    }
   }
 
   // Fallback: check CWD (covers worktree sessions + unset/missing CLAUDE_PROJECT_DIR)
-  try {
-    var cwd = process.cwd();
-    var cwdGit = path.join(cwd, ".git");
-    if (fs.statSync(cwdGit).isFile()) return true;
-  } catch(e) { /* no .git at cwd either */ }
+  var cwd;
+  try { cwd = process.cwd(); } catch(e) { return false; }
+  var cwdResult = findGitUp(cwd);
+  if (cwdResult === "worktree") return true;
 
   return false;
 }
