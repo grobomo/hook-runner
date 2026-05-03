@@ -1409,13 +1409,16 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T575: Add tests for deploy-gate (14), deploy-history-reminder (14), settings-change-gate (11). (PR #486)
 - [x] T576: Add tests for remote-tracking-gate (22) and continuous-claude-gate (22) — 100% PreToolUse coverage. (PR #487)
 - [x] T577: Version bump to v2.67.0 — CHANGELOG, package.json, GitHub release. 115 suites, 1785 tests. (PR #488)
-- [ ] T578: Marketplace sync v2.64.0 → v2.67.0 — copy core files + modules + workflows to ai-skill-marketplace.
-- [ ] T579: Fix README module counts (starter: 42→47, shtd: 101→103).
+- [ ] T578: Marketplace sync v2.64.0 → v2.67.0 — spawned ai-skill-marketplace session.
+- [x] T579: Fix README module counts (starter: 42→47, shtd: 101→103). (PR #490)
 
-## Session Handoff (2026-05-03)
+## Session Handoff (2026-05-03, session 2)
 - v2.67.0 released. 115 suites, 1785 tests, 0 real failures. 113 modules, 7 workflows.
 - All PreToolUse modules now have dedicated test coverage (was 11 untested, now 0).
-- Marketplace needs sync (v2.64.0 → v2.67.0) — T578.
+- Marketplace session spawned for T578 (v2.64.0 → v2.67.0 sync).
+- README module counts fixed (PR #490).
+- 15 non-PreToolUse modules still untested (3 PostToolUse, 5 SessionStart, 7 Stop) — lower priority.
+- Codebase quality verified: all modules have WHY + WORKFLOW tags, no eval/exec, no code TODOs.
 - Only deferred task: port remaining OpenClaw modules (intentionally parked).
 
 ## Architecture Notes
