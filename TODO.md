@@ -1395,6 +1395,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 
 - [x] T562: Fix T369 victory-gate test — match T560 evidence message format. (PR #470)
 - [x] T563: Version bump to v2.64.0, CHANGELOG, GitHub release. (PR #471)
+- [x] T564: Marketplace sync — completed by spawned ai-skill-marketplace session. T042 now passes (source=2.64.0, marketplace=2.64.0).
+- [x] T565: Add test coverage for gh-auto-gate (37 tests) and spec-before-code-gate (20 tests). 57 new tests for previously untested critical PreToolUse modules. (PR #473)
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
