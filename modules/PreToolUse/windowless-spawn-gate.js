@@ -1,15 +1,14 @@
 // TOOLS: Edit, Write
 // WORKFLOW: shtd, starter
-// WHY: Hook modules using execSync("git ...") spawn cmd.exe on Windows,
-// creating visible console popups that steal focus. Every tool call fires
-// 2-5 hooks, each potentially spawning multiple cmd.exe windows. Fix:
-// require execFileSync (no shell) or windowsHide:true on all child_process
-// calls in hook module code. This gate blocks writes of modules that violate.
+// WHY: Hook modules using execSync("git ...") or subprocess.Popen(shell=True)
+// spawn cmd.exe on Windows, creating visible console popups that steal focus.
+// Every tool call fires 2-5 hooks, each potentially spawning multiple windows.
+// Fix: require windowsHide:true (JS) or CREATE_NO_WINDOW (Python) on all
+// child_process/subprocess calls. This gate blocks writes that violate.
 "use strict";
-var path = require("path");
 
-// Patterns that spawn visible processes on Windows
-var DANGEROUS_PATTERNS = [
+// --- JS patterns (child_process) ---
+var JS_DANGEROUS = [
   // execSync with string command (uses cmd.exe shell)
   /\bexecSync\s*\(\s*["'`]/,
   // spawnSync with shell:true but no windowsHide
@@ -18,11 +17,53 @@ var DANGEROUS_PATTERNS = [
   /\bspawn\s*\([^)]*shell\s*:\s*true/
 ];
 
-// Safe alternatives that don't need checking
-var SAFE_PATTERNS = [
+var JS_SAFE = [
   /windowsHide\s*:\s*true/,
   /\bexecFileSync\b/
 ];
+
+// --- Python patterns (subprocess) ---
+var PY_DANGEROUS = [
+  // subprocess.Popen(..., shell=True)
+  /\bsubprocess\.Popen\s*\([^)]*shell\s*=\s*True/,
+  // subprocess.call(..., shell=True)
+  /\bsubprocess\.call\s*\([^)]*shell\s*=\s*True/,
+  // subprocess.run(..., shell=True)
+  /\bsubprocess\.run\s*\([^)]*shell\s*=\s*True/,
+  // subprocess.check_call(..., shell=True)
+  /\bsubprocess\.check_call\s*\([^)]*shell\s*=\s*True/,
+  // subprocess.check_output(..., shell=True)
+  /\bsubprocess\.check_output\s*\([^)]*shell\s*=\s*True/,
+  // os.system("command") — always uses shell
+  /\bos\.system\s*\(/,
+  // os.popen("command") — always uses shell
+  /\bos\.popen\s*\(/
+];
+
+var PY_SAFE = [
+  /CREATE_NO_WINDOW/,
+  /creationflags/,
+  /startupinfo/
+];
+
+var JS_FIX =
+  "FIX (JS): Use one of these patterns instead:\n" +
+  "  cp.execFileSync(\"git\", [\"status\", \"--porcelain\"], {windowsHide: true})  // best: no shell\n" +
+  "  cp.execSync(\"complex | command\", {windowsHide: true})  // OK if shell features needed\n" +
+  "  cp.spawnSync(\"git\", [...], {windowsHide: true})  // OK: explicit windowsHide";
+
+var PY_FIX =
+  "FIX (Python): Use one of these patterns instead:\n" +
+  "  subprocess.run([\"git\", \"status\"], creationflags=subprocess.CREATE_NO_WINDOW)  // best\n" +
+  "  si = subprocess.STARTUPINFO(); si.dwFlags |= subprocess.STARTF_USESHOWWINDOW\n" +
+  "  subprocess.Popen(cmd, shell=True, startupinfo=si)  // OK if shell features needed\n" +
+  "  subprocess.run(cmd, shell=True, creationflags=0x08000000)  // OK: CREATE_NO_WINDOW flag";
+
+function isComment(line, lang) {
+  var trimmed = line.trim();
+  if (lang === "py") return trimmed.indexOf("#") === 0;
+  return trimmed.indexOf("//") === 0;
+}
 
 module.exports = function(input) {
   var tool = input.tool_name || "";
@@ -32,11 +73,20 @@ module.exports = function(input) {
   var ti = input.tool_input || {};
   var filePath = (ti.file_path || "").replace(/\\/g, "/");
 
-  // Only check hook module files
+  // Only check hook module files and scripts in hook directories
   if (filePath.indexOf("/run-modules/") < 0 &&
       filePath.indexOf("/modules/") < 0 &&
-      filePath.indexOf("/hooks/run-") < 0) return null;
-  if (filePath.slice(-3) !== ".js") return null;
+      filePath.indexOf("/hooks/run-") < 0 &&
+      filePath.indexOf("/hooks/") < 0) return null;
+
+  // Determine language from extension
+  var lang;
+  if (filePath.slice(-3) === ".js") lang = "js";
+  else if (filePath.slice(-3) === ".py") lang = "py";
+  else return null;
+
+  var dangerous = lang === "js" ? JS_DANGEROUS : PY_DANGEROUS;
+  var safe = lang === "js" ? JS_SAFE : PY_SAFE;
 
   // Get the content being written
   var content = "";
@@ -52,17 +102,16 @@ module.exports = function(input) {
   var lines = content.split("\n");
   for (var i = 0; i < lines.length; i++) {
     var line = lines[i];
-    // Skip comments
-    if (line.trim().indexOf("//") === 0) continue;
+    if (isComment(line, lang)) continue;
 
-    for (var p = 0; p < DANGEROUS_PATTERNS.length; p++) {
-      if (!DANGEROUS_PATTERNS[p].test(line)) continue;
+    for (var p = 0; p < dangerous.length; p++) {
+      if (!dangerous[p].test(line)) continue;
 
       // Check if the surrounding context (next few lines) has a safe pattern
       var context = lines.slice(i, Math.min(i + 5, lines.length)).join("\n");
       var isSafe = false;
-      for (var s = 0; s < SAFE_PATTERNS.length; s++) {
-        if (SAFE_PATTERNS[s].test(context)) {
+      for (var s = 0; s < safe.length; s++) {
+        if (safe[s].test(context)) {
           isSafe = true;
           break;
         }
@@ -76,14 +125,15 @@ module.exports = function(input) {
 
   if (violations.length === 0) return null;
 
+  var why = lang === "js"
+    ? "WHY: execSync(\"string\") uses cmd.exe as shell → visible console window steals focus."
+    : "WHY: subprocess with shell=True / os.system() spawns cmd.exe → visible console window steals focus.";
+
   return {
     decision: "block",
     reason: "WINDOWLESS SPAWN GATE: " + violations.length + " process spawn(s) will create visible CMD popups on Windows.\n" +
-      "WHY: execSync(\"string\") uses cmd.exe as shell → visible console window steals focus.\n\n" +
+      why + "\n\n" +
       "VIOLATIONS:\n  " + violations.join("\n  ") + "\n\n" +
-      "FIX: Use one of these patterns instead:\n" +
-      "  cp.execFileSync(\"git\", [\"status\", \"--porcelain\"], {windowsHide: true})  // best: no shell\n" +
-      "  cp.execSync(\"complex | command\", {windowsHide: true})  // OK if shell features needed\n" +
-      "  cp.spawnSync(\"git\", [...], {windowsHide: true})  // OK: explicit windowsHide"
+      (lang === "js" ? JS_FIX : PY_FIX)
   };
 };
