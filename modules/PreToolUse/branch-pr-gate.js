@@ -115,7 +115,28 @@ function readHeadFromGitDir(gitRoot) {
   return "HEAD";
 }
 
-function getBranch(input) {
+// T554: Walk up from a file path to find its git root (the dir containing .git)
+function findGitRoot(filePath) {
+  var dir = path.dirname(path.resolve(filePath));
+  var prev = "";
+  while (dir !== prev) {
+    if (fs.existsSync(path.join(dir, ".git"))) return dir;
+    prev = dir;
+    dir = path.dirname(dir);
+  }
+  return "";
+}
+
+function getBranch(input, targetFilePath) {
+  // T554: If a target file is provided, resolve branch from its git root.
+  // Fixes false positives when editing files in a different worktree/repo
+  // from a worktree session — CWD's branch != target file's branch.
+  if (targetFilePath) {
+    var gitRoot = findGitRoot(targetFilePath);
+    if (gitRoot) {
+      try { return readHeadFromGitDir(gitRoot); } catch(e) { /* fall through */ }
+    }
+  }
   // Use shared git context from runner if available (saves ~40ms)
   if (input && input._git && input._git.branch) return input._git.branch;
   // T469: Check CWD first (may be a worktree with a feature branch),
