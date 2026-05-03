@@ -1400,6 +1400,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T566: Add .claude/worktrees/ to .gitignore — stops stale worktree remnants showing as untracked. (PR #475)
 - [x] T567: Add tests for preserve-iterated-content gate — 18 tests covering cache, thresholds, watched dirs. (PR #476)
 - [x] T568: Version bump to v2.65.0 — CHANGELOG, package.json, GitHub release. 99 suites, 1482 tests. (PR #478)
+- [ ] T569: Add tests for reflection-gate and task-completion-gate — hot-path modules with zero coverage.
 
 ## Architecture Notes
 - Repo contains the generic/distributable runner system + module catalog
