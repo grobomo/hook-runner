@@ -8,14 +8,14 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
 ## Current State (v2.76.0)
-- 122 modules, 7 workflows, 170 test suites, ~2605 tests
-- PRs: 519 merged
+- 122 modules, 7 workflows, 183 test suites, ~2685 tests
+- PRs: 522 merged
 
 ## Open Tasks
 - [x] T612: Create GETTING-STARTED.md — 5-minute onboarding guide. Linked from README. (PR #518)
 - [x] T611: Fix onboarding UX — setup.js workflow name dynamic, README module counts updated, --diagnose added to docs. (PR #517)
 - [x] T610: Add tests for 5 untested PreToolUse modules — force-push-gate (14), commit-quality-gate (21), no-hardcoded-paths (19), no-polling-gate (30), no-rules-gate (14). 98 new tests. (PR #515)
-- [ ] T610b: (deferred) Tests for remaining untested modules — 21 still without: branch-pr-gate (358 lines), secret-scan-gate (integration), enforcement-gate, etc.
+- [ ] T610b: (deferred) Tests for remaining untested modules — 7 still without: branch-pr-gate (358), workflow-compliance-gate (149), cross-project-todo-gate (130), secret-scan-gate (113), inter-project-priority-gate (113), enforcement-gate (105), workflow-gate (67). Aliases (gsd-gate, e2e-self-report-gate) covered by test-checkpoint-gate. Done: batch 2 (PR #520, 6 modules/101 tests), batch 3 (PR #521, 5 modules/65 tests), batch 4 (PR #522, 2 modules/33 tests).
 - [x] T609: Fix worktree-gate test env leak + spec-gate control structure allow. 16/16 worktree + 79 spec-gate tests. (PR #514)
 - [x] T608: Fix _bash-write-patterns.js false positive — echo/printf/cat redirect patterns matched across statement boundaries and on stderr redirects. Fixed with `[^;|&]*` + `(?<![0-9])` lookbehind. 63 tests (12 new). (PR #512)
 - [ ] T578: Marketplace sync — BLOCKED on user permission. Two marketplaces exist (trend-ai-taskforce/ai-skill-marketplace and aatf-external/plugin-marketplace). User must clarify: which org is aatf-external, what's the difference, and does hook-runner belong in either/both. CLAUDE.md updated with publishing rules. publish.json needs manual edit to add `team_sharing_approved: false`.
@@ -29,6 +29,12 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T606: no-lessons-file-gate — blocks writes to lessons.jsonl, forces hook module creation. 11 tests.
 - [x] T613: tunnel-check-gate — blocks process-grep SSH tunnel checks, suggests port connectivity. 29 tests. (PR #519)
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
+
+## Session Handoff (2026-05-04, session 11)
+- T613 (PR #519): tunnel-check-gate module — blocks process-grep SSH tunnel checks. 29 tests.
+- T610b batches 2-4 (PRs #520-#522): 199 new tests for 13 modules. 7 modules remain untested (branch-pr-gate, workflow-compliance-gate, cross-project-todo-gate, secret-scan-gate, inter-project-priority-gate, enforcement-gate, workflow-gate).
+- v2.76.0. 122 modules, 183 suites, ~2685 tests, 522 PRs.
+- Next: remaining T610b (7 complex modules), or user-directed work.
 
 ## Session Handoff (2026-05-04, session 10 continued)
 - T611 (PR #517): Fixed setup.js "shtd"→dynamic workflow name, README module counts, --diagnose docs.
