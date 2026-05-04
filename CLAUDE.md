@@ -79,20 +79,36 @@ node setup.js --help         # show all commands
 - **Scope rule**: self-reflection can self-repair hook-runner modules. For everything else, it only writes TODOs. reflection-gate.js enforces this — allows edits to `run-modules/` and `hook-runner/modules/`, blocks other production code when issues exist.
 - **Scoring**: reflection-score.json persists across sessions, injected at SessionStart. Levels (Novice→Master) based on clean reflections, autonomy streaks, user corrections.
 
-## Push Workflow
-This is a grobomo repo. Before pushing:
-1. `gh auth switch --user grobomo`
-2. Push
-3. Sync to marketplace:
+## Publishing Rules
+
+### Team Sharing — REQUIRES USER PERMISSION
+- **NEVER publish or sync to any shared marketplace without explicit user approval.**
+- Claude has a history of sharing projects prematurely before they are functional. This damages credibility.
+- The user must explicitly say "sync to marketplace" or "publish" before any marketplace operation.
+- `publish.json` tracks whether the user has approved sharing. If `"team_sharing_approved": false` or the key is missing, DO NOT publish.
+
+### Two Shared Marketplaces
+Both are shared team spaces (not owned by grobomo). NEVER push to either without permission.
+
+| Marketplace | Org | Purpose | Status |
+|-------------|-----|---------|--------|
+| `ai-skill-marketplace` | `trend-ai-taskforce` | Curated AI skills following Agent Skills Specification. Cross-platform (Claude, Copilot, Gemini). Formal plugin structure. | Known — local clone exists |
+| `plugin-marketplace` | `aatf-external` | External-facing plugins. Simpler structure (manifest.json + SKILL.md). | TODO: Research exact org, audience, and approval process |
+
+**Decision rule**: Do NOT autonomously determine which marketplace to use. Ask the user.
+
+### Push Workflow
+This is a grobomo repo. Before pushing to grobomo/hook-runner (the source repo):
+1. Use `gh_auto` for all push/pull operations (never raw `gh` or `git push`)
+2. Push to grobomo/hook-runner
+3. Do NOT sync to marketplace unless user explicitly approves
+4. The marketplace sync commands are documented here for reference only — run them ONLY when user says to:
    ```bash
+   # ONLY when user approves marketplace sync:
    DEST=../ai-skill-marketplace/plugins/hook-runner
-   # Core files
    cp setup.js report.js load-modules.js workflow.js workflow-cli.js hook-log.js run-async.js constants.js package.json CHANGELOG.md README.md CLAUDE.md "$DEST/"
-   # Modules — use /* to copy contents INTO existing dir (not nested modules/modules/)
    for evt in PreToolUse PostToolUse SessionStart Stop UserPromptSubmit; do
      cp modules/$evt/*.js "$DEST/modules/$evt/" 2>/dev/null
    done
-   # Workflows
    cp workflows/*.yml "$DEST/workflows/"
    ```
-4. Switch back to default account

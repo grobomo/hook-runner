@@ -13,8 +13,8 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - PRs: 509 merged
 
 ## Open Tasks
-- [ ] T578: Marketplace sync v2.64.0 → v2.73.0 — TODO written to ai-skill-marketplace. Needs user permission to push PR to trend-ai-taskforce.
-- [ ] T607: Add T605/T606 modules to README table + version bump to v2.73.0
+- [ ] T578: Marketplace sync — BLOCKED on user permission. Two marketplaces exist (trend-ai-taskforce/ai-skill-marketplace and aatf-external/plugin-marketplace). User must clarify: which org is aatf-external, what's the difference, and does hook-runner belong in either/both. CLAUDE.md updated with publishing rules. publish.json needs manual edit to add `team_sharing_approved: false`.
+- [x] T607: Add T605/T606 modules to README table + version bump to v2.73.0. Also added to live modules.yaml.
 - [x] T596: Project health — archived 468 completed tasks + 5 stale handoffs to TODO-COMPLETED.md (1468→35 lines).
 - [x] T597: Remove broken UserPromptSubmit hook from lab-worker settings.json — already fixed (was `{"hooks": {}}`)
 - [x] T598: Improve hook-editing-gate.js block message with actionable 3-step instructions. Both Bash bypass and Edit/Write blocks updated. Test added (17 tests).
@@ -23,6 +23,15 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T605: automate-everything-gate — blocks manual lint/check commands, forces CI/CD pipeline. 27 tests.
 - [x] T606: no-lessons-file-gate — blocks writes to lessons.jsonl, forces hook module creation. 11 tests.
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
+
+## Session Handoff (2026-05-04, session 9)
+- v2.72.0→v2.73.0 (previous session did T605/T606/T607 directly on main).
+- This session: T603 (user-correction-detector, PR #508), T604 tests (PR #509), changelog (PR #510), README fix (PR #511).
+- CLAUDE.md updated with Publishing Rules section: never publish to shared marketplaces without user permission.
+- publish.json needs manual user edit to add `team_sharing_approved: false`.
+- Investigated spec-before-code-gate "failures" — env issue (hooks intercept test runner), 20/20 pass with HOOK_RUNNER_TEST=1.
+- Cleaned 2 stale worktrees + 6 stale branches.
+- **WAITING ON USER**: Marketplace questions — what is aatf-external org, difference vs trend-ai-taskforce, where does hook-runner belong.
 
 ## Session Handoff (2026-05-04, session 8 continued)
 - T605: automate-everything-gate — blocks flake8/pylint/mypy/ruff/shellcheck/semgrep/eslint/prettier/PSScriptAnalyzer/py_compile. Allows script wrappers. 27/27 tests.
