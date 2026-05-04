@@ -762,7 +762,7 @@ function cmdHelp() {
   console.log("  --disable-all   Disable all workflow groups (--global for global scope)");
   console.log("  --export [file] Export installed modules as shareable YAML (default: modules-export.yaml)");
   console.log("  --perf          Analyze module timing data and identify bottlenecks");
-  console.log("  --test-module   Test a single module with sample inputs");
+  console.log("  --test-module   Test a module with sample inputs (name or path, e.g. force-push-gate)");
   console.log("  --test          Run all test suites (--timeout <sec>, --skip-wsl, --js-only, --sh-only)");
   console.log("  --upgrade       Fetch latest runners from GitHub and update local copies");
   console.log("  --uninstall     Remove hook-runner from settings.json and hooks dir");
@@ -1885,13 +1885,34 @@ function cmdTestModule(args) {
   var idx = args.indexOf("--test-module");
   var modPath = args[idx + 1];
   if (!modPath) {
-    console.error("Usage: node setup.js --test-module <path-to-module.js> [--input <json-file>]");
+    console.error("Usage: node setup.js --test-module <name-or-path> [--input <json-file>]");
     process.exit(1);
   }
   modPath = path.resolve(modPath);
   if (!fs.existsSync(modPath)) {
-    console.error("Module not found: " + modPath);
-    process.exit(1);
+    // Try resolving as a module name (e.g. "force-push-gate" or "force-push-gate.js")
+    var modName = path.basename(modPath);
+    if (!modName.endsWith(".js")) modName += ".js";
+    var events = ["PreToolUse", "PostToolUse", "SessionStart", "Stop", "UserPromptSubmit"];
+    var found = null;
+    for (var ei = 0; ei < events.length && !found; ei++) {
+      var candidate = path.join(REPO_DIR, "modules", events[ei], modName);
+      if (fs.existsSync(candidate)) found = candidate;
+    }
+    if (!found) {
+      // Also check live hooks dir
+      for (var ej = 0; ej < events.length && !found; ej++) {
+        var liveCandidate = path.join(HOOKS_DIR, "run-modules", events[ej], modName);
+        if (fs.existsSync(liveCandidate)) found = liveCandidate;
+      }
+    }
+    if (found) {
+      modPath = found;
+    } else {
+      console.error("Module not found: " + modPath);
+      console.error("  Searched modules/ and live hooks for: " + modName);
+      process.exit(1);
+    }
   }
   console.log("[hook-runner] Test Module");
   console.log("========================");
