@@ -4,6 +4,8 @@
 
 Modular hook system for Claude Code. Enforce workflows, block mistakes, inject context — all with plain `.js` files in folders. No settings.json editing needed.
 
+**New here?** Start with the [Getting Started guide](GETTING-STARTED.md) — zero to guardrails in 5 minutes.
+
 ## What is hook-runner?
 
 Claude Code [hooks](https://docs.anthropic.com/en/docs/claude-code/hooks) let you run scripts at key moments: before a tool runs, after it runs, when a session starts, when it stops. hook-runner turns this into a **module system** — drop a `.js` file in a folder and it runs automatically.
