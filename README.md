@@ -405,6 +405,7 @@ Full catalog in `modules/` directory:
 | `no-playwright-direct` | Blocks raw mcp__playwright__* calls, requires Blueprint Extra MCP |
 | `no-polling-gate` | Blocks LLM-driven polling (loops+sleep, log tailing, comment watching, watch) |
 | `no-rules-gate` | Blocks creation of ~/.claude/rules/ files (use hook modules instead) |
+| `tunnel-check-gate` | Blocks process-grep SSH tunnel checks, suggests port connectivity test |
 | `hook-system-reminder` | Reminds Claude that enforcement is ONLY via hook-runner modules |
 | `inter-project-priority-gate` | Blocks non-XREF work when P0 inter-project TODOs are pending |
 | `pr-first-gate` | Blocks spec/code edits on branches without an open PR |
