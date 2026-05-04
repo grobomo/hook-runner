@@ -2,6 +2,37 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.68.0] — 2026-05-03
+
+### Added
+- **commit-msg-check tests** (T581) — 23 tests covering WIP/fixup/squash detection, length check, HEREDOC parsing.
+- **empty-output-detector tests** (T581) — 29 tests covering EXPECT_OUTPUT vs EMPTY_OK pattern matching.
+- **result-review-gate tests** (T581) — 26 tests covering report filename/directory detection, checklist injection.
+- **test-evidence tests** (T581) — 14 tests covering pattern extraction, evidence file lifecycle.
+- **rule-hygiene tests** (T582) — 22 tests covering filename validation, content length, section count, global vs project scope.
+- **background-task-audit tests** (T582) — 14 tests covering zero-output detection, timeout handling, poll tracking.
+- **disk-space-detect tests** (T582) — 16 tests covering error pattern matching, state file lifecycle.
+- **inter-project-audit tests** (T582) — 15 tests covering cross-project TODO logging, task ID extraction, path normalization.
+- **troubleshoot-detector tests** (T583) — 14 tests covering fail-fail-succeed detection, cooldown, failure expiry.
+- **settings-audit-log tests** (T583) — 21 tests covering watched path detection, Write/Edit/Bash audit logging.
+- **update-stale-docs tests** (T583) — 16 tests covering doc file exemption, code file reminders.
+- **crlf-detector tests** (T583) — 24 tests covering sensitive extension detection, CRLF counting, fix suggestion.
+- **test-before-done tests** (T584) — 4 tests covering always-block contract, message content.
+- **log-gotchas tests** (T584) — 4 tests covering always-block contract, rule file reminder.
+- **never-give-up tests** (T584) — 4 tests covering always-block contract, 3-approach requirement.
+- **unresolved-issues-check tests** (T584) — 18 tests covering stale markers, issue words, gate exemption, line numbers.
+- **test-coverage-check tests** (T584) — 18 tests covering test file detection, sibling tests, code-only filter.
+- **mark-turn-complete tests** (T585) — 7 tests covering marker file lifecycle, JSON content, project env.
+- **auto-continue tests** (T585) — 7 tests covering default block, idle flag one-shot, stop-message.txt sourcing.
+
+### Fixed
+- **commit-msg-check regex** — `\b` after `!` in `fixup!`/`squash!` never matched (non-word boundary between non-word chars). Changed to per-alternative word boundaries.
+
+### Stats
+- 139 suites, ~2081 tests (296 new)
+- 113 modules, 7 workflows
+- PostToolUse: 14/15 tested, Stop: 7/13 tested
+
 ## [2.67.0] — 2026-05-03
 
 ### Added
