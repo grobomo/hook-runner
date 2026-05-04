@@ -2,6 +2,19 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.70.0] — 2026-05-03
+
+### Added
+- **_bash-write-patterns tests** (T594) — 51 tests covering all write-pattern regexes, read-only command exclusions, real-incident scenarios (powershell OpenRead, wsl python).
+- **_file-modify-patterns tests** (T594) — 23 tests covering file modification regexes, python open(w), read-only exclusions.
+- **_gsd-helpers tests** (T594) — 16 tests covering getActivePhases() with real ROADMAP.md parsing, section boundaries, case insensitivity, edge cases.
+- **GitHub releases** for v2.68.0 and v2.69.0 (were missing).
+
+### Stats
+- 158 suites, ~2340 tests (90 new)
+- 118 modules, 7 workflows
+- **100% test coverage**: all modules + helpers across all event types
+
 ## [2.69.0] — 2026-05-03
 
 ### Added
