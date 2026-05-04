@@ -2,6 +2,35 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.69.0] — 2026-05-03
+
+### Added
+- **reflection-score tests** (T587) — 40 tests covering getLevel, POINTS/LEVELS constants, exported API, formatSummary.
+- **chat-export tests** (T587) — 4 tests (module contract).
+- **config-sync tests** (T587) — 4 tests (module contract).
+- **drift-review tests** (T587) — 4 tests (module contract).
+- **push-unpushed tests** (T587) — 4 tests (module contract).
+- **self-reflection tests** (T587) — 4 tests (async module contract).
+- **session-brain-analysis tests** (T587) — 4 tests (async module contract).
+- **load-instructions tests** (T588) — 8 tests covering text content, TODO.md/CLAUDE_PROJECT_DIR references.
+- **_is-pid-running tests** (T588) — 12 tests covering live PIDs, invalid inputs, edge cases.
+- **terminal-title tests** (T588) — 4 tests covering non-TTY behavior.
+- **reflection-score-inject tests** (T588) — 7 tests covering score injection, level display.
+- **lesson-effectiveness tests** (T588) — 13 tests covering file missing, clusters, escalation writing.
+- **inter-project-priority tests** (T588) — 15 tests covering XREF tags, Inbound section, checked items.
+- **backup-check tests** (T589) — 5 tests (async contract, text property).
+- **drift-check tests** (T589) — 3 tests (rate-limiting, contract).
+- **load-lessons tests** (T589) — 12 tests covering self-reflection desc, JSONL injection, lessons.
+- **project-health tests** (T589) — 3 tests (health check contract).
+- **session-cleanup tests** (T589) — 3 tests (always returns null).
+- **session-collision-detector tests** (T589) — 3 tests (no collision case).
+- **workflow-summary tests** (T589) — 6 tests covering workflow engine integration.
+
+### Stats
+- 154 suites, ~2240 tests (158 new)
+- 113 modules, 7 workflows
+- Stop: 13/13 tested (100%), SessionStart: 14/14 tested (100%), PostToolUse: 14/15 tested
+
 ## [2.68.0] — 2026-05-03
 
 ### Added
