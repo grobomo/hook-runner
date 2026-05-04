@@ -2,6 +2,17 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.75.0] — 2026-05-04
+
+### Added
+- **Test suites for 5 modules** (T610) — force-push-gate (14), commit-quality-gate (21), no-hardcoded-paths (19), no-polling-gate (30), no-rules-gate (14). 98 new tests total.
+- **worktree-gate test fix** (T609) — HOOK_RUNNER_TEST env var save/restore prevents intermittent failures in batch mode.
+- **spec-gate control structures** (T609) — `for`/`while`/`if` added to BASH_ALLOW_PATTERNS fast-path.
+
+### Stats
+- 169 suites, ~2576 tests
+- 121 modules, 7 workflows
+
 ## [2.74.0] — 2026-05-04
 
 ### Fixed
