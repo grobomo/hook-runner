@@ -263,13 +263,13 @@ check("validates node script with quotes", function() {
   // Create a real script
   var scriptPath = path.join(TMPDIR, "test-script.js");
   fs.writeFileSync(scriptPath, "// test");
-  var v = mod.diagnose.__proto__; // not directly exported, test via diagnose
-  // Test by creating a hook that references it
+  var cmdPath = scriptPath.replace(/\\/g, "/");
+  var cmd = 'node "' + cmdPath + '"';
   var settings = {
     hooks: {
       Stop: [{
         hooks: [
-          { command: 'node "' + scriptPath.replace(/\\/g, "/") + '"', type: "command" }
+          { command: cmd, type: "command" }
         ]
       }]
     }
@@ -278,6 +278,14 @@ check("validates node script with quotes", function() {
   var result = mod.diagnose(PROJECT_DIR);
   var stopHooks = result.hooks.filter(function(h) { return h.event === "Stop" && h.scope === "project"; });
   assert(stopHooks.length === 1, "should have 1 stop hook");
+  if (stopHooks[0].validation.exists !== true) {
+    console.log("  DEBUG: scriptPath=" + scriptPath);
+    console.log("  DEBUG: cmdPath=" + cmdPath);
+    console.log("  DEBUG: cmd=" + cmd);
+    console.log("  DEBUG: fs.existsSync(scriptPath)=" + fs.existsSync(scriptPath));
+    console.log("  DEBUG: validation=" + JSON.stringify(stopHooks[0].validation));
+    console.log("  DEBUG: all hooks=" + JSON.stringify(result.hooks.filter(function(h) { return h.event === "Stop"; }), null, 2));
+  }
   assert(stopHooks[0].validation.exists === true, "script should exist");
   assert(stopHooks[0].validation.error === null, "should have no error");
 });
