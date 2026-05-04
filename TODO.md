@@ -7,9 +7,9 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Local skill: ~/.claude/skills/hook-runner/
 - Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
-## Current State (v2.74.0)
+## Current State (v2.75.0)
 - 121 modules, 7 workflows, 169 test suites, ~2576 tests
-- PRs: 515 merged
+- PRs: 516 merged
 
 ## Open Tasks
 - [x] T610: Add tests for 5 untested PreToolUse modules — force-push-gate (14), commit-quality-gate (21), no-hardcoded-paths (19), no-polling-gate (30), no-rules-gate (14). 98 new tests. (PR #515)
@@ -26,6 +26,16 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T605: automate-everything-gate — blocks manual lint/check commands, forces CI/CD pipeline. 27 tests.
 - [x] T606: no-lessons-file-gate — blocks writes to lessons.jsonl, forces hook module creation. 11 tests.
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
+
+## Session Handoff (2026-05-04, session 10)
+- v2.73.0→v2.75.0. Three PRs: T608 (#512), T609 (#514), T610 (#515). Plus version bumps (#513, #516).
+- **T608**: Fixed _bash-write-patterns.js false positives — redirect patterns constrained to single statements + exclude stderr fd redirects. 63 tests.
+- **T609**: Fixed worktree-gate test intermittency (HOOK_RUNNER_TEST env leak). Added for/while/if to spec-gate BASH_ALLOW_PATTERNS.
+- **T610**: Added 98 new tests for 5 untested PreToolUse modules (force-push-gate, commit-quality-gate, no-hardcoded-paths, no-polling-gate, no-rules-gate).
+- GitHub releases created for v2.74.0 and v2.75.0.
+- Live hooks synced with T608/T609 fixes.
+- **Still waiting on user**: T578 marketplace questions (aatf-external org, marketplace differences).
+- **Next session**: T610b (21 more untested modules), or any new work from user.
 
 ## Session Handoff (2026-05-04, session 9)
 - v2.72.0→v2.73.0 (previous session did T605/T606/T607 directly on main).
