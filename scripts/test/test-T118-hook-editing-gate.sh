@@ -216,7 +216,36 @@ else
   fail "legitimate edit should pass: $OUTPUT"
 fi
 
-# 16. T413: other projects still blocked from editing hook-editing-gate.js
+# 16. T598: Block message includes actionable steps (TODO.md path + session launch)
+run_gate_other_full() {
+  local tool="$1"
+  local file_path="$2"
+  local content="$3"
+  local input
+  if [ "$tool" = "Write" ]; then
+    input="{\"file_path\":\"$file_path\",\"content\":$(echo "$content" | node -e "process.stdout.write(JSON.stringify(require('fs').readFileSync(0,'utf-8')))")}"
+  else
+    input="{\"file_path\":\"$file_path\",\"new_string\":$(echo "$content" | node -e "process.stdout.write(JSON.stringify(require('fs').readFileSync(0,'utf-8')))")}"
+  fi
+  CLAUDE_PROJECT_DIR="/tmp/some-other-project" node -e "
+    var mod = require('$MODULE');
+    var result = mod({ tool_name: '$tool', tool_input: JSON.parse(process.argv[1]) });
+    if (result && result.decision === 'block') {
+      process.stdout.write(result.reason);
+      process.exit(1);
+    } else {
+      process.stdout.write('PASSED');
+    }
+  " "$input" 2>&1 || true
+}
+OUTPUT=$(run_gate_other_full "Edit" "$HOOKS_DIR/run-modules/PreToolUse/some.js" "var x = 1;")
+if echo "$OUTPUT" | grep -q "TODO.md" && echo "$OUTPUT" | grep -q "new_session.py"; then
+  pass "block message includes actionable TODO.md path and session launch command"
+else
+  fail "block message should include actionable steps: $OUTPUT"
+fi
+
+# 17. T413: other projects still blocked from editing hook-editing-gate.js
 OUTPUT=$(run_gate_other "Edit" "$HOOKS_DIR/run-modules/PreToolUse/hook-editing-gate.js" "$LEGIT_EDIT")
 if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
   pass "other projects blocked from editing hook-editing-gate.js"
