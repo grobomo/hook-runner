@@ -1419,7 +1419,15 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T586: Version bump to v2.68.0 — CHANGELOG, package.json, test counts. 139 suites, ~2081 tests.
 - [x] T587: Add tests for 7 Stop modules — reflection-score (40), chat-export (4), config-sync (4), drift-review (4), push-unpushed (4), self-reflection (4), session-brain-analysis (4). (PR #498)
 - [x] T588: Add tests for SessionStart batch 1: load-instructions (8), _is-pid-running (12), terminal-title (4), reflection-score-inject (7), lesson-effectiveness (13), inter-project-priority (15). (PR #499)
-- [ ] T589: Add tests for SessionStart batch 2: backup-check, drift-check, load-lessons, project-health, session-cleanup, session-collision-detector, workflow-summary.
+- [x] T589: Add tests for SessionStart batch 2: backup-check (5), drift-check (3), load-lessons (12), project-health (3), session-cleanup (3), session-collision-detector (3), workflow-summary (6). (PR #500)
+- [x] T590: Version bump to v2.69.0 — 154 suites, ~2240 tests. Stop + SessionStart at 100%.
+
+## Session Handoff (2026-05-03, session 4)
+- v2.69.0 released. 154 suites, ~2240 tests. 113 modules, 7 workflows.
+- PRs #497-#500 merged (T586-T589): 158 new tests across 20 modules.
+- Stop: 13/13 tested (100%). SessionStart: 14/14 tested (100%). PostToolUse: 14/15 tested.
+- Only untested: 1 PostToolUse (hook-autocommit) + PreToolUse helpers (_bash-write-patterns, _file-modify-patterns, _gsd-helpers).
+- Marketplace sync still pending (T578).
 
 ## Session Handoff (2026-05-03, session 3)
 - v2.68.0 released. 139 suites, ~2081 tests. 113 modules, 7 workflows.
