@@ -47,6 +47,7 @@ node setup.js --health       # verify runners + modules
 node setup.js --diagnose     # diagnose settings, hooks, broken scripts (--fix, --json)
 node setup.js --sync         # sync modules from GitHub
 node setup.js --list         # catalog vs installed
+node setup.js --search <q>   # find modules by name or WHY description
 node setup.js --stats        # text summary of hook log
 node setup.js --perf         # module timing analysis
 node setup.js --export       # export module config as YAML

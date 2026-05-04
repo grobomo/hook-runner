@@ -753,6 +753,7 @@ function cmdHelp() {
   console.log("  --health        Verify runners, modules, and settings are correct");
   console.log("  --sync          Sync modules from GitHub per ~/.claude/hooks/modules.yaml");
   console.log("  --list          Show catalog vs installed modules with status (--why for descriptions)");
+  console.log("  --search <q>    Search modules by name or WHY description (case-insensitive)");
   console.log("  --stats         Quick text summary of hook log activity");
   console.log("  --lessons       Show self-analysis lessons (--project <name>, --date YYYY-MM-DD)");
   console.log("  --workflow      Manage enforceable step pipelines (list|start|status|complete|reset)");
@@ -794,6 +795,7 @@ function cmdHelp() {
   console.log("  node setup.js                    # first-time setup");
   console.log("  node setup.js --report           # see your hooks without installing");
   console.log("  node setup.js --list --why       # browse modules with descriptions");
+  console.log("  node setup.js --search git       # find git-related modules");
   console.log("  node setup.js --sync --dry-run   # preview module sync");
   console.log("  node setup.js --uninstall --dry-run  # preview removal");
 }
@@ -1192,6 +1194,58 @@ function cmdList(args) {
   }
   console.log("");
   console.log("[hook-runner] " + installedCount + " installed, " + catalogCount + " in catalog");
+}
+
+function cmdSearch(args) {
+  var queryIdx = args.indexOf("--search");
+  var query = queryIdx !== -1 && args[queryIdx + 1] ? args[queryIdx + 1] : "";
+  if (!query || query.indexOf("--") === 0) {
+    console.log("Usage: node setup.js --search <query>");
+    console.log("  Searches module names and WHY descriptions (case-insensitive)");
+    process.exit(1);
+    return;
+  }
+  var qLower = query.toLowerCase();
+  var catalogDir = path.join(REPO_DIR, "modules");
+  var liveDir = path.join(HOOKS_DIR, "run-modules");
+  var events = ["PreToolUse", "PostToolUse", "UserPromptSubmit", "Stop", "SessionStart"];
+  var results = [];
+  for (var i = 0; i < events.length; i++) {
+    var ev = events[i];
+    var evDir = path.join(catalogDir, ev);
+    var liveEvDir = path.join(liveDir, ev);
+    var files;
+    try { files = fs.readdirSync(evDir).filter(function(f) { return f.slice(-3) === ".js"; }); }
+    catch(e) { continue; }
+    var installedFiles = [];
+    try { installedFiles = fs.readdirSync(liveEvDir).filter(function(f) { return f.slice(-3) === ".js"; }); }
+    catch(e) {}
+    for (var j = 0; j < files.length; j++) {
+      var name = files[j].replace(".js", "");
+      var why = extractWhy(path.join(evDir, files[j])) || "";
+      var nameMatch = name.toLowerCase().indexOf(qLower) !== -1;
+      var whyMatch = why.toLowerCase().indexOf(qLower) !== -1;
+      if (nameMatch || whyMatch) {
+        var installed = installedFiles.indexOf(files[j]) !== -1;
+        results.push({ event: ev, name: name, why: why, installed: installed });
+      }
+    }
+  }
+  if (results.length === 0) {
+    console.log("[hook-runner] No modules matching \"" + query + "\"");
+    return;
+  }
+  console.log("[hook-runner] " + results.length + " module" + (results.length === 1 ? "" : "s") + " matching \"" + query + "\"");
+  console.log("");
+  for (var r = 0; r < results.length; r++) {
+    var m = results[r];
+    var status = m.installed ? " [installed]" : " [available]";
+    console.log("  " + m.event + "/" + m.name + status);
+    if (m.why) {
+      var desc = m.why.length > 72 ? m.why.slice(0, 69) + "..." : m.why;
+      console.log("    " + desc);
+    }
+  }
 }
 
 function cmdTest(args) {
@@ -2339,6 +2393,7 @@ function main() {
   if (args.indexOf("--export") !== -1) return cmdExport(args);
   if (args.indexOf("--perf") !== -1) return cmdPerf();
   if (args.indexOf("--list") !== -1) return cmdList(args);
+  if (args.indexOf("--search") !== -1) return cmdSearch(args);
   if (args.indexOf("--test-module") !== -1) return cmdTestModule(args);
   if (args.indexOf("--test") !== -1) return cmdTest(args);
   if (args.indexOf("--integrity") !== -1) return cmdIntegrity(args);
