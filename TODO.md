@@ -1423,7 +1423,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T590: Version bump to v2.69.0 — 154 suites, ~2240 tests. Stop + SessionStart at 100%.
 - [x] T591: Add test for hook-autocommit (12) — PostToolUse 15/15 (100%). (PR #502)
 - [x] T592: README update — fix workflow module counts (starter 48, shtd 113, gsd 111, 118+ total). (PR #503)
-- [ ] T594: Add tests for 3 PreToolUse helpers (_bash-write-patterns, _file-modify-patterns, _gsd-helpers).
+- [x] T594: Add tests for 3 PreToolUse helpers — _bash-write-patterns (51), _file-modify-patterns (23), _gsd-helpers (16). (PR #505)
+- [x] T595: Version bump to v2.70.0 — 158 suites, ~2340 tests. 100% coverage all event types + helpers.
 
 ## Session Handoff (2026-05-03, session 5)
 - v2.69.0 released. 155 suites, ~2250 tests. 118 modules, 7 workflows.
