@@ -253,7 +253,7 @@ That's it. Next time Claude tries `rm -rf`, this module blocks it with a helpful
 Test it in isolation before waiting for a real hook trigger:
 
 ```bash
-node setup.js --test-module ~/.claude/hooks/run-modules/PreToolUse/no-rm-rf.js
+node setup.js --test-module no-rm-rf    # resolves by name from any event folder
 ```
 
 ### Project-Scoped Modules
@@ -327,7 +327,7 @@ node setup.js --prune [N]             # prune log entries older than N days
 # Demo & Development
 node setup.js --demo [--fast]          # interactive demo (no install needed)
 node setup.js --demo-html              # generate standalone HTML demo page
-node setup.js --test-module <file> [--input <json>]  # test one module
+node setup.js --test-module <name> [--input <json>]  # test one module (name or path)
 node setup.js --test                   # run all test suites
 node setup.js --version                # show version
 node setup.js --help                   # show all commands
