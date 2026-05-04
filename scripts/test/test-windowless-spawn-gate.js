@@ -6,6 +6,12 @@
 var path = require("path");
 var MOD = path.join(__dirname, "../../modules/PreToolUse/windowless-spawn-gate.js");
 
+// The gate checks HOOK_RUNNER_TEST and skips when set.
+// The test runner sets HOOK_RUNNER_TEST=1 to bypass live gates.
+// Save and clear it so the gate runs normally during tests.
+var savedHRT = process.env.HOOK_RUNNER_TEST;
+delete process.env.HOOK_RUNNER_TEST;
+
 var pass = 0, fail = 0;
 function assert(name, ok) {
   if (ok) { console.log("  PASS: " + name); pass++; }
@@ -170,6 +176,9 @@ assert("PY: empty content passes", r31 === null);
 // 32. .txt file in hooks dir ignored
 var r32 = gate({ tool_name: "Write", tool_input: { file_path: NON_HOOK_TXT, content: 'os.system("bad")' } });
 assert("other: .txt file ignored", r32 === null);
+
+// Restore HOOK_RUNNER_TEST
+if (savedHRT !== undefined) process.env.HOOK_RUNNER_TEST = savedHRT;
 
 // Summary
 console.log("\n" + pass + " passed, " + fail + " failed out of " + (pass + fail));
