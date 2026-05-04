@@ -147,7 +147,7 @@ function validateHookCommand(command, projectDir) {
     var nodeMatch = command.match(/\bnode\s+"([^"]+)"/);
     if (nodeMatch) {
       var p = nodeMatch[1];
-      p = p.replace(/\$HOME/g, HOME).replace(/~/g, HOME);
+      p = p.replace(/\$HOME/g, HOME).replace(/^~/g, HOME);
       scriptPath = p;
     }
   }
@@ -158,7 +158,7 @@ function validateHookCommand(command, projectDir) {
     if (pyMatch) {
       var p2 = pyMatch[1];
       p2 = p2.replace(/\$CLAUDE_PROJECT_DIR/g, projectDir);
-      p2 = p2.replace(/\$HOME/g, HOME).replace(/~/g, HOME);
+      p2 = p2.replace(/\$HOME/g, HOME).replace(/^~/g, HOME);
       scriptPath = p2;
     }
   }

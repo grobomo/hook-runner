@@ -278,8 +278,24 @@ check("validates node script with quotes", function() {
   var result = mod.diagnose(PROJECT_DIR);
   var stopHooks = result.hooks.filter(function(h) { return h.event === "Stop" && h.scope === "project"; });
   assert(stopHooks.length === 1, "should have 1 stop hook");
-  var v = stopHooks[0].validation;
-  assert(v.exists === true, "script should exist | resolved=" + v.resolved + " | scriptPath=" + v.scriptPath + " | directCheck=" + fs.existsSync(scriptPath) + " | cmd=" + cmd);
+  assert(stopHooks[0].validation.exists === true, "script should exist");
+  assert(stopHooks[0].validation.error === null, "should have no error");
+});
+
+check("tilde in 8.3 path not expanded to HOME", function() {
+  // Windows 8.3 names like RUNNER~1 should not have ~ expanded to HOME
+  var mod = loadMod();
+  var fakePath = "C:/Users/RUNNER~1/AppData/Local/Temp/script.js";
+  var cmd = 'node "' + fakePath + '"';
+  var settings = {
+    hooks: { Stop: [{ hooks: [{ command: cmd, type: "command" }] }] }
+  };
+  fs.writeFileSync(path.join(PROJECT_DIR, ".claude", "settings.json"), JSON.stringify(settings));
+  var result = mod.diagnose(PROJECT_DIR);
+  var stopHooks = result.hooks.filter(function(h) { return h.event === "Stop" && h.scope === "project"; });
+  // The resolved path should preserve RUNNER~1, not expand ~ to HOME
+  assert(stopHooks[0].validation.resolved.indexOf("RUNNER") !== -1, "should preserve RUNNER~1 in path");
+  assert(stopHooks[0].validation.resolved.indexOf("~1") !== -1 || stopHooks[0].validation.resolved.indexOf("RUNNER") !== -1, "should not expand 8.3 tilde");
 });
 
 check("validates $CLAUDE_PROJECT_DIR path", function() {
