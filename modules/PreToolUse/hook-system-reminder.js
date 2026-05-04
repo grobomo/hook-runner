@@ -23,11 +23,18 @@ module.exports = function(input) {
   // Allow edits to hook-runner source (that's where modules live)
   if (normalized.indexOf("hook-runner/") !== -1) return null;
 
+  // Allow edits from hook-runner project (modules.yaml, config files)
+  var projDir = (process.env.CLAUDE_PROJECT_DIR || "").replace(/\\/g, "/");
+  if (projDir.indexOf("/hook-runner") !== -1) return null;
+
   // Allow settings files (settings.json, settings.local.json)
   if (/settings(\.local)?\.json$/.test(normalized)) return null;
 
   // Allow data files (JSONL logs/lessons — not code, not enforcement)
   if (/\.jsonl$/.test(normalized)) return null;
+
+  // Allow YAML config files (modules.yaml)
+  if (/\.ya?ml$/.test(normalized)) return null;
 
   return {
     decision: "block",
