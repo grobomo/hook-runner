@@ -18,7 +18,7 @@ hook-runner replaces direct `settings.json` editing. After install, you never to
 
 **1. Modules over shell commands.** Each rule is a `.js` file that receives structured input (tool name, file path, command) and returns a decision. Modules are testable, documented, and version-controlled. Drop a file in a folder and it runs — remove it and it stops.
 
-**2. Workflows over individual modules.** You don't think "I need to enable spec-gate, branch-gate, test-checkpoint-gate, and worker-loop." You think "I want the SHTD development pipeline." Workflows group related modules so you enable one name and get a complete enforcement regime. Disable it and they all go silent. This is how you manage 118+ modules without losing track.
+**2. Workflows over individual modules.** You don't think "I need to enable spec-gate, branch-gate, test-checkpoint-gate, and worker-loop." You think "I want the SHTD development pipeline." Workflows group related modules so you enable one name and get a complete enforcement regime. Disable it and they all go silent. This is how you manage 130+ modules without losing track.
 
 **3. Portability.** Export your module config as YAML (`--export`), sync it to another machine (`--sync`), or share a workflow definition. Workflows also make it easy to switch contexts — enable `customer-data-guard` during incident response, disable it after.
 
@@ -90,7 +90,7 @@ Claude reads the block message and adjusts its approach — no user intervention
 
 ## Workflows
 
-Workflows are the primary abstraction. Instead of managing 118+ individual modules, you enable a workflow and its modules activate automatically.
+Workflows are the primary abstraction. Instead of managing 130+ individual modules, you enable a workflow and its modules activate automatically.
 
 ```bash
 node setup.js --workflow list              # see available workflows
@@ -359,6 +359,7 @@ Full catalog in `modules/` directory:
 | Module | Description |
 |--------|-------------|
 | `archive-not-delete` | Blocks file deletion, suggests archiving instead |
+| `automate-everything-gate` | Blocks manual lint/check commands (flake8, pylint, shellcheck, etc.), forces CI/CD pipeline |
 | `aws-tagging-gate` | Enforces required tags on AWS resource creation |
 | `block-local-docker` | Blocks docker/docker-compose commands |
 | `blueprint-no-sleep` | Blocks sleep between Blueprint MCP calls (pages load during prompt processing) |
@@ -395,6 +396,7 @@ Full catalog in `modules/` directory:
 | `no-fragile-heuristics` | Blocks pixel-counting heuristics |
 | `reflection-gate` | Blocks edits if self-reflection found unresolved issues |
 | `no-hardcoded-paths` | Blocks hardcoded absolute paths in code |
+| `no-lessons-file-gate` | Blocks writes to lessons.jsonl — forces hook module creation instead |
 | `no-hook-bypass` | Blocks Bash cat/echo writes when Write/Edit is gated |
 | `no-nested-claude` | Blocks nested claude -p calls (use context-reset for cross-project) |
 | `no-passive-rules` | Blocks .md rules when a hook module is better |
