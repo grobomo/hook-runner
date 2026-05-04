@@ -2,6 +2,18 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.78.0] — 2026-05-04
+
+### Added
+- **`--list --why`** (T615) — Shows `// WHY:` descriptions inline when browsing the module catalog. Truncates at 72 chars. 11 tests.
+
+### Fixed
+- **windowless-spawn-gate test env leak** (T616) — Test failed when run via `--test` because the gate checks `HOOK_RUNNER_TEST` and the runner sets it. Test now saves/clears the env var. 32/32 pass.
+
+### Stats
+- 191 suites, ~2832 tests
+- 122 modules, 7 workflows
+
 ## [2.77.0] — 2026-05-04
 
 ### Added
