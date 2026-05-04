@@ -7,9 +7,9 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Local skill: ~/.claude/skills/hook-runner/
 - Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
-## Current State (v2.77.0)
-- 122 modules, 7 workflows, 190 test suites, ~2821 tests
-- PRs: 525 merged
+## Current State (v2.78.0)
+- 122 modules, 7 workflows, 191 test suites, ~2832 tests
+- PRs: 529 merged
 
 ## Open Tasks
 - [x] T612: Create GETTING-STARTED.md — 5-minute onboarding guide. Linked from README. (PR #518)
@@ -29,7 +29,17 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T606: no-lessons-file-gate — blocks writes to lessons.jsonl, forces hook module creation. 11 tests.
 - [x] T613: tunnel-check-gate — blocks process-grep SSH tunnel checks, suggests port connectivity. 29 tests. (PR #519)
 - [x] T614: Fix README module counts + v2.77.0 changelog + GitHub releases. (PRs #524-#525)
+- [x] T615: Add `--list --why` flag — shows WHY descriptions inline. 11 tests. (PR #527)
+- [x] T616: Fix windowless-spawn-gate test env leak — HOOK_RUNNER_TEST cleared during test. 32/32 pass. (PR #528)
+- [x] T617: Version bump v2.78.0 + changelog + GitHub release. (PR #529)
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
+
+## Session Handoff (2026-05-04, session 13)
+- T615 (PR #527): `--list --why` flag shows `// WHY:` descriptions inline in module catalog. 11 tests.
+- T616 (PR #528): Fixed windowless-spawn-gate test env leak — gate checks HOOK_RUNNER_TEST, test now saves/clears it. 32/32 pass.
+- T617 (PR #529): v2.78.0 version bump, changelog, GitHub release.
+- v2.78.0. 122 modules, 191 suites, ~2832 tests, 529 PRs.
+- Remaining open: T578 (marketplace sync, blocked on user), deferred OpenClaw module ports.
 
 ## Session Handoff (2026-05-04, session 12)
 - T610b batch 5 (PR #523): Tests for all 7 remaining untested modules — 136 new tests. enforcement-gate (15), cross-project-todo-gate (24), inter-project-priority-gate (34), secret-scan-gate (15), workflow-gate (28), workflow-compliance-gate (8), branch-pr-gate (85).
