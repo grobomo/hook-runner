@@ -15,7 +15,13 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 ## Open Tasks
 - [ ] T578: Marketplace sync v2.64.0 → v2.70.0 — TODO written to ai-skill-marketplace. Needs user permission to push PR to trend-ai-taskforce.
 - [x] T596: Project health — archived 468 completed tasks + 5 stale handoffs to TODO-COMPLETED.md (1468→35 lines).
+- [x] T597: Remove broken UserPromptSubmit hook from lab-worker settings.json — already fixed (was `{"hooks": {}}`)
+- [x] T598: Improve hook-editing-gate.js block message with actionable 3-step instructions. Both Bash bypass and Edit/Write blocks updated. Test added (17 tests).
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
+
+## Session Handoff (2026-05-04, session 7)
+- T597: Already done — lab-worker settings.json was already `{"hooks": {}}`.
+- T598: Updated hook-editing-gate.js error messages in both Bash bypass (line 114-116) and Edit/Write project-lock (line 150-152) blocks with actionable 3-step instructions (write TODO, launch session, auto-execute). Added test #16 verifying actionable content. 17/17 tests pass.
 
 ## Session Handoff (2026-05-03, session 6)
 - v2.70.0 released. 158 suites, ~2340 tests. 118 modules, 7 workflows.
