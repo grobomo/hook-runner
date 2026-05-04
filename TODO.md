@@ -7,9 +7,9 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Local skill: ~/.claude/skills/hook-runner/
 - Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
-## Current State (v2.75.0)
-- 121 modules, 7 workflows, 169 test suites, ~2576 tests
-- PRs: 518 merged
+## Current State (v2.76.0)
+- 122 modules, 7 workflows, 170 test suites, ~2605 tests
+- PRs: 519 merged
 
 ## Open Tasks
 - [x] T612: Create GETTING-STARTED.md — 5-minute onboarding guide. Linked from README. (PR #518)
@@ -27,6 +27,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T603: User correction detector — PostToolUse module, prompt-log.jsonl real-time, strong/moderate patterns, dedup, correction-log.jsonl. 61 tests. (PR #508)
 - [x] T605: automate-everything-gate — blocks manual lint/check commands, forces CI/CD pipeline. 27 tests.
 - [x] T606: no-lessons-file-gate — blocks writes to lessons.jsonl, forces hook module creation. 11 tests.
+- [x] T613: tunnel-check-gate — blocks process-grep SSH tunnel checks, suggests port connectivity. 29 tests. (PR #519)
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
 
 ## Session Handoff (2026-05-04, session 10 continued)
