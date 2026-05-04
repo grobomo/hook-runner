@@ -7,9 +7,10 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Local skill: ~/.claude/skills/hook-runner/
 - Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
-## Current State (v2.78.0)
-- 122 modules, 7 workflows, 191 test suites, ~2832 tests
-- PRs: 529 merged
+## Current State (v2.79.0)
+- 118 modules in catalog, 7 workflows, 192 test suites, ~2854 tests
+- PRs: 535 merged
+- CI: fully green (Ubuntu + Windows + install)
 
 ## Open Tasks
 - [x] T612: Create GETTING-STARTED.md — 5-minute onboarding guide. Linked from README. (PR #518)
@@ -32,13 +33,19 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T615: Add `--list --why` flag — shows WHY descriptions inline. 11 tests. (PR #527)
 - [x] T616: Fix windowless-spawn-gate test env leak — HOOK_RUNNER_TEST cleared during test. 32/32 pass. (PR #528)
 - [x] T617: Version bump v2.78.0 + changelog + GitHub release. (PR #529)
+- [x] T618: Fix `--test-module` to resolve bare module names — searches all event folders. 11 tests. (PR #531)
+- [x] T619: Fix GETTING-STARTED.md (starter 49→46) + README `--test-module` examples. (PRs #532-#533)
+- [x] T620: Fix diagnose.js tilde expansion in Windows 8.3 paths — `RUNNER~1` was expanded to HOME. CI now fully green. 22 tests. (PR #535)
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
 
 ## Session Handoff (2026-05-04, session 13)
 - T615 (PR #527): `--list --why` flag shows `// WHY:` descriptions inline in module catalog. 11 tests.
 - T616 (PR #528): Fixed windowless-spawn-gate test env leak — gate checks HOOK_RUNNER_TEST, test now saves/clears it. 32/32 pass.
-- T617 (PR #529): v2.78.0 version bump, changelog, GitHub release.
-- v2.78.0. 122 modules, 191 suites, ~2832 tests, 529 PRs.
+- T618 (PR #531): `--test-module` resolves bare names from any event folder. 11 tests.
+- T619 (PRs #532-#533): GETTING-STARTED.md starter 49→46, README `--test-module` examples updated.
+- T620 (PR #535): Fixed diagnose.js `/~/g` → `/^~/g` — Windows 8.3 short names like `RUNNER~1` were corrupted. **CI now fully green** for first time (all runs were failing on Windows before this).
+- v2.79.0. 118 catalog modules, 192 suites, ~2854 tests, 535 PRs.
+- GitHub repo description updated (122→118 modules, 13→7 workflows).
 - Remaining open: T578 (marketplace sync, blocked on user), deferred OpenClaw module ports.
 
 ## Session Handoff (2026-05-04, session 12)
