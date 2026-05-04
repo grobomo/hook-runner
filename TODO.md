@@ -14,6 +14,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 ## Open Tasks
 - [ ] T578: Marketplace sync v2.64.0 → v2.73.0 — TODO written to ai-skill-marketplace. Needs user permission to push PR to trend-ai-taskforce.
+- [ ] T607: Add T605/T606 modules to README table + version bump to v2.73.0
 - [x] T596: Project health — archived 468 completed tasks + 5 stale handoffs to TODO-COMPLETED.md (1468→35 lines).
 - [x] T597: Remove broken UserPromptSubmit hook from lab-worker settings.json — already fixed (was `{"hooks": {}}`)
 - [x] T598: Improve hook-editing-gate.js block message with actionable 3-step instructions. Both Bash bypass and Edit/Write blocks updated. Test added (17 tests).
