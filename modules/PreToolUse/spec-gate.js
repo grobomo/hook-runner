@@ -216,6 +216,7 @@ var BASH_ALLOW_PATTERNS = [
   /^\s*cd\b/, /^\s*readlink\b/, /^\s*realpath\b/, /^\s*wsl\b/,
   /^\s*jq\b/, /^\s*yq\b/, /^\s*sort\b/, /^\s*uniq\b/, /^\s*cut\b/, /^\s*tr\b/,
   /^\s*test\b/, /^\s*\[\s/, /^\s*true\b/, /^\s*false\b/,
+  /^\s*for\b/, /^\s*while\b/, /^\s*if\b/,  // T609: shell control structures (read-only loops/conditionals)
   /^\s*date\b/, /^\s*hostname\b/, /^\s*whoami\b/, /^\s*id\b/,
   /^\s*node\s+-e\b/, /^\s*node\s+--eval\b/, // quick evals (not running files)
   /^\s*python\s+-c\b/, // quick evals

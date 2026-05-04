@@ -34,6 +34,10 @@ fs.mkdirSync(gitDir);
 fs.writeFileSync(path.join(gitDir, "HEAD"), "ref: refs/heads/main\n");
 
 var origDir = process.env.CLAUDE_PROJECT_DIR;
+// T609: Save and clear HOOK_RUNNER_TEST — batch runner sets it, which causes
+// the gate to skip (line 18) when tests expect it to block.
+var origHookRunnerTest = process.env.HOOK_RUNNER_TEST;
+delete process.env.HOOK_RUNNER_TEST;
 process.env.CLAUDE_PROJECT_DIR = tmpDir;
 
 // Test: main checkout + code file → block
@@ -92,6 +96,8 @@ delete process.env.HOOK_RUNNER_TEST;
 
 // Cleanup
 process.env.CLAUDE_PROJECT_DIR = origDir || "";
+if (origHookRunnerTest) process.env.HOOK_RUNNER_TEST = origHookRunnerTest;
+else delete process.env.HOOK_RUNNER_TEST;
 fs.rmSync(tmpDir, {recursive: true, force: true});
 
 console.log("\n" + pass + " passed, " + fail + " failed");
