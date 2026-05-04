@@ -2319,6 +2319,13 @@ function main() {
       { stdio: "inherit", windowsHide: true });
     process.exit(snapResult.status || 0);
   }
+  if (args.indexOf("--diagnose") !== -1) {
+    var diagArgs = args.filter(function(a) { return a !== "--diagnose"; });
+    var diagResult = require("child_process").spawnSync(process.execPath,
+      [path.join(__dirname, "diagnose.js")].concat(diagArgs),
+      { stdio: "inherit", windowsHide: true });
+    process.exit(diagResult.status || 0);
+  }
   if (args.indexOf("--health") !== -1) return cmdHealth();
   if (args.indexOf("--audit-project") !== -1) return cmdAuditProject(args);
   if (args.indexOf("--xref") !== -1) return cmdXref();

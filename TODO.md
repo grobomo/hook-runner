@@ -17,6 +17,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T596: Project health — archived 468 completed tasks + 5 stale handoffs to TODO-COMPLETED.md (1468→35 lines).
 - [x] T597: Remove broken UserPromptSubmit hook from lab-worker settings.json — already fixed (was `{"hooks": {}}`)
 - [x] T598: Improve hook-editing-gate.js block message with actionable 3-step instructions. Both Bash bypass and Edit/Write blocks updated. Test added (17 tests).
+- [ ] T604: Hook diagnostics — `node setup.js --diagnose [project-dir]` to show all settings files, hooks, broken scripts, and auto-fix.
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
 
 ## Session Handoff (2026-05-04, session 7)
