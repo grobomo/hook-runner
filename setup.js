@@ -1484,7 +1484,7 @@ function cmdWizard(reportOnly, dryRun, openMode, autoYes, analyzeMode, deepMode,
   console.log("  Backup: " + backup.backupDir);
   console.log("  Report: " + afterReport);
   if (enableWorkflows) {
-    console.log("  Default workflows enabled: shtd");
+    console.log("  Default workflows enabled: " + defaultWorkflows.join(", "));
   }
   console.log("");
   console.log("  To add a hook module:");

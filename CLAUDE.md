@@ -44,6 +44,7 @@ node setup.js                # full setup wizard
 node setup.js --yes          # non-interactive setup + default workflows
 node setup.js --report       # HTML report
 node setup.js --health       # verify runners + modules
+node setup.js --diagnose     # diagnose settings, hooks, broken scripts (--fix, --json)
 node setup.js --sync         # sync modules from GitHub
 node setup.js --list         # catalog vs installed
 node setup.js --stats        # text summary of hook log
