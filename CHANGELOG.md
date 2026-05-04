@@ -2,6 +2,25 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.74.0] — 2026-05-04
+
+### Fixed
+- **_bash-write-patterns.js** (T608) — Redirect patterns (`echo`/`printf`/`cat`) no longer match across statement boundaries (`;`, `&&`, `||`) or on stderr fd redirects (`2>/dev/null`). Previously a read-only `for` loop with `echo` + `2>/dev/null` triggered the spec-gate because `.*` spanned across `;` to the `>`. Fixed with `[^;|&]*` constraint + `(?<![0-9])` negative lookbehind. 12 new test cases, 63 total.
+
+### Stats
+- 162 suites, ~2470 tests
+- 121 modules, 7 workflows
+
+## [2.73.0] — 2026-05-04
+
+### Added
+- **automate-everything-gate** (T605) — PreToolUse module that blocks manual lint/check commands (flake8, pylint, eslint, prettier, etc.), forces CI/CD pipeline usage. 27 tests.
+- **no-lessons-file-gate** (T606) — PreToolUse module that blocks direct writes to lessons.jsonl, forces hook module creation instead. 11 tests.
+
+### Stats
+- 162 suites, ~2460 tests
+- 121 modules, 7 workflows
+
 ## [2.72.0] — 2026-05-04
 
 ### Added
