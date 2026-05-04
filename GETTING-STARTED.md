@@ -8,7 +8,7 @@ Get from zero to enforced guardrails in 5 minutes. For the full reference, see [
 npx grobomo/hook-runner --yes
 ```
 
-This backs up your existing hooks, installs the runner system, and enables the **starter** workflow (49 modules covering the most common mistakes).
+This backs up your existing hooks, installs the runner system, and enables the **starter** workflow (46 modules covering the most common mistakes).
 
 To preview first without changing anything:
 ```bash
@@ -76,11 +76,13 @@ node setup.js --workflow disable shtd
 ## 5. Day-to-day commands
 
 ```bash
-node setup.js --health        # is everything working?
-node setup.js --diagnose      # something broken? start here
-node setup.js --stats         # what are my hooks doing?
-node setup.js --report --open # visual HTML overview
-node setup.js --perf          # which modules are slow?
+node setup.js --health            # is everything working?
+node setup.js --diagnose          # something broken? start here
+node setup.js --list --why        # browse modules with descriptions
+node setup.js --test-module NAME  # test a module against sample inputs
+node setup.js --stats             # what are my hooks doing?
+node setup.js --report --open     # visual HTML overview
+node setup.js --perf              # which modules are slow?
 ```
 
 ## Uninstall
