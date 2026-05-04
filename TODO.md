@@ -7,15 +7,15 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Local skill: ~/.claude/skills/hook-runner/
 - Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
-## Current State (v2.76.0)
-- 122 modules, 7 workflows, 183 test suites, ~2685 tests
-- PRs: 522 merged
+## Current State (v2.77.0)
+- 122 modules, 7 workflows, 190 test suites, ~2821 tests
+- PRs: 523 merged
 
 ## Open Tasks
 - [x] T612: Create GETTING-STARTED.md — 5-minute onboarding guide. Linked from README. (PR #518)
 - [x] T611: Fix onboarding UX — setup.js workflow name dynamic, README module counts updated, --diagnose added to docs. (PR #517)
 - [x] T610: Add tests for 5 untested PreToolUse modules — force-push-gate (14), commit-quality-gate (21), no-hardcoded-paths (19), no-polling-gate (30), no-rules-gate (14). 98 new tests. (PR #515)
-- [ ] T610b: (deferred) Tests for remaining untested modules — 7 still without: branch-pr-gate (358), workflow-compliance-gate (149), cross-project-todo-gate (130), secret-scan-gate (113), inter-project-priority-gate (113), enforcement-gate (105), workflow-gate (67). Aliases (gsd-gate, e2e-self-report-gate) covered by test-checkpoint-gate. Done: batch 2 (PR #520, 6 modules/101 tests), batch 3 (PR #521, 5 modules/65 tests), batch 4 (PR #522, 2 modules/33 tests).
+- [x] T610b: Tests for all remaining untested modules. Batch 2 (PR #520, 6 modules/101 tests), batch 3 (PR #521, 5 modules/65 tests), batch 4 (PR #522, 2 modules/33 tests), batch 5 (PR #523, 7 modules/136 tests). All modules now have test coverage.
 - [x] T609: Fix worktree-gate test env leak + spec-gate control structure allow. 16/16 worktree + 79 spec-gate tests. (PR #514)
 - [x] T608: Fix _bash-write-patterns.js false positive — echo/printf/cat redirect patterns matched across statement boundaries and on stderr redirects. Fixed with `[^;|&]*` + `(?<![0-9])` lookbehind. 63 tests (12 new). (PR #512)
 - [ ] T578: Marketplace sync — BLOCKED on user permission. Two marketplaces exist (trend-ai-taskforce/ai-skill-marketplace and aatf-external/plugin-marketplace). User must clarify: which org is aatf-external, what's the difference, and does hook-runner belong in either/both. CLAUDE.md updated with publishing rules. publish.json needs manual edit to add `team_sharing_approved: false`.
@@ -29,6 +29,12 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T606: no-lessons-file-gate — blocks writes to lessons.jsonl, forces hook module creation. 11 tests.
 - [x] T613: tunnel-check-gate — blocks process-grep SSH tunnel checks, suggests port connectivity. 29 tests. (PR #519)
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
+
+## Session Handoff (2026-05-04, session 12)
+- T610b batch 5 (PR #523): Tests for all 7 remaining untested modules — 136 new tests. enforcement-gate (15), cross-project-todo-gate (24), inter-project-priority-gate (34), secret-scan-gate (15), workflow-gate (28), workflow-compliance-gate (8), branch-pr-gate (85).
+- T610b COMPLETE — every module now has test coverage. 190 suites, 2821 tests total.
+- v2.77.0. 122 modules, 190 suites, 523 PRs.
+- Remaining open: T578 (marketplace sync, blocked on user), deferred OpenClaw module ports.
 
 ## Session Handoff (2026-05-04, session 11)
 - T613 (PR #519): tunnel-check-gate module — blocks process-grep SSH tunnel checks. 29 tests.
