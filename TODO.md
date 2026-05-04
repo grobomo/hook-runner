@@ -7,12 +7,14 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Local skill: ~/.claude/skills/hook-runner/
 - Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
-## Current State (v2.73.0)
-- 121 modules, 7 workflows, 162 test suites, ~2460 tests
-- 100% test coverage across all event types + helpers
-- PRs: 512 merged
+## Current State (v2.74.0)
+- 121 modules, 7 workflows, 169 test suites, ~2576 tests
+- PRs: 515 merged
 
 ## Open Tasks
+- [x] T610: Add tests for 5 untested PreToolUse modules — force-push-gate (14), commit-quality-gate (21), no-hardcoded-paths (19), no-polling-gate (30), no-rules-gate (14). 98 new tests. (PR #515)
+- [ ] T610b: (deferred) Tests for remaining untested modules — 21 still without: branch-pr-gate (358 lines), secret-scan-gate (integration), enforcement-gate, etc.
+- [x] T609: Fix worktree-gate test env leak + spec-gate control structure allow. 16/16 worktree + 79 spec-gate tests. (PR #514)
 - [x] T608: Fix _bash-write-patterns.js false positive — echo/printf/cat redirect patterns matched across statement boundaries and on stderr redirects. Fixed with `[^;|&]*` + `(?<![0-9])` lookbehind. 63 tests (12 new). (PR #512)
 - [ ] T578: Marketplace sync — BLOCKED on user permission. Two marketplaces exist (trend-ai-taskforce/ai-skill-marketplace and aatf-external/plugin-marketplace). User must clarify: which org is aatf-external, what's the difference, and does hook-runner belong in either/both. CLAUDE.md updated with publishing rules. publish.json needs manual edit to add `team_sharing_approved: false`.
 - [x] T607: Add T605/T606 modules to README table + version bump to v2.73.0. Also added to live modules.yaml.
