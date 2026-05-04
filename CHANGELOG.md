@@ -2,6 +2,18 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.77.0] — 2026-05-04
+
+### Added
+- **Test coverage complete** (T610b) — All modules now have tests. Batch 5 adds 136 tests for the 7 remaining complex modules: branch-pr-gate (85), inter-project-priority-gate (34), workflow-gate (28), cross-project-todo-gate (24), enforcement-gate (15), secret-scan-gate (15), workflow-compliance-gate (8).
+
+### Fixed
+- **README module counts** (T614) — starter workflow 49→46, shtd workflow 110→104 to match actual WORKFLOW tag counts.
+
+### Stats
+- 190 suites, ~2821 tests
+- 122 modules, 7 workflows
+
 ## [2.76.0] — 2026-05-04
 
 ### Added
