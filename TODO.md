@@ -7,9 +7,9 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Local skill: ~/.claude/skills/hook-runner/
 - Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
-## Current State (v2.79.0)
-- 118 modules in catalog, 7 workflows, 192 test suites, ~2854 tests
-- PRs: 535 merged
+## Current State (v2.80.0)
+- 118 modules in catalog, 7 workflows, 193 test suites, ~2869 tests
+- PRs: 537 merged
 - CI: fully green (Ubuntu + Windows + install)
 
 ## Open Tasks
@@ -36,7 +36,14 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T618: Fix `--test-module` to resolve bare module names — searches all event folders. 11 tests. (PR #531)
 - [x] T619: Fix GETTING-STARTED.md (starter 49→46) + README `--test-module` examples. (PRs #532-#533)
 - [x] T620: Fix diagnose.js tilde expansion in Windows 8.3 paths — `RUNNER~1` was expanded to HOME. CI now fully green. 22 tests. (PR #535)
+- [x] T621: Add `--search <query>` — find modules by name or WHY description. 15 tests. (PR #537)
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
+
+## Session Handoff (2026-05-04, session 14)
+- T621 (PR #537): `--search <query>` — find modules by name or WHY description. Case-insensitive. 15 tests.
+- T622: README + GETTING-STARTED.md updated with `--search` and `--list --why`. v2.80.0.
+- v2.80.0. 118 catalog modules, 193 suites, ~2869 tests, 538 PRs.
+- Remaining open: T578 (marketplace sync, blocked on user), deferred OpenClaw module ports.
 
 ## Session Handoff (2026-05-04, session 13)
 - T615 (PR #527): `--list --why` flag shows `// WHY:` descriptions inline in module catalog. 11 tests.

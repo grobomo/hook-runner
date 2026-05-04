@@ -2,6 +2,19 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.80.0] — 2026-05-04
+
+### Added
+- **`--search <query>`** (T621) — Find modules by name or WHY description. Case-insensitive. Shows event type, install status, and descriptions. 15 tests.
+
+### Docs
+- README: Added `--list --why` and `--search` to CLI reference.
+- GETTING-STARTED.md: Added `--search` to day-to-day commands.
+
+### Stats
+- 193 suites, ~2869 tests
+- 118 modules in catalog, 7 workflows
+
 ## [2.79.0] — 2026-05-04
 
 ### Added

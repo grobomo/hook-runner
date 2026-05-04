@@ -79,6 +79,7 @@ node setup.js --workflow disable shtd
 node setup.js --health            # is everything working?
 node setup.js --diagnose          # something broken? start here
 node setup.js --list --why        # browse modules with descriptions
+node setup.js --search git        # find modules by keyword
 node setup.js --test-module NAME  # test a module against sample inputs
 node setup.js --stats             # what are my hooks doing?
 node setup.js --report --open     # visual HTML overview
