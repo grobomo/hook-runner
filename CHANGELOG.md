@@ -2,6 +2,25 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.72.0] — 2026-05-04
+
+### Added
+- **diagnose.js tests** (T604) — 21 tests covering settings resolution, hook extraction, hook validation, fix mode, edge cases. Diagnose tool was WIP, now fully tested.
+
+### Stats
+- 160 suites, ~2420 tests
+- 119 modules, 7 workflows
+
+## [2.71.0] — 2026-05-04
+
+### Added
+- **user-correction-detector** (T603) — PostToolUse module that detects user corrections in real-time via prompt-log.jsonl analysis. 21 strong patterns ("No, that's wrong", "I already told you", "You should have") and 6 moderate patterns for short prompts ("No.", "Wrong!", "Stop"). Deduplicates per-prompt via temp marker file. Logs corrections to correction-log.jsonl for scoring system consumption. False positive exclusions for task verbs, code blocks, slash commands, greetings, long prompts. 61 tests.
+- **no-infra-excuse** (T602) — PostToolUse module that blocks Claude from claiming it "can't test" things when AWS/Azure/RONE infrastructure is available.
+
+### Stats
+- 159 suites, ~2400 tests
+- 119 modules, 7 workflows
+
 ## [2.70.0] — 2026-05-03
 
 ### Added
