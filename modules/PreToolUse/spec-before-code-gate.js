@@ -43,7 +43,7 @@ function hasRecentSpec() {
   // Check recent commit message (within 5 min) with sufficient detail
   try {
     var log = cp.execFileSync("git", ["log", "--oneline", "-1", "--format=%s", "--since=5.minutes.ago"], {
-      encoding: "utf-8", timeout: 5000, windowsHide: true
+      encoding: "utf-8", timeout: 5000, windowsHide: true, cwd: projectDir
     }).trim();
     if (log && log.split(/\s+/).length > 4) return true;
   } catch(e) {}
