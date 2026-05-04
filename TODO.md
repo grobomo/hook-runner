@@ -10,9 +10,10 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 ## Current State (v2.73.0)
 - 121 modules, 7 workflows, 162 test suites, ~2460 tests
 - 100% test coverage across all event types + helpers
-- PRs: 509 merged
+- PRs: 512 merged
 
 ## Open Tasks
+- [x] T608: Fix _bash-write-patterns.js false positive — echo/printf/cat redirect patterns matched across statement boundaries and on stderr redirects. Fixed with `[^;|&]*` + `(?<![0-9])` lookbehind. 63 tests (12 new). (PR #512)
 - [ ] T578: Marketplace sync — BLOCKED on user permission. Two marketplaces exist (trend-ai-taskforce/ai-skill-marketplace and aatf-external/plugin-marketplace). User must clarify: which org is aatf-external, what's the difference, and does hook-runner belong in either/both. CLAUDE.md updated with publishing rules. publish.json needs manual edit to add `team_sharing_approved: false`.
 - [x] T607: Add T605/T606 modules to README table + version bump to v2.73.0. Also added to live modules.yaml.
 - [x] T596: Project health — archived 468 completed tasks + 5 stale handoffs to TODO-COMPLETED.md (1468→35 lines).
