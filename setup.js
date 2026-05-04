@@ -752,7 +752,7 @@ function cmdHelp() {
   console.log("  --analyze --input <file>  Merge pre-computed LLM analysis JSON into the report");
   console.log("  --health        Verify runners, modules, and settings are correct");
   console.log("  --sync          Sync modules from GitHub per ~/.claude/hooks/modules.yaml");
-  console.log("  --list          Show catalog vs installed modules with status");
+  console.log("  --list          Show catalog vs installed modules with status (--why for descriptions)");
   console.log("  --stats         Quick text summary of hook log activity");
   console.log("  --lessons       Show self-analysis lessons (--project <name>, --date YYYY-MM-DD)");
   console.log("  --workflow      Manage enforceable step pipelines (list|start|status|complete|reset)");
@@ -793,6 +793,7 @@ function cmdHelp() {
   console.log("Examples:");
   console.log("  node setup.js                    # first-time setup");
   console.log("  node setup.js --report           # see your hooks without installing");
+  console.log("  node setup.js --list --why       # browse modules with descriptions");
   console.log("  node setup.js --sync --dry-run   # preview module sync");
   console.log("  node setup.js --uninstall --dry-run  # preview removal");
 }
@@ -1093,7 +1094,20 @@ function cmdLessons(args) {
   if (lessons.length === 0) console.log("  No lessons match the given filters.");
 }
 
-function cmdList() {
+function extractWhy(filePath) {
+  try {
+    var content = fs.readFileSync(filePath, "utf8");
+    var lines = content.split("\n");
+    for (var i = 0; i < Math.min(lines.length, 15); i++) {
+      var match = lines[i].match(/^\/\/\s*WHY:\s*(.+)/);
+      if (match) return match[1].trim();
+    }
+  } catch(e) {}
+  return null;
+}
+
+function cmdList(args) {
+  var showWhy = args && args.indexOf("--why") !== -1;
   console.log("[hook-runner] Module List");
   console.log("========================");
   var catalogDir = path.join(REPO_DIR, "modules");
@@ -1140,7 +1154,18 @@ function cmdList() {
       var status = m.installed && m.catalog ? " [installed]" :
                    m.installed && !m.catalog ? " [installed, custom]" :
                    " [available]";
-      console.log("    " + modNames[mn].replace(".js", "") + status);
+      var line = "    " + modNames[mn].replace(".js", "") + status;
+      if (showWhy) {
+        var modFile = m.installed
+          ? path.join(liveDir, ev, modNames[mn])
+          : path.join(catalogDir, ev, modNames[mn]);
+        var why = extractWhy(modFile);
+        if (why) {
+          if (why.length > 72) why = why.slice(0, 69) + "...";
+          line += "\n      " + why;
+        }
+      }
+      console.log(line);
     }
   }
   var projScoped = [];
@@ -2292,7 +2317,7 @@ function main() {
   if (args.indexOf("--stats") !== -1) return cmdStats();
   if (args.indexOf("--export") !== -1) return cmdExport(args);
   if (args.indexOf("--perf") !== -1) return cmdPerf();
-  if (args.indexOf("--list") !== -1) return cmdList();
+  if (args.indexOf("--list") !== -1) return cmdList(args);
   if (args.indexOf("--test-module") !== -1) return cmdTestModule(args);
   if (args.indexOf("--test") !== -1) return cmdTest(args);
   if (args.indexOf("--integrity") !== -1) return cmdIntegrity(args);
