@@ -2,6 +2,15 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.76.0] — 2026-05-04
+
+### Added
+- **tunnel-check-gate** (T613) — Blocks process-grep SSH tunnel checks (`tasklist | grep ssh`, `ps aux | grep ssh`, `pgrep ssh`). Suggests port connectivity test instead. Allows kill/stop/terminate (legitimate process management). 29 tests.
+
+### Stats
+- 170 suites, ~2605 tests
+- 122 modules, 7 workflows
+
 ## [2.75.0] — 2026-05-04
 
 ### Added
