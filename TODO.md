@@ -1422,7 +1422,16 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T589: Add tests for SessionStart batch 2: backup-check (5), drift-check (3), load-lessons (12), project-health (3), session-cleanup (3), session-collision-detector (3), workflow-summary (6). (PR #500)
 - [x] T590: Version bump to v2.69.0 — 154 suites, ~2240 tests. Stop + SessionStart at 100%.
 - [x] T591: Add test for hook-autocommit (12) — PostToolUse 15/15 (100%). (PR #502)
-- [ ] T592: README update — test coverage stats, module counts, version bump notes.
+- [x] T592: README update — fix workflow module counts (starter 48, shtd 113, gsd 111, 118+ total). (PR #503)
+
+## Session Handoff (2026-05-03, session 5)
+- v2.69.0 released. 155 suites, ~2250 tests. 118 modules, 7 workflows.
+- PRs #497-#503 merged (T586-T592): 7 PRs this session.
+- **PostToolUse: 15/15 (100%)**, **Stop: 13/13 (100%)**, **SessionStart: 14/14 (100%)**.
+- README module counts fixed to match actual YAML definitions.
+- T578 marketplace sync: TODO written to ai-skill-marketplace/TODO.md as XREF item. Needs user permission to push PR to trend-ai-taskforce.
+- Only remaining untested: PreToolUse helpers (_bash-write-patterns, _file-modify-patterns, _gsd-helpers).
+- Next value-add ideas: GitHub release for v2.69.0, marketplace sync, module performance profiling.
 
 ## Session Handoff (2026-05-03, session 4)
 - v2.69.0 released. 154 suites, ~2240 tests. 113 modules, 7 workflows.
