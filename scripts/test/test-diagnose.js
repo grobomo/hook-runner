@@ -7,11 +7,11 @@ var path = require("path");
 var fs = require("fs");
 var os = require("os");
 var modPath = path.join(__dirname, "..", "..", "diagnose.js");
-var passed = 0, failed = 0;
+var passed = 0, failed = 0, failures = [];
 
 function check(name, fn) {
   try { fn(); console.log("OK: " + name); passed++; }
-  catch (e) { console.log("FAIL: " + name + " — " + e.message); failed++; }
+  catch (e) { console.log("FAIL: " + name + " — " + e.message); failed++; failures.push(name + " — " + e.message); }
 }
 function assert(cond, msg) { if (!cond) throw new Error(msg || "assertion failed"); }
 
@@ -379,5 +379,9 @@ check("diagnose handles empty command", function() {
 cleanup();
 
 // --- Summary ---
+if (failures.length > 0) {
+  console.log("\nFailed tests:");
+  for (var fi = 0; fi < failures.length; fi++) console.log("  " + failures[fi]);
+}
 console.log("\n=== Results: " + passed + " passed, " + failed + " failed ===");
 process.exit(failed > 0 ? 1 : 0);
