@@ -165,6 +165,32 @@ module.exports = function(input) {
 
   // --- We're in hook-runner project. Apply quality checks + weakening detection. ---
 
+  // T600: Even in hook-runner, settings.json edits should only target ~/.claude/
+  // or hook-runner's own .claude/. Editing settings.json in unrelated projects
+  // (e.g. lab-worker/.claude/settings.json) bypassed all gates — no TODO, no PR.
+  if (protectedType === "settings") {
+    var homeDir = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
+    // Normalize POSIX drive prefix (/c/Users) to Windows (C:/Users) for comparison
+    var normWin = norm.replace(/^\/([a-zA-Z])\//, function(_, d) { return d.toUpperCase() + ":/"; });
+    var homeDirWin = homeDir.replace(/^\/([a-zA-Z])\//, function(_, d) { return d.toUpperCase() + ":/"; });
+    var projDirWin = projectDir.replace(/^\/([a-zA-Z])\//, function(_, d) { return d.toUpperCase() + ":/"; });
+    var normLower = normWin.toLowerCase();
+    var isHomeSettings = homeDirWin && normLower.indexOf(homeDirWin.toLowerCase() + "/.claude/") === 0;
+    var isOwnSettings = normLower.indexOf(projDirWin.toLowerCase().replace(/\/$/, "") + "/.claude/") === 0;
+    if (!isHomeSettings && !isOwnSettings) {
+      auditLog(filePath, tool, false, "FOREIGN SETTINGS: " + norm, projectDir);
+      return {
+        decision: "block",
+        reason: "HOOK EDITING GATE: Cannot edit settings.json in another project.\n" +
+          "WHY: hook-runner trust only extends to ~/.claude/ and its own .claude/.\n" +
+          "Editing " + base + " in a foreign project bypasses that project's gates.\n\n" +
+          "Target: " + norm + "\n" +
+          "FIX: Open a session in that project and edit its settings there,\n" +
+          "  or write a TODO in that project's TODO.md."
+      };
+    }
+  }
+
   // Get the content being written
   var content = "";
   if (tool === "Write") {

@@ -282,9 +282,10 @@ module.exports = function(input) {
   if (!isBash) {
     // Allow bootstrap/config/planning files on any branch
     // T080: Tightened — removed scripts/test/ blanket bypass and .json catch-all
+    // T599: Removed broad /.claude\// — scoped below to current project + home only
     var allowPatterns = [
       /TODO\.md$/, /SESSION_STATE\.md$/, /CLAUDE\.md$/,
-      /\.claude\//, /\/specs\//, /\.planning\//, /\.specify\//,
+      /\/specs\//, /\.planning\//, /\.specify\//,
       /\.github\//, /\/hooks\//, /\/rules\//,
       /\.gitignore$/,
       // Specific config files only (not all .json)
@@ -295,12 +296,18 @@ module.exports = function(input) {
       if (allowPatterns[i].test(norm)) return null;
     }
 
+    // T599: Allow .claude/ files only in the CURRENT project or user home.
+    // Previously /.claude\// matched any project's .claude/ dir, letting edits
+    // to other projects' settings.json bypass the entire spec chain.
+    if (/\.claude\//.test(norm)) {
+      var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
+      var projDir = (process.env.CLAUDE_PROJECT_DIR || "").replace(/\\/g, "/");
+      if (home && norm.toLowerCase().indexOf(home.toLowerCase() + "/.claude/") === 0) return null;
+      if (projDir && norm.toLowerCase().indexOf(projDir.toLowerCase().replace(/\/$/, "") + "/.claude/") === 0) return null;
+    }
+
     // Allow test files — but only if at least one spec+tasks combo exists anywhere
     isTestFile = /[\/\\]tests?[\/\\]|scripts\/test\/|\.test\.[jt]s$|\.spec\.[jt]s$|_test\.py$|test_.*\.py$/.test(norm);
-
-    // Allow user home config
-    var home = (process.env.HOME || process.env.USERPROFILE || "").replace(/\\/g, "/");
-    if (home && norm.indexOf(home + "/.claude/") === 0) return null;
   }
 
   // Find project root(s)

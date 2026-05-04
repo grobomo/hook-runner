@@ -253,6 +253,31 @@ else
   fail "other project should be blocked: $OUTPUT"
 fi
 
+# 18. T600: hook-runner blocked from editing settings.json in OTHER projects
+FOREIGN_SETTINGS="$HOME/Documents/ProjectsCL1/_tmemu/lab-worker/.claude/settings.json"
+OUTPUT=$(run_gate "Write" "$FOREIGN_SETTINGS" '{"hooks":{}}')
+if echo "$OUTPUT" | grep -q "BLOCKED.*Cannot edit settings.json in another project"; then
+  pass "hook-runner blocked from editing foreign project settings.json"
+else
+  fail "foreign settings.json should be blocked: $OUTPUT"
+fi
+
+# 19. T600: hook-runner CAN edit ~/.claude/settings.json (home dir)
+OUTPUT=$(run_gate "Edit" "$HOME/.claude/settings.json" '"hooks": {}')
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "hook-runner can edit home dir settings.json"
+else
+  fail "home settings.json should pass: $OUTPUT"
+fi
+
+# 20. T600: hook-runner CAN edit its own .claude/settings.json
+OUTPUT=$(run_gate "Edit" "$REPO_DIR/.claude/settings.json" '"hooks": {}')
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "hook-runner can edit its own .claude/settings.json"
+else
+  fail "own settings.json should pass: $OUTPUT"
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ] || exit 1

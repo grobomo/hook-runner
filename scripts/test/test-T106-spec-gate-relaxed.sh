@@ -150,6 +150,41 @@ else
   fail "T340: should block on main with specs: $RESULT7"
 fi
 
+# 8. T599: .claude/ in OTHER project NOT allowed (was bypassing spec chain)
+PROJ8="$TMPDIR/proj-foreign-claude"
+mkdir -p "$PROJ8/src"
+git init -q "$PROJ8"
+echo "x" > "$PROJ8/src/app.js"
+init_git "$PROJ8"
+RESULT8=$(node -e "
+  var modPath = process.argv[1], dir = process.argv[2];
+  delete require.cache[require.resolve(modPath)];
+  process.env.CLAUDE_PROJECT_DIR = dir;
+  var mod = require(modPath);
+  var r = mod({ tool_name: 'Write', tool_input: { file_path: '/tmp/other-project/.claude/settings.json', content: '{}' } });
+  process.stdout.write(r && r.decision === 'block' ? 'BLOCKED' : 'PASSED');
+" "$MODULE" "$PROJ8" 2>/dev/null)
+if echo "$RESULT8" | grep -q "BLOCKED"; then
+  pass "T599: .claude/ in foreign project blocked by spec chain"
+else
+  fail "T599: foreign .claude/ should NOT bypass spec chain: $RESULT8"
+fi
+
+# 9. T599: .claude/ in CURRENT project still allowed
+RESULT9=$(node -e "
+  var modPath = process.argv[1], dir = process.argv[2];
+  delete require.cache[require.resolve(modPath)];
+  process.env.CLAUDE_PROJECT_DIR = dir;
+  var mod = require(modPath);
+  var r = mod({ tool_name: 'Write', tool_input: { file_path: dir + '/.claude/settings.json', content: '{}' } });
+  process.stdout.write(r && r.decision === 'block' ? 'BLOCKED' : 'PASSED');
+" "$MODULE" "$PROJ8" 2>/dev/null)
+if echo "$RESULT9" | grep -q "PASSED"; then
+  pass "T599: .claude/ in current project still allowed"
+else
+  fail "T599: own .claude/ should be allowed: $RESULT9"
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ] || exit 1
