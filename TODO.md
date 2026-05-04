@@ -9,7 +9,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 ## Current State (v2.77.0)
 - 122 modules, 7 workflows, 190 test suites, ~2821 tests
-- PRs: 523 merged
+- PRs: 525 merged
 
 ## Open Tasks
 - [x] T612: Create GETTING-STARTED.md — 5-minute onboarding guide. Linked from README. (PR #518)
@@ -28,13 +28,17 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T605: automate-everything-gate — blocks manual lint/check commands, forces CI/CD pipeline. 27 tests.
 - [x] T606: no-lessons-file-gate — blocks writes to lessons.jsonl, forces hook module creation. 11 tests.
 - [x] T613: tunnel-check-gate — blocks process-grep SSH tunnel checks, suggests port connectivity. 29 tests. (PR #519)
+- [x] T614: Fix README module counts + v2.77.0 changelog + GitHub releases. (PRs #524-#525)
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
 
 ## Session Handoff (2026-05-04, session 12)
 - T610b batch 5 (PR #523): Tests for all 7 remaining untested modules — 136 new tests. enforcement-gate (15), cross-project-todo-gate (24), inter-project-priority-gate (34), secret-scan-gate (15), workflow-gate (28), workflow-compliance-gate (8), branch-pr-gate (85).
 - T610b COMPLETE — every module now has test coverage. 190 suites, 2821 tests total.
-- v2.77.0. 122 modules, 190 suites, 523 PRs.
+- T614 (PRs #524-#525): Fixed README module counts (starter 49→46, shtd 110→104), v2.77.0 changelog.
+- GitHub releases created for v2.76.0 and v2.77.0. Snapshot refreshed (391 files).
+- v2.77.0. 122 modules, 190 suites, 525 PRs.
 - Remaining open: T578 (marketplace sync, blocked on user), deferred OpenClaw module ports.
+- Project fully current: all tests pass, live hooks synced, snapshot fresh, releases published.
 
 ## Session Handoff (2026-05-04, session 11)
 - T613 (PR #519): tunnel-check-gate module — blocks process-grep SSH tunnel checks. 29 tests.
