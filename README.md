@@ -303,6 +303,8 @@ node setup.js --uninstall [--confirm]  # remove (--confirm restores backup)
 
 # Modules
 node setup.js --list                   # catalog vs installed comparison
+node setup.js --list --why             # browse modules with descriptions
+node setup.js --search <query>         # find modules by name or description
 node setup.js --sync [--dry-run]       # sync from GitHub per modules.yaml
 node setup.js --export [file.yaml]     # export config as shareable YAML
 node setup.js --upgrade [--dry-run]    # fetch latest from GitHub
