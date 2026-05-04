@@ -7,8 +7,8 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Local skill: ~/.claude/skills/hook-runner/
 - Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
-## Current State (v2.71.0)
-- 119 modules, 7 workflows, 159 test suites, ~2400 tests
+## Current State (v2.72.0)
+- 119 modules, 7 workflows, 160 test suites, ~2420 tests
 - 100% test coverage across all event types + helpers
 - PRs: 506 merged
 
@@ -17,7 +17,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T596: Project health — archived 468 completed tasks + 5 stale handoffs to TODO-COMPLETED.md (1468→35 lines).
 - [x] T597: Remove broken UserPromptSubmit hook from lab-worker settings.json — already fixed (was `{"hooks": {}}`)
 - [x] T598: Improve hook-editing-gate.js block message with actionable 3-step instructions. Both Bash bypass and Edit/Write blocks updated. Test added (17 tests).
-- [ ] T604: Hook diagnostics — `node setup.js --diagnose [project-dir]` to show all settings files, hooks, broken scripts, and auto-fix.
+- [x] T604: Hook diagnostics — `node setup.js --diagnose [project-dir]` to show all settings files, hooks, broken scripts, and auto-fix. 21 tests.
 - [x] T603: User correction detector — PostToolUse module that reads prompt-log.jsonl in real-time, detects correction signals (strong/moderate patterns), deduplicates per-prompt, logs to correction-log.jsonl. 61 tests.
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
 
