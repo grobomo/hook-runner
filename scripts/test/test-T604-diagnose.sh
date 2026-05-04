@@ -102,13 +102,12 @@ else
   fail "should show ancestor settings: $OUTPUT"
 fi
 
-echo "DEBUG: reached test 8"
 # 8. Exits with code 1 when broken hooks found
 PROJ_EXIT="$TMPDIR/proj-exit-test"
 mkdir -p "$PROJ_EXIT/.claude"
-printf '{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"python \\\"$CLAUDE_PROJECT_DIR/.claude/hooks/missing.py\\\"","timeout":5}]}]}}' > "$PROJ_EXIT/.claude/settings.json"
-node "$DIAGNOSE" "$PROJ_EXIT" > /dev/null 2>&1
-EXIT_CODE=$?
+printf '%s' '{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"python \"$CLAUDE_PROJECT_DIR/.claude/hooks/missing.py\"","timeout":5}]}]}}' > "$PROJ_EXIT/.claude/settings.json"
+EXIT_CODE=0
+node "$DIAGNOSE" "$PROJ_EXIT" > /dev/null 2>&1 || EXIT_CODE=$?
 if [ "$EXIT_CODE" -eq 1 ]; then
   pass "exits with code 1 on broken hooks"
 else
