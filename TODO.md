@@ -1421,6 +1421,7 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T588: Add tests for SessionStart batch 1: load-instructions (8), _is-pid-running (12), terminal-title (4), reflection-score-inject (7), lesson-effectiveness (13), inter-project-priority (15). (PR #499)
 - [x] T589: Add tests for SessionStart batch 2: backup-check (5), drift-check (3), load-lessons (12), project-health (3), session-cleanup (3), session-collision-detector (3), workflow-summary (6). (PR #500)
 - [x] T590: Version bump to v2.69.0 — 154 suites, ~2240 tests. Stop + SessionStart at 100%.
+- [ ] T591: Add test for hook-autocommit (last untested PostToolUse module) + marketplace sync.
 
 ## Session Handoff (2026-05-03, session 4)
 - v2.69.0 released. 154 suites, ~2240 tests. 113 modules, 7 workflows.
