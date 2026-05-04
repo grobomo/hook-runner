@@ -451,6 +451,8 @@ Full catalog in `modules/` directory:
 | `inter-project-audit` | Logs inter-project TODO writes to JSONL audit trail |
 | `result-review-gate` | Injects review checklist when reading report/PDF/coverage files |
 | `test-evidence` | Records test pass/fail counts to evidence file for victory-gate validation |
+| `no-infra-excuse` | Blocks infrastructure excuses — reminds Claude it has AWS/Azure/RONE available |
+| `user-correction-detector` | Real-time detection of user corrections via prompt-log.jsonl pattern matching |
 
 ### UserPromptSubmit (processes user prompts)
 | Module | Description |
