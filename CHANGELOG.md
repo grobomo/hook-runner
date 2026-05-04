@@ -2,6 +2,22 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.79.0] — 2026-05-04
+
+### Added
+- **`--test-module` name resolution** (T618) — Accepts bare module names (e.g. `--test-module force-push-gate`) instead of requiring full paths. Searches all event folders. 11 tests.
+
+### Fixed
+- **diagnose.js tilde expansion in 8.3 paths** (T620) — Windows 8.3 short names like `RUNNER~1` had their `~` incorrectly expanded to `$HOME`. Changed `/~/g` to `/^~/g`. Fixes persistent Windows CI failure. 22 tests.
+- **windowless-spawn-gate test env leak** (T616) — Test saves/clears `HOOK_RUNNER_TEST` before testing. 32/32 pass.
+- **GETTING-STARTED.md** (T619) — starter module count 49→46, added `--list --why` and `--test-module` to day-to-day commands.
+- **README** (T619) — `--test-module` examples now show bare name resolution.
+
+### Stats
+- 192 suites, ~2854 tests
+- 118 modules in catalog, 7 workflows
+- **CI fully green** — Ubuntu + Windows + install tests all pass
+
 ## [2.78.0] — 2026-05-04
 
 ### Added
