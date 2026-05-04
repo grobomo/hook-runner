@@ -9,9 +9,11 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 ## Current State (v2.75.0)
 - 121 modules, 7 workflows, 169 test suites, ~2576 tests
-- PRs: 516 merged
+- PRs: 518 merged
 
 ## Open Tasks
+- [x] T612: Create GETTING-STARTED.md — 5-minute onboarding guide. Linked from README. (PR #518)
+- [x] T611: Fix onboarding UX — setup.js workflow name dynamic, README module counts updated, --diagnose added to docs. (PR #517)
 - [x] T610: Add tests for 5 untested PreToolUse modules — force-push-gate (14), commit-quality-gate (21), no-hardcoded-paths (19), no-polling-gate (30), no-rules-gate (14). 98 new tests. (PR #515)
 - [ ] T610b: (deferred) Tests for remaining untested modules — 21 still without: branch-pr-gate (358 lines), secret-scan-gate (integration), enforcement-gate, etc.
 - [x] T609: Fix worktree-gate test env leak + spec-gate control structure allow. 16/16 worktree + 79 spec-gate tests. (PR #514)
@@ -26,6 +28,11 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T605: automate-everything-gate — blocks manual lint/check commands, forces CI/CD pipeline. 27 tests.
 - [x] T606: no-lessons-file-gate — blocks writes to lessons.jsonl, forces hook module creation. 11 tests.
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
+
+## Session Handoff (2026-05-04, session 10 continued)
+- T611 (PR #517): Fixed setup.js "shtd"→dynamic workflow name, README module counts, --diagnose docs.
+- T612 (PR #518): Created GETTING-STARTED.md — 5-min onboarding guide, linked from README.
+- PRs: 518 merged total. Next: T610b (more tests) or user-directed work.
 
 ## Session Handoff (2026-05-04, session 10)
 - v2.73.0→v2.75.0. Three PRs: T608 (#512), T609 (#514), T610 (#515). Plus version bumps (#513, #516).
