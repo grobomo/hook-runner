@@ -1417,7 +1417,8 @@ Guard module `_openclaw/tmemu-guard.js` protects production OpenClaw.
 - [x] T584: Add tests for Stop: test-before-done (4), log-gotchas (4), never-give-up (4), unresolved-issues-check (18), test-coverage-check (18). (PR #495)
 - [x] T585: Add tests for Stop: mark-turn-complete (7), auto-continue (7). (PR #496)
 - [x] T586: Version bump to v2.68.0 — CHANGELOG, package.json, test counts. 139 suites, ~2081 tests.
-- [ ] T587: Add tests for Stop: reflection-score, chat-export, config-sync, drift-review, push-unpushed, self-reflection, session-brain-analysis.
+- [x] T587: Add tests for 7 Stop modules — reflection-score (40), chat-export (4), config-sync (4), drift-review (4), push-unpushed (4), self-reflection (4), session-brain-analysis (4). (PR #498)
+- [ ] T588: Add tests for SessionStart modules batch 1: load-instructions, _is-pid-running, terminal-title, reflection-score-inject, lesson-effectiveness, inter-project-priority.
 
 ## Session Handoff (2026-05-03, session 3)
 - v2.68.0 released. 139 suites, ~2081 tests. 113 modules, 7 workflows.
