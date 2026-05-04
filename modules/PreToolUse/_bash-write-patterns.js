@@ -29,9 +29,13 @@ module.exports = [
   /\btruncate\s/,                   // truncate files
   /\binstall\s+-[a-zA-Z]/,          // install command (file copy variant)
   // Output redirection to files
-  /\becho\s+.*>/,                   // echo > file
-  /\bprintf\s+.*>/,                 // printf > file
-  /\bcat\s+[^|]*\s*>\s*[^&]/,      // cat ... > file (not cat | cmd)
+  // T608: Two fixes for false positives:
+  // 1. [^;|&]* prevents matching across compound operators (;, &&, ||, |).
+  //    Previously `echo x; cmd 2>/dev/null` matched because `.*` spanned `;`.
+  // 2. (?<![0-9]) excludes fd redirects like 2>/dev/null (stderr is not a write).
+  /\becho\s+[^;|&]*(?<![0-9])>/,   // echo > file (not 2>, single statement)
+  /\bprintf\s+[^;|&]*(?<![0-9])>/, // printf > file (not 2>, single statement)
+  /\bcat\s+[^;|&]*(?<![0-9])>\s*[^&]/, // cat > file (not 2>, single statement)
   // Build/package management
   /\bnpm\s+(install|ci|link|uninstall|publish)\b/,
   /\byarn\s+(add|install|remove)\b/,

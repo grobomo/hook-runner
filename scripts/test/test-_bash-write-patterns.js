@@ -75,5 +75,20 @@ assert(!matches('powershell "[System.IO.Compression.ZipFile]::OpenRead()"'), "po
 assert(!matches("wsl -e bash -c 'python3 openclaw-checkin.py'"), "wsl python does not match");
 assert(!matches("echo hello"), "echo without redirect does not match");
 
+// === T608: Compound commands — redirect patterns must not cross statement boundaries ===
+assert(!matches('echo "=== test ==="; for mod in *.js; do ls "$mod"; done'), "echo before semicolon+for loop does not match");
+assert(!matches('echo "hello"; cat file.txt 2>/dev/null'), "echo; cat with 2>/dev/null does not match");
+assert(!matches('cat file.txt 2>/dev/null'), "cat with 2>/dev/null (stderr redirect) does not match");
+assert(!matches('echo "text" 2>/dev/null'), "echo with 2>/dev/null (stderr redirect) does not match");
+assert(!matches('printf "text" 2>/dev/null'), "printf with 2>/dev/null (stderr redirect) does not match");
+assert(!matches('echo "status" && git status'), "echo && git status does not match");
+assert(!matches('for evt in a b c; do echo "=== $evt ==="; done'), "for loop with echo (no redirect) does not match");
+assert(!matches('echo "text"; printf "more"; cat file'), "multiple echo/printf/cat without redirect does not match");
+assert(!matches('echo "info"; ls scripts/test/test-*"$base"* 2>/dev/null | head -1'), "echo; ls with 2>/dev/null pipe does not match");
+// Redirects within the same statement should still match
+assert(matches('echo "hello" > file.txt; cat other.txt'), "echo > file before semicolon still matches");
+assert(matches('printf "data" > out.log && echo done'), "printf > file before && still matches");
+assert(matches('cat in.txt > out.txt; rm tmp'), "cat > file before semicolon still matches");
+
 console.log("\n=== Results: " + passed + " passed, " + failed + " failed ===");
 process.exit(failed > 0 ? 1 : 0);
