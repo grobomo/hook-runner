@@ -7,25 +7,33 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Local skill: ~/.claude/skills/hook-runner/
 - Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
-## Current State (v2.72.0)
-- 119 modules, 7 workflows, 160 test suites, ~2420 tests
+## Current State (v2.73.0)
+- 121 modules, 7 workflows, 162 test suites, ~2460 tests
 - 100% test coverage across all event types + helpers
 - PRs: 509 merged
 
 ## Open Tasks
-- [ ] T578: Marketplace sync v2.64.0 → v2.70.0 — TODO written to ai-skill-marketplace. Needs user permission to push PR to trend-ai-taskforce.
+- [ ] T578: Marketplace sync v2.64.0 → v2.73.0 — TODO written to ai-skill-marketplace. Needs user permission to push PR to trend-ai-taskforce.
 - [x] T596: Project health — archived 468 completed tasks + 5 stale handoffs to TODO-COMPLETED.md (1468→35 lines).
 - [x] T597: Remove broken UserPromptSubmit hook from lab-worker settings.json — already fixed (was `{"hooks": {}}`)
 - [x] T598: Improve hook-editing-gate.js block message with actionable 3-step instructions. Both Bash bypass and Edit/Write blocks updated. Test added (17 tests).
 - [x] T604: Hook diagnostics — `node setup.js --diagnose [project-dir]`. Settings resolution, hook validation, --fix, --json. 10+21 tests. (PR #509)
 - [x] T603: User correction detector — PostToolUse module, prompt-log.jsonl real-time, strong/moderate patterns, dedup, correction-log.jsonl. 61 tests. (PR #508)
+- [x] T605: automate-everything-gate — blocks manual lint/check commands, forces CI/CD pipeline. 27 tests.
+- [x] T606: no-lessons-file-gate — blocks writes to lessons.jsonl, forces hook module creation. 11 tests.
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
 
+## Session Handoff (2026-05-04, session 8 continued)
+- T605: automate-everything-gate — blocks flake8/pylint/mypy/ruff/shellcheck/semgrep/eslint/prettier/PSScriptAnalyzer/py_compile. Allows script wrappers. 27/27 tests.
+- T606: no-lessons-file-gate — blocks Edit/Write/Bash to lessons.jsonl. Forces hook module creation. 11/11 tests.
+- Fixed spec-before-code-gate bug: git log ran in cwd instead of CLAUDE_PROJECT_DIR. 20/20 tests.
+- Fixed hook-system-reminder: now allows edits from hook-runner project + .yaml config files. 13/13 tests.
+- Added no-infra-excuse + user-correction-detector to live modules.yaml.
+- README updated with 2 new PostToolUse modules (T094 test now passes).
+- Stale worktrees: cleaned t602. t597 has uncommitted work (leave). t604 locked by AV.
+- **Next**: Version bump, marketplace sync (T578 needs user permission), add T605/T606 to modules.yaml + README.
+
 ## Session Handoff (2026-05-04, session 8)
-- v2.72.0. 119 modules, 160 test suites, ~2420 tests. PRs #508-#509 merged.
-- T603: user-correction-detector PostToolUse module — real-time detection of user corrections via prompt-log.jsonl pattern matching (21 strong + 6 moderate patterns). 61 tests. Dedup via per-session temp marker. Logs to correction-log.jsonl.
-- T604: diagnose.js tests — 21 tests covering settings resolution, hook extraction, validation, fix mode. Tool was WIP from prior session, now fully tested.
-- Only open task: T578 marketplace sync (blocked on user permission).
 
 ## Session Handoff (2026-05-04, session 7)
 - T597: Already done — lab-worker settings.json was already `{"hooks": {}}`.
