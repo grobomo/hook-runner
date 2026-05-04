@@ -18,7 +18,7 @@ hook-runner replaces direct `settings.json` editing. After install, you never to
 
 **1. Modules over shell commands.** Each rule is a `.js` file that receives structured input (tool name, file path, command) and returns a decision. Modules are testable, documented, and version-controlled. Drop a file in a folder and it runs — remove it and it stops.
 
-**2. Workflows over individual modules.** You don't think "I need to enable spec-gate, branch-gate, test-checkpoint-gate, and worker-loop." You think "I want the SHTD development pipeline." Workflows group related modules so you enable one name and get a complete enforcement regime. Disable it and they all go silent. This is how you manage 115+ modules without losing track.
+**2. Workflows over individual modules.** You don't think "I need to enable spec-gate, branch-gate, test-checkpoint-gate, and worker-loop." You think "I want the SHTD development pipeline." Workflows group related modules so you enable one name and get a complete enforcement regime. Disable it and they all go silent. This is how you manage 118+ modules without losing track.
 
 **3. Portability.** Export your module config as YAML (`--export`), sync it to another machine (`--sync`), or share a workflow definition. Workflows also make it easy to switch contexts — enable `customer-data-guard` during incident response, disable it after.
 
@@ -51,11 +51,11 @@ The setup wizard will:
 1. Scan your current hooks and generate a styled HTML report
 2. Back up existing hooks to `~/.claude/hooks/archive/`
 3. Install the runner system
-4. Enable the `starter` workflow (with `--yes`) — 47 universally useful modules
+4. Enable the `starter` workflow (with `--yes`) — 48 universally useful modules
 
 Ready for more? Enable the full development pipeline:
 ```bash
-node setup.js --workflow enable shtd    # 103 modules: spec-first, test-first, PR discipline
+node setup.js --workflow enable shtd    # 113 modules: spec-first, test-first, PR discipline
 ```
 
 To undo everything: `node setup.js --uninstall --confirm`
@@ -90,7 +90,7 @@ Claude reads the block message and adjusts its approach — no user intervention
 
 ## Workflows
 
-Workflows are the primary abstraction. Instead of managing 115+ individual modules, you enable a workflow and its modules activate automatically.
+Workflows are the primary abstraction. Instead of managing 118+ individual modules, you enable a workflow and its modules activate automatically.
 
 ```bash
 node setup.js --workflow list              # see available workflows
@@ -104,13 +104,13 @@ node setup.js --workflow query Edit        # which workflows affect Edit?
 
 | Workflow | Modules | What it enforces |
 |----------|---------|-----------------|
-| `starter` | 42 | **Start here.** Safe defaults for any user — blocks force-push, destructive git, secret commits, file deletion. Adds commit quality checks, test reminders, and session context. |
-| `shtd` | 101 | Spec-Hook-Test-Driven — the full development pipeline. Enforces spec → branch → test → implement → PR, plus code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement. |
-| `gsd` | 101 | GSD-driven development — replaces shtd's spec-based flow with phase-based flow (.planning/ → ROADMAP.md → phase plan → branch → execute → PR). Same safety and quality modules as shtd. |
-| `customer-data-guard` | 3 | Read-only incident response — blocks env changes, data exfil, and V1 modifications. |
-| `dispatcher-worker` | 3 | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
-| `no-local-docker` | 1 | Blocks local Docker commands, forces remote infrastructure. |
-| `cross-project-reset` | 0 | Step template for cross-project context switching (cwd-drift-detector is in shtd). |
+| `starter` | 48 | **Start here.** Safe defaults for any user — blocks force-push, destructive git, secret commits, file deletion. Adds commit quality checks, test reminders, and session context. |
+| `shtd` | 113 | Spec-Hook-Test-Driven — the full development pipeline. Enforces spec → branch → test → implement → PR, plus code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement. |
+| `gsd` | 111 | GSD-driven development — replaces shtd's spec-based flow with phase-based flow (.planning/ → ROADMAP.md → phase plan → branch → execute → PR). Same safety and quality modules as shtd. |
+| `customer-data-guard` | 4 | Read-only incident response — blocks env changes, data exfil, and V1 modifications. |
+| `dispatcher-worker` | 10 | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
+| `no-local-docker` | 2 | Blocks local Docker commands, forces remote infrastructure. |
+| `cross-project-reset` | 4 | Step template for cross-project context switching (cwd-drift-detector is in shtd). |
 
 ### Workflow State Machine
 
