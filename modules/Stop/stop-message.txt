@@ -7,8 +7,8 @@ DO NOT STOP. DO NOT SUMMARIZE. DO NOT LIST OPTIONS. Follow this order:
 5) Zoom out: why does this project exist, how does it integrate, what real-world value comes next? How can we share it with the team — publish, document, demo, package? Write new tasks to TODO.md then EXECUTE. No breaks. No asking. Plan then do.
 
 If context is getting long, save state to $CLAUDE_PROJECT_DIR/TODO.md (always the launch directory, not cwd), then run context-reset (ALWAYS closes this tab):
-  python "$CONTEXT_RESET_PY" --project-dir $CLAUDE_PROJECT_DIR
+  python "$CONTEXT_RESET_PY" --project-dir $CLAUDE_PROJECT_DIR --reason "<why: e.g. context full, completing T123, or user-requested>"
   (CONTEXT_RESET_PY defaults to ~/Documents/ProjectsCL1/_grobomo/context-reset/context_reset.py)
 
 CROSS-PROJECT WORK: If you created TODOs in another project's TODO.md, open a new session there (this tab keeps running):
-  python "$NEW_SESSION_PY" --project-dir <OTHER_PROJECT_DIR>
+  python "$NEW_SESSION_PY" --project-dir <OTHER_PROJECT_DIR> --reason "<why: e.g. cross-project TODO for T034>"

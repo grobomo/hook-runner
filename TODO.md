@@ -37,6 +37,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T619: Fix GETTING-STARTED.md (starter 49→46) + README `--test-module` examples. (PRs #532-#533)
 - [x] T620: Fix diagnose.js tilde expansion in Windows 8.3 paths — `RUNNER~1` was expanded to HOME. CI now fully green. 22 tests. (PR #535)
 - [x] T621: Add `--search <query>` — find modules by name or WHY description. 15 tests. (PR #537)
+- [ ] T623: Spawn-reason tracking — stop module should pass `--reason` to context_reset.py. Depends on context-reset T034 (`--reason` arg). After T034 merges, update the stop module's context-reset call to include reason string.
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
 
 ## Session Handoff (2026-05-04, session 14)
