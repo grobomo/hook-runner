@@ -40,12 +40,12 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T621: Add `--search <query>` — find modules by name or WHY description. 15 tests. (PR #537)
 - [x] T623: Spawn-reason tracking — stop module should pass `--reason` to context_reset.py. Depends on context-reset T034 (`--reason` arg). Done in PR #539 — stop-message.txt now includes `--reason` in both context_reset.py and new_session.py calls.
 - [x] T624: Rewrite spec-gate with auto-activation — activate when: publish.json=public, specs/ already exists, shared org, feat/ branch. Dormant otherwise. Removed WORKFLOW tag, added shouldActivate() with caching. 10 new tests. (PR #540)
-- [ ] T635: UPS settings guard — hook-editing-gate blocks UserPromptSubmit in any settings.json. 4 tests. (branch 541-T635, not yet merged)
-- [ ] T636: Create _haiku-judge.js shared helper — POST /judge to llm-token-proxy (port 4100). Health check, 5s timeout, fallback. Used by gates for semantic judgment calls.
+- [x] T635: UPS settings guard — hook-editing-gate blocks UserPromptSubmit in any settings.json. 4 tests. (PR #541)
+- [x] T636: Create _haiku-judge.js shared helper — POST /judge to llm-token-proxy (port 4100). 8 tests. (PR #542)
 - [ ] T637: Wire victory-declaration gate (T634) through _haiku-judge.js as proof of concept.
 - [ ] T625: Verify chat-export skill works end-to-end (installed via symlink, untested)
 - [ ] T626: Test all active gates in live session — todo-gate, settings-watchdog-gate, gate-quality-gate, cross-project-todo-gate
-- [ ] T627: Fix 5 broken gates — regex patcher injected invalid JS into: cross-project-todo-gate, settings-watchdog-gate, todo-gate, no-rewrite-gate, proxy-restart-gate. Restore from clean source, add logging manually.
+- [x] T627: Fix 5 broken gates — regex patcher had injected `_log(...)` inline into `return null` statements, breaking JS syntax. Fixed by stripping corrupted patterns. 3 gates restored (no-rewrite, settings-watchdog, todo-gate), 2 were already working (cross-project-todo, proxy-restart).
 - [ ] T628: Add logging to all gates properly — clean implementation, not regex patching. Each gate needs: _log() on invoke, _log() on pass with reason, _log() on block with context.
 - [ ] T629: INVESTIGATE — gate-quality-gate did NOT fire when Python script wrote broken code to gate files via Bash (path.write_text). Root cause: gate only intercepts Edit/Write tools, not Bash file writes. Fix: add Bash detection for writes targeting hooks/run-modules/ (same pattern as settings-watchdog-gate).
 - [ ] T630: agent-quality-gate needs testing — verify it fires on Agent tool calls and haiku analysis works through proxy
