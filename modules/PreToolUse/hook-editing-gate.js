@@ -141,6 +141,30 @@ module.exports = function(input) {
 
   var projectDir = (process.env.CLAUDE_PROJECT_DIR || "").replace(/\\/g, "/");
 
+  // T635: UNIVERSAL UPS BLOCK — no project can add UserPromptSubmit hooks to settings.json.
+  // A broken UPS hook locks the user out of their entire session with no recovery path.
+  // This check fires BEFORE the project lock so it protects ALL projects including hook-runner.
+  if (protectedType === "settings") {
+    var settingsContent = "";
+    if (tool === "Write") {
+      settingsContent = ((ti || {}).content || "");
+    } else if (tool === "Edit") {
+      settingsContent = ((ti || {}).new_string || "");
+    }
+    if (/UserPromptSubmit/i.test(settingsContent)) {
+      auditLog(filePath, tool, false, "UPS HOOK BLOCKED: " + base, projectDir);
+      return {
+        decision: "block",
+        reason: "HOOK EDITING GATE: UserPromptSubmit hooks are FORBIDDEN in settings.json.\n" +
+          "WHY: Any bug in a UPS hook locks the user out of their session entirely —\n" +
+          "they cannot send any message to fix it. The only recovery is external file editing.\n" +
+          "INCIDENT: dd-lab session 45 was locked out by a UPS hook referencing a non-existent script.\n\n" +
+          "FIX: Move this logic to PreToolUse (for blocking) or PostToolUse (for monitoring).\n" +
+          "File: " + base
+      };
+    }
+  }
+
   // PROJECT LOCK: Only hook-runner project can edit hook infrastructure
   // hook-runner IS the gatekeeper — it can edit all hooks including this file.
   // The weakening detector + quality checks still apply to all edits.
@@ -214,8 +238,8 @@ module.exports = function(input) {
   if (protectedType === "module") {
     var isJsFile = /\.js$/.test(norm);
     if (tool === "Write" && isJsFile) {
-      if (!/\/\/ WORKFLOW:/.test(content)) {
-        issues.push("Missing // WORKFLOW: tag — every module must declare its workflow");
+      if (!/\/\/ WORKFLOW:/.test(content) && !/auto-activ/i.test(content)) {
+        issues.push("Missing // WORKFLOW: tag — every module must declare its workflow (or auto-activation)");
       }
       if (!/\/\/ WHY:/.test(content)) {
         issues.push("Missing // WHY: comment — explain the real incident that caused this module");

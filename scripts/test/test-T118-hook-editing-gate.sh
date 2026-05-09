@@ -278,6 +278,41 @@ else
   fail "own settings.json should pass: $OUTPUT"
 fi
 
+# 21. T635: Writing UPS hooks to OWN settings.json is blocked (any project)
+UPS_CONTENT='{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"echo hi"}]}]}}'
+OUTPUT=$(run_gate "Write" "$REPO_DIR/.claude/settings.json" "$UPS_CONTENT")
+if echo "$OUTPUT" | grep -q "BLOCKED.*UserPromptSubmit hooks are FORBIDDEN"; then
+  pass "T635: UPS hooks in own settings.json blocked (hook-runner project)"
+else
+  fail "T635: UPS in own settings.json should block: $OUTPUT"
+fi
+
+# 22. T635: Writing UPS hooks to home settings.json is blocked
+OUTPUT=$(run_gate "Write" "$HOME/.claude/settings.json" "$UPS_CONTENT")
+if echo "$OUTPUT" | grep -q "BLOCKED.*UserPromptSubmit hooks are FORBIDDEN"; then
+  pass "T635: UPS hooks in home settings.json blocked"
+else
+  fail "T635: UPS in home settings.json should block: $OUTPUT"
+fi
+
+# 23. T635: Edit adding UPS content to settings.json is blocked
+UPS_EDIT='"UserPromptSubmit": [{"hooks": [{"type": "command", "command": "python check.py"}]}]'
+OUTPUT=$(run_gate "Edit" "$REPO_DIR/.claude/settings.json" "$UPS_EDIT")
+if echo "$OUTPUT" | grep -q "BLOCKED.*UserPromptSubmit hooks are FORBIDDEN"; then
+  pass "T635: Edit adding UPS content to settings.json blocked"
+else
+  fail "T635: Edit adding UPS should block: $OUTPUT"
+fi
+
+# 24. T635: Non-UPS settings.json writes still pass (from hook-runner)
+SAFE_CONTENT='{"hooks":{"PreToolUse":[{"hooks":[{"type":"command","command":"echo hi"}]}]}}'
+OUTPUT=$(run_gate "Write" "$REPO_DIR/.claude/settings.json" "$SAFE_CONTENT")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "T635: Non-UPS settings.json write passes"
+else
+  fail "T635: Non-UPS settings.json should pass: $OUTPUT"
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ] || exit 1
