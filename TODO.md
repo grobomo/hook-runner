@@ -43,6 +43,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T635: UPS settings guard — hook-editing-gate blocks UserPromptSubmit in any settings.json. 4 tests. (PR #541)
 - [x] T636: Create _haiku-judge.js shared helper — POST /judge to llm-token-proxy (port 4100). 8 tests. (PR #542)
 - [ ] T637: Wire victory-declaration gate (T634) through _haiku-judge.js as proof of concept.
+- [ ] T638: Standardize haiku rules file naming — `{event}-haiku-rules.yaml`. Rename: prompt-preprocessing-rules.yaml → userprompt-haiku-rules.yaml, stop-analysis-rules.yaml → stop-haiku-rules.yaml, session-start-instructions.md → sessionstart-haiku-rules.md. Update references in prompt-preprocessor-gate.js, auto-continue-gate.js, load-instructions-gate.js. Future: pretooluse-haiku-rules.yaml, posttooluse-haiku-rules.yaml, pretooluse-frontend-haiku-rules.yaml etc.
 - [ ] T625: Verify chat-export skill works end-to-end (installed via symlink, untested)
 - [ ] T626: Test all active gates in live session — todo-gate, settings-watchdog-gate, gate-quality-gate, cross-project-todo-gate
 - [x] T627: Fix 5 broken gates — regex patcher had injected `_log(...)` inline into `return null` statements, breaking JS syntax. Fixed by stripping corrupted patterns. 3 gates restored (no-rewrite, settings-watchdog, todo-gate), 2 were already working (cross-project-todo, proxy-restart).
