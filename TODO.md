@@ -19,6 +19,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T610b: Tests for all remaining untested modules. Batch 2 (PR #520, 6 modules/101 tests), batch 3 (PR #521, 5 modules/65 tests), batch 4 (PR #522, 2 modules/33 tests), batch 5 (PR #523, 7 modules/136 tests). All modules now have test coverage.
 - [x] T609: Fix worktree-gate test env leak + spec-gate control structure allow. 16/16 worktree + 79 spec-gate tests. (PR #514)
 - [x] T608: Fix _bash-write-patterns.js false positive — echo/printf/cat redirect patterns matched across statement boundaries and on stderr redirects. Fixed with `[^;|&]*` + `(?<![0-9])` lookbehind. 63 tests (12 new). (PR #512)
+- [ ] T613: Update nested-claude gate message — currently says "Cannot run claude as a subprocess" with no alternative. Should suggest: (1) run scripts that use claude -p from a separate terminal, (2) use PowerShell Start-Process to detach, (3) use context_reset.py for new sessions. Gate should distinguish between `claude --help` (always block) and scripts that call `claude -p --model` (suggest running from terminal).
 - [ ] T578: Marketplace sync — BLOCKED on user permission. Two marketplaces exist (trend-ai-taskforce/ai-skill-marketplace and aatf-external/plugin-marketplace). User must clarify: which org is aatf-external, what's the difference, and does hook-runner belong in either/both. CLAUDE.md updated with publishing rules. publish.json needs manual edit to add `team_sharing_approved: false`.
 - [x] T607: Add T605/T606 modules to README table + version bump to v2.73.0. Also added to live modules.yaml.
 - [x] T596: Project health — archived 468 completed tasks + 5 stale handoffs to TODO-COMPLETED.md (1468→35 lines).
@@ -37,8 +38,21 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T619: Fix GETTING-STARTED.md (starter 49→46) + README `--test-module` examples. (PRs #532-#533)
 - [x] T620: Fix diagnose.js tilde expansion in Windows 8.3 paths — `RUNNER~1` was expanded to HOME. CI now fully green. 22 tests. (PR #535)
 - [x] T621: Add `--search <query>` — find modules by name or WHY description. 15 tests. (PR #537)
-- [ ] T623: Spawn-reason tracking — stop module should pass `--reason` to context_reset.py. Depends on context-reset T034 (`--reason` arg). After T034 merges, update the stop module's context-reset call to include reason string.
+- [x] T623: Spawn-reason tracking — stop module should pass `--reason` to context_reset.py. Depends on context-reset T034 (`--reason` arg). Done in PR #539 — stop-message.txt now includes `--reason` in both context_reset.py and new_session.py calls.
+- [x] T624: Rewrite spec-gate with auto-activation — activate when: publish.json=public, specs/ already exists, shared org, feat/ branch. Dormant otherwise. Removed WORKFLOW tag, added shouldActivate() with caching. 10 new tests. (PR #540)
+- [ ] T625: Verify chat-export skill works end-to-end (installed via symlink, untested)
+- [ ] T626: Test all active gates in live session — todo-gate, settings-watchdog-gate, gate-quality-gate, cross-project-todo-gate
+- [ ] T627: Fix 5 broken gates — regex patcher injected invalid JS into: cross-project-todo-gate, settings-watchdog-gate, todo-gate, no-rewrite-gate, proxy-restart-gate. Restore from clean source, add logging manually.
+- [ ] T628: Add logging to all gates properly — clean implementation, not regex patching. Each gate needs: _log() on invoke, _log() on pass with reason, _log() on block with context.
+- [ ] T629: INVESTIGATE — gate-quality-gate did NOT fire when Python script wrote broken code to gate files via Bash (path.write_text). Root cause: gate only intercepts Edit/Write tools, not Bash file writes. Fix: add Bash detection for writes targeting hooks/run-modules/ (same pattern as settings-watchdog-gate).
+- [ ] T630: agent-quality-gate needs testing — verify it fires on Agent tool calls and haiku analysis works through proxy
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
+
+### Worktree-awareness bugs (reported from dd-lab session 39, 2026-05-08)
+- [ ] T631: spec-before-code gate checks TODO.md and git log at CLAUDE_PROJECT_DIR (original project dir), not CWD — worktree TODO.md edits and commits are invisible to the gate. Repro: EnterWorktree, edit TODO.md with `- [ ] T###:`, try Edit on any file → gate says "no spec found". Root cause: path resolution uses original project dir, not `git rev-parse --show-toplevel` or CWD.
+- [ ] T632: SHTD spec gate checks `specs/` at original project dir, not worktree — creating tasks.md in worktree doesn't satisfy the gate. Same root cause as T631: path resolution ignores worktree.
+- [ ] T633: Branch detection reports worktree as "main" — worktree on branch `worktree-terraform-refactor` but gate says "On main branch, create a feature branch". Root cause: `git branch --show-current` or `git rev-parse --abbrev-ref HEAD` may return wrong result when run from worktree subdir, or gate is reading from wrong .git path.
+- [ ] T634: Victory-declaration gate triggers on "completed" and "done" in commit messages that describe past work (retroactive tasks.md for already-shipped PRs). Gate should only flag claims about the CURRENT commit's changes, not historical references.
 
 ## Session Handoff (2026-05-04, session 14)
 - T621 (PR #537): `--search <query>` — find modules by name or WHY description. Case-insensitive. 15 tests.

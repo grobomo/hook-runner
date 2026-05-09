@@ -1,11 +1,11 @@
 // TOOLS: Bash, Edit, Write
-// WORKFLOW: shtd
 // WHY: Claude implemented features that nobody asked for, wasting hours.
 // T321: Strengthened — if branch has TXXX, that specific task must be unchecked.
 // T322: Cross-project guidance in block messages.
 // T323: "Spec before code" explicit reminder in all block messages.
 // T374: Task ID match takes priority over fuzzy word matching — prevents false positives.
 // T384: Allowlist session management scripts (new_session.py, context_reset.py) and curl.
+// T624: Auto-activation — no WORKFLOW tag. Gate self-activates based on project traits.
 "use strict";
 // requires: enforcement-gate
 // Spec gate: enforces spec → tasks → code pipeline.
@@ -22,6 +22,7 @@ var path = require("path");
 // and autoActivateShtd is ~7ms. Cache both with mtime invalidation.
 var _cache = {
   shtdActivated: {},  // projectDir → true (once per process)
+  autoActivated: {},  // projectDir → boolean (T624: cached auto-activation result)
   specScans: {},      // specsDir → { mtime, entries }
   todoReads: {},      // todoPath → { mtime, content, hasUnchecked }
   taskReads: {},      // tasksPath → { mtime, content }
@@ -113,6 +114,29 @@ function autoActivateShtd(projectDir) {
       }
     }
   } catch (e) { /* best effort */ }
+}
+
+// T624: Auto-activation — gate is dormant unless project characteristics require it.
+// Checks publish.json visibility/org and specs/ directory existence.
+// SPEC_GATE_ACTIVE=1 forces activation (for testing).
+function shouldActivate(projectDir) {
+  if (process.env.SPEC_GATE_ACTIVE === "1") return true;
+  if (!projectDir) return false;
+  if (projectDir in _cache.autoActivated) return _cache.autoActivated[projectDir];
+  var result = false;
+  try {
+    var pubPath = path.join(projectDir, ".github", "publish.json");
+    var pub = JSON.parse(fs.readFileSync(pubPath, "utf-8"));
+    if (pub.visibility === "public") { result = true; }
+    else if (pub.github_account && pub.github_account !== "grobomo") { result = true; }
+  } catch (e) {}
+  if (!result) {
+    try {
+      if (fs.statSync(path.join(projectDir, "specs")).isDirectory()) { result = true; }
+    } catch (e) {}
+  }
+  _cache.autoActivated[projectDir] = result;
+  return result;
 }
 
 function getGitBranch(gitRoot) {
@@ -356,6 +380,10 @@ module.exports = function(input) {
   }
   var featureWords = branchFeatureWords(branch);
   var taskId = branchTaskId(branch); // T321: e.g. "T319"
+
+  // T624: Auto-activation — dormant unless project needs spec enforcement.
+  var isFeatureBranch = branch && /^feat[\/\-]/.test(branch);
+  if (!isFeatureBranch && !shouldActivate(projectDir)) return null;
 
   // T321: If branch has a task ID, verify that specific task is unchecked somewhere.
   // This prevents edits to production code when the branch task is already done

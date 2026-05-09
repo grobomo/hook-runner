@@ -4,6 +4,7 @@
 // - getGitBranch handles worktree .git files
 // - CWD-based root detection for worktrees inside project dir
 // - Branch preference: non-main over main
+process.env.SPEC_GATE_ACTIVE = "1"; // T624: force activation for testing
 var path = require("path");
 var fs = require("fs");
 var os = require("os");

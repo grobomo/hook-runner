@@ -85,10 +85,10 @@ modules.forEach(function(mod) {
     nok(label + " runs without crash", e.message);
   }
 
-  // Test 3: WORKFLOW tag in first 5 lines
+  // Test 3: WORKFLOW tag or auto-activation declaration in first 10 lines
   try {
-    var head = fs.readFileSync(mod.file, "utf-8").split("\n").slice(0, 5).join("\n");
-    if (/WORKFLOW:/.test(head)) {
+    var head = fs.readFileSync(mod.file, "utf-8").split("\n").slice(0, 10).join("\n");
+    if (/WORKFLOW:/.test(head) || /auto-activ/i.test(head)) {
       ok(label + " has WORKFLOW tag");
     } else {
       nok(label + " has WORKFLOW tag");

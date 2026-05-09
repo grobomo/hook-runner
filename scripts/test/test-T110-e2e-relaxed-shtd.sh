@@ -2,6 +2,7 @@
 # Test T110: End-to-end relaxed SHTD workflow — single instance with TODO.md
 # Simulates: TODO.md tasks → test files → branch → implement → PR allowed
 set -euo pipefail
+export SPEC_GATE_ACTIVE=1  # T624: force activation for testing
 REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"
 PASS=0; FAIL=0
 pass() { echo "  PASS: $1"; PASS=$((PASS + 1)); }

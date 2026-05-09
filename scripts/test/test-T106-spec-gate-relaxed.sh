@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Test T106: spec-gate accepts TODO.md with `- [ ] TXXX:` as valid task source
 set -euo pipefail
+export SPEC_GATE_ACTIVE=1  # T624: force activation for testing
 REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"
 PASS=0; FAIL=0
 pass() { echo "  PASS: $1"; PASS=$((PASS + 1)); }
