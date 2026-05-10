@@ -33,15 +33,18 @@ var modulePaths = loadModules(path.join(modulesDir, "Stop"));
 // Legacy fallback: known module names that predate the BLOCKING tag.
 var LEGACY_BLOCKING = ["auto-continue", "never-give-up"];
 
-var firstBlock = null;
+var blocks = [];
 var bgPaths = [];
+
+// Write analysis file so TUI and next session can see haiku's reasoning
+var analysisPath = path.join(process.env.HOME || process.env.USERPROFILE || "", ".claude", "hooks", "stop-analysis.md");
 
 for (var i = 0; i < modulePaths.length; i++) {
   var modPath = modulePaths[i];
   var modName = path.basename(modPath, ".js");
 
   if (loadModules.isBlocking(modPath) || LEGACY_BLOCKING.indexOf(modName) !== -1) {
-    // Run sync — these are fast gate modules
+    // Run sync — all blocking modules run, not just first
     var startMs = Date.now();
     try {
       var mod = require(modPath);
@@ -49,7 +52,7 @@ for (var i = 0; i < modulePaths.length; i++) {
       var ms = Date.now() - startMs;
       if (result && result.decision === "block") {
         hookLog.logHook("Stop", modName, "block", Object.assign({}, ctx, { reason: result.reason, ms: ms }));
-        if (!firstBlock) firstBlock = result;
+        blocks.push({ module: modName, reason: result.reason, ms: ms });
       } else {
         hookLog.logHook("Stop", modName, "pass", Object.assign({}, ctx, { ms: ms }));
       }
@@ -62,9 +65,25 @@ for (var i = 0; i < modulePaths.length; i++) {
   }
 }
 
-// Output block immediately
-if (firstBlock) {
-  process.stdout.write(JSON.stringify(firstBlock));
+// Write analysis file with all blocking results
+if (blocks.length > 0) {
+  var analysis = [
+    "# Stop Analysis — " + new Date().toISOString(),
+    ""
+  ];
+  for (var bi = 0; bi < blocks.length; bi++) {
+    analysis.push("## " + blocks[bi].module + " (" + blocks[bi].ms + "ms)");
+    analysis.push(blocks[bi].reason);
+    analysis.push("");
+  }
+  try { fs.writeFileSync(analysisPath, analysis.join("\n"), "utf-8"); } catch (e) {}
+}
+
+// Output first block to stdout (Claude Code protocol) + all to stderr (TUI)
+if (blocks.length > 0) {
+  process.stdout.write(JSON.stringify({ decision: "block", reason: blocks[0].reason }));
+  var summary = blocks.map(function(b) { return "[" + b.module + "] " + b.reason; }).join("\n");
+  process.stderr.write(summary + "\n");
 }
 
 // Spawn background worker for remaining modules
@@ -86,4 +105,4 @@ if (bgPaths.length > 0) {
   }
 }
 
-process.exit(firstBlock ? 1 : 0);
+process.exit(blocks.length > 0 ? 1 : 0);
