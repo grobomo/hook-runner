@@ -7,11 +7,16 @@ var http = require("http");
 var path = require("path");
 var fs = require("fs");
 
-var JUDGE_URL = process.env.JUDGE_URL || "http://127.0.0.1:4100";
-var _parsed;
-try { _parsed = new URL(JUDGE_URL); } catch (e) { _parsed = { hostname: "127.0.0.1", port: "4100" }; }
-var _host = _parsed.hostname || "127.0.0.1";
-var _port = parseInt(_parsed.port, 10) || 4100;
+// Read central config — single source of truth for all haiku gates
+var HOME = process.env.HOME || process.env.USERPROFILE || "";
+var CONFIG_PATH = path.join(HOME, ".claude", "proxy", "haiku-config.json");
+var _cfg = null;
+try { _cfg = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8")); } catch (e) { _cfg = {}; }
+var _proxy = _cfg.proxy || {};
+var _timeouts = _cfg.timeouts || {};
+
+var _host = _proxy.host || "127.0.0.1";
+var _port = _proxy.port || 4100;
 
 // Auth token — read from env first, fall back to settings.json
 var _authToken = null;
@@ -34,7 +39,7 @@ function getAuthToken() {
 
 var _available = null;
 var _lastCheck = 0;
-var HEALTH_TTL_MS = 60000;
+var HEALTH_TTL_MS = _timeouts.healthCacheTTL || 60000;
 
 function checkHealth() {
   var now = Date.now();
@@ -48,9 +53,9 @@ function checkHealth() {
     var req = http.get({
       hostname: _host,
       port: _port,
-      path: "/health",
+      path: _proxy.healthPath || "/health",
       headers: healthHeaders,
-      timeout: 2000
+      timeout: _timeouts.healthCheck || 2000
     }, function(res) {
       var data = "";
       res.on("data", function(chunk) { data += chunk; });
@@ -89,10 +94,10 @@ function judge(opts) {
       var req = http.request({
         hostname: _host,
         port: _port,
-        path: "/judge",
+        path: _proxy.judgePath || "/judge",
         method: "POST",
         headers: judgeHeaders,
-        timeout: 5000
+        timeout: _timeouts.judgeCall || 5000
       }, function(res) {
         var data = "";
         res.on("data", function(chunk) { data += chunk; });
