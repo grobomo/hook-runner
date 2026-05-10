@@ -27,9 +27,11 @@ var ctx = hookLog.extractContext("Stop", input);
 var modulesDir = process.env.HOOK_RUNNER_MODULES_DIR || path.join(__dirname, "run-modules");
 var modulePaths = loadModules(path.join(modulesDir, "Stop"));
 
-// Known blocking modules — these return {decision:"block"} and are fast.
-// Run them directly. Everything else goes to background.
-var BLOCKING_MODULES = ["auto-continue", "never-give-up"];
+// T639: Modules declare themselves blocking with "// BLOCKING: true" in the header.
+// These run synchronously so their block/pass is visible in the TUI.
+// Everything else goes to a detached background worker.
+// Legacy fallback: known module names that predate the BLOCKING tag.
+var LEGACY_BLOCKING = ["auto-continue", "never-give-up"];
 
 var firstBlock = null;
 var bgPaths = [];
@@ -38,7 +40,7 @@ for (var i = 0; i < modulePaths.length; i++) {
   var modPath = modulePaths[i];
   var modName = path.basename(modPath, ".js");
 
-  if (BLOCKING_MODULES.indexOf(modName) !== -1) {
+  if (loadModules.isBlocking(modPath) || LEGACY_BLOCKING.indexOf(modName) !== -1) {
     // Run sync — these are fast gate modules
     var startMs = Date.now();
     try {

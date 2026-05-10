@@ -57,6 +57,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [ ] T632: SHTD spec gate checks `specs/` at original project dir, not worktree — creating tasks.md in worktree doesn't satisfy the gate. Same root cause as T631: path resolution ignores worktree.
 - [ ] T633: Branch detection reports worktree as "main" — worktree on branch `worktree-terraform-refactor` but gate says "On main branch, create a feature branch". Root cause: `git branch --show-current` or `git rev-parse --abbrev-ref HEAD` may return wrong result when run from worktree subdir, or gate is reading from wrong .git path.
 - [ ] T634: Victory-declaration gate triggers on "completed" and "done" in commit messages that describe past work (retroactive tasks.md for already-shipped PRs). Gate should only flag claims about the CURRENT commit's changes, not historical references.
+- [ ] T639: Standardize module meta parsing — replace separate parseToolTags/parseWorkflowTags/isBlocking with single parseModuleMeta() that returns all tags in one pass. Central registry of known tags. Add BLOCKING tag for Stop modules (replaces hardcoded list in run-stop.js).
 - [x] T635: Wire auto-continue-gate stop module to spawn api_check.py --watch as detached process when API error patterns detected in transcript. Enables autonomous recovery: session dies → watcher waits → spawns fresh session. 15 tests.
 
 ## Session Handoff (2026-05-04, session 14)
