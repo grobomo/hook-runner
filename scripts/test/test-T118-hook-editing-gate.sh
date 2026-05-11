@@ -313,6 +313,86 @@ else
   fail "T635: Non-UPS settings.json should pass: $OUTPUT"
 fi
 
+# --- T618: Bash in-place edit detection ---
+run_bash_gate() {
+  local cmd="$1"
+  local project="${2:-/tmp/some-other-project}"
+  CLAUDE_PROJECT_DIR="$project" node -e "
+    var mod = require('$MODULE');
+    var result = mod({ tool_name: 'Bash', tool_input: { command: process.argv[1] } });
+    if (result && result.decision === 'block') {
+      process.stdout.write('BLOCKED');
+      process.exit(1);
+    } else {
+      process.stdout.write('PASSED');
+    }
+  " "$cmd" 2>&1 || true
+}
+
+# 25. T618: sed -i on hook file blocked (other project)
+OUTPUT=$(run_bash_gate "sed -i 's/old/new/' ~/.claude/hooks/run-modules/PreToolUse/gate.js")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "T618: sed -i on hook file blocked"
+else
+  fail "T618: sed -i should block: $OUTPUT"
+fi
+
+# 26. T618: perl -i on hook file blocked
+OUTPUT=$(run_bash_gate "perl -i -pe 's/old/new/' ~/.claude/hooks/run-modules/PreToolUse/gate.js")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "T618: perl -i on hook file blocked"
+else
+  fail "T618: perl -i should block: $OUTPUT"
+fi
+
+# 27. T618: tee to hook file blocked
+OUTPUT=$(run_bash_gate "echo 'bad' | tee ~/.claude/hooks/run-modules/PreToolUse/gate.js")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "T618: tee to hook file blocked"
+else
+  fail "T618: tee should block: $OUTPUT"
+fi
+
+# 28. T618: redirect to hook file blocked
+OUTPUT=$(run_bash_gate "echo 'bad' > ~/.claude/hooks/run-modules/PreToolUse/gate.js")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "T618: redirect to hook file blocked"
+else
+  fail "T618: redirect should block: $OUTPUT"
+fi
+
+# 29. T618: cat redirect to hook file blocked
+OUTPUT=$(run_bash_gate "cat /tmp/src.js > ~/.claude/hooks/run-modules/Stop/gate.js")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "T618: cat redirect to hook file blocked"
+else
+  fail "T618: cat redirect should block: $OUTPUT"
+fi
+
+# 30. T618: cp to hooks still blocked (regression check)
+OUTPUT=$(run_bash_gate "cp /tmp/src.js ~/.claude/hooks/run-modules/PreToolUse/gate.js")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "T618: cp to hooks still blocked"
+else
+  fail "T618: cp should still block: $OUTPUT"
+fi
+
+# 31. T618: normal sed on non-hook file passes
+OUTPUT=$(run_bash_gate "sed -i 's/old/new/' /tmp/myfile.js")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "T618: sed on non-hook file passes"
+else
+  fail "T618: non-hook sed should pass: $OUTPUT"
+fi
+
+# 32. T618: Bash commands from hook-runner project allowed
+OUTPUT=$(run_bash_gate "sed -i 's/old/new/' ~/.claude/hooks/run-modules/PreToolUse/gate.js" "$REPO_DIR")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "T618: sed from hook-runner project allowed"
+else
+  fail "T618: hook-runner sed should pass: $OUTPUT"
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ] || exit 1

@@ -166,4 +166,4 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T616b: (merged into T616)
 
 - [x] T617: run-stop.js bestBlock preference — prefers stop-analysis-gate (Haiku reasoning) over alphabetically-first static message. Live file synced. 1 new test.
-- [ ] T618: hook-editing-gate does not detect sed/awk/perl in-place edits on hook files. Only Edit/Write/Bash-redirect patterns are checked. Add detection for sed -i, perl -i, awk on hook paths.
+- [x] T618: Expanded Bash detection in hook protection — now catches sed -i, perl -i, tee, redirects, cat redirects, and python write_text targeting protected directories. 8 new tests (32 total).
