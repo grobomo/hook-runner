@@ -53,10 +53,10 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
 
 ### Worktree-awareness bugs (reported from dd-lab session 39, 2026-05-08)
-- [ ] T631: spec-before-code gate checks TODO.md and git log at CLAUDE_PROJECT_DIR (original project dir), not CWD — worktree TODO.md edits and commits are invisible to the gate. Repro: EnterWorktree, edit TODO.md with `- [ ] T###:`, try Edit on any file → gate says "no spec found". Root cause: path resolution uses original project dir, not `git rev-parse --show-toplevel` or CWD.
-- [ ] T632: SHTD spec gate checks `specs/` at original project dir, not worktree — creating tasks.md in worktree doesn't satisfy the gate. Same root cause as T631: path resolution ignores worktree.
-- [ ] T633: Branch detection reports worktree as "main" — worktree on branch `worktree-terraform-refactor` but gate says "On main branch, create a feature branch". Root cause: `git branch --show-current` or `git rev-parse --abbrev-ref HEAD` may return wrong result when run from worktree subdir, or gate is reading from wrong .git path.
-- [ ] T634: Victory-declaration gate triggers on "completed" and "done" in commit messages that describe past work (retroactive tasks.md for already-shipped PRs). Gate should only flag claims about the CURRENT commit's changes, not historical references.
+- [x] T631: spec-before-code-gate worktree awareness — added findGitRoot(CWD) + isWorktree() check. Worktree TODO.md and git log now checked alongside CLAUDE_PROJECT_DIR. 3 new tests (23 total).
+- [x] T632: spec-gate worktree root detection — changed roots.unshift(cwdRoot) so worktree is checked first for specs/, TODO.md. Also accepts worktrees when projectDir is empty. 3 new tests (11 total).
+- [x] T633: Branch detection fixed — consequence of T632 fix. roots.unshift() puts worktree first, so branch detection finds feature branch before "main". Tested.
+- [x] T634: Victory-declaration gate false positives — tightened VICTORY_WORDS regex. Bare "completed" no longer triggers (was hitting historical references). Now requires "completed successfully" or "all X completed". 5 new tests (36 total across 2 suites).
 - [x] T640: Spirit-check system installed — spirit-check.js (PostToolUse, Haiku audits tool calls against spirit-rules.yaml), violation-gate.js (PreToolUse, blocks on high-severity violations). Both installed live and in repo catalog. Gate-quality-gate updated to whitelist .pending→.js renames. 16 tests.
 - [x] T641: Fix stop hook — was three issues: (1) BLOCKING_MODULES hardcoded list didn't include new -gate modules → replaced with // BLOCKING: true tag (T639), (2) run-stop.js only kept first block → now collects ALL blocking results, writes stop-analysis.md, outputs to stderr, (3) settings.json timeout was 5s, haiku needs ~6s → set to 30s from haiku-config.json. (PR #540)
 - [x] T642: Fix settings-watchdog-gate.js corruption — fixed during WSL module copy to Windows. Stripped `.trim()});` + bare `return null;` artifacts from no-rewrite-gate and todo-gate too.
@@ -162,4 +162,8 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T629: gate-quality-gate Bash detection — now intercepts cp, mv, redirect, write_text, heredoc, sed -i, tee targeting hook module dirs. Distinguishes live (.pending required) vs repo catalog (quality checks only). Added to repo catalog. 20 tests. (PR #546)
 - [ ] T647: MOOT — continue-directive-gate.js from T645 was never created. Panama Canal model described but not implemented.
 
-- [ ] T616: WSL haiku-client.js missing ANTHROPIC_AUTH_TOKEN fallback — Windows version checks `ANTHROPIC_AUTH_TOKEN` before `LLM_PROXY_AUTH`, but WSL version only checks `LLM_PROXY_AUTH`. The token is available in the environment as `ANTHROPIC_AUTH_TOKEN` (RDSec JWT). One-line fix: add `if (process.env.ANTHROPIC_AUTH_TOKEN) { _authCache = process.env.ANTHROPIC_AUTH_TOKEN; return _authCache; }` before the LLM_PROXY_AUTH check in ~/.claude/hooks/haiku-client.js. This is why stop-analysis-gate fails in 141ms on WSL — no auth key → proxy returns error.
+- [x] T616: WSL haiku-client.js missing ANTHROPIC_AUTH_TOKEN fallback — added `ANTHROPIC_AUTH_TOKEN` check before `LLM_PROXY_AUTH` in `getAuth()`. Live file patched. Verified: Haiku call succeeds in 1.2s (was failing with no auth). T616b merged into this.
+- [x] T616b: (merged into T616)
+
+- [x] T617: run-stop.js bestBlock preference — prefers stop-analysis-gate (Haiku reasoning) over alphabetically-first static message. Live file synced. 1 new test.
+- [ ] T618: hook-editing-gate does not detect sed/awk/perl in-place edits on hook files. Only Edit/Write/Bash-redirect patterns are checked. Add detection for sed -i, perl -i, awk on hook paths.

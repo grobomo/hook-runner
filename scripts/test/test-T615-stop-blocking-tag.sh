@@ -275,6 +275,13 @@ else
   fail "Module routing unexpected: $COUNTS"
 fi
 
+# T617: Verify bestBlock preference for stop-analysis-gate
+if grep -q 'stop-analysis-gate.*bestBlock.*break' "$REPO_DIR/run-stop.js"; then
+  pass "T617: run-stop.js prefers stop-analysis-gate output"
+else
+  fail "T617: run-stop.js should prefer stop-analysis-gate for bestBlock"
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ] || exit 1

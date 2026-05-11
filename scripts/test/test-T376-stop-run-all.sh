@@ -130,11 +130,11 @@ else
   fail "run-stop.js missing blocks[] collection (T641)"
 fi
 
-# 6. Verify run-stop.js outputs first block to stdout + all to stderr (T641)
-if grep -q 'process.stdout.write(JSON.stringify.*blocks\[0\]' "$REPO_DIR/run-stop.js" && grep -q 'process.exit(blocks.length' "$REPO_DIR/run-stop.js"; then
-  pass "run-stop.js outputs blocks to stdout+stderr then exits"
+# 6. Verify run-stop.js outputs best block to stdout + all to stderr (T617: prefer stop-analysis-gate)
+if grep -q 'process.stdout.write(JSON.stringify.*bestBlock' "$REPO_DIR/run-stop.js" && grep -q 'process.exit(blocks.length' "$REPO_DIR/run-stop.js"; then
+  pass "run-stop.js outputs best block to stdout+stderr then exits"
 else
-  fail "run-stop.js should output blocks to stdout and stderr"
+  fail "run-stop.js should output best block to stdout and stderr"
 fi
 
 echo ""

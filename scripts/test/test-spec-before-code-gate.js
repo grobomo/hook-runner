@@ -167,6 +167,48 @@ ok("no project dir: Edit passes", passes({
   tool_name: "Edit", tool_input: { file_path: "/tmp/src/app.js", old_string: "a", new_string: "b" }
 }));
 
+// === T631: Worktree awareness ===
+// Create a "main project" with no spec and a worktree with a spec
+var wtMainDir = path.join(tmpDir, "wt-main");
+var wtMainGitDir = path.join(wtMainDir, ".git");
+fs.mkdirSync(path.join(wtMainGitDir, "refs", "heads"), { recursive: true });
+fs.writeFileSync(path.join(wtMainGitDir, "HEAD"), "ref: refs/heads/main\n");
+fs.writeFileSync(path.join(wtMainDir, "TODO.md"), "# empty\n");
+
+var wtDir = path.join(wtMainDir, ".claude", "worktrees", "feat-test");
+fs.mkdirSync(wtDir, { recursive: true });
+var wtGitDir = path.join(wtMainGitDir, "worktrees", "feat-test");
+fs.mkdirSync(wtGitDir, { recursive: true });
+fs.writeFileSync(path.join(wtDir, ".git"), "gitdir: " + wtGitDir.replace(/\\/g, "/") + "\n");
+fs.writeFileSync(path.join(wtGitDir, "HEAD"), "ref: refs/heads/feat-test\n");
+fs.writeFileSync(path.join(wtDir, "TODO.md"), "- [ ] T631: Fix worktree awareness\n");
+
+var origCwd = process.cwd();
+
+// Test: CWD in worktree, projectDir = main (no spec) → worktree TODO.md has spec
+resetState({ lastCommitTs: 0, specChecked: false });
+process.env.CLAUDE_PROJECT_DIR = wtMainDir;
+try { process.chdir(wtDir); } catch(e) {}
+ok("T631: worktree TODO.md found when main has no spec", passes({
+  tool_name: "Edit", tool_input: { file_path: wtDir + "/src/app.js", old_string: "a", new_string: "b" }
+}));
+
+// Test: CWD in worktree with spec, main also has no spec — should still pass
+resetState({ lastCommitTs: 0, specChecked: false });
+ok("T631: worktree spec found on second edit too", passes({
+  tool_name: "Write", tool_input: { file_path: wtDir + "/src/b.js", content: "x" }
+}));
+
+// Test: CWD NOT in worktree (normal git dir), main has no spec → should still block
+process.chdir(origCwd);
+resetState({ lastCommitTs: 0, specChecked: false });
+process.env.CLAUDE_PROJECT_DIR = wtMainDir;
+ok("T631: non-worktree CWD does not leak into check", blocks({
+  tool_name: "Edit", tool_input: { file_path: wtMainDir + "/src/app.js", old_string: "a", new_string: "b" }
+}));
+
+process.chdir(origCwd);
+
 // === Cleanup ===
 process.env.CLAUDE_PROJECT_DIR = origProjectDir || "";
 if (origState) {
