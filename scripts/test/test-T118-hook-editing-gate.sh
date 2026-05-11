@@ -239,8 +239,8 @@ run_gate_other_full() {
   " "$input" 2>&1 || true
 }
 OUTPUT=$(run_gate_other_full "Edit" "$HOOKS_DIR/run-modules/PreToolUse/some.js" "var x = 1;")
-if echo "$OUTPUT" | grep -q "TODO.md" && echo "$OUTPUT" | grep -q "new_session.py"; then
-  pass "block message includes actionable TODO.md path and session launch command"
+if echo "$OUTPUT" | grep -q "TODO.md" && echo "$OUTPUT" | grep -q "DO THIS NOW"; then
+  pass "block message includes actionable TODO.md path and directive"
 else
   fail "block message should include actionable steps: $OUTPUT"
 fi
