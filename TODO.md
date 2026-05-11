@@ -76,7 +76,10 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
   - SessionStart (2): load-instructions-gate (12), stop-hook-selftest (6)
 - **T648**: Added Agent matcher to settings.json PreToolUse hooks. Updated settings-watchdog-gate safe-change allowlist to permit hook matcher additions.
 - **T649**: Fixed T627 corruption in todo-gate (2 sites) and no-rewrite-gate (3 sites). Pattern: `.trim()});` appended to comment + orphaned `return null;` causing early exit. Both gates were completely non-functional (always passing).
-- spirit-check false positive pattern noted: flags gate bug FIXES as "gate weakening" since it sees removal of `return null` without understanding the corruption context.
+- **T650**: Updated spirit-rules.yaml — gate-weakening-spirit now recognizes corruption removal as bug fixing.
+- **T651**: agent-quality-gate migrated from `claude -p` to haiku-client.js (~4s via proxy vs 15s CLI spawn).
+- **T652**: Fixed pre-tool-verify-gate rate limiter — in-memory var didn't persist across Node processes, now file-persisted.
+- v2.84.0 pushed. 202 suites, 2685 tests.
 - **Next session**: T630 (agent-quality-gate live test — needs session restart for Agent matcher). T578 (marketplace, blocked on user).
 
 ## Session Handoff (2026-05-11, session 16)
@@ -209,4 +212,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 - [x] T648: Add Agent matcher to settings.json PreToolUse hooks — settings.json only had Edit/Write/Bash matchers. Agent calls never fired PreToolUse. Added "Agent" matcher entry, updated settings-watchdog-gate safe-change allowlist. Takes effect next session.
 - [x] T649: Fix T627 corruption in todo-gate and no-rewrite-gate — regex patcher injected `.trim()});` + orphaned `return null;` into comment lines, causing early returns that disabled all blocking. todo-gate: 2 sites, no-rewrite-gate: 3 sites. Both gates now functional.
+- [x] T650: Fix spirit-check false positives on gate repairs — updated gate-weakening-spirit and settings-bypass-spirit rules in spirit-rules.yaml to recognize corruption removal as bug fixing and hook matcher additions as safe.
+- [x] T651: Migrate agent-quality-gate from claude -p to haiku-client.js — was spawning full Claude CLI session (15s timeout, expensive). Now uses local proxy at :4100 (~4s, logged). Added proper _log() wrapper, invoke/result logging.
+- [x] T652: Fix pre-tool-verify-gate rate limiter — module-level `_lastCallMs` var reset to 0 every invocation (fresh Node process). Replaced with file-persisted timestamp. Call 2 now takes 1ms (was ~2s).
 - [x] T621: Mandate enforcement gate — mandate-gate.js (PreToolUse) reads mandate.json written by auto-continue-gate (Stop). Blocks first tool call with mandate text, sets seen=true, passes subsequent calls. 10min expiry. Auto-continue-gate writes mandate on CONTINUE, clears on DONE, passes prior mandate context to Haiku. 24 tests.
