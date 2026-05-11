@@ -1,3 +1,4 @@
+// TOOLS: Bash, Edit, Write, Read, Glob, Grep
 // WORKFLOW: shtd, gsd
 // WHY: When working in project A, Claude drifts into project B's files (cd, edit, read).
 // Instead of working in-place, spawn a new tab via context-reset so both projects
@@ -52,6 +53,8 @@ module.exports = function(input) {
 
   if (toolName === "Bash") {
     var cmd = toolInput.command || "";
+    // Session management scripts dispatch work to other projects — that's their purpose
+    if (/\b(new_session|context_reset)\.py\b/.test(cmd)) return null;
     // Detect cd into another project
     var cdMatch = cmd.match(/\bcd\s+["']?([^\s"';&|]+)/);
     if (cdMatch) targetPath = cdMatch[1];
@@ -80,11 +83,9 @@ module.exports = function(input) {
     if (basename === "TODO.md" || basename === "SESSION_STATE.md") return null;
   }
 
-  // Allow running context-reset.py (the spawn command itself)
+  // Block git branch creation in other projects (substantive work, not handoff)
   if (toolName === "Bash") {
     var cmd2 = toolInput.command || "";
-    if (cmd2.indexOf("context_reset.py") >= 0) return null;
-    // Block git branch creation in other projects (substantive work, not handoff)
     if (/\bgit\s+(switch\s+-c|checkout\s+-b|branch\s+\S)/.test(cmd2)) {
       return {
         decision: "block",

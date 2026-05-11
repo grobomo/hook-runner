@@ -107,6 +107,24 @@ R=$(CLAUDE_PROJECT_DIR="$PROJECT_DIR" \
   " 2>/dev/null) || true
 assert "cross-project git checkout -b blocks" "block" "$R"
 
+# Test: new_session.py command → pass (allowed exception)
+R=$(CLAUDE_PROJECT_DIR="$PROJECT_DIR" \
+  node -e "
+    var mod = require('./$MOD');
+    var r = mod({tool_name:'Bash',tool_input:{command:'python3 $PROJECTS_ROOT/_grobomo/context-reset/new_session.py --project-dir $OTHER_PROJECT --no-close'}});
+    console.log(r && r.decision === 'block' ? 'block' : 'pass');
+  " 2>/dev/null) || true
+assert "new_session.py command passes" "pass" "$R"
+
+# Test: new_session.py with --project-dir to other project → pass
+R=$(CLAUDE_PROJECT_DIR="$PROJECT_DIR" \
+  node -e "
+    var mod = require('./$MOD');
+    var r = mod({tool_name:'Bash',tool_input:{command:'python3 /mnt/c/Users/foo/projects/context-reset/new_session.py --project-dir $OTHER_PROJECT'}});
+    console.log(r && r.decision === 'block' ? 'block' : 'pass');
+  " 2>/dev/null) || true
+assert "new_session.py with cross-project --project-dir passes" "pass" "$R"
+
 # Test: skills directory cross-access → block
 HOME_DIR="$(node -e "console.log(require('os').homedir().replace(/\\\\/g,'/'))")"
 R=$(run_mod Edit file_path "$HOME_DIR/.claude/skills/some-other-skill/SKILL.md")

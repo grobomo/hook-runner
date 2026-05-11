@@ -135,6 +135,27 @@ else
   fail "should have 0 broken modules, got: $BROKEN_MODS"
 fi
 
+# 11. Cross-platform hooks detected (Windows paths in WSL)
+PROJ_XPLAT="$TMPDIR/proj-xplat"
+mkdir -p "$PROJ_XPLAT/.claude"
+cat > "$PROJ_XPLAT/.claude/settings.json" <<'XPLAT'
+{"hooks":{"PreToolUse":[{"matcher":"Bash","hooks":[{"type":"command","command":"node \"C:/Users/test/.claude/hooks/run-hidden.js\" run-pretooluse.js","timeout":10}]}]}}
+XPLAT
+OUTPUT=$(node "$DIAGNOSE" "$PROJ_XPLAT" --json 2>&1) || true
+XPLAT_COUNT=$(echo "$OUTPUT" | node -e "var d=JSON.parse(require('fs').readFileSync(0,'utf-8')); process.stdout.write(String(d.summary.crossPlatformHooks || 0))" 2>/dev/null)
+XPLAT_BROKEN=$(echo "$OUTPUT" | node -e "var d=JSON.parse(require('fs').readFileSync(0,'utf-8')); process.stdout.write(String(d.summary.brokenHooks))" 2>/dev/null)
+if [ -f /proc/version ] && grep -qi "microsoft\|wsl" /proc/version 2>/dev/null; then
+  # Running in WSL — should detect as cross-platform, not broken
+  if [ "$XPLAT_COUNT" = "1" ] && [ "$XPLAT_BROKEN" = "0" ]; then
+    pass "Windows hooks detected as cross-platform in WSL"
+  else
+    fail "Windows hooks should be cross-platform (xplat=$XPLAT_COUNT, broken=$XPLAT_BROKEN)"
+  fi
+else
+  # Running on native Linux/Windows — should detect as broken or OK
+  pass "Windows hooks detection (skipped — not in WSL)"
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ] || exit 1

@@ -7,10 +7,19 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Local skill: ~/.claude/skills/hook-runner/
 - Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
-## Current State (v2.84.0)
-- 129 modules in catalog, 7 workflows, 202 test suites, ~2685 tests
+## Current State (v2.85.0)
+- 129 modules in catalog, 7 workflows, 202 test suites, ~2691 tests
 - PRs: 542 merged (PR #541 squash-merged)
 - CI: pre-existing failures (T024, T204, T636, workflow-gate — environment-specific)
+
+## Bugs (dispatched from publishable-audit 2026-05-11)
+
+- [x] T640: **cwd-drift gate blocks new_session.py cross-project dispatch** — Fixed: moved session management script allowlist (`new_session.py`, `context_reset.py`) to early return before path extraction. Both script path and `--project-dir` argument no longer trigger false positives. 14 tests (2 new).
+
+## Event-Driven Observability (from claude-portable specs/event-driven-observability/)
+
+- [ ] T655: **PostToolUse async module: tool-event-guard.js** — Emits `tool.used` events to JSONL at `$CLAUDE_EVENT_LOG`. No-op when env var unset. Reads tool name + command from stdin JSON, truncates command at 200 chars. Includes `CURRENT_TASK_ID`/`CURRENT_STAGE` from env. Async (returns null, never blocks). 10MB log rotation. Spec: claude-portable/specs/event-driven-observability/spec.md section "PostToolUse async hook".
+- [ ] T656: **Stop module: status-emitter-guard.js** — Emits `claude.stopped` event to JSONL at `$CLAUDE_EVENT_LOG`. No-op when env var unset. Runs alongside auto-continue. Includes task_id, stage, stop reason. Spec: claude-portable/specs/event-driven-observability/spec.md section "Stop hook: status-emitter".
 
 ## Open Tasks
 - [x] T612: Create GETTING-STARTED.md — 5-minute onboarding guide. Linked from README. (PR #518)
@@ -49,7 +58,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T627: Fix 5 broken gates — regex patcher had injected `_log(...)` inline into `return null` statements, breaking JS syntax. Fixed by stripping corrupted patterns. 3 gates restored (no-rewrite, settings-watchdog, todo-gate), 2 were already working (cross-project-todo, proxy-restart).
 - [x] T628: Add logging to wsl workflow gates — spec-gate was the only active gate missing logging. Added _log() wrapper with block-tag extraction. 10/11 active wsl PreToolUse gates now have logging. Remaining non-wsl gates deferred (only run when those workflows are enabled).
 - [x] T629: gate-quality-gate Bash detection — added Bash interception for writes to hooks/run-modules/ and hook-runner/modules/. Detects cp, mv, redirect, heredoc, sed -i, tee, python write_text. 20 tests.
-- [ ] T630: agent-quality-gate needs testing — verify it fires on Agent tool calls and haiku analysis works through proxy. T648 added Agent matcher; will take effect next session.
+- [x] T630: agent-quality-gate live test — verified in session 18. Agent matcher active, gate fires on Agent tool calls, Haiku analysis via proxy at :4100 works (2061ms). Full pipeline confirmed: matcher → runner → gate → haiku-client → proxy → Haiku.
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
 
 ### Worktree-awareness bugs (reported from dd-lab session 39, 2026-05-08)
@@ -67,6 +76,16 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T645: Haiku directive enforcement (Panama Canal model) — auto-continue-gate writes structured continue-directive.json with scoped `allow` list when haiku says CONTINUE. PreToolUse continue-directive-gate reads allow list to permit only tools targeting allowed files (TODO.md, SESSION_STATE.md, etc.). Read/Glob/Grep always pass. Circuit breaker at 3 same-rule strikes. 10min expiry. Stale session detection. Prevents deadlock where enforcement blocks the tools needed to comply.
 - [x] T646: T626 live gate verification — all 16 active wsl gates verified. Found and fixed: T648 (Agent matcher missing from settings.json), T649 (T627 corruption in todo-gate and no-rewrite-gate — both had early return null preventing blocking). spirit-check false positives noted (flags gate FIXES as "weakening").
 - [x] T647: MOOT — continue-directive-gate.js from T645 was never created. Closed (duplicate entry cleaned up).
+- [x] T653: diagnose.js WSL cross-platform detection — Windows-native hooks (`C:/...`) now labeled XPLAT instead of BROKEN. Exit code 0 when only cross-platform hooks exist. 11 tests (1 new).
+- [x] T654: Fix haiku-client.js markdown fence stripping + maxTokens increase — Haiku wraps JSON in fences, wasting tokens. Pre-tool-verify-gate 200→400, L1 triage 150→300. Eliminates truncation-caused parse failures.
+
+## Session Handoff (2026-05-11, session 18)
+- **T630**: agent-quality-gate live test confirmed — Agent matcher active, gate fires on Agent tool calls, Haiku analysis via proxy at :4100 works (2061ms). Full pipeline verified.
+- **T640**: cwd-drift-detector fixed — `new_session.py` and `context_reset.py` now allowed in early return before path extraction. Both script path and `--project-dir` argument no longer trigger false positives. 14 tests (2 new).
+- **T653**: diagnose.js WSL cross-platform detection — Windows-native hooks no longer count as BROKEN. 0 broken hooks (was 8 false positives). 11 tests (1 new).
+- **T654**: haiku-client.js markdown fence stripping + maxTokens increase. Pre-tool-verify-gate 200→400, L1 triage 150→300.
+- v2.85.0. 202 suites, ~2691 tests. Snapshot refreshed.
+- **Remaining**: T578 (marketplace, blocked on user). OpenClaw ports (deferred).
 
 ## Session Handoff (2026-05-11, session 17)
 - **T626/T646**: Live gate verification complete. All 16 active wsl workflow gates verified:

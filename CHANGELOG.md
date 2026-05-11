@@ -2,6 +2,21 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.85.0] — 2026-05-11
+
+### Fixed
+- **cwd-drift-detector new_session.py allowlist** (T640) — Gate blocked `new_session.py --project-dir <other>` because it pattern-matched project names in the command arguments. Moved session management script detection (`new_session.py`, `context_reset.py`) to early return before path extraction. Both script path and `--project-dir` argument no longer trigger false positives.
+- **diagnose.js WSL cross-platform detection** (T653) — Windows-native hooks (`C:/...` paths) from Windows settings.json were reported as BROKEN when running in WSL. Now detected as `[XPLAT]` (cross-platform) and excluded from broken count. Exit code 0 when only cross-platform hooks exist.
+- **haiku-client.js markdown fence stripping** (T654) — Haiku wraps JSON responses in ` ```json ``` ` markdown fences, wasting tokens. JSON parser now strips fences before matching. Combined with maxTokens increase (200→400 for verify-gate, 150→300 for L1 triage) to eliminate truncation-caused parse failures.
+
+### Added
+- **agent-quality-gate live verification** (T630) — Confirmed Agent matcher fires, Haiku analysis works through proxy at :4100 (~2s). Full pipeline verified: matcher → runner → gate → haiku-client → proxy → Haiku.
+- **TOOLS tag for cwd-drift-detector** — Added `// TOOLS: Bash, Edit, Write, Read, Glob, Grep` to skip loading for Agent and other tools.
+
+### Stats
+- 129 catalog modules, 202 suites, ~2691 tests
+- 0 broken hooks (was 8 false positives from WSL/Windows cross-platform)
+
 ## [2.84.0] — 2026-05-11
 
 ### Fixed

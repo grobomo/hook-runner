@@ -176,6 +176,17 @@ function validateHookCommand(command, projectDir) {
     return { scriptPath: null, resolved: command, exists: null, error: null, unparseable: true };
   }
 
+  // Detect Windows absolute paths when running in WSL — these are cross-platform
+  // hooks from the Windows settings.json, not broken hooks
+  if (/^[A-Za-z]:[\\/]/.test(scriptPath) && process.platform === "linux" && fs.existsSync("/proc/version")) {
+    try {
+      var ver = fs.readFileSync("/proc/version", "utf-8");
+      if (/microsoft|wsl/i.test(ver)) {
+        return { scriptPath: scriptPath, resolved: scriptPath, exists: null, error: null, crossPlatform: true };
+      }
+    } catch (e) {}
+  }
+
   var resolved = path.resolve(scriptPath);
   return {
     scriptPath: scriptPath,
@@ -256,12 +267,16 @@ function diagnose(projectDir, options) {
   }
   results.modules = { count: moduleCount, broken: modulesBroken };
 
+  // Count cross-platform hooks
+  var crossPlatformCount = allHooks.filter(function(h) { return h.validation && h.validation.crossPlatform; }).length;
+
   // Summary
   results.summary = {
     settingsFilesChecked: settingsFiles.length,
     settingsFilesFound: settingsFiles.filter(function(s) { return s.exists; }).length,
     totalHooks: allHooks.length,
     brokenHooks: results.broken.length,
+    crossPlatformHooks: crossPlatformCount,
     hookRunnerModules: moduleCount,
     brokenModules: modulesBroken.length
   };
@@ -357,12 +372,14 @@ function printReport(results) {
     for (var j = 0; j < results.hooks.length; j++) {
       var h = results.hooks[j];
       var v = h.validation || {};
-      var icon2 = v.error ? "BROKEN" : (v.unparseable ? "??" : "OK");
+      var icon2 = v.error ? "BROKEN" : (v.crossPlatform ? "XPLAT" : (v.unparseable ? "??" : "OK"));
       console.log("  [" + icon2 + "] " + h.event + ": " + h.command.substring(0, 90));
       console.log("        Source: " + h.source + " (" + h.scope + ")");
       if (v.error) {
         console.log("        ERROR: " + v.error);
         if (v.resolved) console.log("        Expected at: " + v.resolved);
+      } else if (v.crossPlatform) {
+        console.log("        (Windows hook — runs on Windows Claude Code, not WSL)");
       }
     }
   }
@@ -397,8 +414,10 @@ function printReport(results) {
 
   // Summary
   var s = results.summary;
+  var hookDetail = s.brokenHooks + " broken";
+  if (s.crossPlatformHooks > 0) hookDetail += ", " + s.crossPlatformHooks + " cross-platform";
   console.log("Summary: " + s.settingsFilesFound + "/" + s.settingsFilesChecked + " settings files, " +
-    s.totalHooks + " hooks (" + s.brokenHooks + " broken), " +
+    s.totalHooks + " hooks (" + hookDetail + "), " +
     s.hookRunnerModules + " modules (" + s.brokenModules + " broken)");
 
   if (s.brokenHooks > 0) {
