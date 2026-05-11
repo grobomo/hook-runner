@@ -7,10 +7,10 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Local skill: ~/.claude/skills/hook-runner/
 - Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
-## Current State (v2.80.0)
-- 118 modules in catalog, 7 workflows, 193 test suites, ~2869 tests
-- PRs: 537 merged
-- CI: fully green (Ubuntu + Windows + install)
+## Current State (v2.82.0)
+- 128 modules in catalog, 7 workflows, 200 test suites, ~2634 tests
+- PRs: 542 merged (PR #541 squash-merged)
+- CI: pre-existing failures (T088, T204, T604, T636 — environment-specific)
 
 ## Open Tasks
 - [x] T612: Create GETTING-STARTED.md — 5-minute onboarding guide. Linked from README. (PR #518)
@@ -67,6 +67,18 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T645: Haiku directive enforcement (Panama Canal model) — auto-continue-gate writes structured continue-directive.json with scoped `allow` list when haiku says CONTINUE. PreToolUse continue-directive-gate reads allow list to permit only tools targeting allowed files (TODO.md, SESSION_STATE.md, etc.). Read/Glob/Grep always pass. Circuit breaker at 3 same-rule strikes. 10min expiry. Stale session detection. Prevents deadlock where enforcement blocks the tools needed to comply.
 - [ ] T646: T626 live gate verification — test all active wsl gates in real session. Need fresh session (this one is deep in context). Gates to test: todo-gate, settings-watchdog-gate, gate-quality-gate, continue-directive-gate, no-rewrite-gate, proxy-restart-gate, agent-quality-gate, pre-tool-verify-gate, spec-gate. For each: trigger condition, expected block message, verify logging. Also T625 (chat-export e2e).
 - [ ] T647: Directive allow list needs `context-reset` and `new_session.py` — spawning fresh sessions is a valid way to address "continue working" directives but got blocked. Also need to allow `git` commands (commit/push are valid work actions).
+
+## Session Handoff (2026-05-11, session 15)
+- **T616**: WSL haiku-client.js auth fix — ANTHROPIC_AUTH_TOKEN fallback (live file only)
+- **T631-T633**: Worktree awareness for spec-before-code-gate + spec-gate. 6 new tests.
+- **T634**: Victory-declaration gate — tightened regex for false positives. 5 new tests.
+- **T617**: run-stop.js bestBlock — prefers Haiku output. 1 new test.
+- **T643**: New mcp-manager-gate — blocks direct .mcp.json entries and MCP relay scripts. 22 tests.
+- **T644**: hook-editing-gate directive messaging — "DO THIS NOW" instead of "TO MODIFY HOOKS"
+- **T618**: Expanded Bash detection in hook-editing-gate (sed -i, perl -i, tee, redirects). 8 new tests.
+- **T647**: Marked MOOT (continue-directive-gate never created)
+- v2.82.0. 128 catalog modules, 200 suites, ~2634 tests. PR #541 squash-merged.
+- Remaining open: T578 (marketplace, blocked), T637 (haiku-judge), T625/T626/T646 (testing), T628 (logging), T630 (agent-quality-gate)
 
 ## Session Handoff (2026-05-04, session 14)
 - T621 (PR #537): `--search <query>` — find modules by name or WHY description. Case-insensitive. 15 tests.
