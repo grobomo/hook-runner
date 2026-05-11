@@ -104,9 +104,11 @@ module.exports = function(input) {
   if (!filePath.endsWith(".js")) return null;
   var basename = path.basename(filePath);
 
-  // --- Check 1: Name convention ---
+  // --- Check 1: Name convention (new files only) ---
+  // Existing modules may predate the convention — only enforce on creation
   var isHelper = basename.startsWith("_");
-  if (!isHelper && !basename.endsWith("-gate.js") && !basename.endsWith("-check.js") && !basename.endsWith("-guard.js")) {
+  var isNewFile = tool === "Write" && !fs.existsSync(filePath);
+  if (isNewFile && !isHelper && !basename.endsWith("-gate.js") && !basename.endsWith("-check.js") && !basename.endsWith("-guard.js")) {
     return {
       decision: "block",
       reason: [
