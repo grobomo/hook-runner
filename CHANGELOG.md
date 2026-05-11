@@ -2,6 +2,23 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.81.0] — 2026-05-10
+
+### Fixed
+- **Stop gate BLOCKING tag** (T615) — `stop-analysis-gate.js` and `auto-continue-gate.js` were running in background instead of synchronously, making their block/pass decisions invisible in the TUI. Added `// BLOCKING: true` tag to both. Also synced live `run-stop.js` and `load-modules.js` to use `isBlocking()` from T639 instead of hardcoded module names.
+- **T376 test regression** — Updated test assertions to match new `blocks[]` array pattern (T641) instead of legacy `firstBlock`.
+
+### Added
+- **gate-quality-gate Bash detection** (T629) — Gate now intercepts Bash commands that write to `hooks/run-modules/` or `hook-runner/modules/` (cp, mv, redirect, python write_text, heredoc, sed -i, tee). Previously only caught Edit/Write tools.
+- **3 new catalog modules** — `auto-continue-gate.js`, `stop-analysis-gate.js`, `gate-quality-gate.js` added to repo catalog (were live-only).
+- 40 new tests: T615 (20 tests), T629 (20 tests).
+
+### Docs
+- README: Added 4 missing modules to tables (api-watcher, auto-continue-gate, gate-quality-gate, stop-analysis-gate).
+
+### Stats
+- 198 suites, ~2592 tests
+
 ## [2.80.0] — 2026-05-04
 
 ### Added

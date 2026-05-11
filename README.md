@@ -92,7 +92,7 @@ Claude reads the block message and adjusts its approach — no user intervention
 
 ## Workflows
 
-Workflows are the primary abstraction. Instead of managing 130+ individual modules, you enable a workflow and its modules activate automatically.
+Workflows are the primary abstraction. Instead of managing 120+ individual modules, you enable a workflow and its modules activate automatically.
 
 ```bash
 node setup.js --workflow list              # see available workflows
@@ -383,6 +383,7 @@ Full catalog in `modules/` directory:
 | `enforcement-gate` | Requires git repo + TODO.md before edits |
 | `env-var-check` | Blocks edits if required env vars missing |
 | `force-push-gate` | Blocks git push --force to main/master |
+| `gate-quality-gate` | Enforces naming, WHY/TOOLS tags, incident history, and logging on hook modules |
 | `gh-auto-gate` | Forces gh_auto wrapper for all gh/git push commands (EMU account safety) |
 | `gsd-gate` | Alias → `test-checkpoint-gate` (legacy name) |
 | `gsd-branch-gate` | Enforces GSD branch naming (seq-phase-N-slug) for new branches |
@@ -473,6 +474,7 @@ Full catalog in `modules/` directory:
 | Module | Description |
 |--------|-------------|
 | `auto-continue` | Blocks stopping — always find the next task |
+| `auto-continue-gate` | LLM-powered stop analysis — Haiku evaluates rules from stop-haiku-rules.yaml |
 | `chat-export` | Auto-exports session to HTML on stop |
 | `config-sync` | Auto-commits and pushes ~/.claude changes to cloud backup |
 | `drift-review` | Checks work matches the active spec task |
@@ -483,6 +485,7 @@ Full catalog in `modules/` directory:
 | `reflection-score` | Gamified scoring system — tracks autonomy, corrections, streaks |
 | `self-reflection` | LLM-powered review of recent gate decisions (async, calls claude -p) |
 | `session-brain-analysis` | Sends session summary to unified-brain for cross-session analysis |
+| `stop-analysis-gate` | Haiku evaluates whether session should end — writes reasoning to stop-analysis.md |
 | `test-before-done` | Reminds to run e2e tests before done |
 | `unresolved-issues-check` | Blocks session end with stale TESTING NOW/IN PROGRESS/WIP tasks |
 
@@ -494,6 +497,7 @@ Full catalog in `modules/` directory:
 ### SessionStart (injects context)
 | Module | Description |
 |--------|-------------|
+| `api-watcher` | Spawns API connectivity watcher on start — auto-recovers from outages |
 | `backup-check` | Warns if config backup is stale |
 | `drift-check` | Daily drift detection against last snapshot |
 | `load-instructions` | Injects working instructions at session start |
