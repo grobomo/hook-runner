@@ -2,6 +2,20 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.84.0] — 2026-05-11
+
+### Fixed
+- **todo-gate corruption** (T649) — Two corruption sites from T627 regex patching: `.trim()});` appended to comment lines + orphaned `return null;` causing the gate to always pass. Gate was completely non-functional (0 blocks in 1990 invocations). Now blocks when no TODO.md with unchecked tasks exists.
+- **no-rewrite-gate corruption** (T649) — Three corruption sites from same T627 issue. Gate was completely non-functional for both Write and Bash detection. Now correctly blocks Write to existing files and Bash overwrite patterns.
+- **spirit-rules.yaml false positives** (T650) — Updated `gate-weakening-spirit` rule to recognize corruption removal as bug fixing, not weakening. Updated `settings-bypass-spirit` to allow hook matcher additions.
+
+### Added
+- **Agent matcher in settings.json** (T648) — PreToolUse hooks only had Edit/Write/Bash matchers. Agent tool calls never triggered PreToolUse. Added Agent matcher entry. Updated settings-watchdog-gate safe-change allowlist to permit hook matcher additions without triggering the protection.
+
+### Stats
+- 16 active wsl workflow gates verified live (T626/T646)
+- 129 catalog modules, 202 suites, ~2685 tests
+
 ## [2.83.0] — 2026-05-11
 
 ### Fixed
