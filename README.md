@@ -372,6 +372,7 @@ Full catalog in `modules/` directory:
 | `commit-counter-gate` | Forces commit after every 15 edits — prevents losing work on context reset |
 | `commit-quality-gate` | Blocks generic commit messages (< 5 words, "fix"/"update" without detail) |
 | `victory-declaration-gate` | Blocks vague success claims in commit titles ("all tests pass", "all green", "100%") |
+| `violation-gate` | Blocks after spirit-check detects a violation — forces reading analysis and correction |
 | `unresolved-issues-gate` | Scans TODO.md for unchecked FAIL/WARN/timeout tasks before allowing commit |
 | `continuous-claude-gate` | Blocks code without tracked task workflow |
 | `crlf-ssh-key-check` | Blocks SSH key copy without CRLF stripping |
@@ -460,6 +461,7 @@ Full catalog in `modules/` directory:
 | `result-review-gate` | Injects review checklist when reading report/PDF/coverage files |
 | `test-evidence` | Records test pass/fail counts to evidence file for victory-gate validation |
 | `no-infra-excuse` | Blocks infrastructure excuses — reminds Claude it has AWS/Azure/RONE available |
+| `spirit-check` | LLM audits tool calls against spirit-rules.yaml — catches creative workarounds that JS gates miss |
 | `user-correction-detector` | Real-time detection of user corrections via prompt-log.jsonl pattern matching |
 
 ### UserPromptSubmit (processes user prompts)

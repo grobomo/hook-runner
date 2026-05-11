@@ -62,6 +62,9 @@ module.exports = function(input) {
 
     if (!cmd.match(/\.js\b/)) return null;
 
+    // Allow .pending → .js renames (verification workflow activation)
+    if (/\bmv\s.*\.js\.pending\s.*\.js\b/.test(cmd)) return null;
+
     var writePatterns = [
       /(?<![2&])>\s*[^\s&]/,
       /\btee\s/,
