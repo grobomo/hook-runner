@@ -74,8 +74,11 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - **T614**: L1 Haiku triage in UserPromptSubmit — resolves shorthand via haiku-client + userprompt-haiku-rules.yaml. Session-scoped files, + bypass, 4s timeout. 20 tests.
 - **T637**: victory-declaration-gate wired through _haiku-judge.js — regex pre-filters, semantic check via judge, fallback on unavailability. 3 test files updated for async. 39 tests.
 - **T628**: spec-gate logging added (only active wsl gate without it).
+- **T625**: chat-export skill verified end-to-end (244 turns, 554KB HTML, landing page).
+- L1 triage fix: bumped timeout 4s to 8s, added regex fallback for truncated JSON.
+- Mandate-gate first live test: Haiku hallucinated T111 from another project. Mandate enforced correctly but content was wrong. Need better project scoping in stop-haiku-rules.
 - v2.83.0. 129 catalog modules, 202 suites, ~2685 tests.
-- Remaining open: T578 (marketplace, blocked), T625/T626/T646 (testing), T630 (agent-quality-gate)
+- **Next session**: T626/T646 (live gate verification, needs fresh context). T630 (agent-quality-gate). T578 (marketplace, blocked on user).
 
 ## Session Handoff (2026-05-11, session 15)
 - **T616**: WSL haiku-client.js auth fix — ANTHROPIC_AUTH_TOKEN fallback (live file only)
