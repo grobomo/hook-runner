@@ -13,8 +13,12 @@ All notable changes to hook-runner are documented here.
 - **agent-quality-gate live verification** (T630) — Confirmed Agent matcher fires, Haiku analysis works through proxy at :4100 (~2s). Full pipeline verified: matcher → runner → gate → haiku-client → proxy → Haiku.
 - **TOOLS tag for cwd-drift-detector** — Added `// TOOLS: Bash, Edit, Write, Read, Glob, Grep` to skip loading for Agent and other tools.
 
+### Added
+- **tool-event-guard.js** (T655) — PostToolUse async module. Emits `tool.used` events to JSONL at `$CLAUDE_EVENT_LOG`. No-op when env var unset. Includes task_id, stage, worker_id from env. Command truncated at 200 chars. 10MB log rotation. 10 tests.
+- **status-emitter-guard.js** (T656) — Stop module. Emits `claude.stopped` events to JSONL at `$CLAUDE_EVENT_LOG`. No-op when env var unset. Includes task_id, stage, stop reason, worker_id. 10MB log rotation. 9 tests.
+
 ### Stats
-- 129 catalog modules, 202 suites, ~2691 tests
+- 131 catalog modules, 204 suites, ~2710 tests
 - 0 broken hooks (was 8 false positives from WSL/Windows cross-platform)
 
 ## [2.84.0] — 2026-05-11

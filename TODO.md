@@ -18,8 +18,8 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 ## Event-Driven Observability (from claude-portable specs/event-driven-observability/)
 
-- [ ] T655: **PostToolUse async module: tool-event-guard.js** — Emits `tool.used` events to JSONL at `$CLAUDE_EVENT_LOG`. No-op when env var unset. Reads tool name + command from stdin JSON, truncates command at 200 chars. Includes `CURRENT_TASK_ID`/`CURRENT_STAGE` from env. Async (returns null, never blocks). 10MB log rotation. Spec: claude-portable/specs/event-driven-observability/spec.md section "PostToolUse async hook".
-- [ ] T656: **Stop module: status-emitter-guard.js** — Emits `claude.stopped` event to JSONL at `$CLAUDE_EVENT_LOG`. No-op when env var unset. Runs alongside auto-continue. Includes task_id, stage, stop reason. Spec: claude-portable/specs/event-driven-observability/spec.md section "Stop hook: status-emitter".
+- [x] T655: **PostToolUse async module: tool-event-guard.js** — Emits `tool.used` events to JSONL at `$CLAUDE_EVENT_LOG`. No-op when env var unset. Truncates command at 200 chars. Includes task_id/stage/worker_id from env. Async (returns null). 10MB log rotation. 10 tests.
+- [x] T656: **Stop module: status-emitter-guard.js** — Emits `claude.stopped` event to JSONL at `$CLAUDE_EVENT_LOG`. No-op when env var unset. Includes task_id, stage, stop reason, worker_id. 10MB log rotation. 9 tests.
 
 ## Open Tasks
 - [x] T612: Create GETTING-STARTED.md — 5-minute onboarding guide. Linked from README. (PR #518)
@@ -84,7 +84,9 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - **T640**: cwd-drift-detector fixed — `new_session.py` and `context_reset.py` now allowed in early return before path extraction. Both script path and `--project-dir` argument no longer trigger false positives. 14 tests (2 new).
 - **T653**: diagnose.js WSL cross-platform detection — Windows-native hooks no longer count as BROKEN. 0 broken hooks (was 8 false positives). 11 tests (1 new).
 - **T654**: haiku-client.js markdown fence stripping + maxTokens increase. Pre-tool-verify-gate 200→400, L1 triage 150→300.
-- v2.85.0. 202 suites, ~2691 tests. Snapshot refreshed.
+- **T655**: tool-event-guard.js (PostToolUse async) — emits tool.used events to $CLAUDE_EVENT_LOG. No-op without env var. 10 tests.
+- **T656**: status-emitter-guard.js (Stop) — emits claude.stopped events to $CLAUDE_EVENT_LOG. No-op without env var. 9 tests.
+- v2.85.0. 204 suites, ~2710 tests. Snapshot refreshed.
 - **Remaining**: T578 (marketplace, blocked on user). OpenClaw ports (deferred).
 
 ## Session Handoff (2026-05-11, session 17)
