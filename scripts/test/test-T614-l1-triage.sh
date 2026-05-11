@@ -61,11 +61,11 @@ else
   fail "Runner missing stdout output"
 fi
 
-# 8. Runner uses 4s timeout
-if grep -q 'timeoutMs: 4000' "$RUNNER"; then
-  pass "Runner uses 4s Haiku timeout"
+# 8. Runner uses 8s timeout (4s was too tight — Haiku needs ~5s through proxy)
+if grep -q 'timeoutMs: 8000' "$RUNNER"; then
+  pass "Runner uses 8s Haiku timeout"
 else
-  fail "Runner missing 4s timeout"
+  fail "Runner missing 8s timeout"
 fi
 
 # 9. Runner uses jsonMode

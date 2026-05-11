@@ -107,14 +107,19 @@ if (prompt.length >= 3 && prompt.charAt(0) !== "+") {
           'Reply with JSON: {"interpretation":"what they mean","confidence":"high|medium|low","notes":"context if useful"}',
         caller: "l1-triage",
         maxTokens: 150,
-        timeoutMs: 4000,
+        timeoutMs: 8000,
         jsonMode: true
       });
 
-      if (result.ok && result.parsed) {
-        var interp = result.parsed.interpretation || result.content || "";
-        var conf = result.parsed.confidence || "high";
-        var notes = result.parsed.notes || "";
+      var parsed = result.parsed;
+      if (!parsed && result.content) {
+        var m = result.content.match(/"interpretation"\s*:\s*"([^"]+)"/);
+        if (m) parsed = { interpretation: m[1], confidence: "high" };
+      }
+      if (parsed) {
+        var interp = parsed.interpretation || result.content || "";
+        var conf = parsed.confidence || "high";
+        var notes = parsed.notes || "";
         var analysis = "# L1 Analysis\n" +
           "**Interpretation**: " + interp + "\n" +
           "**Confidence**: " + conf + "\n" +
