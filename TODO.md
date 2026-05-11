@@ -160,7 +160,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 - [x] T615: Fix stop-analysis-gate.js not showing in TUI — added `// BLOCKING: true` tag to both stop-analysis-gate.js and auto-continue-gate.js. Synced live run-stop.js and load-modules.js with repo (isBlocking + blocks[] array). Added both gates + gate-quality-gate to repo catalog. 20 tests. (PR #546)
 - [x] T629: gate-quality-gate Bash detection — now intercepts cp, mv, redirect, write_text, heredoc, sed -i, tee targeting hook module dirs. Distinguishes live (.pending required) vs repo catalog (quality checks only). Added to repo catalog. 20 tests. (PR #546)
-- [ ] T647: MOOT — continue-directive-gate.js from T645 was never created. Panama Canal model described but not implemented.
+- [x] T647: MOOT — continue-directive-gate.js from T645 was never created. Closed.
 
 - [x] T616: WSL haiku-client.js missing ANTHROPIC_AUTH_TOKEN fallback — added `ANTHROPIC_AUTH_TOKEN` check before `LLM_PROXY_AUTH` in `getAuth()`. Live file patched. Verified: Haiku call succeeds in 1.2s (was failing with no auth). T616b merged into this.
 - [x] T616b: (merged into T616)
