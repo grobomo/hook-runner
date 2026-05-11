@@ -465,6 +465,19 @@ Full catalog in `modules/` directory:
 | `no-infra-excuse` | Blocks infrastructure excuses — reminds Claude it has AWS/Azure/RONE available |
 | `spirit-check` | LLM audits tool calls against spirit-rules.yaml — catches creative workarounds that JS gates miss |
 | `user-correction-detector` | Real-time detection of user corrections via prompt-log.jsonl pattern matching |
+| `post-tool-use-gate` | LLM-powered analysis of tool results for quality and correctness |
+| `tool-event-guard` | Emits `tool.used` events to `$CLAUDE_EVENT_LOG` for worker observability (no-op locally) |
+
+### Stop (session exit analysis)
+| Module | Description |
+|--------|-------------|
+| `auto-continue-gate` | LLM decides whether to continue, write mandate, or dispatch work |
+| `stop-analysis-gate` | LLM analyzes stop reason and suggests next steps |
+| `status-emitter-guard` | Emits `claude.stopped` events to `$CLAUDE_EVENT_LOG` for worker observability (no-op locally) |
+| `auto-continue` | Simple pattern-based auto-continue (fallback for non-Haiku envs) |
+| `never-give-up` | Blocks stopping when TODO items remain |
+| `self-reflection` | Tries unified-brain /ask endpoint for session reflection |
+| `test-before-done` | Blocks "done" when tests haven't been run |
 
 ### UserPromptSubmit (processes user prompts)
 | Module | Description |
