@@ -69,6 +69,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [ ] T644: Add gate rule: "hook-runner project exists at /mnt/c/Users/joelg/Documents/ProjectsCL1/_grobomo/hook-runner/" — when Claude needs to modify hooks and gets blocked by hook-editing-gate, it should automatically create a TODO in hook-runner and spawn a session there via context-reset, not ask the user to do it manually.
 - [x] T639: Standardize module meta parsing — single-pass parseModuleMeta() replaces 3 separate parsers. getHeaderLines() scans full comment block (was slice(0,8) — missed 3 modules). Added BLOCKING tag, central haiku-config.json, settings.json backup-on-change. (PR #540)
 - [x] T635: Wire auto-continue-gate stop module to spawn api_check.py --watch as detached process when API error patterns detected in transcript. Enables autonomous recovery: session dies → watcher waits → spawns fresh session. 15 tests.
+- [x] T645: Haiku directive enforcement (Panama Canal model) — auto-continue-gate writes structured continue-directive.json with scoped `allow` list when haiku says CONTINUE. PreToolUse continue-directive-gate reads allow list to permit only tools targeting allowed files (TODO.md, SESSION_STATE.md, etc.). Read/Glob/Grep always pass. Circuit breaker at 3 same-rule strikes. 10min expiry. Stale session detection. Prevents deadlock where enforcement blocks the tools needed to comply.
 
 ## Session Handoff (2026-05-04, session 14)
 - T621 (PR #537): `--search <query>` — find modules by name or WHY description. Case-insensitive. 15 tests.
@@ -157,3 +158,5 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - `setup.js --sync` fetches modules from GitHub and installs them
 - Project-scoped modules go in `modules/PreToolUse/<project-name>/` in the repo
 - Completed task history: see TODO-COMPLETED.md
+
+- [ ] T614: Add Haiku L1 triage to UserPromptSubmit hook — call `/ask` endpoint with user prompt, print analysis to stdout so it shows in TUI as `<user-prompt-submit-hook>`. Currently only Stop hook calls Haiku (stop-analysis-gate.js). UserPromptSubmit just logs + detects frustration. Should add: call `http://127.0.0.1:4100/ask` with Haiku, system prompt from `prompt-preprocessing-rules.yaml`, 150 max tokens, 4s timeout. Print "L1: {analysis}" to stdout. Session-scoped output file for multi-tab isolation. Ref: existing `haiku-client.js` for the HTTP call pattern.
