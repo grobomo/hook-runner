@@ -40,6 +40,13 @@ ok("100% blocked", blocks('git commit -m "100% coverage achieved"'));
 ok("normal commit allowed", passes('git commit -m "T613: Add tunnel-check-gate"'));
 ok("fix commit allowed", passes('git commit -m "Fix bug in parser"'));
 
+// T634: Historical references should NOT trigger
+ok("T634: bare completed allowed", passes('git commit -m "T631: spec-gate worktree awareness — completed"'));
+ok("T634: mark as completed allowed", passes('git commit -m "tasks.md: mark T456 as completed"'));
+ok("T634: already completed allowed", passes('git commit -m "Add retroactive tasks for completed PRs"'));
+ok("T634: all tasks completed blocked", blocks('git commit -m "all tasks completed"'));
+ok("T634: all work completed blocked", blocks('git commit -m "All work completed"'));
+
 // Specific results in title allowed (not caught by VICTORY_WORDS)
 ok("specific results allowed", passes('git commit -m "T442: 17/17 pass"'));
 

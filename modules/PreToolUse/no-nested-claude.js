@@ -29,17 +29,29 @@ module.exports = function(input) {
     if (/\b(git\s+(commit|push|pull|fetch|log|diff|status|add|tag|branch|merge|rebase|stash|show|remote|config|checkout))\b/.test(cmd)) return null;
     if (/\bgh_auto\s/.test(cmd)) return null;
 
-    // Match: claude -p, claude --print, claude -m, or piped into claude
+    // Info commands (--help, --version): always block, nothing useful as subprocess
+    if (/\bclaude\s+(--help|-h|--version|-v)\b/.test(cmd)) {
+      return {
+        decision: "block",
+        reason: "NO NESTED CLAUDE: claude info commands don't work as a subprocess.\n" +
+          "You already have Claude's capabilities — no need to call claude --help."
+      };
+    }
+
+    // Script commands (claude -p, --print, -m, piped into claude): suggest alternatives
     if (/\bclaude\s+(-p|--print|-m|--message)\b/.test(cmd) ||
         /\|\s*claude\b/.test(cmd) ||
         /\bclaude\s+-/.test(cmd)) {
       return {
         decision: "block",
-        reason: "NO NESTED CLAUDE: Cannot run claude as a subprocess — it doesn't work reliably.\n" +
-          "FIX: Use context_reset.py to spawn a proper new session:\n" +
-          "  python context_reset.py --target-project /path/to/other/project \\\n" +
-          "    --no-close --prompt \"your instructions here\"\n" +
-          "Or open a new terminal tab and run claude there."
+        reason: "NO NESTED CLAUDE: Running claude as a subprocess doesn't work from inside a session.\n" +
+          "ALTERNATIVES:\n" +
+          "  1. Run from a separate terminal: open a new tab and run the command there\n" +
+          "  2. Spawn a new session with context_reset.py:\n" +
+          "     python context_reset.py --target-project /path/to/project --no-close --prompt \"...\"\n" +
+          "  3. Detach the process (PowerShell):\n" +
+          "     Start-Process -NoNewWindow -FilePath claude -ArgumentList '-p','your prompt'\n" +
+          "NOTE: You ARE Claude — analyze data directly instead of calling claude -p on it."
       };
     }
   }

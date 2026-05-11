@@ -79,18 +79,26 @@ function auditLog(filePath, tool, approved, reason, projectDir) {
   } catch (e) { /* best effort */ }
 }
 
-// T395: Detect Bash cp/mv/copy targeting hooks dir (bypass of Write/Edit gate)
+// T395+T618: Detect Bash commands that modify hook files (bypass of Write/Edit gate)
 function checkBashHookCopy(command) {
   if (!command) return null;
-  // Patterns: cp/copy/mv source target, where target is hooks dir
-  var hooksPatterns = [
-    /\b(cp|copy|mv|install)\b.*['"\/]\.claude\/hooks\//,
-    /\b(cp|copy|mv|install)\b.*~\/\.claude\/hooks\//,
-    /\b(cp|copy|mv|install)\b.*\$HOME\/\.claude\/hooks\//,
-    /\b(cp|copy|mv|install)\b.*run-modules\//
+  var hookPathPattern = /\.claude\/hooks\/|run-modules\//;
+  if (!hookPathPattern.test(command)) return null;
+
+  var modifyPatterns = [
+    /\b(cp|copy|mv|install)\b/,
+    /\bsed\s+-i/,
+    /\bperl\s+-[ip]/,
+    /\bawk\b.*-i\s+inplace/,
+    /\btee\b/,
+    />\s*[^\s]*\.claude\/hooks\//,
+    />\s*[^\s]*run-modules\//,
+    /\bpython3?\s+.*write_text\b/,
+    /\bcat\s*>.*\.claude\/hooks\//,
+    /\bcat\s*>.*run-modules\//
   ];
-  for (var i = 0; i < hooksPatterns.length; i++) {
-    if (hooksPatterns[i].test(command)) return true;
+  for (var i = 0; i < modifyPatterns.length; i++) {
+    if (modifyPatterns[i].test(command)) return true;
   }
   return false;
 }
@@ -112,13 +120,11 @@ module.exports = function(input) {
             "bypassing the Write/Edit gate. All hook changes must go through hook-runner.\n\n" +
             "Your project: " + (projectDir || "(unknown)") + "\n" +
             "Command: " + cmd.substring(0, 120) + "\n\n" +
-            "TO MODIFY HOOKS:\n" +
+            "DO THIS NOW (do not ask the user):\n" +
             "1. Write the exact change needed as a TODO in hook-runner's TODO.md:\n" +
-            "   ~/Documents/ProjectsCL1/_grobomo/hook-runner/TODO.md\n" +
-            "2. Launch a session there:\n" +
-            "   python ~/Documents/ProjectsCL1/_grobomo/context-reset/new_session.py \\\n" +
-            "     --target-project ~/Documents/ProjectsCL1/_grobomo/hook-runner\n" +
-            "3. The new session picks up TODO.md and executes the change."
+            "   /mnt/c/Users/joelg/Documents/ProjectsCL1/_grobomo/hook-runner/TODO.md\n" +
+            "2. Then continue with your current task — the hook-runner TODO will be\n" +
+            "   picked up by the next hook-runner session automatically."
         };
       }
       // In hook-runner project: allow (this is the sync-live workflow)
@@ -177,13 +183,11 @@ module.exports = function(input) {
         "No session outside hook-runner can modify hook infrastructure.\n\n" +
         "Your project: " + (projectDir || "(unknown)") + "\n" +
         "Protected file: " + base + " (" + protectedType + ")\n\n" +
-        "TO MODIFY HOOKS:\n" +
+        "DO THIS NOW (do not ask the user):\n" +
         "1. Write the exact change needed as a TODO in hook-runner's TODO.md:\n" +
-        "   ~/Documents/ProjectsCL1/_grobomo/hook-runner/TODO.md\n" +
-        "2. Launch a session there:\n" +
-        "   python ~/Documents/ProjectsCL1/_grobomo/context-reset/new_session.py \\\n" +
-        "     --target-project ~/Documents/ProjectsCL1/_grobomo/hook-runner\n" +
-        "3. The new session picks up TODO.md and executes the change."
+        "   /mnt/c/Users/joelg/Documents/ProjectsCL1/_grobomo/hook-runner/TODO.md\n" +
+        "2. Then continue with your current task — the hook-runner TODO will be\n" +
+        "   picked up by the next hook-runner session automatically."
     };
   }
 

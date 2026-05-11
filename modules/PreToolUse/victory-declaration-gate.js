@@ -10,7 +10,7 @@ var fs = require("fs");
 var os = require("os");
 var path = require("path");
 
-var VICTORY_WORDS = /\b(all\s+(tests?\s+)?pass(ed|ing|es)?|all\s+green|succeeded|fully\s+working|complete[ds]?\s+(successfully)?|100%|zero\s+fail)/i;
+var VICTORY_WORDS = /\b(all\s+(tests?\s+)?pass(ed|ing|es)?|all\s+green|succeeded|fully\s+working|complete[ds]?\s+successfully|all\s+(\w+\s+)?complete[ds]?|100%|zero\s+fail)/i;
 
 var EVIDENCE_PATH = path.join(os.tmpdir(), ".hook-runner-test-evidence.json");
 var MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes

@@ -200,5 +200,72 @@ if (!r8) {
 }
 process.chdir(origCwd);
 
+// --- Test 6: T632 — worktree specs/ and TODO.md checked before main ---
+// Create worktree with specs/ and TODO but main has NONE
+var mainNoSpec = path.join(TMPDIR, "main-no-spec");
+var mainNoSpecGit = path.join(mainNoSpec, ".git");
+fs.mkdirSync(path.join(mainNoSpecGit, "refs", "heads"), { recursive: true });
+fs.writeFileSync(path.join(mainNoSpecGit, "HEAD"), "ref: refs/heads/main\n");
+fs.writeFileSync(path.join(mainNoSpec, "TODO.md"), "# nothing\n");
+fs.mkdirSync(path.join(mainNoSpec, "src"), { recursive: true });
+fs.writeFileSync(path.join(mainNoSpec, "src", "app.js"), "x");
+
+var wt632 = path.join(mainNoSpec, ".claude", "worktrees", "feat-t632");
+fs.mkdirSync(wt632, { recursive: true });
+var wt632GitDir = path.join(mainNoSpecGit, "worktrees", "feat-t632");
+fs.mkdirSync(wt632GitDir, { recursive: true });
+fs.writeFileSync(path.join(wt632, ".git"), "gitdir: " + wt632GitDir.replace(/\\/g, "/") + "\n");
+fs.writeFileSync(path.join(wt632GitDir, "HEAD"), "ref: refs/heads/feat-t632\n");
+fs.writeFileSync(path.join(wt632, "TODO.md"), "- [ ] T632: Fix worktree spec detection\n");
+fs.mkdirSync(path.join(wt632, "specs", "feat-t632"), { recursive: true });
+fs.writeFileSync(path.join(wt632, "specs", "feat-t632", "spec.md"), "# T632 spec");
+fs.writeFileSync(path.join(wt632, "specs", "feat-t632", "tasks.md"), "- [ ] T632: Worktree spec gate fix\n");
+fs.mkdirSync(path.join(wt632, "src"), { recursive: true });
+fs.writeFileSync(path.join(wt632, "src", "app.js"), "x");
+
+try { process.chdir(wt632); } catch(e) {}
+var r9 = runGate(mainNoSpec.replace(/\\/g, "/"), path.join(wt632, "src", "app.js"), "");
+if (!r9) {
+  pass("T632: worktree specs/ found when main has none — edit allowed");
+} else {
+  fail("T632: worktree specs/ not found: " + (r9.reason || "").substring(0, 100));
+}
+process.chdir(origCwd);
+
+// --- Test 7: T633 — branch detected from worktree, not main ---
+try { process.chdir(wt632); } catch(e) {}
+var r10 = runGate(mainNoSpec.replace(/\\/g, "/"), path.join(wt632, "src", "app.js"), "");
+if (!r10) {
+  pass("T633: worktree branch detected (not 'main')");
+} else if (r10.decision === "block" && r10.reason.indexOf("main branch") !== -1) {
+  fail("T633: gate still sees 'main' instead of worktree branch");
+} else {
+  fail("T633: unexpected: " + (r10.reason || "").substring(0, 100));
+}
+process.chdir(origCwd);
+
+// --- Test 8: T632 — worktree TODO.md has task, main does not ---
+var wt632b = path.join(mainNoSpec, ".claude", "worktrees", "T632-todo");
+fs.mkdirSync(wt632b, { recursive: true });
+var wt632bGitDir = path.join(mainNoSpecGit, "worktrees", "T632-todo");
+fs.mkdirSync(wt632bGitDir, { recursive: true });
+fs.writeFileSync(path.join(wt632b, ".git"), "gitdir: " + wt632bGitDir.replace(/\\/g, "/") + "\n");
+fs.writeFileSync(path.join(wt632bGitDir, "HEAD"), "ref: refs/heads/feat/T632-todo\n");
+fs.writeFileSync(path.join(wt632b, "TODO.md"), "- [ ] T632: Task only in worktree\n");
+fs.mkdirSync(path.join(wt632b, "specs", "T632-todo"), { recursive: true });
+fs.writeFileSync(path.join(wt632b, "specs", "T632-todo", "spec.md"), "# spec");
+fs.writeFileSync(path.join(wt632b, "specs", "T632-todo", "tasks.md"), "- [ ] T632: Worktree task\n");
+fs.mkdirSync(path.join(wt632b, "src"), { recursive: true });
+fs.writeFileSync(path.join(wt632b, "src", "app.js"), "x");
+
+try { process.chdir(wt632b); } catch(e) {}
+var r11 = runGate(mainNoSpec.replace(/\\/g, "/"), path.join(wt632b, "src", "app.js"), "");
+if (!r11) {
+  pass("T632: worktree TODO.md task found (main has none)");
+} else {
+  fail("T632: worktree TODO.md task not found: " + (r11.reason || "").substring(0, 100));
+}
+process.chdir(origCwd);
+
 console.log("\n=== Results: " + PASS + " passed, " + FAIL + " failed ===");
 process.exit(FAIL > 0 ? 1 : 0);

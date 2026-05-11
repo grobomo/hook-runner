@@ -43,10 +43,22 @@ ok("echo allowed", passes("echo hello"));
 ok("node allowed", passes("node setup.js"));
 ok("empty command allowed", passes(""));
 
-// Block message quality
+// Block message quality — subprocess commands
 var r = gate({tool_name: "Bash", tool_input: {command: "claude -p 'test'"}});
 ok("block mentions context_reset", r && /context_reset/i.test(r.reason));
 ok("block mentions subprocess", r && /subprocess/.test(r.reason));
+ok("block mentions terminal alternative", r && /terminal/.test(r.reason));
+ok("block mentions PowerShell Start-Process", r && /Start-Process/.test(r.reason));
+ok("block mentions you ARE Claude", r && /ARE Claude/.test(r.reason));
+
+// Info commands get different message (T613)
+ok("claude --help blocked", blocks("claude --help"));
+ok("claude -h blocked", blocks("claude -h"));
+ok("claude --version blocked", blocks("claude --version"));
+ok("claude -v blocked", blocks("claude -v"));
+var infoResult = gate({tool_name: "Bash", tool_input: {command: "claude --help"}});
+ok("info block does NOT mention context_reset", infoResult && !/context_reset/.test(infoResult.reason));
+ok("info block mentions capabilities", infoResult && /capabilities/.test(infoResult.reason));
 
 console.log("\n" + pass + "/" + (pass+fail) + " passed");
 process.exit(fail > 0 ? 1 : 0);

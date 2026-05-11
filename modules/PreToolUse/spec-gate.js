@@ -340,15 +340,16 @@ module.exports = function(input) {
   var roots = [];
   if (projectDir) roots.push(projectDir);
 
-  // T469: Also check CWD if it's a worktree of the same project.
-  // Worktrees have `.git` as a file (not directory) and live inside the project dir.
-  // Only add when both conditions are true to avoid contaminating test environments.
-  if (projectDir) {
-    var cwdRoot = findGitRoot(process.cwd());
-    if (cwdRoot && roots.indexOf(cwdRoot) === -1 &&
-        cwdRoot.replace(/\\/g, "/").indexOf(projectDir) === 0) {
+  // T469+T632: Also check CWD if it's a worktree of the same project.
+  // Worktrees have `.git` as a file (not directory).
+  // T632: Use unshift() to put worktree first — branch detection prefers it over main.
+  var cwdRoot = findGitRoot(process.cwd());
+  if (cwdRoot && roots.indexOf(cwdRoot) === -1) {
+    var isRelated = !projectDir ||
+        cwdRoot.replace(/\\/g, "/").indexOf(projectDir) === 0;
+    if (isRelated) {
       try {
-        if (fs.statSync(path.join(cwdRoot, ".git")).isFile()) roots.push(cwdRoot);
+        if (fs.statSync(path.join(cwdRoot, ".git")).isFile()) roots.unshift(cwdRoot);
       } catch (e) { /* not a worktree, skip */ }
     }
   }

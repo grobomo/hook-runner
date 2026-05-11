@@ -26,27 +26,49 @@ function writeState(state) {
   } catch(e) {}
 }
 
+function findGitRoot(startDir) {
+  var dir = startDir;
+  for (var d = 0; d < 20; d++) {
+    if (fs.existsSync(path.join(dir, ".git"))) return dir;
+    var parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
+function isWorktree(dir) {
+  try { return fs.statSync(path.join(dir, ".git")).isFile(); } catch(e) { return false; }
+}
+
 function hasRecentSpec() {
   var projectDir = process.env.CLAUDE_PROJECT_DIR || "";
-  if (!projectDir) return true; // Can't check — don't block
+  var cwdRoot = findGitRoot(process.cwd());
+  var dirs = [];
+  if (cwdRoot && isWorktree(cwdRoot)) dirs.push(cwdRoot);
+  if (projectDir && dirs.indexOf(projectDir) === -1) dirs.push(projectDir);
+  if (dirs.length === 0) return true;
 
-  // Check TODO.md for recent entries with task markers
-  var todoPath = path.join(projectDir, "TODO.md");
-  try {
-    if (fs.existsSync(todoPath)) {
-      var content = fs.readFileSync(todoPath, "utf-8");
-      // Has unchecked tasks = spec exists
-      if (/^- \[ \] T\d+:/m.test(content)) return true;
-    }
-  } catch(e) {}
+  // Check TODO.md in each root for task markers
+  for (var i = 0; i < dirs.length; i++) {
+    var todoPath = path.join(dirs[i], "TODO.md");
+    try {
+      if (fs.existsSync(todoPath)) {
+        var content = fs.readFileSync(todoPath, "utf-8");
+        if (/^- \[ \] T\d+:/m.test(content)) return true;
+      }
+    } catch(e) {}
+  }
 
-  // Check recent commit message (within 5 min) with sufficient detail
-  try {
-    var log = cp.execFileSync("git", ["log", "--oneline", "-1", "--format=%s", "--since=5.minutes.ago"], {
-      encoding: "utf-8", timeout: 5000, windowsHide: true, cwd: projectDir
-    }).trim();
-    if (log && log.split(/\s+/).length > 4) return true;
-  } catch(e) {}
+  // Check recent commit from CWD first (worktree), then projectDir
+  for (var j = 0; j < dirs.length; j++) {
+    try {
+      var log = cp.execFileSync("git", ["log", "--oneline", "-1", "--format=%s", "--since=5.minutes.ago"], {
+        encoding: "utf-8", timeout: 5000, windowsHide: true, cwd: dirs[j]
+      }).trim();
+      if (log && log.split(/\s+/).length > 4) return true;
+    } catch(e) {}
+  }
 
   return false;
 }

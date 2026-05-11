@@ -123,18 +123,18 @@ else
   fail "Tracking file not created"
 fi
 
-# 5. Verify actual run-stop.js has the T376 pattern (no process.exit in handleResult)
-if grep -q 'if (!firstBlock) firstBlock' "$REPO_DIR/run-stop.js"; then
-  pass "run-stop.js uses collect-first-block pattern"
+# 5. Verify run-stop.js collects all blocks (T641: blocks[] array, not firstBlock)
+if grep -q 'blocks.push' "$REPO_DIR/run-stop.js"; then
+  pass "run-stop.js collects all blocking results in blocks[]"
 else
-  fail "run-stop.js missing collect-first-block pattern"
+  fail "run-stop.js missing blocks[] collection (T641)"
 fi
 
-# 6. Verify run-stop.js outputs block before background spawn (T390 architecture)
-if grep -q 'process.stdout.write(JSON.stringify(firstBlock))' "$REPO_DIR/run-stop.js" && grep -q 'process.exit(firstBlock' "$REPO_DIR/run-stop.js"; then
-  pass "run-stop.js outputs block immediately then exits"
+# 6. Verify run-stop.js outputs best block to stdout + all to stderr (T617: prefer stop-analysis-gate)
+if grep -q 'process.stdout.write(JSON.stringify.*bestBlock' "$REPO_DIR/run-stop.js" && grep -q 'process.exit(blocks.length' "$REPO_DIR/run-stop.js"; then
+  pass "run-stop.js outputs best block to stdout+stderr then exits"
 else
-  fail "run-stop.js should output block immediately (not in handleDone)"
+  fail "run-stop.js should output best block to stdout and stderr"
 fi
 
 echo ""

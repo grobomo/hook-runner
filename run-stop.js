@@ -79,9 +79,14 @@ if (blocks.length > 0) {
   try { fs.writeFileSync(analysisPath, analysis.join("\n"), "utf-8"); } catch (e) {}
 }
 
-// Output first block to stdout (Claude Code protocol) + all to stderr (TUI)
+// Output best block to stdout (Claude Code protocol) + all to stderr (TUI)
+// Prefer stop-analysis-gate (Haiku reasoning) over static messages
 if (blocks.length > 0) {
-  process.stdout.write(JSON.stringify({ decision: "block", reason: blocks[0].reason }));
+  var bestBlock = blocks[0];
+  for (var pi = 0; pi < blocks.length; pi++) {
+    if (blocks[pi].module === "stop-analysis-gate") { bestBlock = blocks[pi]; break; }
+  }
+  process.stdout.write(JSON.stringify({ decision: "block", reason: bestBlock.reason }));
   var summary = blocks.map(function(b) { return "[" + b.module + "] " + b.reason; }).join("\n");
   process.stderr.write(summary + "\n");
 }
