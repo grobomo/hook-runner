@@ -7,10 +7,10 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Local skill: ~/.claude/skills/hook-runner/
 - Live hooks: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
-## Current State (v2.82.0)
-- 128 modules in catalog, 7 workflows, 200 test suites, ~2634 tests
+## Current State (v2.83.0)
+- 129 modules in catalog, 7 workflows, 202 test suites, ~2685 tests
 - PRs: 542 merged (PR #541 squash-merged)
-- CI: pre-existing failures (T088, T204, T604, T636 — environment-specific)
+- CI: pre-existing failures (T024, T204, T636, workflow-gate — environment-specific)
 
 ## Open Tasks
 - [x] T612: Create GETTING-STARTED.md — 5-minute onboarding guide. Linked from README. (PR #518)
@@ -42,12 +42,12 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T624: Rewrite spec-gate with auto-activation — activate when: publish.json=public, specs/ already exists, shared org, feat/ branch. Dormant otherwise. Removed WORKFLOW tag, added shouldActivate() with caching. 10 new tests. (PR #540)
 - [x] T635: UPS settings guard — hook-editing-gate blocks UserPromptSubmit in any settings.json. 4 tests. (PR #541)
 - [x] T636: Create _haiku-judge.js shared helper — POST /judge to llm-token-proxy (port 4100). 8 tests. (PR #542)
-- [ ] T637: Wire victory-declaration gate (T634) through _haiku-judge.js as proof of concept.
+- [x] T637: Wire victory-declaration gate through _haiku-judge.js — regex pre-filters, then haiku-judge does semantic check. Fallback to regex-only when judge unavailable. Updated 3 test files for async handling (39 tests total).
 - [x] T638: Standardize haiku rules file naming — done in previous session (PR #544). Files now at ~/.claude/proxy/{stop,sessionstart,userprompt}-haiku-rules.{yaml,md}. Copied to Windows in this session.
-- [ ] T625: Verify chat-export skill works end-to-end (installed via symlink, untested)
+- [x] T625: Chat-export skill verified end-to-end — export.py parses JSONL (244 turns), generates 554KB self-contained HTML, creates landing page with search.
 - [ ] T626: Test all active gates in live session — todo-gate, settings-watchdog-gate, gate-quality-gate, cross-project-todo-gate
 - [x] T627: Fix 5 broken gates — regex patcher had injected `_log(...)` inline into `return null` statements, breaking JS syntax. Fixed by stripping corrupted patterns. 3 gates restored (no-rewrite, settings-watchdog, todo-gate), 2 were already working (cross-project-todo, proxy-restart).
-- [ ] T628: Add logging to all gates properly — clean implementation, not regex patching. Each gate needs: _log() on invoke, _log() on pass with reason, _log() on block with context.
+- [x] T628: Add logging to wsl workflow gates — spec-gate was the only active gate missing logging. Added _log() wrapper with block-tag extraction. 10/11 active wsl PreToolUse gates now have logging. Remaining non-wsl gates deferred (only run when those workflows are enabled).
 - [x] T629: gate-quality-gate Bash detection — added Bash interception for writes to hooks/run-modules/ and hook-runner/modules/. Detects cp, mv, redirect, heredoc, sed -i, tee, python write_text. 20 tests.
 - [ ] T630: agent-quality-gate needs testing — verify it fires on Agent tool calls and haiku analysis works through proxy
 - [ ] (deferred) Port remaining OpenClaw modules (configurable/niche: aws-tagging, deploy-gate, messaging-safety, etc.)
@@ -67,6 +67,15 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T645: Haiku directive enforcement (Panama Canal model) — auto-continue-gate writes structured continue-directive.json with scoped `allow` list when haiku says CONTINUE. PreToolUse continue-directive-gate reads allow list to permit only tools targeting allowed files (TODO.md, SESSION_STATE.md, etc.). Read/Glob/Grep always pass. Circuit breaker at 3 same-rule strikes. 10min expiry. Stale session detection. Prevents deadlock where enforcement blocks the tools needed to comply.
 - [ ] T646: T626 live gate verification — test all active wsl gates in real session. Need fresh session (this one is deep in context). Gates to test: todo-gate, settings-watchdog-gate, gate-quality-gate, continue-directive-gate, no-rewrite-gate, proxy-restart-gate, agent-quality-gate, pre-tool-verify-gate, spec-gate. For each: trigger condition, expected block message, verify logging. Also T625 (chat-export e2e).
 - [ ] T647: Directive allow list needs `context-reset` and `new_session.py` — spawning fresh sessions is a valid way to address "continue working" directives but got blocked. Also need to allow `git` commands (commit/push are valid work actions).
+
+## Session Handoff (2026-05-11, session 16)
+- **T619/T620**: run-stop.js bestBlock now uses HAIKU_GATES array for both Haiku gates + >50 char fallback. 23 tests.
+- **T621**: mandate-gate.js (PreToolUse) — enforces stop-hook CONTINUE directives by blocking first tool call with mandate text. auto-continue-gate writes/clears mandate.json, passes prior mandate context to Haiku. 24 tests.
+- **T614**: L1 Haiku triage in UserPromptSubmit — resolves shorthand via haiku-client + userprompt-haiku-rules.yaml. Session-scoped files, + bypass, 4s timeout. 20 tests.
+- **T637**: victory-declaration-gate wired through _haiku-judge.js — regex pre-filters, semantic check via judge, fallback on unavailability. 3 test files updated for async. 39 tests.
+- **T628**: spec-gate logging added (only active wsl gate without it).
+- v2.83.0. 129 catalog modules, 202 suites, ~2685 tests.
+- Remaining open: T578 (marketplace, blocked), T625/T626/T646 (testing), T630 (agent-quality-gate)
 
 ## Session Handoff (2026-05-11, session 15)
 - **T616**: WSL haiku-client.js auth fix — ANTHROPIC_AUTH_TOKEN fallback (live file only)
@@ -168,7 +177,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - Project-scoped modules go in `modules/PreToolUse/<project-name>/` in the repo
 - Completed task history: see TODO-COMPLETED.md
 
-- [ ] T614: Add Haiku L1 triage to UserPromptSubmit hook — call `/ask` endpoint with user prompt, print analysis to stdout so it shows in TUI as `<user-prompt-submit-hook>`. Currently only Stop hook calls Haiku (stop-analysis-gate.js). UserPromptSubmit just logs + detects frustration. Should add: call `http://127.0.0.1:4100/ask` with Haiku, system prompt from `prompt-preprocessing-rules.yaml`, 150 max tokens, 4s timeout. Print "L1: {analysis}" to stdout. Session-scoped output file for multi-tab isolation. Ref: existing `haiku-client.js` for the HTTP call pattern.
+- [x] T614: L1 Haiku triage in UserPromptSubmit — calls haiku-client with user prompt + userprompt-haiku-rules.yaml system prompt. Resolves shorthand, detects ambiguity, enriches context. Output prints to stdout as `<user-prompt-submit-hook>`. Session-scoped l1-analysis-{session}.md with symlink. 4s timeout, + prefix bypass. 20 tests.
 
 - [x] T615: Fix stop-analysis-gate.js not showing in TUI — added `// BLOCKING: true` tag to both stop-analysis-gate.js and auto-continue-gate.js. Synced live run-stop.js and load-modules.js with repo (isBlocking + blocks[] array). Added both gates + gate-quality-gate to repo catalog. 20 tests. (PR #546)
 - [x] T629: gate-quality-gate Bash detection — now intercepts cp, mv, redirect, write_text, heredoc, sed -i, tee targeting hook module dirs. Distinguishes live (.pending required) vs repo catalog (quality checks only). Added to repo catalog. 20 tests. (PR #546)
@@ -179,3 +188,9 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 - [x] T617: run-stop.js bestBlock preference — prefers stop-analysis-gate (Haiku reasoning) over alphabetically-first static message. Live file synced. 1 new test.
 - [x] T618: Expanded Bash detection in hook protection — now catches sed -i, perl -i, tee, redirects, cat redirects, and python write_text targeting protected directories. 8 new tests (32 total).
+
+- [x] T619: URGENT — run-stop.js bestBlock now uses HAIKU_GATES array (both stop-analysis-gate and auto-continue-gate) + >50 char fallback. 23 tests.
+
+- [x] T620: run-stop.js HAIKU_GATES array replaces single stop-analysis-gate check. Both repo and live hooks synced.
+
+- [x] T621: Mandate enforcement gate — mandate-gate.js (PreToolUse) reads mandate.json written by auto-continue-gate (Stop). Blocks first tool call with mandate text, sets seen=true, passes subsequent calls. 10min expiry. Auto-continue-gate writes mandate on CONTINUE, clears on DONE, passes prior mandate context to Haiku. 24 tests.

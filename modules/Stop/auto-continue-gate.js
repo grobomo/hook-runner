@@ -34,6 +34,7 @@ var haiku = require(path.join(process.env.HOME || "", ".claude", "hooks", "haiku
 
 var RULES_PATH = path.join(process.env.HOME || "", ".claude", "proxy", "stop-haiku-rules.yaml");
 var LOG_PATH = path.join(process.env.HOME || "", ".claude", "hooks", "hook-log.jsonl");
+var MANDATE_PATH = path.join(process.env.HOME || "", ".claude", "hooks", "mandate.json");
 
 function log(entry) {
   entry.ts = new Date().toISOString();
@@ -155,6 +156,17 @@ module.exports = function(input) {
     return null;
   }
 
+  // Check prior mandate state
+  var mandateContext = "";
+  try {
+    var mandate = JSON.parse(fs.readFileSync(MANDATE_PATH, "utf-8"));
+    if (mandate.seen) {
+      mandateContext = "\nPRIOR MANDATE [" + (mandate.source_rule || "unknown") + "]: " + (mandate.action || "") +
+        (mandate.actions && mandate.actions.length > 0 ? " (actions: " + mandate.actions.join(", ") + ")" : "") +
+        "\nThe prior mandate was delivered to Opus. Evaluate whether it was fulfilled.";
+    }
+  } catch (e) {}
+
   // Build haiku prompt from rules
   var rulesBlock = rules.map(function(r, i) {
     return (i + 1) + ". " + r.name + ": " + r.check + "\n   → If yes: " + r.action;
@@ -170,6 +182,7 @@ module.exports = function(input) {
     "User's last prompt: " + (userPrompt || "").slice(0, 400),
     "Assistant's last response (tail): " + assistantText.slice(-600),
     "Current TODO items: " + (todos ? todos.slice(0, 5).join("; ") : "none"),
+    mandateContext,
     "",
     "Check ALL rules. If ANY rule triggers, return the appropriate action.",
     "Reply with EXACTLY this JSON (no other text):",
@@ -214,14 +227,24 @@ module.exports = function(input) {
 
     if (decision === "CONTINUE" || decision === "NEXT" || decision === "DISPATCH") {
       var actionList = actions.length > 0 ? "\nActions: " + actions.join(" | ") : "";
+      try {
+        fs.writeFileSync(MANDATE_PATH, JSON.stringify({
+          action: reason,
+          source_rule: triggeredRule,
+          decision: decision,
+          actions: actions,
+          created: new Date().toISOString(),
+          seen: false,
+          fulfilled: false
+        }, null, 2), "utf-8");
+      } catch (e) {}
       return {
         decision: "block",
         reason: "SELF-CHECK [" + triggeredRule + "]: " + decision + " — " + reason + actionList,
       };
     }
 
-    // DONE — still block so user sees the decision in TUI, but tell Claude to stop.
-    // The stop_hook_active guard in run-stop.js prevents infinite loops (next stop exits immediately).
+    try { fs.unlinkSync(MANDATE_PATH); } catch (e) {}
     return {
       decision: "block",
       reason: "SELF-CHECK [" + triggeredRule + "]: DONE — " + reason + "\nNo further action needed. You may stop.",

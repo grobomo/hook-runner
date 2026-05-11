@@ -16,6 +16,15 @@
 // Allows: config, specs, planning, rules, hooks, TODO.md, SESSION_STATE.md, test files
 var fs = require("fs");
 var path = require("path");
+var os = require("os");
+
+var LOG_PATH = path.join(os.homedir(), ".claude", "hooks", "hook-log.jsonl");
+function _log(entry) {
+  entry.ts = new Date().toISOString();
+  entry.module = "spec-gate";
+  entry.event = "PreToolUse";
+  try { fs.appendFileSync(LOG_PATH, JSON.stringify(entry) + "\n", "utf-8"); } catch (e) {}
+}
 
 // --- Caching layer (T420) ---
 // spec-gate runs on every Edit/Write/Bash call. The specs/ directory scan is ~62ms
@@ -258,7 +267,7 @@ var BASH_ALLOW_PATTERNS = [
 // is allowed as exploration. Replaces T338 default-deny approach.
 var BASH_WRITE_PATTERNS = require("./_bash-write-patterns");
 
-module.exports = function(input) {
+function specGateInner(input) {
   var tool = input.tool_name;
   var isBash = (tool === "Bash");
   if (tool !== "Edit" && tool !== "Write" && !isBash) return null;
@@ -663,4 +672,21 @@ module.exports = function(input) {
   }
 
   return null;
+}
+
+module.exports = function(input) {
+  var result = specGateInner(input);
+  if (result && result.decision === "block") {
+    var blockTag = "unknown";
+    var reason = result.reason || "";
+    if (reason.indexOf("No specs/") !== -1) blockTag = "no-specs";
+    else if (reason.indexOf("not a task") !== -1) blockTag = "task-not-found";
+    else if (reason.indexOf("spec.md missing") !== -1) blockTag = "missing-spec";
+    else if (reason.indexOf("tasks.md missing") !== -1) blockTag = "missing-tasks";
+    else if (reason.indexOf("All tasks") !== -1 && reason.indexOf("checked off") !== -1) blockTag = "all-done";
+    else if (reason.indexOf("On main branch") !== -1) blockTag = "main-branch";
+    else if (reason.indexOf("No spec has a complete") !== -1) blockTag = "incomplete-chain";
+    _log({ result: "block", tag: blockTag, tool: input.tool_name });
+  }
+  return result;
 };

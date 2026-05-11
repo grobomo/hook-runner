@@ -2,6 +2,24 @@
 
 All notable changes to hook-runner are documented here.
 
+## [2.83.0] — 2026-05-11
+
+### Fixed
+- **run-stop.js bestBlock preference** (T619/T620) — Haiku gates (`stop-analysis-gate` AND `auto-continue-gate`) now both preferred over static messages when selecting the best block for stdout. Added `HAIKU_GATES` array + >50 char fallback heuristic.
+
+### Added
+- **mandate-gate.js** (T621) — PreToolUse module that enforces Haiku stop-hook directives. When `auto-continue-gate` decides CONTINUE, it writes `mandate.json`. The mandate-gate blocks the first tool call with the mandate text, forcing Opus to read and acknowledge before proceeding. 10min expiry, session-scoped logging. 24 tests.
+- **auto-continue-gate mandate writing** (T621) — `auto-continue-gate.js` now writes `mandate.json` on CONTINUE/NEXT/DISPATCH and clears it on DONE. Prior mandate context is passed to Haiku for fulfillment evaluation.
+- **L1 Haiku triage** (T614) — `run-userpromptsubmit.js` now calls Haiku with the user prompt + `userprompt-haiku-rules.yaml` to resolve shorthand and enrich context. Output prints to stdout as `<user-prompt-submit-hook>`. Session-scoped analysis files with symlink. 4s timeout, `+` prefix bypass. 20 tests.
+
+### Stats
+- 129 catalog modules, 202 suites, ~2685 tests
+
+## [2.82.0] — 2026-05-11
+
+### Fixed
+- See previous session handoff for T615-T647 changes.
+
 ## [2.81.0] — 2026-05-10
 
 ### Fixed

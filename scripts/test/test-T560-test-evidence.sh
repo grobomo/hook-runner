@@ -56,17 +56,24 @@ else if (action === "run-evidence-skip") {
   console.log(r === null ? "null" : "not-null");
 }
 else if (action === "run-victory") {
-  // Simulate commit with victory words
   var m = fresh(VG_MOD);
   var msg = process.argv[3] || "All tests pass";
   var r = m({tool_name: "Bash", tool_input: {command: 'git commit -m "' + msg + '"'}});
-  console.log(r === null ? "allowed" : "blocked");
+  if (r && typeof r.then === "function") {
+    r.then(function(v) { console.log(v === null ? "allowed" : "blocked"); });
+  } else {
+    console.log(r === null ? "allowed" : "blocked");
+  }
 }
 else if (action === "run-victory-reason") {
   var m = fresh(VG_MOD);
   var msg = process.argv[3] || "All tests pass";
   var r = m({tool_name: "Bash", tool_input: {command: 'git commit -m "' + msg + '"'}});
-  console.log(r ? r.reason : "no-reason");
+  if (r && typeof r.then === "function") {
+    r.then(function(v) { console.log(v ? v.reason : "no-reason"); });
+  } else {
+    console.log(r ? r.reason : "no-reason");
+  }
 }
 JSEOF
 trap 'rm -f "$HELPER"' EXIT

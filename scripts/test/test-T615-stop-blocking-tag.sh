@@ -275,11 +275,32 @@ else
   fail "Module routing unexpected: $COUNTS"
 fi
 
-# T617: Verify bestBlock preference for stop-analysis-gate
-if grep -q 'stop-analysis-gate.*bestBlock.*break' "$REPO_DIR/run-stop.js"; then
-  pass "T617: run-stop.js prefers stop-analysis-gate output"
+# T617/T620: Verify bestBlock preference for Haiku gates
+if grep -q 'HAIKU_GATES' "$REPO_DIR/run-stop.js"; then
+  pass "T620: run-stop.js defines HAIKU_GATES array"
 else
-  fail "T617: run-stop.js should prefer stop-analysis-gate for bestBlock"
+  fail "T620: run-stop.js should define HAIKU_GATES array"
+fi
+
+# 22. HAIKU_GATES includes both gates
+HAS_BOTH=$(node -e "
+  var src = require('fs').readFileSync('$REPO_DIR/run-stop.js', 'utf-8');
+  var m = src.match(/HAIKU_GATES\s*=\s*\[([^\]]+)\]/);
+  if (!m) { console.log('false'); process.exit(0); }
+  var arr = m[1];
+  console.log(arr.indexOf('stop-analysis-gate') !== -1 && arr.indexOf('auto-continue-gate') !== -1);
+")
+if [ "$HAS_BOTH" = "true" ]; then
+  pass "T620: HAIKU_GATES includes stop-analysis-gate AND auto-continue-gate"
+else
+  fail "T620: HAIKU_GATES should include both Haiku gates"
+fi
+
+# 23. Fallback prefers long reasons (>50 chars) over short static messages
+if grep -q 'reason.length > 50' "$REPO_DIR/run-stop.js"; then
+  pass "T619: run-stop.js has >50 char fallback for Haiku-like analysis"
+else
+  fail "T619: run-stop.js should prefer long reasons as Haiku analysis fallback"
 fi
 
 echo ""

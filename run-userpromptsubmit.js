@@ -7,10 +7,12 @@
 // send any message to Claude to fix it. The frustration-detector incident
 // (2026-04-07) proved this. hook-editing-gate enforces the ban.
 //
-// This runner does TWO things directly (no modules):
+// This runner does THREE things directly (no modules):
 // 1. Logs the prompt preview to hook-log.jsonl (replaces prompt-logger module)
 // 2. Detects frustration patterns and writes to frustration-log.jsonl
 //    (replaces frustration-detector module — but NEVER blocks)
+// 3. L1 Haiku triage — resolves shorthand, enriches context, prints to stdout
+//    (output appears as <user-prompt-submit-hook> in conversation)
 //
 // Self-reflection (Stop hook) reads both logs for analysis.
 var fs = require("fs");
@@ -85,5 +87,48 @@ if (prompt.length >= 5) {
   }
 }
 
-// NEVER output anything — no blocking, no modifying the prompt
+// 3. L1 Haiku triage — resolve shorthand, enrich context for Opus
+if (prompt.length >= 3 && prompt.charAt(0) !== "+") {
+  try {
+    var haiku = require("./haiku-client");
+    var rulesPath = path.join(os.homedir(), ".claude", "proxy", "userprompt-haiku-rules.yaml");
+    var rules = "";
+    try { rules = fs.readFileSync(rulesPath, "utf-8"); } catch (e) {}
+
+    if (rules) {
+      var sessionPrefix = (process.env.CLAUDE_SESSION_ID || "unknown").slice(0, 8);
+      var analysisFile = path.join(HOOKS_DIR, "l1-analysis-" + sessionPrefix + ".md");
+      var symlinkPath = path.join(HOOKS_DIR, "l1-analysis.md");
+
+      var result = haiku.call({
+        system: rules,
+        prompt: 'Analyze this user prompt. Resolve shorthand, detect ambiguity, infer action.\n\nPROMPT: "' +
+          prompt.slice(0, 500).replace(/"/g, '\\"') + '"\n\n' +
+          'Reply with JSON: {"interpretation":"what they mean","confidence":"high|medium|low","notes":"context if useful"}',
+        caller: "l1-triage",
+        maxTokens: 150,
+        timeoutMs: 4000,
+        jsonMode: true
+      });
+
+      if (result.ok && result.parsed) {
+        var interp = result.parsed.interpretation || result.content || "";
+        var conf = result.parsed.confidence || "high";
+        var notes = result.parsed.notes || "";
+        var analysis = "# L1 Analysis\n" +
+          "**Interpretation**: " + interp + "\n" +
+          "**Confidence**: " + conf + "\n" +
+          (notes ? "**Notes**: " + notes + "\n" : "");
+
+        fs.writeFileSync(analysisFile, analysis, "utf-8");
+        try { fs.unlinkSync(symlinkPath); } catch (e) {}
+        try { fs.symlinkSync(analysisFile, symlinkPath); } catch (e) {}
+
+        process.stdout.write("L1: " + interp.slice(0, 200) +
+          (conf !== "high" ? " [" + conf + " confidence]" : "") + "\n");
+      }
+    }
+  } catch (e) { /* fail silently — never block */ }
+}
+
 process.exit(0);

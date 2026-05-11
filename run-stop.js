@@ -80,11 +80,17 @@ if (blocks.length > 0) {
 }
 
 // Output best block to stdout (Claude Code protocol) + all to stderr (TUI)
-// Prefer stop-analysis-gate (Haiku reasoning) over static messages
+// Prefer Haiku gates (real analysis) over static messages
+var HAIKU_GATES = ["stop-analysis-gate", "auto-continue-gate"];
 if (blocks.length > 0) {
   var bestBlock = blocks[0];
   for (var pi = 0; pi < blocks.length; pi++) {
-    if (blocks[pi].module === "stop-analysis-gate") { bestBlock = blocks[pi]; break; }
+    if (HAIKU_GATES.indexOf(blocks[pi].module) !== -1) { bestBlock = blocks[pi]; break; }
+  }
+  if (HAIKU_GATES.indexOf(bestBlock.module) === -1) {
+    for (var ri = 0; ri < blocks.length; ri++) {
+      if (blocks[ri].reason && blocks[ri].reason.length > 50) { bestBlock = blocks[ri]; break; }
+    }
   }
   process.stdout.write(JSON.stringify({ decision: "block", reason: bestBlock.reason }));
   var summary = blocks.map(function(b) { return "[" + b.module + "] " + b.reason; }).join("\n");

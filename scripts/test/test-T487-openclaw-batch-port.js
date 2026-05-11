@@ -157,29 +157,26 @@ ok("no-hardcoded-paths: allows comment lines", (function() {
   return r === null;
 })());
 
-// ── victory-declaration-gate ─────────────────────────────────────────
+// ── victory-declaration-gate (T637: async via haiku-judge) ──────────
 var vdg = path.join(modulesDir, "PreToolUse", "victory-declaration-gate.js");
 
-ok("victory-declaration-gate: blocks 'all tests pass' commit", (function() {
-  var r = runGate(vdg, { tool_name: "Bash", tool_input: {
-    command: "git commit -m 'All tests pass'"
-  }});
-  return r && r.decision === "block" && /VICTORY DECLARATION/.test(r.reason);
-})());
-
-ok("victory-declaration-gate: blocks '100%' commit", (function() {
-  var r = runGate(vdg, { tool_name: "Bash", tool_input: {
-    command: "git commit -m '100% coverage achieved'"
-  }});
-  return r && r.decision === "block";
-})());
-
-ok("victory-declaration-gate: allows specific commit", (function() {
-  var r = runGate(vdg, { tool_name: "Bash", tool_input: {
-    command: "git commit -m 'T487: Fix testbox gate — 17/17 tests pass, synced to live'"
-  }});
-  return r === null;
-})());
+// These return Promises now — defer to end of test
+var _vdgDone = (function() {
+  function callVdg(cmd) {
+    var r = runGate(vdg, { tool_name: "Bash", tool_input: { command: cmd } });
+    return (r && typeof r.then === "function") ? r : Promise.resolve(r);
+  }
+  return callVdg("git commit -m 'All tests pass'").then(function(r) {
+    ok("victory-declaration-gate: blocks 'all tests pass' commit",
+      r && r.decision === "block" && /VICTORY DECLARATION/.test(r.reason));
+    return callVdg("git commit -m '100% coverage achieved'");
+  }).then(function(r) {
+    ok("victory-declaration-gate: blocks '100%' commit", r && r.decision === "block");
+    return callVdg("git commit -m 'T487: Fix testbox gate — 17/17 tests pass, synced to live'");
+  }).then(function(r) {
+    ok("victory-declaration-gate: allows specific commit", r === null);
+  });
+})();
 
 // ── root-cause-gate ──────────────────────────────────────────────────
 var rcg = path.join(modulesDir, "PreToolUse", "root-cause-gate.js");
@@ -445,6 +442,11 @@ try {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 } catch (e) { /* best effort */ }
 
-// ── Summary ──────────────────────────────────────────────────────────
-console.log("\n" + pass + "/" + (pass + fail) + " passed" + (fail > 0 ? " (" + fail + " FAILED)" : ""));
-process.exit(fail > 0 ? 1 : 0);
+// ── Summary (wait for async victory-declaration tests) ───────────────
+_vdgDone.then(function() {
+  console.log("\n" + pass + "/" + (pass + fail) + " passed" + (fail > 0 ? " (" + fail + " FAILED)" : ""));
+  process.exit(fail > 0 ? 1 : 0);
+}).catch(function(e) {
+  console.error("Async test error: " + e.message);
+  process.exit(1);
+});

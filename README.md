@@ -412,6 +412,7 @@ Full catalog in `modules/` directory:
 | `tunnel-check-gate` | Blocks process-grep SSH tunnel checks, suggests port connectivity test |
 | `hook-system-reminder` | Reminds Claude that enforcement is ONLY via hook-runner modules |
 | `inter-project-priority-gate` | Blocks non-XREF work when P0 inter-project TODOs are pending |
+| `mandate-gate` | Enforces Haiku stop-hook directives — blocks first tool call until Opus reads the mandate |
 | `mcp-manager-gate` | Blocks direct MCP server entries in .mcp.json and relay scripts |
 | `pr-first-gate` | Blocks spec/code edits on branches without an open PR |
 | `pr-per-task-gate` | Requires task ID in PR titles |
