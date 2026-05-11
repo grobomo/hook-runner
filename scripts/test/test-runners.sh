@@ -16,8 +16,13 @@ echo "[1] load-modules.js exports a function"
 node -e "var lm = require('$REPO_DIR/load-modules.js'); if (typeof lm !== 'function') throw new Error('not a function');" 2>/dev/null && pass "load-modules exports function" || fail "load-modules not a function"
 
 # Test 2: load-modules returns array for existing dir
+# Uses a temp workflow-config that enables shtd (most catalog modules use it)
+# so workflow filtering doesn't hide all modules during testing.
 echo "[2] load-modules returns array for modules/PreToolUse"
-COUNT=$(node -e "var lm = require('$REPO_DIR/load-modules.js'); var r = lm('$REPO_DIR/modules/PreToolUse'); console.log(r.length);" 2>/dev/null)
+_T2_TMPDIR=$(mktemp -d)
+echo '{"shtd":true}' > "$_T2_TMPDIR/workflow-config.json"
+COUNT=$(CLAUDE_PROJECT_DIR="$_T2_TMPDIR" node -e "var lm = require('$REPO_DIR/load-modules.js'); var r = lm('$REPO_DIR/modules/PreToolUse'); console.log(r.length);" 2>/dev/null)
+rm -rf "$_T2_TMPDIR"
 if [ "$COUNT" -gt 0 ]; then pass "found $COUNT PreToolUse modules"; else fail "no modules found"; fi
 
 # Test 3: load-modules returns empty for nonexistent dir

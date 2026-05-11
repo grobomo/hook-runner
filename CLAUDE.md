@@ -36,7 +36,9 @@ node setup.js --test    # runs all suites, auto-discovers scripts/test/test-*.sh
 - Return `null` to pass, `{decision: "block", reason: "..."}` to block
 - `// WHY:` comment required — explains the real incident that caused the module
 - `// WORKFLOW: name` — only runs when that workflow is active (comma-separated for multi: `// WORKFLOW: shtd, starter`)
+- `// BLOCKING: true` — Stop modules only: run synchronously so block/pass is visible in TUI. Without this, Stop modules run in a detached background worker.
 - `// requires: mod1, mod2` — missing deps = module skipped
+- All tags are parsed in a single pass by `parseModuleMeta()` in `load-modules.js`. To add a new tag, add it there.
 
 ## CLI Commands
 ```
@@ -75,6 +77,72 @@ node setup.js --help         # show all commands
 - **Modules** must have `// WORKFLOW: name` tag and `// WHY:` comment.
 - **Modules** may have `// TOOLS: Bash, Edit, Write` tag — skips loading when tool doesn't match (saves ~5ms/module).
 - The `hook-editing-gate` module enforces these rules at edit time (including the UPS no-block rule).
+
+## Haiku Preprocessor Architecture
+
+LLM-powered gate decisions using Haiku via the `llm-token-tracker` proxy at `:4100`.
+
+### Components
+
+| Component | Path | Purpose |
+|-----------|------|---------|
+| `_haiku-judge.js` | `modules/PreToolUse/` | Shared helper for structured `/judge` calls (returns `{allow, reason, confidence}`) |
+| `haiku-client.js` | `~/.claude/hooks/` | Shared helper for freeform `/v1/chat/completions` calls (returns `{ok, content, parsed}`) |
+| Rules files | `~/.claude/proxy/` | YAML/MD config files read by modules at runtime |
+| LLM proxy | `llm-token-tracker` `:4100` | Routes to Anthropic/RDSec, logs token usage, `/judge` + `/ask` + `/health` |
+
+### Auth
+Both helpers read `ANTHROPIC_AUTH_TOKEN` from env (set in `settings.json`). The proxy requires `Authorization: Bearer <token>` on all endpoints.
+
+### haiku-client.js API
+```js
+var haiku = require(path.join(HOME, ".claude", "hooks", "haiku-client"));
+
+// Freeform LLM call
+var result = haiku.call({
+  prompt: "Analyze this...",
+  caller: "my-gate",        // logged for attribution
+  jsonMode: true,            // parse JSON from response
+  maxTokens: 300,
+  timeoutMs: 8000
+});
+// result: { ok: true, content: "...", parsed: {...}, ms: 1234 }
+
+// Read recent conversation from transcript JSONL
+var ctx = haiku.getConversationContext(transcriptPath, 8);
+```
+
+### WSL vs Windows
+- **Windows**: `haiku-client.js` uses Node `http` module via `child_process.execSync` (synchronous). Proxy at `:4100` (`llm-token-tracker`).
+- **WSL**: `haiku-client.js` uses `curl` to `:4100`. Same proxy endpoint, different transport.
+- Modules are identical across platforms — only `haiku-client.js` differs.
+
+### Modules that depend on haiku
+| Module | Event | Dependency |
+|--------|-------|------------|
+| `agent-quality-gate.js` | PreToolUse | `haiku-client.js` |
+| `pre-tool-verify-gate.js` | PreToolUse | `haiku-client.js` |
+| `post-tool-use-gate.js` | PostToolUse | `haiku-client.js` |
+| `auto-continue-gate.js` | Stop | `haiku-client.js` + `stop-haiku-rules.yaml` |
+| `stop-analysis-gate.js` | Stop | `haiku-client.js` + `stop-haiku-rules.yaml` |
+
+### Rules files
+| File | Used by | Purpose |
+|------|---------|---------|
+| `stop-haiku-rules.yaml` | `auto-continue-gate.js`, `stop-analysis-gate.js` | Stop-event decision rules (DONE/CONTINUE/NEXT/DISPATCH) |
+| `sessionstart-haiku-rules.md` | `load-instructions-gate.js` | Text injected at session start |
+| `userprompt-haiku-rules.yaml` | L1 preprocessor (future) | Shorthand resolution, interpretation rules |
+
+### `wsl` Workflow
+Lightweight direct-to-main workflow with 13 modules. Enabled via `workflow-config.json`. No branch/PR enforcement. Modules tagged `// WORKFLOW: wsl`.
+
+**PreToolUse (8):** agent-quality-gate, gate-quality-gate, no-rewrite-gate, pre-tool-verify-gate, proxy-restart-gate, settings-watchdog-gate, spec-gate, todo-gate
+
+**PostToolUse (1):** post-tool-use-gate
+
+**SessionStart (2):** load-instructions-gate, stop-hook-selftest-check
+
+**Stop (2):** auto-continue-gate, stop-analysis-gate
 
 ## Self-Reflection Architecture
 - **Brain bridge (T331)**: `self-reflection.js` (Stop module) tries unified-brain `/ask` endpoint first (fast, has three-tier memory). Falls back to direct LLM call when brain is unavailable. `BRAIN_URL` env var configurable (default `http://localhost:8790`).

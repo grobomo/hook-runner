@@ -1,19 +1,45 @@
 // Shared helper: Haiku judge — gates call this for semantic decisions at ambiguous points.
 // Routes through llm-token-proxy POST /judge endpoint (logs to judge_log, visible on dashboard).
 // Gracefully falls back when proxy is unavailable — never blocks the gate pipeline.
+// Auth: reads ANTHROPIC_AUTH_TOKEN from env (set in settings.json).
 "use strict";
 var http = require("http");
 var path = require("path");
+var fs = require("fs");
 
-var JUDGE_URL = process.env.JUDGE_URL || "http://127.0.0.1:4100";
-var _parsed;
-try { _parsed = new URL(JUDGE_URL); } catch (e) { _parsed = { hostname: "127.0.0.1", port: "4100" }; }
-var _host = _parsed.hostname || "127.0.0.1";
-var _port = parseInt(_parsed.port, 10) || 4100;
+// Read central config — single source of truth for all haiku gates
+var HOME = process.env.HOME || process.env.USERPROFILE || "";
+var CONFIG_PATH = path.join(HOME, ".claude", "proxy", "haiku-config.json");
+var _cfg = null;
+try { _cfg = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8")); } catch (e) { _cfg = {}; }
+var _proxy = _cfg.proxy || {};
+var _timeouts = _cfg.timeouts || {};
+
+var _host = _proxy.host || "127.0.0.1";
+var _port = _proxy.port || 4100;
+
+// Auth token — read from env first, fall back to settings.json
+var _authToken = null;
+function getAuthToken() {
+  if (_authToken) return _authToken;
+  if (process.env.ANTHROPIC_AUTH_TOKEN) {
+    _authToken = process.env.ANTHROPIC_AUTH_TOKEN;
+    return _authToken;
+  }
+  try {
+    var settingsPath = path.join(process.env.HOME || process.env.USERPROFILE || "", ".claude", "settings.json");
+    var settings = JSON.parse(fs.readFileSync(settingsPath, "utf-8"));
+    if (settings.env && settings.env.ANTHROPIC_AUTH_TOKEN) {
+      _authToken = settings.env.ANTHROPIC_AUTH_TOKEN;
+      return _authToken;
+    }
+  } catch (e) {}
+  return "";
+}
 
 var _available = null;
 var _lastCheck = 0;
-var HEALTH_TTL_MS = 60000;
+var HEALTH_TTL_MS = _timeouts.healthCacheTTL || 60000;
 
 function checkHealth() {
   var now = Date.now();
@@ -21,11 +47,15 @@ function checkHealth() {
     return Promise.resolve(_available);
   }
   return new Promise(function(resolve) {
+    var healthHeaders = {};
+    var token = getAuthToken();
+    if (token) healthHeaders["Authorization"] = "Bearer " + token;
     var req = http.get({
       hostname: _host,
       port: _port,
-      path: "/health",
-      timeout: 2000
+      path: _proxy.healthPath || "/health",
+      headers: healthHeaders,
+      timeout: _timeouts.healthCheck || 2000
     }, function(res) {
       var data = "";
       res.on("data", function(chunk) { data += chunk; });
@@ -58,13 +88,16 @@ function judge(opts) {
         fallback: opts.fallback || "allow"
       });
 
+      var judgeHeaders = { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload) };
+      var authToken = getAuthToken();
+      if (authToken) judgeHeaders["Authorization"] = "Bearer " + authToken;
       var req = http.request({
         hostname: _host,
         port: _port,
-        path: "/judge",
+        path: _proxy.judgePath || "/judge",
         method: "POST",
-        headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload) },
-        timeout: 5000
+        headers: judgeHeaders,
+        timeout: _timeouts.judgeCall || 5000
       }, function(res) {
         var data = "";
         res.on("data", function(chunk) { data += chunk; });

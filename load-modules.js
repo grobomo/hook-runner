@@ -13,108 +13,132 @@
 var fs = require("fs");
 var path = require("path");
 
-// Cache header lines (first 8) per file path within a single loadModules() call.
+// Cache parsed module metadata per file path within a single loadModules() call.
 // Each hook invocation is a fresh Node process, so no stale cache risk.
 var _headerCache = {};
 
+// Return all comment/blank/shebang lines before the first real code line.
+// Stops at the first line that isn't a comment, blank, shebang, or "use strict".
+// This way tags can appear anywhere in the header block — no line-number limit.
 function getHeaderLines(filePath) {
   if (_headerCache[filePath]) return _headerCache[filePath];
   try {
     var content = fs.readFileSync(filePath, "utf-8");
-    var lines = content.split("\n").slice(0, 8);
-    _headerCache[filePath] = lines;
-    return lines;
+    var allLines = content.split("\n");
+    var header = [];
+    for (var i = 0; i < allLines.length; i++) {
+      var line = allLines[i];
+      var trimmed = line.replace(/^\s+|\s+$/g, "");
+      // Keep: empty lines, comments (// or /* or * or */), shebang, "use strict"
+      if (trimmed === "" ||
+          trimmed.charAt(0) === "/" ||
+          trimmed.charAt(0) === "*" ||
+          trimmed.charAt(0) === "#" ||
+          trimmed === '"use strict";' ||
+          trimmed === "'use strict';") {
+        header.push(line);
+      } else {
+        break; // first real code line — stop
+      }
+    }
+    _headerCache[filePath] = header;
+    return header;
   } catch (e) { return []; }
 }
 
 /**
- * Parse "// TOOLS: Bash, Edit" from the first 8 lines of a module file.
- * When present, the module only runs for the listed tool names.
- * Returns array of tool names, or empty array (= runs for all tools).
+ * Parse all module metadata from header comments in a single pass.
+ * Scans the first 8 lines for known tags. Returns a structured object.
+ *
+ * Supported tags:
+ *   // TOOLS: Bash, Edit, Write    — which tools this module intercepts
+ *   // WORKFLOW: shtd, wsl         — only runs when these workflows are active
+ *   // BLOCKING: true              — Stop modules: run synchronously (visible block/pass)
+ *   // requires: mod1, mod2        — skip if these modules aren't installed
+ *
+ * @param {string} filePath
+ * @returns {{ tools: string[], workflows: string[], requires: string[], blocking: boolean }}
  */
-function parseToolTags(filePath) {
+var _metaCache = {};
+
+function parseModuleMeta(filePath) {
+  if (_metaCache[filePath]) return _metaCache[filePath];
+
+  var meta = { tools: [], workflows: [], requires: [], blocking: false };
   var lines = getHeaderLines(filePath);
+
   for (var i = 0; i < lines.length; i++) {
-    var match = lines[i].match(/^\/\/\s*TOOLS:\s*(.+)/i);
-    if (match) {
-      var tools = match[1].split(",");
-      var result = [];
+    var line = lines[i];
+
+    // // TOOLS: Bash, Edit
+    var toolMatch = line.match(/^\/\/\s*TOOLS:\s*(.+)/i);
+    if (toolMatch && meta.tools.length === 0) {
+      var tools = toolMatch[1].split(",");
       for (var t = 0; t < tools.length; t++) {
         var tool = tools[t].replace(/^\s+|\s+$/g, "");
-        if (tool) result.push(tool);
+        if (tool) meta.tools.push(tool);
       }
-      if (result.length > 0) return result;
+    }
+
+    // // WORKFLOW: shtd, wsl
+    var wfMatch = line.match(/^\/\/\s*WORKFLOW:\s*(.+)/i);
+    if (wfMatch && meta.workflows.length === 0) {
+      var wfs = wfMatch[1].split(",");
+      for (var w = 0; w < wfs.length; w++) {
+        var wf = wfs[w].replace(/^\s+|\s+$/g, "");
+        if (wf) meta.workflows.push(wf);
+      }
+    }
+
+    // // BLOCKING: true
+    var blockMatch = line.match(/^\/\/\s*BLOCKING:\s*(true|yes|1)/i);
+    if (blockMatch) meta.blocking = true;
+
+    // // requires: mod1, mod2
+    var reqMatch = line.match(/^\/\/\s*requires:\s*(.+)/i);
+    if (reqMatch && meta.requires.length === 0) {
+      var deps = reqMatch[1].split(",").map(function(s) { return s.trim(); }).filter(Boolean);
+      meta.requires = deps.filter(function(d) { return /^[a-z0-9][-a-z0-9]*$/.test(d); });
     }
   }
-  return [];
+
+  _metaCache[filePath] = meta;
+  return meta;
 }
 
-/**
- * Filter modules by tool name. Modules with a // TOOLS: tag are skipped
- * if the current tool doesn't match. Modules without the tag always pass.
- * @param {string[]} modulePaths
- * @param {string} toolName - current tool being invoked (e.g. "Bash", "Edit")
- * @returns {string[]} filtered paths
- */
+// --- Convenience wrappers (backwards-compatible, delegate to parseModuleMeta) ---
+
+function parseToolTags(filePath) {
+  return parseModuleMeta(filePath).tools;
+}
+
 function filterByTool(modulePaths, toolName) {
   if (!toolName) return modulePaths;
   var result = [];
   for (var i = 0; i < modulePaths.length; i++) {
     var tools = parseToolTags(modulePaths[i]);
-    if (tools.length === 0) {
-      result.push(modulePaths[i]); // no tag = runs for all tools
-    } else if (tools.indexOf(toolName) !== -1) {
+    if (tools.length === 0 || tools.indexOf(toolName) !== -1) {
       result.push(modulePaths[i]);
     }
   }
   return result;
 }
 
-/**
- * Parse "// requires: mod1, mod2" from the first 8 lines of a module file.
- * Only matches module-name patterns (lowercase with hyphens, no spaces in names).
- * Returns array of required module base names (without .js).
- */
 function parseRequires(filePath) {
-  var lines = getHeaderLines(filePath);
-  for (var i = 0; i < lines.length; i++) {
-    var match = lines[i].match(/^\/\/\s*requires:\s*(.+)/i);
-    if (match) {
-      var deps = match[1].split(",").map(function(s) { return s.trim(); }).filter(Boolean);
-      // Only accept valid module names (lowercase, hyphens, digits — no spaces/descriptions)
-      var valid = deps.filter(function(d) { return /^[a-z0-9][-a-z0-9]*$/.test(d); });
-      if (valid.length > 0) return valid;
-    }
-  }
-  return [];
+  return parseModuleMeta(filePath).requires;
 }
 
-/**
- * Parse "// WORKFLOW: workflow-name" from the first 5 lines of a module file.
- * Supports comma-separated names: "// WORKFLOW: shtd, starter"
- * Returns array of workflow names, or empty array if no tag found.
- */
 function parseWorkflowTags(filePath) {
-  var lines = getHeaderLines(filePath);
-  for (var i = 0; i < lines.length; i++) {
-    var match = lines[i].match(/^\/\/\s*WORKFLOW:\s*(.+)/i);
-    if (match) {
-      var tags = match[1].split(",");
-      var result = [];
-      for (var t = 0; t < tags.length; t++) {
-        var tag = tags[t].replace(/^\s+|\s+$/g, "");
-        if (tag) result.push(tag);
-      }
-      if (result.length > 0) return result;
-    }
-  }
-  return [];
+  return parseModuleMeta(filePath).workflows;
 }
 
-// Backwards-compatible: returns first tag or null
 function parseWorkflowTag(filePath) {
   var tags = parseWorkflowTags(filePath);
   return tags.length > 0 ? tags[0] : null;
+}
+
+function isBlocking(filePath) {
+  return parseModuleMeta(filePath).blocking;
 }
 
 // Cache workflow groups for 30s to avoid re-reading YAML on every hook invocation
@@ -343,5 +367,7 @@ module.exports.parseWorkflowTag = parseWorkflowTag;
 module.exports.parseWorkflowTags = parseWorkflowTags;
 module.exports.filterByWorkflow = filterByWorkflow;
 module.exports.loadWorkflowGroups = loadWorkflowGroups;
+module.exports.parseModuleMeta = parseModuleMeta;
 module.exports.parseToolTags = parseToolTags;
 module.exports.filterByTool = filterByTool;
+module.exports.isBlocking = isBlocking;
