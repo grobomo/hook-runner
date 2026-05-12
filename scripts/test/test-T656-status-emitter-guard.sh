@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CI-SKIP — uses python3 for 10MB file creation, crashes on Windows CI
 # WHY: T656 — verify status-emitter-guard emits claude.stopped events and is no-op without env var
 set -euo pipefail
 cd "$(dirname "$0")/../.."

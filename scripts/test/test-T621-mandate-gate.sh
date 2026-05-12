@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CI-SKIP — uses python3 for JSON generation, crashes on Windows CI
 # Test T621: mandate-gate.js (PreToolUse) — mandate enforcement
 set -euo pipefail
 REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"

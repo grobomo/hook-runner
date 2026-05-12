@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CI-SKIP — requires python3 for api_check.py mock
 # T635: Test api-watcher.js (SessionStart) — spawns api_check.py --watch sentinel
 set -uo pipefail
 cd "$(dirname "$0")/../.."

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CI-SKIP — uses python3 for 10MB file creation, crashes on Windows CI
 # WHY: T655 — verify tool-event-guard emits tool.used events and is no-op without env var
 set -euo pipefail
 cd "$(dirname "$0")/../.."
