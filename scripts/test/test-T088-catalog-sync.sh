@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CI-SKIP — requires installed modules.yaml
 # T088: Verify catalog structure is valid (modules exist per event type)
 set -euo pipefail
 REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"

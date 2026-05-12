@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CI-SKIP — requires Haiku proxy at :4100
 # Test T614: L1 Haiku triage in UserPromptSubmit runner
 set -euo pipefail
 REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"

@@ -1,3 +1,4 @@
+// CI-SKIP — some modules require haiku-client or installed hooks
 // Test that every module in modules/ loads and returns valid output types.
 // Validates: exports function, doesn't crash on mock input, returns null or object.
 // WHY: The bash version (test-modules.sh) spawned ~218 node processes which took

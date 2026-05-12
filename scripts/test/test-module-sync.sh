@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CI-SKIP — requires installed modules.yaml and live hooks
 # Test: module catalog + sync functionality
 set -e
 cd "$(dirname "$0")/../.."

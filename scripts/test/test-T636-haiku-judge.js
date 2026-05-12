@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// CI-SKIP — requires Haiku proxy at :4100
 "use strict";
 // Tests for T636: _haiku-judge.js shared helper
 // Tests fallback behavior, health caching, timeout handling

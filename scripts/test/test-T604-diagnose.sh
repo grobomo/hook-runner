@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CI-SKIP — reads live settings.json and installed hooks
 # Test T604: diagnose.js — hook transparency and auditing
 set -euo pipefail
 REPO_DIR="$(cd "$(dirname "$0")/../.." && (pwd -W 2>/dev/null || pwd))"

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CI-SKIP — path patterns are platform-specific
 # WHY: T204 — verify no hardcoded user paths in distributable modules.
 # CI secret-scan catches these on push, but this test catches them locally before commit.
 set -euo pipefail

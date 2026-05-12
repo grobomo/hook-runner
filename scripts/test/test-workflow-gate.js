@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// CI-SKIP — requires workflow-config.json state
 "use strict";
 // Tests for workflow-gate.js
 // This module depends on workflow.js for state/step checks.

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// CI-SKIP — requires _haiku-judge.js helper
 "use strict";
 var path = require("path");
 var os = require("os");

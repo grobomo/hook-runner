@@ -20,7 +20,7 @@ jobs:
       # the CI was first set up. --test discovers all scripts/test/test-*.sh
       # automatically so new tests are always included.
       - name: Run all test suites
-        run: node setup.js --test
+        run: node setup.js --test --ci
 
   test-windows:
     runs-on: windows-latest
@@ -35,7 +35,7 @@ jobs:
       # use pwd -W fallback and mktemp but CI must verify cross-platform.
       - name: Run all test suites
         shell: bash
-        run: node setup.js --test
+        run: node setup.js --test --ci
 
   install-test:
     runs-on: ubuntu-latest

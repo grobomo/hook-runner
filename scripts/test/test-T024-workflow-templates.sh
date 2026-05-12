@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# CI-SKIP — requires workflow-config.json state
 # Test T024: --workflow templates + --from-template flag
 # WHY: Users need curated starting points for workflows, not empty scaffolds.
 # This test verifies template listing and creation from templates.

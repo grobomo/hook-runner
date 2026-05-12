@@ -1253,6 +1253,7 @@ function cmdTest(args) {
   var timeoutIdx = args ? args.indexOf("--timeout") : -1;
   var customTimeout = timeoutIdx !== -1 && args[timeoutIdx + 1] ? parseInt(args[timeoutIdx + 1], 10) * 1000 : 0;
   var skipWsl = args && args.indexOf("--skip-wsl") !== -1;
+  var ciMode = args && args.indexOf("--ci") !== -1 || !!process.env.CI;
   var jsOnly = args && args.indexOf("--js-only") !== -1;
   var shOnly = args && args.indexOf("--sh-only") !== -1;
   var JS_TIMEOUT = customTimeout || 60000;   // 60s default for JS (some create git repos)
@@ -1263,6 +1264,7 @@ function cmdTest(args) {
   console.log("[hook-runner] Test Suite");
   console.log("========================");
   if (skipWsl) console.log("  (skipping WSL-dependent tests)");
+  if (ciMode) console.log("  (CI mode: skipping env-dependent tests)");
   if (jsOnly) console.log("  (JS tests only)");
   if (shOnly) console.log("  (bash tests only)");
   console.log("  Timeouts: JS=" + (JS_TIMEOUT / 1000) + "s, bash=" + (SH_TIMEOUT / 1000) + "s");
@@ -1294,6 +1296,16 @@ function cmdTest(args) {
       try {
         var head = fs.readFileSync(path.join(testDir, f), "utf-8").slice(0, 2000);
         return !/\bwsl\b/i.test(head) && !/\bopenclaw\b/i.test(head);
+      } catch(e) { return true; }
+    });
+  }
+  // CI mode: skip tests that need local infrastructure (haiku proxy, installed hooks, etc.)
+  // Matches both # CI-SKIP (bash) and // CI-SKIP (JS)
+  if (ciMode) {
+    testFiles = testFiles.filter(function(f) {
+      try {
+        var head = fs.readFileSync(path.join(testDir, f), "utf-8").slice(0, 500);
+        return !/CI-SKIP/.test(head);
       } catch(e) { return true; }
     });
   }

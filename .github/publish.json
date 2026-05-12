@@ -1,5 +1,9 @@
 {
   "github_account": "grobomo",
   "visibility": "public",
-  "reason": "Generic hook runner system for Claude Code, no internal/customer data"
+  "reason": "Generic hook runner system for Claude Code, no internal/customer data",
+  "targets": [
+    { "account": "grobomo", "remote": "origin" },
+    { "account": "trend-aatf-external", "remote": "aatf" }
+  ]
 }
