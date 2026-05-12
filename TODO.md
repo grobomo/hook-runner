@@ -16,6 +16,10 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 
 - [x] T640: **cwd-drift gate blocks new_session.py cross-project dispatch** — Fixed: moved session management script allowlist (`new_session.py`, `context_reset.py`) to early return before path extraction. Both script path and `--project-dir` argument no longer trigger false positives. 14 tests (2 new).
 
+## Focus-Steal Fix (dispatched from system-monitor T040, 2026-05-11)
+
+- [x] T657: **Add `windowsHide: true` to haiku-client.js execSync** — Fixed: added windowsHide to the curl execSync options. Was the only hook subprocess call missing it.
+
 ## Event-Driven Observability (from claude-portable specs/event-driven-observability/)
 
 - [x] T655: **PostToolUse async module: tool-event-guard.js** — Emits `tool.used` events to JSONL at `$CLAUDE_EVENT_LOG`. No-op when env var unset. Truncates command at 200 chars. Includes task_id/stage/worker_id from env. Async (returns null). 10MB log rotation. 10 tests.
@@ -29,7 +33,7 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T609: Fix worktree-gate test env leak + spec-gate control structure allow. 16/16 worktree + 79 spec-gate tests. (PR #514)
 - [x] T608: Fix _bash-write-patterns.js false positive — echo/printf/cat redirect patterns matched across statement boundaries and on stderr redirects. Fixed with `[^;|&]*` + `(?<![0-9])` lookbehind. 63 tests (12 new). (PR #512)
 - [x] T613: Updated nested-claude gate — now distinguishes info commands (--help, --version) from subprocess commands (claude -p). Info commands get "you ARE Claude" message. Subprocess commands get 3 alternatives: separate terminal, context_reset.py, PowerShell Start-Process. Also fixed gate-quality-gate name convention check to only apply to new files. 28 tests.
-- [ ] T578: Marketplace sync — BLOCKED on user permission. Two marketplaces exist (trend-ai-taskforce/ai-skill-marketplace and aatf-external/plugin-marketplace). User must clarify: which org is aatf-external, what's the difference, and does hook-runner belong in either/both. CLAUDE.md updated with publishing rules. publish.json needs manual edit to add `team_sharing_approved: false`.
+- [x] T578: Marketplace sync — Published to `trend-aatf-external/hook-runner` (private, EMU org). Org name is `trend-aatf-external` (accessible via tmemu account). Remote `aatf` added to local repo. EMU org doesn't allow public repos — grobomo/hook-runner remains the public source.
 - [x] T607: Add T605/T606 modules to README table + version bump to v2.73.0. Also added to live modules.yaml.
 - [x] T596: Project health — archived 468 completed tasks + 5 stale handoffs to TODO-COMPLETED.md (1468→35 lines).
 - [x] T597: Remove broken UserPromptSubmit hook from lab-worker settings.json — already fixed (was `{"hooks": {}}`)
@@ -237,3 +241,5 @@ Modular hook runner system for Claude Code. One runner per event, modules in fol
 - [x] T651: Migrate agent-quality-gate from claude -p to haiku-client.js — was spawning full Claude CLI session (15s timeout, expensive). Now uses local proxy at :4100 (~4s, logged). Added proper _log() wrapper, invoke/result logging.
 - [x] T652: Fix pre-tool-verify-gate rate limiter — module-level `_lastCallMs` var reset to 0 every invocation (fresh Node process). Replaced with file-persisted timestamp. Call 2 now takes 1ms (was ~2s).
 - [x] T621: Mandate enforcement gate — mandate-gate.js (PreToolUse) reads mandate.json written by auto-continue-gate (Stop). Blocks first tool call with mandate text, sets seen=true, passes subsequent calls. 10min expiry. Auto-continue-gate writes mandate on CONTINUE, clears on DONE, passes prior mandate context to Haiku. 24 tests.
+
+- [ ] T622: mandate.json is global — leaks across sessions. One tab writes a mandate, all tabs see it. Fix: scope by session ID or project dir. Either use mandate-{session_id}.json or include project_dir field and only enforce when current project matches. Current bug: hook-runner session wrote mandate about T578/T657, then every other Claude tab (including llm-token-tracker) gets blocked by it.

@@ -4,7 +4,7 @@ Modular hook runner for Claude Code. Workflows group modules into enforceable pi
 
 ## Repo
 - **Account**: grobomo (public)
-- **Marketplace**: trend-ai-taskforce/ai-skill-marketplace → plugins/hook-runner (PR #164 pending)
+- **Team mirror**: trend-aatf-external/hook-runner (private, push via tmemu account, remote `aatf`)
 - **Local skill**: ~/.claude/skills/hook-runner/
 - **Live hooks**: ~/.claude/hooks/ (run-*.js, load-modules.js, run-modules/)
 
