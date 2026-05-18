@@ -523,7 +523,7 @@ What was done this session:
 - T420 (PR #289): Optimized spec-gate — mtime-based caching for specs/ scan + TODO.md reads + autoActivateShtd (~98ms→2ms per call, 57x speedup)
 - T421 (PR #290): Version bump to 2.21.2 + CHANGELOG
 - Marketplace synced to v2.21.2 (claude-code-skills)
-- gh auth switched back to default (joel-ginsberg_tmemu)
+- gh auth switched back to default (default-account)
 - Cleaned up report-debug.js (moved to archive/)
 - All spec-gate tests pass (38/38), batch module validation (89/89), setup wizard (7/7)
 - Health: 110 OK, 0 warnings, 0 failures
@@ -577,7 +577,7 @@ What was done this session:
 - T361 (PR #297): Version bump 2.23.0
 - T362: Updated shtd.yml with new modules, audit clean
 - Marketplace synced to v2.23.0
-- gh auth on default (joel-ginsberg_tmemu)
+- gh auth on default (default-account)
 
 Remaining:
 - shtd.yml update not yet committed (minor — just module count)
@@ -593,7 +593,7 @@ What was done this session:
 - T367 (PR #304): Version bump to 2.23.2
 - Marketplace synced to v2.23.2 (grobomo/claude-code-skills)
 - Stale remote branches being cleaned up (background)
-- gh auth on default (joel-ginsberg_tmemu)
+- gh auth on default (default-account)
 - Health: 115 OK, 0 warnings, 0 failures
 
 ## Session Handoff (2026-04-11d)
@@ -605,7 +605,7 @@ What was done this session:
 - T372 (PR #310): Fixed test-runners.sh broken by T368 run-modules/ untracking
 - Code review: all JSON.parse wrapped in try/catch, all execSync safe, no path traversal
 - Module validation: 372/372 pass (all modules load and execute)
-- gh auth on grobomo (switch back to joel-ginsberg_tmemu before push)
+- gh auth on grobomo (switch back to default-account before push)
 
 Remaining to investigate:
 - test-T351-session-collision.sh and test-module-sync.sh failures (may be transient/slow)
@@ -627,7 +627,7 @@ What was done this session:
 - Health: 115 OK, 0 warnings, 0 failures
 - Watchdog + setup now reference correct workflow defaults
 - Live hooks synced (watchdog.js, setup.js)
-- gh auth on default (joel-ginsberg_tmemu)
+- gh auth on default (default-account)
 
 ## Session Handoff (2026-04-11f)
 What was done this session:
@@ -636,7 +636,7 @@ What was done this session:
 - T430 (PR #321): Version bump to 2.24.1 + SKILL.md starter keyword
 - T431 (PR #322): Code review — README cross-project-reset count fix, ENFORCEMENT.md regen, v2.24.2
 - Marketplace synced to v2.24.2
-- gh auth on default (joel-ginsberg_tmemu)
+- gh auth on default (default-account)
 - ES5 clean, no security issues, all audit/health checks pass
 
 Next session (continue step 3-4 of stop-hook flow):
@@ -664,7 +664,7 @@ What was done this session:
 - Code review: all modules pass contract, ES5 clean, no security issues
 - Health: 115 OK, 0 warnings, 0 failures
 - Workflow audit: 98 modules, 97 tagged, all matching YAML
-- gh auth on default (joel-ginsberg_tmemu)
+- gh auth on default (default-account)
 
 Status:
 - Version: 2.24.6
@@ -679,7 +679,7 @@ What was done this session:
 - Updated GitHub repo description (100 modules, 5 workflows)
 - Marketplace synced to v2.24.6, live hooks synced
 - Code review: no hardcoded paths (except detection patterns in share-is-generic), no security issues, all execSync sanitized
-- gh auth on default (joel-ginsberg_tmemu)
+- gh auth on default (default-account)
 
 Status:
 - 0 pending tasks
@@ -702,7 +702,7 @@ What was done this session:
 - Code review: ES5 clean, no security issues, no bare-string return bugs
 - Full test suite: 51 suites, 405 passed, 0 failed
 - Health: 116 OK, 0 warnings, 0 failures
-- gh auth on default (joel-ginsberg_tmemu)
+- gh auth on default (default-account)
 
 Status:
 - 0 pending tasks

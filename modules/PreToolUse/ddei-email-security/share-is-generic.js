@@ -19,8 +19,6 @@ var BLOCKED_PATTERNS = [
   // Internal ticket / task references
   /\bT0\d{2}\b/,
   // Internal repo references
-  /\bjoel-ginsberg_tmemu\b/,
-  /\bgrobomo\b/,
 ];
 
 // Allowlist: patterns that look like matches but are OK

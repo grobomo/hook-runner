@@ -9,10 +9,10 @@ var WRITE_PATTERNS = [
   // Skill tool calls to v1-api that could modify
   /v1[-_]?(api|lite).*\b(add|create|update|delete|patch|post|put|remove|block|isolate|quarantine|collect|reset|terminate|disable|enable|submit|run|execute|deploy|restore)\b/i,
   // Direct curl/fetch to V1 API with write methods
-  /curl\b.*-X\s*(POST|PUT|PATCH|DELETE)\b.*api\.xdr\.trendmicro/i,
-  /curl\b.*api\.xdr\.trendmicro.*-X\s*(POST|PUT|PATCH|DELETE)/i,
+  /curl\b.*-X\s*(POST|PUT|PATCH|DELETE)\b.*api\.xdr\.vendor/i,
+  /curl\b.*api\.xdr\.vendor.*-X\s*(POST|PUT|PATCH|DELETE)/i,
   // Python requests to V1 with write methods
-  /requests\.(post|put|patch|delete)\s*\(.*api\.xdr\.trendmicro/i,
+  /requests\.(post|put|patch|delete)\s*\(.*api\.xdr\.vendor/i,
   // V1 response actions (isolate endpoint, collect file, etc.)
   /\/v3\.0\/response\//i,
   // V1 blocklist modifications
@@ -25,7 +25,7 @@ var WRITE_PATTERNS = [
 var SAFE_PATTERNS = [
   /\b(search|list|get|download|export|describe|check|status|health)\b/i,
   /curl\b.*-X\s*GET\b/i,
-  /curl\b[^|]*api\.xdr\.trendmicro(?!.*-X)/i,  // curl without -X defaults to GET
+  /curl\b[^|]*api\.xdr\.vendor(?!.*-X)/i,  // curl without -X defaults to GET
   /requests\.get\s*\(/i,
 ];
 
@@ -44,7 +44,7 @@ module.exports = function(input) {
   }
 
   // Check if this touches V1 API at all
-  var touchesV1 = /v1[-_]?(api|lite)|api\.xdr\.trendmicro|vision\s*one/i.test(cmd);
+  var touchesV1 = /v1[-_]?(api|lite)|api\.xdr\.vendor|vision\s*one/i.test(cmd);
   if (!touchesV1) return null;
 
   // Check against write patterns

@@ -93,7 +93,7 @@ PROJ4="$TMPDIR/shared-org-project"
 mkdir -p "$PROJ4/src" "$PROJ4/.github"
 git init -q "$PROJ4"
 cat > "$PROJ4/.github/publish.json" <<'EOF'
-{"github_account": "joel-ginsberg_tmemu", "visibility": "private", "reason": "internal"}
+{"github_account": "your-org", "visibility": "private", "reason": "internal"}
 EOF
 echo "x" > "$PROJ4/src/app.js"
 init_git "$PROJ4"

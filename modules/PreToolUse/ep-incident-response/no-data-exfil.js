@@ -18,7 +18,7 @@ var BLOCKED_SKILLS = [
 
 // Bash patterns that send data externally
 var BLOCKED_BASH_PATTERNS = [
-  /\bcurl\b.*-X\s*(POST|PUT|PATCH)\b(?!.*api\.xdr\.trendmicro)(?!.*github)/i,  // POST to non-V1, non-GitHub
+  /\bcurl\b.*-X\s*(POST|PUT|PATCH)\b(?!.*api\.xdr\.vendor)(?!.*github)/i,  // POST to non-V1, non-GitHub
   /\bwget\b.*--post/i,
   /teams_chat\.py\s+send/,
   /graph_post.*sendMail/i,

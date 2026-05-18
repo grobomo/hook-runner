@@ -4,7 +4,7 @@
 // and any Blueprint automation against customer portals.
 "use strict";
 
-var HACKATHON_ACCOUNT = "752266476357";
+var HACKATHON_ACCOUNT = process.env.HACKATHON_AWS_ACCOUNT || "REPLACE_ME";
 
 module.exports = function(input) {
   var tool = input.tool_name;

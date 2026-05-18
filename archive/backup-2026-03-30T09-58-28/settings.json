@@ -3,7 +3,7 @@
     "DISABLE_AUTOUPDATER": "1",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "0",
     "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
-    "GOOGLE_GEMINI_BASE_URL": "https://api.rdsec.trendmicro.com/prod/aiendpoint",
+    "GOOGLE_GEMINI_BASE_URL": "https://api.example.com/prod/aiendpoint",
     "NANO_BANANA_MODEL": "gemini-3-pro-image"
   },
   "attribution": {

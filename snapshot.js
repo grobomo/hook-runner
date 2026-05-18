@@ -63,7 +63,7 @@ function findMcpDir() {
       }
     } catch (e) {}
   }
-  var od = path.join(HOME, "OneDrive - TrendMicro", "Documents", "ProjectsCL", "MCP", "mcp-manager");
+  var od = path.join(HOME, "OneDrive", "Documents", "MCP", "mcp-manager");
   return fs.existsSync(od) ? od : null;
 }
 

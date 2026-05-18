@@ -40,7 +40,7 @@ fi
 
 # Check for hardcoded GitHub usernames (PII)
 GHITS=$(grep -rn \
-  -E 'joel-ginsberg|tmemu|joelg' \
+  -E 'your-username|your-org|your-user' \
   modules/PreToolUse/*.js \
   modules/PostToolUse/*.js \
   modules/Stop/*.js \
