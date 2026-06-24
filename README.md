@@ -90,6 +90,33 @@ npx grobomo/hook-runner --demo          # terminal demo
 npx grobomo/hook-runner --demo-html     # shareable HTML page
 ```
 
+## What hook-runner replaces
+
+Without hook-runner, you write shell commands directly in `settings.json` — one per event, no structure:
+
+```json
+"hooks": {
+  "PreToolUse": [{
+    "matcher": "Bash",
+    "hooks": [{ "type": "command", "command": "node check-force-push.js" }]
+  }]
+}
+```
+
+With hook-runner, `settings.json` has exactly **one entry per event** that routes to the runner. You never edit it again — just drop `.js` files in folders:
+
+```json
+"hooks": {
+  "PreToolUse": [
+    { "matcher": "Edit",  "hooks": [{ "type": "command", "command": "node \"$HOME/.claude/hooks/run-hidden.js\" run-pretooluse.js" }] },
+    { "matcher": "Write", "hooks": [{ "type": "command", "command": "node \"$HOME/.claude/hooks/run-hidden.js\" run-pretooluse.js" }] },
+    { "matcher": "Bash",  "hooks": [{ "type": "command", "command": "node \"$HOME/.claude/hooks/run-hidden.js\" run-pretooluse.js" }] }
+  ]
+}
+```
+
+The setup wizard (`node setup.js --yes`) writes this for you.
+
 ## What does a block look like?
 
 When Claude tries something a module blocks, the hook fires and Claude sees the block reason inline. Two examples from the `starter` workflow:
@@ -147,6 +174,47 @@ node setup.js --workflow complete spec     # mark spec step done
 node setup.js --workflow reset             # clear active workflow
 ```
 
+### What a real workflow looks like
+
+Here's the `starter` workflow (excerpt from `workflows/starter.yml`):
+
+```yaml
+name: starter
+description: Safe defaults for any Claude Code user.
+version: 2
+enabled: true
+
+modules:
+  # Git safety — prevent irreversible mistakes
+  - force-push-gate
+  - git-destructive-guard
+  - secret-scan-gate
+  - commit-quality-gate
+  # File safety
+  - archive-not-delete
+  # Code quality
+  - no-hardcoded-paths
+  - test-coverage-check
+  # Session management
+  - stop-fired-check-gate
+```
+
+Each module name maps to a `.js` file in `modules/{Event}/`. The workflow tag in the file (`// WORKFLOW: starter`) links them:
+
+```javascript
+// modules/PreToolUse/force-push-gate.js
+// WORKFLOW: starter
+// WHY: Force push destroyed the gate system — 142 modules lost, 3 hours to recover.
+module.exports = function(input) {
+  if (input.tool_name !== "Bash") return null;
+  var cmd = (input.tool_input || {}).command || "";
+  if (/git\s+push\s+.*--force/.test(cmd)) {
+    return { decision: "block", reason: "Force-push blocked. Use a regular push or revert commit." };
+  }
+  return null;
+};
+```
+
 ### Custom Workflows
 
 Create `workflows/my-workflow.yml`:
@@ -155,13 +223,6 @@ Create `workflows/my-workflow.yml`:
 name: my-workflow
 description: What this workflow enforces
 version: 1
-steps:
-  - id: setup
-    name: Set up environment
-  - id: build
-    name: Build the thing
-    gate:
-      require_step: setup
 modules:
   - my-gate-module
 ```
@@ -301,8 +362,11 @@ Every behavioral requirement should be a gate unless it requires LLM judgment. H
 
 ## Architecture
 
+### Installed layout (`~/.claude/hooks/`)
+
 ```
 ~/.claude/hooks/
+  run-hidden.js                # entry point (stdin → runner dispatch)
   run-pretooluse.js            # PreToolUse runner
   run-posttooluse.js           # PostToolUse runner
   run-stop.js                  # Stop runner
@@ -313,15 +377,50 @@ Every behavioral requirement should be a gate unless it requires LLM judgment. H
   run-async.js                 # async module executor (Promise detection, 4s timeout)
   workflow.js                  # workflow engine (YAML state machine)
   run-modules/
-    PreToolUse/*.js            # gate modules
-    PostToolUse/*.js           # post-action checks
-    Stop/*.js                  # session-end controls
-    SessionStart/*.js          # context injection
+    PreToolUse/*.js            # gate modules (block before action)
+    PostToolUse/*.js           # observation modules (warn after action, never block)
+    Stop/*.js                  # session-end controls (continue/done decisions)
+    SessionStart/*.js          # context injection (inject text into session)
     UserPromptSubmit/*.js      # prompt processing
+  rules/stop/*.yaml            # Haiku stop rules (LLM-evaluated at session end)
   workflows/*.yml              # workflow definitions
 ```
 
-Each runner reads stdin, discovers modules via `load-modules.js`, calls each in order. First block wins.
+### Repo layout
+
+```
+hook-runner/
+  setup.js, report.js, ...    # development copies (canonical — edit these)
+  cli/                         # npm package: CLI entry points (synced from root)
+  src/                         # npm package: shared libraries (synced from root)
+  runners/                     # npm package: event runners (synced from root)
+  modules/                     # module catalog (copied to run-modules/ on install)
+  workflows/                   # workflow definitions (copied on install)
+  rules/                       # stop rules (copied on install)
+  scripts/test/                # test suites (274 suites)
+  docs/                        # architecture docs and specs
+```
+
+Root `.js` files are the development copies. `cli/`, `src/`, and `runners/` are the npm package distribution — kept in sync via the hygiene audit (`scripts/project-hygiene.js`).
+
+### Execution flow
+
+Each runner reads stdin (hook input from Claude Code), discovers modules via `load-modules.js`, calls each in order. First block wins — remaining modules are skipped.
+
+```
+Claude Code triggers hook event
+  → settings.json calls run-hidden.js with event name
+  → run-hidden.js delegates to the event runner (e.g. run-pretooluse.js)
+  → Runner calls load-modules.js:
+      1. Scans run-modules/{Event}/ for .js files
+      2. Filters by workflow tag (only enabled workflow modules load)
+      3. Filters by TOOLS tag (skip if tool doesn't match)
+      4. Checks dependencies (// requires: tag)
+  → Runner calls each module with {tool_name, tool_input, ...}
+  → Module returns null (pass) or {decision: "block", reason: "..."}
+  → First block → exit 1 + stderr message → Claude sees the block
+  → All pass → exit 0 → Claude proceeds
+```
 
 ## CLI Reference
 

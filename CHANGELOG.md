@@ -2,6 +2,24 @@
 
 All notable changes to hook-runner are documented here.
 
+## [3.1.0] — 2026-06-24
+
+### Added
+- **Dispatcher pattern enforcement** (T840-T846) — 3 mechanical PreToolUse gates (`block-remote-execution-gate`, `dispatcher-scope-gate`, `dispatcher-self-kill-gate`), 1 Haiku gate (`dispatch-or-work-gate`), 1 SessionStart module (`dispatcher-cron-check`), 2 stop rules (`dispatcher-review`, `clean-workspace`). Enforces that request-tracker sessions manage/dispatch rather than doing direct implementation work.
+- **PostToolUse observers** (T815-T816) — `dispatch-spawn-check` detects pending dispatches without sessions, `self-analysis-check` surfaces health signals after poll commands.
+- **Automated hygiene audit** — `scripts/project-hygiene.js` with 19 checks across organization, naming, hygiene, docs, and integrity. Supports `--ci` (exit 1 on fail), `--json`, and Haiku semantic analysis. CI workflow at `.github/workflows/hygiene.yml`.
+- **34 stop rules** (was 30) — modular YAML files in `rules/stop/`.
+
+### Fixed
+- **portal-verify-gate false positive** (T848) — Edit operations that append new TODOs after existing completed cost tasks no longer trigger false blocks.
+- **PII cleanup** — Personal identifiers stripped from test fixtures, scripts, and templates for safe public sharing.
+- **README accuracy** — Module counts, workflow table, architecture section, and settings.json before/after all updated to match current state.
+- **Root↔subdir sync** — `cli/`, `src/`, `runners/` now match root files (hygiene audit enforces this).
+
+### Stats
+- 183 modules, 274 test suites, 700 smoke tests passing
+- `starter` workflow: 76 modules, `shtd`: 135, `haiku-rules`: 69
+
 ## [2.85.0] — 2026-05-11
 
 ### Fixed
