@@ -656,6 +656,32 @@ Full catalog in `modules/` directory:
 | `stop-hook-verify-check` | Verifies stop hook runners and modules are healthy on session start |
 | `unauthorized-change-check` | Detects undocumented changes to hook infrastructure via SHA256 hashing |
 
+## Reliability & Failure Modes
+
+| Failure | Behavior | Risk |
+|---------|----------|------|
+| Module throws an error | Caught by runner — logged to `hook-log.jsonl`, module skipped, pipeline continues. Other modules still evaluate. | Low — fail-open per module |
+| Module hangs | 4-second timeout (`run-async.js`). Module killed, logged as timeout, pipeline continues. | Low — bounded by timeout |
+| All modules fail | Safety net forces output anyway. Claude is never silently stuck. | Low |
+| Haiku API offline | `_haiku-judge.js` health-checks proxy with 60s cache. If down, returns `fallback_used: true` and the configured fallback (`"allow"` or `"block"` per gate). | Medium — semantic gates degrade to pass-through |
+| Haiku API slow | 5-second timeout on judge calls. Falls back same as offline. | Low |
+| Circular `// requires:` deps | `load-modules.js` validates before loading. Missing deps = module skipped with log entry. No circular detection needed — deps are one-level only. | Low |
+| Two modules conflict | First block wins. Module load order is filesystem order (alphabetical). No priority system — design modules to be independent. | Design-time concern |
+| Malicious module in `run-modules/` | Modules run in the same Node process as the runner. A malicious module could read env vars or modify other modules. Mitigate with `unauthorized-change-check` (SessionStart SHA256 verification) and `hook-editing-gate` (blocks edits to hook files from non-hook-runner projects). | Medium — trust boundary is the module author |
+
+### Performance
+
+Typical latency per hook invocation (measured with `node setup.js --perf`):
+
+| Event | Modules loaded | Avg latency | Notes |
+|-------|---------------|-------------|-------|
+| PreToolUse | 5-15 (TOOLS filter) | 2-8ms | Only modules matching the tool name load |
+| PostToolUse | 3-8 | 1-5ms | Never blocks (T803) |
+| Stop | 5-10 + Haiku call | 1-3s | Haiku evaluates 30+ rules in one call |
+| SessionStart | 8-12 | 50-200ms | File I/O for health checks |
+
+The `// TOOLS:` tag is the primary performance optimization — a module tagged `// TOOLS: Bash` never loads for Edit/Write calls, saving ~5ms per skipped module.
+
 ## Troubleshooting
 
 **Something broken? Run diagnostics first:**
