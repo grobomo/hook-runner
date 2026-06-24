@@ -8,7 +8,7 @@ Get from zero to enforced guardrails in 5 minutes. For the full reference, see [
 npx grobomo/hook-runner --yes
 ```
 
-This backs up your existing hooks, installs the runner system, and enables the **starter** workflow (46 modules covering the most common mistakes).
+This backs up your existing hooks, installs the runner system, and enables the **starter** workflow (76 modules covering the most common mistakes).
 
 To preview first without changing anything:
 ```bash

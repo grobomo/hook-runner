@@ -5,9 +5,9 @@
 // Supports both sync and async modules (async awaited with 4s timeout)
 var fs = require("fs");
 var path = require("path");
-var loadModules = require("../src/load-modules");
-var hookLog = require("../src/hook-log");
-var runAsync = require("../src/run-async");
+var loadModules = require("./load-modules");
+var hookLog = require("./hook-log");
+var runAsync = require("./run-async");
 
 var input;
 try {

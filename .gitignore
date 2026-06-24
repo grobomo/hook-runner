@@ -35,3 +35,9 @@ hook-debug.js
 audit-report-*.txt
 session-analysis-*.md
 *.rewrite-approved
+
+# Stale docs (replaced by hooks-template.json)
+docs/hook-runner-hooks-template.json
+
+# Hygiene report (generated, not committed)
+scripts/hygiene-report.md

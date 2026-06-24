@@ -132,6 +132,7 @@ node setup.js --workflow query Edit        # which workflows affect Edit?
 | `shtd` | 135 | Spec-Hook-Test-Driven — the full development pipeline. Enforces spec → branch → test → implement → PR, plus code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement. |
 | `gsd` | 76 | GSD-driven development — replaces shtd's spec-based flow with phase-based flow (.planning/ → ROADMAP.md → phase plan → branch → execute → PR). Same safety and quality modules as shtd. |
 | `haiku-rules` | 69 | LLM-augmented gates — Haiku-powered semantic analysis for ambiguous decisions. Includes stop analysis, auto-continue, mandate enforcement. |
+| `autonomous` | extends haiku-rules | Unattended operation — self-correction, reflection, RCA enforcement, TODO tracking, operational hygiene. |
 | `customer-data-guard` | 4 | Read-only incident response — blocks env changes, data exfil, and V1 modifications. |
 | `no-local-docker` | 2 | Blocks local Docker commands, forces remote infrastructure. |
 

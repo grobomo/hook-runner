@@ -5,8 +5,8 @@
 // Spawned as a detached process so it doesn't block the hook timeout.
 var fs = require("fs");
 var path = require("path");
-var hookLog = require("../src/hook-log");
-var runAsync = require("../src/run-async");
+var hookLog = require("./hook-log");
+var runAsync = require("./run-async");
 
 var tmpFile = process.argv[2];
 if (!tmpFile || !fs.existsSync(tmpFile)) process.exit(0);

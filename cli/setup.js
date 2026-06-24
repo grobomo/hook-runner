@@ -43,13 +43,13 @@ var REPORT_DIR = path.join(CLAUDE_DIR, "reports");
 var SCRIPT_DIR = __dirname;
 // When installed as a skill, runners are in the repo root.
 // When run from the repo directly, they're right here.
-var REPO_DIR = path.join(SCRIPT_DIR, "..");
+var REPO_DIR = SCRIPT_DIR;
 
 var HOOK_LOG_PATH = path.join(HOOKS_DIR, "hook-log.jsonl");
-var VERSION = require(path.join(__dirname, "../package.json")).version;
+var VERSION = require(path.join(__dirname, "package.json")).version;
 
 // Shared file lists — single source of truth (see constants.js)
-var RUNNER_FILES = require(path.join(__dirname, "../src/constants.js")).RUNNER_FILES;
+var RUNNER_FILES = require(path.join(__dirname, "constants.js")).RUNNER_FILES;
 
 // Safe settings.json reader — returns {} on corrupt/missing file
 function readSettings() {
@@ -1542,7 +1542,7 @@ function cmdWizard(reportOnly, dryRun, openMode, autoYes, analyzeMode, deepMode,
   var enableWorkflows = autoYes;
   if (enableWorkflows) {
     console.log("[6/6] Enabling default workflows...");
-    var wf = require("../src/workflow");
+    var wf = require("./workflow");
     var globalDir = path.join(os.homedir(), ".claude", "hooks");
     var defaultWorkflows = ["starter"];
     for (var wi = 0; wi < defaultWorkflows.length; wi++) {
@@ -2038,7 +2038,7 @@ function cmdTestModule(args) {
     return;
   }
 
-  var runAsync = require("../src/run-async");
+  var runAsync = require("./run-async");
   var passed = 0, blocked = 0, errors = 0;
 
   function runNext(i) {
@@ -2439,34 +2439,6 @@ function main() {
       { stdio: "inherit", windowsHide: true });
     process.exit(diagResult.status || 0);
   }
-  if (args.indexOf("--debug") !== -1) {
-    var debugArg = args[args.indexOf("--debug") + 1] || "status";
-    var hookDebug = require(path.join(__dirname, "..", "hook-debug"));
-    if (debugArg === "on") {
-      var fs2 = require("fs");
-      try { fs2.mkdirSync(path.dirname(hookDebug.DEBUG_FLAG), { recursive: true }); } catch(e) {}
-      fs2.writeFileSync(hookDebug.DEBUG_FLAG, new Date().toISOString() + "\n");
-      console.log("Debug mode ON. Inputs logged to: " + hookDebug.DEBUG_DIR);
-    } else if (debugArg === "off") {
-      try { require("fs").unlinkSync(hookDebug.DEBUG_FLAG); } catch(e) {}
-      console.log("Debug mode OFF.");
-    } else if (debugArg === "trace") {
-      try {
-        var lines = require("fs").readFileSync(hookDebug.TRACE_PATH, "utf-8").trim().split("\n");
-        var tail = lines.slice(-30);
-        for (var ti = 0; ti < tail.length; ti++) {
-          var e = JSON.parse(tail[ti]);
-          console.log(e.ts.slice(11, 23) + " " + (e.event || "").padEnd(12) + " " + (e.module || "").padEnd(28) + " " + e.phase + (e.ms ? " (" + e.ms + "ms)" : "") + (e.result ? " -> " + e.result : ""));
-        }
-      } catch(e) { console.log("No trace data. Enable debug mode first: node setup.js --debug on"); }
-    } else {
-      console.log("Debug mode: " + (hookDebug.isActive() ? "ON" : "OFF"));
-      console.log("Flag: " + hookDebug.DEBUG_FLAG);
-      console.log("Dir:  " + hookDebug.DEBUG_DIR);
-      try { var count = require("fs").readdirSync(hookDebug.DEBUG_DIR).length; console.log("Files: " + count); } catch(e) { console.log("Files: (none yet)"); }
-    }
-    return;
-  }
   if (args.indexOf("--health") !== -1) return cmdHealth();
   if (args.indexOf("--audit-project") !== -1) return cmdAuditProject(args);
   if (args.indexOf("--xref") !== -1) return cmdXref();
@@ -2786,7 +2758,7 @@ function healthCheck() {
   }
 
   // 3. Check module dependencies
-  var loadModules = require("../src/load-modules");
+  var loadModules = require("./load-modules");
   for (var di = 0; di < events.length; di++) {
     var depEvt = events[di];
     var depDir = path.join(HOOKS_DIR, "run-modules", depEvt);

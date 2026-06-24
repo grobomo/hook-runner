@@ -4,9 +4,9 @@
 // Supports both sync and async modules (async awaited with 4s timeout)
 var fs = require("fs");
 var path = require("path");
-var loadModules = require("../src/load-modules");
-var hookLog = require("../src/hook-log");
-var runAsync = require("../src/run-async");
+var loadModules = require("./load-modules");
+var hookLog = require("./hook-log");
+var runAsync = require("./run-async");
 
 var input;
 try {
@@ -31,8 +31,7 @@ var modulesDir = process.env.HOOK_RUNNER_MODULES_DIR || path.join(__dirname, "ru
 var modules = loadModules(path.join(modulesDir, "PostToolUse"), input.tool_name);
 
 // T378: Run all modules before exiting (consistent with T376 Stop runner fix).
-// PostToolUse is monitoring/reporting — all modules should run even if one blocks.
-var firstResult = null;
+// PostToolUse is monitoring/reporting — all modules run, none block (T803).
 
 runAsync.runModules(modules, input,
   function handleResult(modName, result, err, ms) {
@@ -44,7 +43,6 @@ runAsync.runModules(modules, input,
     if (result && result.decision) {
       hookLog.logHook("PostToolUse", modName, result.decision, Object.assign({}, ctx, { reason: result.reason, ms: ms }));
       process.stderr.write(result.reason + "\n");
-      if (!firstResult) firstResult = result;
       return false; // T378: continue running remaining modules
     }
     if (result && result.text) {
@@ -54,10 +52,10 @@ runAsync.runModules(modules, input,
     return false;
   },
   function handleDone() {
-    if (firstResult) {
-      process.stdout.write(JSON.stringify(firstResult));
-      process.exit(1);
-    }
-    // No output = allow
+    // T803: PostToolUse NEVER blocks — the action already happened.
+    // Module block decisions are logged and printed to stderr (line 46)
+    // but NOT propagated to Claude Code. Blocking after the fact is
+    // pointless and confuses Claude into thinking the action failed.
+    // No output = allow (always)
   }
 );

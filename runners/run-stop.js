@@ -14,8 +14,9 @@
 var fs = require("fs");
 var path = require("path");
 var cp = require("child_process");
-var loadModules = require("../src/load-modules");
-var hookLog = require("../src/hook-log");
+var loadModules = require("./load-modules");
+var hookLog = require("./hook-log");
+var hookDebug = require("./hook-debug");
 
 // Read input: HOOK_INPUT_FILE (from run-hidden.js) avoids Windows pipe deadlock
 var input;
@@ -25,9 +26,43 @@ try {
     : fs.readFileSync(0, "utf-8");
   input = JSON.parse(raw);
 } catch (e) {
+  var errMsg = "SELF-CHECK [infra-safety-net]: CONTINUE — run-stop.js failed to parse input: " + e.message + ". HOOK_INPUT_FILE=" + (process.env.HOOK_INPUT_FILE || "unset");
+  process.stdout.write(JSON.stringify({ decision: "block", reason: errMsg }));
+  process.stderr.write(errMsg + "\n");
+  process.exit(1);
+}
+// T759: Re-entrant guard — exit 0 to break the loop (re-entries are noise, not signal)
+if (input.stop_hook_active) {
   process.exit(0);
 }
-if (input.stop_hook_active) process.exit(0);
+
+// Propagate session_id from input to env if not already set (Claude Code passes it in JSON, not env)
+if (input.session_id && !process.env.CLAUDE_SESSION_ID) {
+  process.env.CLAUDE_SESSION_ID = input.session_id;
+}
+
+// T740: Write input JSON for debugging (always — small file, overwritten each stop)
+var HOOKS_DIR_PATH = path.join(process.env.HOME || process.env.USERPROFILE || "/home/ubu", ".claude", "hooks");
+try {
+  var debugInput = { keys: Object.keys(input), lengths: {} };
+  for (var k in input) { debugInput.lengths[k] = typeof input[k] === "string" ? input[k].length : typeof input[k]; }
+  debugInput.ts = new Date().toISOString();
+  debugInput.session = (process.env.CLAUDE_SESSION_ID || "unknown").slice(0, 8);
+  fs.writeFileSync(path.join(HOOKS_DIR_PATH, ".last-stop-input.json"), JSON.stringify(debugInput, null, 2));
+} catch (e) {}
+
+// T741: Write full input to debug dir when debug mode is active
+hookDebug.writeInput("Stop", input);
+
+// Write stop-fired marker with turn number for T726 detection (T755: session-scoped)
+var sessionId = (process.env.CLAUDE_SESSION_ID || "unknown").slice(0, 8);
+try {
+  var turnData = JSON.parse(fs.readFileSync(path.join(HOOKS_DIR_PATH, ".last-turn-start-" + sessionId), "utf-8"));
+  var turn = (turnData.session === sessionId) ? turnData.turn : 0;
+  fs.writeFileSync(path.join(HOOKS_DIR_PATH, ".last-stop-fired-" + sessionId), JSON.stringify({ session: sessionId, turn: turn, ts: new Date().toISOString() }));
+} catch (e) {
+  fs.writeFileSync(path.join(HOOKS_DIR_PATH, ".last-stop-fired-" + sessionId), JSON.stringify({ session: sessionId, turn: 0, ts: new Date().toISOString() }));
+}
 
 var ctx = hookLog.extractContext("Stop", input);
 var modulesDir = process.env.HOOK_RUNNER_MODULES_DIR || path.join(__dirname, "run-modules");
@@ -41,6 +76,7 @@ var analysisPath = path.join(process.env.HOME || process.env.USERPROFILE || "", 
 
 function runModule(modPath) {
   var modName = path.basename(modPath, ".js");
+  hookDebug.traceModuleStart("Stop", modName);
   var startMs = Date.now();
   try {
     var mod = require(modPath);
@@ -48,12 +84,16 @@ function runModule(modPath) {
     var ms = Date.now() - startMs;
     if (result && result.decision === "block") {
       hookLog.logHook("Stop", modName, "block", Object.assign({}, ctx, { reason: result.reason, ms: ms }));
+      hookDebug.traceModuleEnd("Stop", modName, result, ms);
       return { module: modName, reason: result.reason, ms: ms };
     }
     hookLog.logHook("Stop", modName, "pass", Object.assign({}, ctx, { ms: ms }));
+    hookDebug.traceModuleEnd("Stop", modName, null, ms);
     return null;
   } catch (e) {
-    hookLog.logHook("Stop", modName, "error", Object.assign({}, ctx, { reason: e.message, ms: Date.now() - startMs }));
+    var ms = Date.now() - startMs;
+    hookLog.logHook("Stop", modName, "error", Object.assign({}, ctx, { reason: e.message, ms: ms }));
+    hookDebug.traceModuleError("Stop", modName, e.message, ms);
     return null;
   }
 }
@@ -67,6 +107,9 @@ function parseHaikuDecision(reason) {
   return "UNKNOWN";
 }
 
+// T804: Decision priority — higher index wins conflicts
+var DECISION_PRIORITY = { "UNKNOWN": 0, "DISPATCH": 1, "DONE": 2, "NEXT": 3, "CONTINUE": 4, "CORRECT": 5 };
+
 // --- New architecture: ordered subdirectories ---
 if (fs.existsSync(haikuDir)) {
   var blocks = [];
@@ -74,13 +117,48 @@ if (fs.existsSync(haikuDir)) {
   // Phase 1: Run haiku gates (semantic analysis, always first)
   var haikuModules = loadModules(haikuDir);
   var haikuDecision = "UNKNOWN";
+  var allDecisions = []; // T804: track ALL decisions for conflict detection
 
   for (var i = 0; i < haikuModules.length; i++) {
     var result = runModule(haikuModules[i]);
     if (result) {
       blocks.push(result);
       var decision = parseHaikuDecision(result.reason);
-      if (decision !== "UNKNOWN") haikuDecision = decision;
+      var modName = path.basename(haikuModules[i], ".js");
+      if (decision !== "UNKNOWN") {
+        allDecisions.push({ rule: modName, verdict: decision, reason: (result.reason || "").substring(0, 120) });
+        // T804: Higher priority decision wins (CORRECT > CONTINUE > NEXT > DONE > DISPATCH)
+        if ((DECISION_PRIORITY[decision] || 0) > (DECISION_PRIORITY[haikuDecision] || 0)) {
+          haikuDecision = decision;
+        }
+      }
+    }
+  }
+
+  // T804: Detect and log conflicts between haiku decisions
+  if (allDecisions.length > 1) {
+    var uniqueVerdicts = {};
+    for (var di = 0; di < allDecisions.length; di++) {
+      uniqueVerdicts[allDecisions[di].verdict] = true;
+    }
+    var hasConflict = Object.keys(uniqueVerdicts).length > 1;
+    var conflictEntry = {
+      ts: new Date().toISOString(),
+      event: "Stop",
+      module: "decision-conflict",
+      result: hasConflict ? "conflict" : "agree",
+      decisions: allDecisions,
+      winner: haikuDecision
+    };
+    try { fs.appendFileSync(hookLog.LOG_PATH, JSON.stringify(conflictEntry) + "\n"); } catch (e) {}
+
+    if (hasConflict) {
+      var conflictMsg = "[decision-conflict] " + allDecisions.length + " rules disagree. ";
+      for (var ci = 0; ci < allDecisions.length; ci++) {
+        conflictMsg += allDecisions[ci].rule + "=" + allDecisions[ci].verdict + " ";
+      }
+      conflictMsg += "| Winner: " + haikuDecision + " (priority: CORRECT>CONTINUE>NEXT>DONE)";
+      process.stderr.write(conflictMsg + "\n");
     }
   }
 
@@ -93,6 +171,18 @@ if (fs.existsSync(haikuDir)) {
         blocks.push(mechResult);
       }
     }
+  }
+
+  // T738: Stop health report — if NO module blocked, force a diagnostic block
+  if (blocks.length === 0) {
+    var healthReason = "SELF-CHECK [stop-health-report]: CONTINUE — No stop module produced a block result. " +
+      "Haiku modules loaded: " + haikuModules.length + " (" + haikuModules.map(function(p) { return path.basename(p, ".js"); }).join(", ") + "). " +
+      "All returned null/pass. Investigate: (1) check auto-continue-gate.js for early-return bugs, " +
+      "(2) verify haiku-client.js auth (curl -s http://127.0.0.1:4100/health), " +
+      "(3) check .last-stop-input.json for what input was received.";
+    blocks.push({ module: "stop-health-report", reason: healthReason, ms: 0 });
+    hookLog.logHook("Stop", "stop-health-report", "block", Object.assign({}, ctx, { reason: "no-module-blocked", ms: 0 }));
+    process.stderr.write("[stop-health-report] " + healthReason + "\n");
   }
 
   // Phase 3: Load top-level modules for background processing
@@ -145,7 +235,8 @@ if (fs.existsSync(haikuDir)) {
     }
   }
 
-  process.exit(blocks.length > 0 ? 1 : 0);
+  // T759: ALWAYS exit 1 — user directive: stop hook must always be visible in TUI
+  process.exit(1);
 
 } else {
   // --- Legacy flat architecture (backwards compatible) ---
