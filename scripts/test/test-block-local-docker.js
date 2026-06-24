@@ -106,7 +106,7 @@ check("docker run: blocks", function() {
   var gate = loadGate();
   var r = gate(makeInput("docker run -d nginx"));
   assert(r && r.decision === "block");
-  assert(r.reason.indexOf("no-local-docker") >= 0);
+  assert(/BLOCKED|docker|local/i.test(r.reason));
 });
 
 check("docker build: blocks", function() {

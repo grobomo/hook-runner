@@ -78,6 +78,80 @@ node setup.js --help         # show all commands
 - **Modules** may have `// TOOLS: Bash, Edit, Write` tag — skips loading when tool doesn't match (saves ~5ms/module).
 - The `hook-editing-gate` module enforces these rules at edit time (including the UPS no-block rule).
 
+## Enforcement Philosophy: Gates > Rules > Memory
+
+**Three enforcement tiers exist. Use the strongest one that fits.**
+
+### Tier 1: Mechanical Gates (STRONGEST — use by default)
+PreToolUse/PostToolUse modules that mechanically block or detect. Code runs, regex matches, file checks happen. Claude CANNOT rationalize past a gate — it either passes or blocks. Every behavioral requirement should be a gate unless there's a reason it can't be.
+
+Examples: `hook-editing-gate.js` (blocks edits), `force-push-gate.js` (blocks force push), `no-rules-gate.js` (blocks .claude/rules/ writes).
+
+### Tier 2: Haiku Stop Rules (MEDIUM — for judgment calls)
+Rules in `stop-haiku-rules.yaml` that Haiku evaluates at every stop. Good for decisions that need context (is this task done? should Claude keep going?). Haiku rules SHOULD reference mechanical gate results when available — e.g., "if the test gate blocked, tell Claude to fix the tests" rather than reimplementing the test check in the rule.
+
+Examples: `todo-awareness` (checks TODO.md for unchecked items), `never-ask-permission` (detects "Want me to...?" patterns).
+
+### Tier 3: Claude Native Rules/Memory (WEAKEST — never rely on these)
+`.claude/rules/` files, MEMORY.md, or Claude's built-in memory system. These are **suggestions Claude can ignore or forget**. They don't survive context resets reliably. NEVER use these for behavioral enforcement. The `no-rules-gate` mechanically blocks `.claude/rules/` file creation.
+
+### Decision Hierarchy
+1. Can it be checked mechanically (regex, file existence, exit code)? → **Gate**
+2. Does it need LLM judgment (context, intent, completion status)? → **Haiku rule** (referencing gate outputs)
+3. Is it just a preference with no enforcement need? → **CLAUDE.md documentation** (this file)
+
+### Decision Logging
+Every behavioral change (exit codes, gate logic, stop rules) MUST be documented with WHY. Gate `T777` (when built) enforces this by requiring a `decisions.jsonl` entry for hook infrastructure edits. Without a decision log, changes made in one session become mysterious bugs in the next.
+
+## Gate System Philosophy
+
+Gates are Claude's memory between sessions. Promises don't survive context resets — gates do. The system exists to help Claude work better, not to fight against.
+
+**How it works for other sessions:**
+1. Claude (in any project) attempts a tool call
+2. PreToolUse gates evaluate the call against rules
+3. If blocked, the block message tells Claude WHY and WHAT TO DO
+4. If the gate is wrong (false positive), Claude files a TODO HERE (hook-runner) with the fix
+5. Claude checks if a hook-runner session is running (via fleet API)
+6. If not running, Claude spawns one (via context-reset/new_session.py)
+7. Hook-runner session picks up the TODO and fixes the gate
+8. Meanwhile, Claude works around the false positive while respecting the gate's SPIRIT
+
+**Critical: hook-runner is the ONLY project that can edit gates.** The `hook-editing-gate` enforces this. Other sessions file TODOs here — they never touch gate code directly.
+
+## Block Message Standard (MANDATORY)
+
+Every block message MUST include three parts:
+
+```
+BLOCKED: {what was blocked — the specific action}
+WHY: {what incident or failure this prevents — one sentence explaining the real reason}
+NEXT STEPS:
+1. {first action to take}
+2. {second action if needed}
+FALSE POSITIVE? File a TODO in hook-runner: "Fix {gate-name} — {what went wrong}"
+```
+
+The FALSE POSITIVE line ensures Claude always knows how to handle incorrect blocks instead of getting stuck or using a different tool to sneak past the gate's intent.
+
+**Example (good):**
+```
+BLOCKED: git push --force to main
+WHY: Force push destroyed the entire gate system on 2026-05-20 — 142 modules lost, 3 hours to recover.
+NEXT STEPS:
+1. Use 'git push' without --force
+2. If you need to rewrite history, create a new branch and PR instead
+FALSE POSITIVE? File a TODO in hook-runner: "Fix force-push-gate — {describe the legitimate use case}"
+```
+
+**Example (bad):**
+```
+BLOCKED: Force push not allowed.
+```
+(No WHY, no next steps — Claude doesn't understand the spirit and will try to work around it)
+
+**Why this matters:** When Claude hits a block, it needs to understand the SPIRIT (to respect it) and the PATH FORWARD (to keep working). Without both, it either fights the gate or stops dead. 66 gates currently lack NEXT STEPS — fixing this is the top priority.
+
 ## Haiku Preprocessor Architecture
 
 LLM-powered gate decisions using Haiku via the `llm-token-tracker` proxy at `:4100`.
@@ -133,8 +207,8 @@ var ctx = haiku.getConversationContext(transcriptPath, 8);
 | `sessionstart-haiku-rules.md` | `load-instructions-gate.js` | Text injected at session start |
 | `userprompt-haiku-rules.yaml` | L1 preprocessor (future) | Shorthand resolution, interpretation rules |
 
-### `wsl` Workflow
-Lightweight direct-to-main workflow with 13 modules. Enabled via `workflow-config.json`. No branch/PR enforcement. Modules tagged `// WORKFLOW: wsl`.
+### `haiku-rules` Workflow
+Lightweight direct-to-main workflow with 13 modules. Enabled via `workflow-config.json`. No branch/PR enforcement. Modules tagged `// WORKFLOW: haiku-rules`.
 
 **PreToolUse (8):** agent-quality-gate, gate-quality-gate, no-rewrite-gate, pre-tool-verify-gate, proxy-restart-gate, settings-watchdog-gate, spec-gate, todo-gate
 
@@ -143,6 +217,40 @@ Lightweight direct-to-main workflow with 13 modules. Enabled via `workflow-confi
 **SessionStart (2):** load-instructions-gate, stop-hook-selftest-check
 
 **Stop (2):** auto-continue-gate, stop-analysis-gate
+
+## Hook Runner Watchdog (T750)
+
+A **separate** hook from hook-runner that validates hook-runner fired correctly. Lives at `~/.claude/hooks/hook-runner-watchdog.js`. Has its own settings.json entry (fires AFTER hook-runner on Stop events).
+
+### CLI Commands (all proven, tested)
+```bash
+node ~/.claude/hooks/hook-runner-watchdog.js status     # health check all runners
+node ~/.claude/hooks/hook-runner-watchdog.js deploy      # backup → install → verify → auto-rollback
+node ~/.claude/hooks/hook-runner-watchdog.js backup      # snapshot 9 hook files + module manifest
+node ~/.claude/hooks/hook-runner-watchdog.js restore     # restore from last backup
+node ~/.claude/hooks/hook-runner-watchdog.js monitor 30  # watch loop (30s), auto-rollback after 3 failures
+node ~/.claude/hooks/hook-runner-watchdog.js on/off      # toggle (flag file or HOOK_WATCHDOG=1 env)
+node ~/.claude/hooks/hook-runner-watchdog.js analyze     # categorize issues from log, generate TODOs
+node ~/.claude/hooks/hook-runner-watchdog.js heal        # L1 classify + L2 diagnose + auto-repair (low-risk only)
+node ~/.claude/hooks/hook-runner-watchdog.js heal --dry-run  # same but preview without executing
+```
+
+### What it checks
+- Runner scripts exist with valid `require()` paths (catches T747-style crashes)
+- `load-modules.js` exists
+- `hook-log.jsonl` updated recently (runner actually fired)
+- No error/crash entries in recent log
+- Module count matches expectations
+
+### When to use
+- **After editing any hook file**: run `status` to verify nothing broke
+- **After deploying changes**: run `deploy` (auto-backs up first, auto-rolls back on failure)
+- **When stop hooks seem invisible**: run `analyze` to categorize issues and `heal` for auto-repair
+- **Continuous monitoring**: run `monitor` in a separate terminal for ongoing health checks
+
+### Logs
+- `~/.claude/hooks/watchdog-log.jsonl` (separate from hook-log.jsonl)
+- 41 tests in `scripts/test/test-T750-watchdog.js`
 
 ## Self-Reflection Architecture
 - **Brain bridge (T331)**: `self-reflection.js` (Stop module) tries unified-brain `/ask` endpoint first (fast, has three-tier memory). Falls back to direct LLM call when brain is unavailable. `BRAIN_URL` env var configurable (default `http://localhost:8790`).

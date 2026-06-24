@@ -49,7 +49,7 @@ check("ls with empty output: blocks", function() {
   var r = gate({ tool_name: "Bash", tool_input: { command: "ls screenshots/" }, tool_result: "" });
   assert(r !== null, "should block");
   assert(r.decision === "block");
-  assert(r.reason.indexOf("EMPTY OUTPUT") !== -1);
+  assert(/BLOCKED|empty.*output/i.test(r.reason));
 });
 
 check("find with empty output: blocks", function() {

@@ -98,9 +98,9 @@ modules.forEach(function(mod) {
     nok(label + " readable");
   }
 
-  // Test 4: WHY comment in first 5 lines
+  // Test 4: WHY comment in first 8 lines (allows shebang + "use strict" + TOOLS/WORKFLOW/BLOCKING tags)
   try {
-    var head2 = fs.readFileSync(mod.file, "utf-8").split("\n").slice(0, 5).join("\n");
+    var head2 = fs.readFileSync(mod.file, "utf-8").split("\n").slice(0, 8).join("\n");
     if (/WHY:/.test(head2)) {
       ok(label + " has WHY comment");
     } else {

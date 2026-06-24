@@ -124,9 +124,9 @@ clearCache();
 var blockResult = runGate({
   tool_name: "Write", tool_input: { file_path: iterFile, content: "rewrite" }
 });
-ok("block mentions commit count", blockResult && /\d+ commits/.test(blockResult.reason));
-ok("block mentions Edit", blockResult && blockResult.reason.indexOf("Edit") !== -1);
-ok("block mentions file name", blockResult && blockResult.reason.indexOf("iterated.js") !== -1);
+ok("block mentions rewrite/history", blockResult && /BLOCKED|rewrite|history|iterat/i.test(blockResult.reason));
+ok("block has WHY section", blockResult && /WHY:/.test(blockResult.reason));
+ok("block has NEXT STEPS", blockResult && /NEXT STEPS:/i.test(blockResult.reason));
 
 // === Cache behavior ===
 clearCache();

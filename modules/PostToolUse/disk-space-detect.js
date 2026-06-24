@@ -41,7 +41,7 @@ module.exports = function(input) {
 
       return {
         decision: "block",
-        reason: "DISK SPACE ALERT: The last command failed due to insufficient disk space.\n" +
+        reason: "BLOCKED: Command execution due to insufficient disk space\nWHY: Previous operations exhausted available disk capacity, preventing new writes or tool execution\nNEXT STEPS:\n1. Check disk usage with `df -h` and identify large files or directories to remove\n2. Clear temporary files, cache, or old logs, then retry the command\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix disk-space-detect — {describe the issue}\"" +
           "DO NOT attempt to delete files to free space.\n" +
           "Instead: run the disk-monitor scan to identify cleanup candidates:\n" +
           "  python ~/.claude/skills/disk-monitor/scan.py --min-size-mb 100\n" +

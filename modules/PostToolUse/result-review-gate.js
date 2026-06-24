@@ -46,7 +46,7 @@ module.exports = function(input) {
   // Non-blocking advisory — inject checklist every time
   return {
     decision: "block",
-    reason: "REPORT FILE READ — Review checklist before acting on results.\n\n" +
+    reason: "BLOCKED: Acting on test results without manual verification\nWHY: Claude can misinterpret mostly-passing reports and miss critical failures in edge cases or non-obvious test output\nNEXT STEPS:\n1. Review the full test report for failures, flaky tests, and coverage gaps\n2. Confirm all critical paths passed before proceeding with deployment or code changes\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix result-review-gate — {describe the issue}\"" +
       "File: " + basename + "\n\n" +
       "Before committing or declaring results:\n" +
       "  1. List EVERY FAIL, WARN, timeout, error, and empty section in this report\n" +

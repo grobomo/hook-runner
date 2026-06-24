@@ -1,0 +1,9 @@
+# Stop Rule: incomplete-delivery
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _07-incomplete-delivery.yaml)
+
+name: incomplete-delivery
+check: "Did the user ask for something with multiple parts and Claude only delivered one part?"
+action: "CONTINUE — finish all parts before stopping."

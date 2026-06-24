@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 "use strict";
-// WORKFLOW: wsl
+// WORKFLOW: haiku-rules
 // BLOCKING: true
 // WHY: Stop hooks ran in background — their analysis and block/pass decisions
 //      were invisible in the TUI, so Claude would stop even when Haiku said CONTINUE.
@@ -20,9 +20,16 @@ var path = require("path");
 
 var HOME = process.env.HOME || "/home/ubu";
 var haiku = require(path.join(HOME, ".claude", "hooks", "haiku-client"));
-var RULES_PATH = process.env.STOP_RULES_PATH || path.join(HOME, ".claude", "proxy", "stop-haiku-rules.yaml");
-var ANALYSIS_PATH = path.join(HOME, ".claude", "hooks", "stop-analysis.md");
+// T806: rules moved from proxy/ to hooks/rules/ — fallback to old path
+var _newRulesPath = path.join(HOME, ".claude", "hooks", "rules", "stop-haiku-rules.yaml");
+var RULES_PATH = process.env.STOP_RULES_PATH || (fs.existsSync(_newRulesPath) ? _newRulesPath : path.join(HOME, ".claude", "proxy", "stop-haiku-rules.yaml"));
+var SESSION_PREFIX = (process.env.CLAUDE_SESSION_ID || "unknown").slice(0, 8);
+var ANALYSIS_PATH = path.join(HOME, ".claude", "hooks", "stop-analysis-" + SESSION_PREFIX + ".md");
 var LOG_PATH = path.join(HOME, ".claude", "hooks", "hook-log.jsonl");
+var MANDATE_LOG_PATH = path.join(HOME, ".claude", "hooks", "mandate-log.jsonl");
+var CORRECTIONS_PATH = path.join(HOME, ".claude", "hooks", "stop-corrections.jsonl");
+var DEDUP_WINDOW_MS = 10 * 60 * 1000;
+var CORRECTIONS_WINDOW_MS = 60 * 60 * 1000;
 
 function log(entry) {
   entry.ts = new Date().toISOString();
@@ -33,6 +40,61 @@ function log(entry) {
 
 function getSessionId() {
   return (process.env.CLAUDE_SESSION_ID || "unknown").slice(0, 8);
+}
+
+function readMandateLog() {
+  try {
+    var content = fs.readFileSync(MANDATE_LOG_PATH, "utf-8").trim();
+    if (!content) return [];
+    return content.split("\n").map(function(line) {
+      try { return JSON.parse(line); } catch (e) { return null; }
+    }).filter(Boolean);
+  } catch (e) { return []; }
+}
+
+function writeMandateEntry(entry) {
+  var entries = readMandateLog();
+  entries.push(entry);
+  if (entries.length > 20) entries = entries.slice(-20);
+  try {
+    fs.writeFileSync(MANDATE_LOG_PATH, entries.map(function(e) { return JSON.stringify(e); }).join("\n") + "\n", "utf-8");
+  } catch (e) {}
+}
+
+function hasRecentMandate() {
+  var entries = readMandateLog();
+  var now = Date.now();
+  var sessionId = getSessionId();
+  for (var i = entries.length - 1; i >= 0; i--) {
+    var e = entries[i];
+    if (!e.ts) continue;
+    var age = now - new Date(e.ts).getTime();
+    if (age > DEDUP_WINDOW_MS) break;
+    if (e.session === sessionId) return e;
+  }
+  return null;
+}
+
+function getRecentCorrections() {
+  try {
+    var content = fs.readFileSync(CORRECTIONS_PATH, "utf-8").trim();
+    if (!content) return [];
+    var now = Date.now();
+    var sessionId = getSessionId();
+    var corrections = [];
+    var lines = content.split("\n");
+    for (var i = lines.length - 1; i >= 0; i--) {
+      try {
+        var e = JSON.parse(lines[i]);
+        if (!e.ts || !e.correction) continue;
+        if (now - new Date(e.ts).getTime() > CORRECTIONS_WINDOW_MS) break;
+        if (e.session && e.session !== sessionId) continue;
+        corrections.unshift(e.correction);
+        if (corrections.length >= 5) break;
+      } catch (ex) {}
+    }
+    return corrections;
+  } catch (e) { return []; }
 }
 
 function getTranscriptPath() {
@@ -53,6 +115,13 @@ function getTranscriptPath() {
 }
 
 module.exports = function(input) {
+  // Dedup: skip Haiku if this session already got a mandate recently
+  var recentMandate = hasRecentMandate();
+  if (recentMandate) {
+    log({ result: "dedup_skip", recent_rule: recentMandate.rule, recent_gate: recentMandate.gate, age_s: Math.round((Date.now() - new Date(recentMandate.ts).getTime()) / 1000) });
+    return null;
+  }
+
   // Read rules
   var rules = "";
   try { rules = fs.readFileSync(RULES_PATH, "utf-8"); } catch (e) {
@@ -74,11 +143,17 @@ module.exports = function(input) {
   }
 
   // Build prompt
+  var corrections = getRecentCorrections();
+  var correctionsBlock = corrections.length > 0
+    ? "\nCORRECTIONS FROM SESSION (these override stale assumptions):\n- " + corrections.join("\n- ")
+    : "";
+
   var prompt = [
     "You are the Stop Analysis Gate. Decide if this Claude Code session should stop or continue.",
     "",
     "RULES (evaluate each):",
     rules,
+    correctionsBlock,
     "",
     context || "(no conversation context available)",
     "",
@@ -136,6 +211,7 @@ module.exports = function(input) {
   log({ result: decision, reason: reason, rule: ruleTriggered, confidence: confidence, ms: result.ms });
 
   if (decision === "continue") {
+    writeMandateEntry({ rule: ruleTriggered || "unknown", decision: "continue", gate: "stop-analysis-gate", session: sessionId, ts: new Date().toISOString() });
     return {
       decision: "block",
       reason: reason

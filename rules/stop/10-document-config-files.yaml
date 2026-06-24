@@ -1,0 +1,9 @@
+# Stop Rule: document-config-files
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _10-document-config-files.yaml)
+
+name: document-config-files
+check: "Did Claude create or modify a config/yaml/json/jsonc file without adding inline comments explaining what it does, how to use it, and how to modify it?"
+action: "CONTINUE — add self-documenting comments to the file. Every config file should explain itself to someone reading it cold."

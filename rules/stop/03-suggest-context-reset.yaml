@@ -1,0 +1,9 @@
+# Stop Rule: suggest-context-reset
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _03-suggest-context-reset.yaml)
+
+name: suggest-context-reset
+check: "ONLY trigger if at least TWO of these are true: (1) Claude explicitly signals session end ('next session', 'wrapping up', 'that covers it') while TODO items remain, (2) Claude is re-reading files it already read earlier in the session (sign of context loss), (3) Claude mentions compaction or lost context, (4) the same error or approach has been tried 3+ times. Do NOT trigger just because the session is long or many stop hooks fired — long productive sessions are cheaper than restarts ($2.33 each in cache_write). Productivity matters more than freshness."
+action: "CONTINUE — tell Claude: 'Context appears degraded — save state to TODO.md and run context-reset autonomously (don't ask user). Remaining work continues in the fresh session.' This overrides todo-awareness — do NOT push more tasks into a degraded session."

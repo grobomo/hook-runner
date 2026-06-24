@@ -27,7 +27,7 @@ module.exports = function(input) {
     if (CLEANUP_PATTERNS[i].test(cmd)) {
       return {
         decision: "block",
-        reason: "Root cause first: you're about to clean up a symptom. Before running this, diagnose WHY it happened and fix the root cause. What caused the dirty state / conflict / failure? Fix that first, then clean up."
+        reason: "BLOCKED: Cleanup command without root cause analysis\nWHY: Previous cleanup operations masked underlying bugs instead of addressing the actual failure, creating recurring issues\nNEXT STEPS:\n1. Identify and document the root cause of the failure\n2. Fix the underlying issue before proceeding with cleanup\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix root-cause-gate — {describe the issue}\""
       };
     }
   }

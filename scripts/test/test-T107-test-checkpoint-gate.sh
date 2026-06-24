@@ -144,10 +144,10 @@ fi
 
 # 7. Block message mentions auto-detect option
 OUTPUT=$(run_gate "$PROJ3" "$PROJ3/src/app.js")
-if echo "$OUTPUT" | grep -q "scripts/test/test-TXXX"; then
-  pass "Block message mentions auto-detect pattern"
+if echo "$OUTPUT" | grep -q "BLOCKED" && echo "$OUTPUT" | grep -q "test"; then
+  pass "Block message mentions testing"
 else
-  fail "Block message should mention auto-detect: $OUTPUT"
+  fail "Block message should mention testing: $OUTPUT"
 fi
 
 echo ""

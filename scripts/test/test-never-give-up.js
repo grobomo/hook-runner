@@ -25,22 +25,22 @@ check("Always blocks", function() {
   assert(r.decision === "block");
 });
 
-check("Mentions 3 approaches", function() {
+check("Mentions alternatives/approaches", function() {
   var gate = loadGate();
   var r = gate({});
-  assert(r.reason.indexOf("3 different approaches") !== -1);
+  assert(/approach|altern|attempt|strateg/i.test(r.reason));
 });
 
-check("Mentions WebSearch", function() {
+check("Has WHY section", function() {
   var gate = loadGate();
   var r = gate({});
-  assert(r.reason.indexOf("WebSearch") !== -1);
+  assert(/WHY:/.test(r.reason));
 });
 
-check("Mentions exhausting options", function() {
+check("Has NEXT STEPS", function() {
   var gate = loadGate();
   var r = gate({});
-  assert(r.reason.indexOf("exhausting options") !== -1);
+  assert(/NEXT STEPS:/i.test(r.reason));
 });
 
 // --- Summary ---

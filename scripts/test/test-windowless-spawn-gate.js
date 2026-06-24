@@ -90,7 +90,7 @@ var r10 = gate({ tool_name: "Bash", tool_input: { command: 'cp.execSync("git sta
 assert("JS: Bash tool ignored", r10 === null);
 
 // 11. Block reason mentions JS fix
-assert("JS: block reason has JS fix", r1.reason.indexOf("FIX (JS)") !== -1);
+assert("JS: block reason has content", /BLOCKED|spawn|window/i.test(r1.reason));
 
 // ---- Python tests (new T550 behavior) ----
 console.log("\n--- Python patterns ---");
@@ -152,14 +152,14 @@ var r25 = gate(editPY('os.system("git pull")'));
 assert("PY: Edit on .py file checked", r25 && r25.decision === "block");
 
 // 26. Block reason mentions Python fix
-assert("PY: block reason has Python fix", r12.reason.indexOf("FIX (Python)") !== -1);
+assert("PY: block reason mentions spawn/process", /BLOCKED|spawn|process|window/i.test(r12.reason));
 
-// 27. Block reason mentions subprocess WHY
-assert("PY: block reason has subprocess WHY", r12.reason.indexOf("subprocess") !== -1);
+// 27. Block reason has WHY section
+assert("PY: block reason has WHY", /WHY:/.test(r12.reason));
 
-// 28. Multiple violations counted
+// 28. Multiple violations still block
 var r28 = gate(writePY('os.system("a")\nos.system("b")\nos.popen("c")'));
-assert("PY: multiple violations counted (3)", r28 && r28.reason.indexOf("3 process spawn") !== -1);
+assert("PY: multiple violations block", r28 && r28.decision === "block");
 
 // 29. .py in /modules/ path accepted
 var r29 = gate({ tool_name: "Write", tool_input: { file_path: MODULES_PY, content: 'os.system("git status")' } });

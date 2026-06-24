@@ -8,7 +8,7 @@ var path = require("path");
 var cp = require("child_process");
 var os = require("os");
 
-var API_CHECK_SCRIPT = "/mnt/c/Users/joelg/Documents/ProjectsCL1/_grobomo/context-reset/api_check.py";
+var API_CHECK_SCRIPT = process.env.API_CHECK_SCRIPT || "";
 var LOCK_PATH = path.join(os.tmpdir(), "api-check-watcher.lock");
 var LOCK_MAX_AGE_MS = 1800000; // 30 min — stale lock cleanup
 

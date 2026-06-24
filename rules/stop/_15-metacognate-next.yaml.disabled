@@ -1,0 +1,12 @@
+# Stop Rule: keep-working
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _15-keep-working.yaml)
+#
+# This is the catch-all rule. It fires when no other rule triggered.
+# It NEVER returns DONE. Haiku does not decide when to stop.
+
+name: keep-working
+check: "None of the above rules triggered. NEVER return DONE. Step 1: Check if TODO.md has unchecked actionable items (not BLOCKED, DEFERRED, or DESIGN NEEDED). If yes, return NEXT with the specific task ID and name. Step 2: If all TODO items are checked, scan the session history for tangents — side tasks mentioned but not tracked, user requests acknowledged but not completed, ideas discussed but not captured. If untracked tangents exist, return NEXT telling Opus to add them to TODO.md first. Step 3: If all tangents are already tracked, return CONTINUE with this exact instruction: 'All TODO items complete. Organize, optimize, secure the project. Then zoom out and expand — look for improvements, missing tests, documentation gaps, performance issues, security hardening. Read jsonl logs in ~/.claude/projects/ for incomplete tangents from previous sessions. If nothing remains, save state to TODO.md and run context-reset autonomously.'"
+action: "NEVER return DONE. Return NEXT with the task ID if actionable TODO items exist. Return CONTINUE with the exact organize-optimize-expand instruction from the check field if all work is tracked. Haiku never decides when to stop."

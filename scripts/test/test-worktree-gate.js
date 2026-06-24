@@ -45,7 +45,7 @@ mod = loadMod();
 var r = mod({tool_name: "Edit", tool_input: {file_path: path.join(tmpDir, "foo.js")}});
 assert(r && r.decision === "block", "main checkout: code file blocks");
 assert(r && r.reason && /worktree/i.test(r.reason), "block message mentions worktree");
-assert(r && r.reason && /EnterWorktree/.test(r.reason), "block message mentions EnterWorktree");
+assert(r && r.reason && /WHY:/.test(r.reason), "block message has WHY section");
 
 // Test: main checkout + config file → allowed (allowlist)
 r = mod({tool_name: "Edit", tool_input: {file_path: path.join(tmpDir, "TODO.md")}});

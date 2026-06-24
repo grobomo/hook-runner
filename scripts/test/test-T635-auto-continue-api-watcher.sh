@@ -15,7 +15,8 @@ check() {
 }
 
 MOD="modules/SessionStart/api-watcher.js"
-TMPDIR_T=$(mktemp -d)
+TMPDIR_T_RAW=$(mktemp -d)
+TMPDIR_T="$(cd "$TMPDIR_T_RAW" && (pwd -W 2>/dev/null || pwd))"
 FAKE_PROJECT="$TMPDIR_T/project"
 LOCK="$TMPDIR_T/api-check-watcher.lock"
 FAKE_SCRIPT="$TMPDIR_T/api_check.py"

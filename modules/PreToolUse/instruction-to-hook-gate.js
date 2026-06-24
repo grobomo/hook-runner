@@ -74,13 +74,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "INSTRUCTION-TO-HOOK GATE: User gave a persistent instruction " +
-      "(detected: " + (flag.pattern || "instruction keyword") + ") but you're editing " +
-      "'" + path.basename(filePath) + "' instead of creating a hook or rule.\n\n" +
-      "User said: \"" + (flag.preview || "").substring(0, 100) + "...\"\n\n" +
-      "FIX: Create a hook in ~/.claude/hooks/run-modules/<Event>/ or an SHTD workflow.\n" +
-      "Then the flag will clear and you can proceed with other edits.\n" +
-      "If the instruction is already covered by an existing hook/workflow, edit that file to acknowledge it.\n" +
-      "NOTE: .claude/rules/ is deprecated — use hooks/run-modules or SHTD workflows instead."
+    reason: "BLOCKED: Instruction-based edits without persistence mechanism\nWHY: User instructions given in one session are lost when the conversation ends, requiring manual re-entry or forgotten entirely until behavior regresses.\nNEXT STEPS:\n1. Convert instruction into a hook definition or SHTD workflow file\n2. Store in persistent system configuration rather than relying on session context\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix instruction-to-hook-gate — {describe the issue}\""
   };
 };

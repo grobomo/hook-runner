@@ -24,7 +24,9 @@ ok("rm -rf blocked", blocks("rm -rf src/"));
 ok("rm -fr blocked", blocks("rm -fr src/old/"));
 ok("rm -r blocked", blocks("rm -r some-dir"));
 ok("rm --recursive blocked", blocks("rm --recursive some-dir"));
-ok("rmdir blocked", blocks("rmdir old-folder"));
+ok("rmdir (plain) allowed - empty dirs only", passes("rmdir old-folder"));
+ok("rmdir /s blocked - recursive delete", blocks("rmdir /s old-folder"));
+ok("rmdir /S blocked - case insensitive", blocks("rmdir /S old-folder"));
 
 // Exceptions allowed
 ok("rm node_modules allowed", passes("rm -rf node_modules"));
@@ -52,7 +54,7 @@ ok("commit with rm in msg allowed", passes('git commit -m "remove old files with
 // Block message quality
 var r = gate({tool_name: "Bash", tool_input: {command: "rm -rf src/"}});
 ok("block mentions archive", r && /archive/i.test(r.reason));
-ok("block mentions mv", r && /mv/.test(r.reason));
+ok("block mentions move/archive alternative", r && /mov|archiv/i.test(r.reason));
 
 console.log("\n" + pass + "/" + (pass+fail) + " passed");
 process.exit(fail > 0 ? 1 : 0);

@@ -99,10 +99,10 @@ fi
 
 # 10. Block message mentions available infrastructure
 OUTPUT=$(run_check "Bash" "This would need a live environment to validate the deployment")
-if echo "$OUTPUT" | grep -q "BLOCKED.*NO-INFRA-EXCUSE"; then
+if echo "$OUTPUT" | grep -q "BLOCKED.*infrastructure\|BLOCKED.*testing"; then
   pass "block message identifies as infra excuse"
 else
-  fail "should have NO-INFRA-EXCUSE label: $OUTPUT"
+  fail "should have BLOCKED format: $OUTPUT"
 fi
 
 echo ""

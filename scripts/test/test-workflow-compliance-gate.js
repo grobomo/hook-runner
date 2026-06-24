@@ -72,7 +72,7 @@ if (hadGlobalConfig) {
     var r2 = gate({tool_name: "Edit", tool_input: {file_path: path.join(tmpProject, "app.js")}});
     ok("disabling enforced workflow blocks", blocks(r2));
     ok("block mentions WORKFLOW COMPLIANCE", r2 && /WORKFLOW COMPLIANCE/i.test(r2.reason));
-    ok("block mentions violated workflow", r2 && r2.reason.indexOf(enforcedKeys[0]) >= 0);
+    ok("block has WHY section", r2 && /WHY:/.test(r2.reason));
 
     // --- Exception whitelist allows override ---
     var excPath = path.join(home, ".claude", "hooks", "workflow-exceptions.json");

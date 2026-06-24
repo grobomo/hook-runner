@@ -57,7 +57,7 @@ module.exports = function(input) {
   if (warnings.length > 0) {
     return {
       decision: "block",
-      reason: "Rule hygiene:\n" + warnings.map(function(w) { return "- " + w; }).join("\n")
+      reason: "BLOCKED: Rule files with multiple unrelated topics mixed together\nWHY: Multi-topic rule files become difficult to maintain and debug when changes affect unintended areas\nNEXT STEPS:\n1. Split the rule file into separate focused files by topic/concern\n2. Update imports to reference the new single-topic rule files\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix rule-hygiene — {describe the issue}\"" + warnings.map(function(w) { return "- " + w; }).join("\n")
     };
   }
 

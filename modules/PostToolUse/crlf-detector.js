@@ -1,4 +1,4 @@
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // TOOLS: Write, Edit
 // WHY: On Windows, Write/Edit can produce CRLF line endings that break shell scripts,
 // YAML files, SSH keys, and other Unix-sensitive formats. The crlf-ssh-key-check
@@ -30,6 +30,7 @@ module.exports = function(input) {
   try { content = fs.readFileSync(filePath, "utf-8"); } catch (e) { return null; }
   if (content.indexOf("\r\n") === -1) return null;
 
+  var basename = path.basename(filePath);
   var crlfCount = 0;
   for (var ci = 0; ci < content.length - 1; ci++) {
     if (content.charAt(ci) === "\r" && content.charAt(ci + 1) === "\n") crlfCount++;
@@ -37,6 +38,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "WARNING: " + path.basename(filePath) + " has " + crlfCount + " CRLF line endings. Shell scripts, YAML, and Python files break with \\r\\n on Unix. Fix with: sed -i 's/\\r$//' " + filePath
+    reason: "BLOCKED: \nFALSE POSITIVE? File a TODO in hook-runner: \"Fix crlf-detector — {describe the issue}\"" + basename + " has " + crlfCount + " CRLF line endings.\nWHY: CRLF line endings cause shell scripts, YAML, and Python files to fail with carriage return errors on Unix systems.\nNEXT STEPS:\n1. Convert to LF: dos2unix " + basename + " or configure editor to use LF\n2. Re-save the file with LF line endings before committing"
   };
 };

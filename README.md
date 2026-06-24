@@ -20,23 +20,45 @@ hook-runner replaces direct `settings.json` editing. After install, you never to
 
 **1. Modules over shell commands.** Each rule is a `.js` file that receives structured input (tool name, file path, command) and returns a decision. Modules are testable, documented, and version-controlled. Drop a file in a folder and it runs — remove it and it stops.
 
-**2. Workflows over individual modules.** You don't think "I need to enable spec-gate, branch-gate, test-checkpoint-gate, and worker-loop." You think "I want the SHTD development pipeline." Workflows group related modules so you enable one name and get a complete enforcement regime. Disable it and they all go silent. This is how you manage 120+ modules without losing track.
+**2. Workflows over individual modules.** You don't think "I need to enable spec-gate, branch-gate, test-checkpoint-gate, and worker-loop." You think "I want the SHTD development pipeline." Workflows group related modules so you enable one name and get a complete enforcement regime. Disable it and they all go silent. This is how you manage 180+ modules without losing track.
 
 **3. Portability.** Export your module config as YAML (`--export`), sync it to another machine (`--sync`), or share a workflow definition. Workflows also make it easy to switch contexts — enable `customer-data-guard` during incident response, disable it after.
 
-## Integrating with other Claude Code tools
+## How the System Decides
 
-hook-runner is one piece of a larger Claude Code tooling ecosystem. Here's how the pieces connect:
+Every time Claude finishes a response, the **Stop hook** fires. Here's exactly what happens:
 
-- **context-reset** — When a session's context gets long, `context-reset` saves conversation state to `SESSION_STATE.md` and starts fresh. hook-runner's `SessionStart` modules inject active workflow status on the new session so Claude picks up where it left off without losing enforcement context.
+```
+Claude finishes responding
+  → run-stop.js loads gates from run-modules/Stop/1-haiku/
+  → Each gate calls Haiku (fast LLM) with:
+      - Rules from ~/.claude/hooks/rules/stop/*.yaml
+      - Last assistant response (what Claude just said)
+      - Unchecked TODO items from the project
+      - Prior mandate context (if any)
+  → Haiku evaluates ALL rules and returns:
+      - DONE = Claude may stop (work is complete)
+      - CONTINUE = keep working (rule triggered)
+      - NEXT = start the next TODO item
+      - DISPATCH = work belongs in another project
+  → Gate returns {decision: "block", reason: "SELF-CHECK [rule]: DECISION — ..."}
+  → run-stop.js writes to stderr (visible in TUI) and stdout (read by Claude Code)
+  → Exit 1 = block shown in TUI. Exit 0 = invisible (never allowed).
+  → If ALL gates fail: safety net forces output anyway.
+```
 
-- **skill-maker** — Skills are reusable prompts; hooks are enforcement. A skill tells Claude *how* to do something, a hook tells it *what it must not do*. Use skill-maker to create workflows that call hook-runner's CLI (`--workflow start`, `--health`, `--report`).
+**PreToolUse gates** fire before every tool call. They're mechanical (regex, file checks — no LLM):
+- `todo-gate.js` — blocks code changes without a tracked TODO item
+- `git-destructive-guard.js` — blocks force-push, reset --hard, etc.
+- `archive-not-delete.js` — blocks `rm`, forces `mv archive/`
+- `gate-quality-gate.js` — enforces naming and documentation on new gates
+- `promises-to-gates-gate.js` — blocks behavioral promises, requires gate creation
 
-- **mcp-manager** — MCP servers provide Claude with tools (browser automation, API access). hook-runner gates *which* tools Claude can use and *how*. For example, a PreToolUse module can block `Bash` commands that hit production endpoints, while mcp-manager provides the staging endpoint via an MCP tool.
+**PostToolUse gates** fire after tools complete. They observe and log:
+- `hook-autocommit-gate.js` — auto-commits gate changes to backup repo
+- `spirit-check.js` — audits tool calls against spirit rules
 
-- **emu skill marketplace** — hook-runner is available on the [emu skill marketplace](https://github.com/trend-ai-taskforce/ai-skill-marketplace). Install the skill to get `--workflow`, `--report`, and the full module catalog. The marketplace copy stays in sync with this repo.
-
-- **OpenClaw** — hook-runner gates are portable to [OpenClaw](https://openclaw.ai) via the Plugin SDK. The `openclaw-plugin/` directory contains a ready-to-install plugin with 3 ported gates (force-push, secret-scan, commit-quality). Install with `bash openclaw-plugin/install.sh`. See [openclaw-plugin/README.md](openclaw-plugin/README.md) for the conversion table.
+**The decision hierarchy:** Haiku rules (behavioral, evaluated by LLM) → PreToolUse gates (structural, regex) → PostToolUse gates (observational). Haiku guides. Gates enforce. Together they compensate for Claude's lack of persistent memory.
 
 ## Quick Start
 
@@ -53,11 +75,11 @@ The setup wizard will:
 1. Scan your current hooks and generate a styled HTML report
 2. Back up existing hooks to `~/.claude/hooks/archive/`
 3. Install the runner system
-4. Enable the `starter` workflow (with `--yes`) — 46 universally useful modules
+4. Enable the `starter` workflow (with `--yes`) — 76 universally useful modules
 
 Ready for more? Enable the full development pipeline:
 ```bash
-node setup.js --workflow enable shtd    # 104 modules: spec-first, test-first, PR discipline
+node setup.js --workflow enable shtd    # 135 modules: spec-first, test-first, PR discipline
 ```
 
 To undo everything: `node setup.js --uninstall --confirm`
@@ -106,13 +128,12 @@ node setup.js --workflow query Edit        # which workflows affect Edit?
 
 | Workflow | Modules | What it enforces |
 |----------|---------|-----------------|
-| `starter` | 49 | **Start here.** Safe defaults for any user — blocks force-push, destructive git, secret commits, file deletion. Adds commit quality checks, test reminders, and session context. |
-| `shtd` | 110 | Spec-Hook-Test-Driven — the full development pipeline. Enforces spec → branch → test → implement → PR, plus code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement. |
-| `gsd` | 110 | GSD-driven development — replaces shtd's spec-based flow with phase-based flow (.planning/ → ROADMAP.md → phase plan → branch → execute → PR). Same safety and quality modules as shtd. |
+| `starter` | 76 | **Start here.** Safe defaults for any user — blocks force-push, destructive git, secret commits, file deletion. Adds commit quality checks, test reminders, and session context. |
+| `shtd` | 135 | Spec-Hook-Test-Driven — the full development pipeline. Enforces spec → branch → test → implement → PR, plus code quality, infrastructure safety, messaging guards, session lifecycle, and self-improvement. |
+| `gsd` | 76 | GSD-driven development — replaces shtd's spec-based flow with phase-based flow (.planning/ → ROADMAP.md → phase plan → branch → execute → PR). Same safety and quality modules as shtd. |
+| `haiku-rules` | 69 | LLM-augmented gates — Haiku-powered semantic analysis for ambiguous decisions. Includes stop analysis, auto-continue, mandate enforcement. |
 | `customer-data-guard` | 4 | Read-only incident response — blocks env changes, data exfil, and V1 modifications. |
-| `dispatcher-worker` | 10 | Role-aware fleet workflow. Dispatcher specs/distributes, workers implement/test/PR. |
 | `no-local-docker` | 2 | Blocks local Docker commands, forces remote infrastructure. |
-| `cross-project-reset` | 4 | Step template for cross-project context switching (cwd-drift-detector is in shtd). |
 
 ### Workflow State Machine
 
@@ -267,6 +288,16 @@ run-modules/PreToolUse/
     custom-gate.js            # runs ONLY when project name = "my-project"
 ```
 
+## Enforcement Philosophy: Gates > Rules > Memory
+
+| Tier | Mechanism | Strength | Use For |
+|------|-----------|----------|---------|
+| **1. Gates** | PreToolUse/PostToolUse modules | Mechanical — cannot bypass | All behavioral enforcement (default) |
+| **2. Haiku Rules** | stop-haiku-rules.yaml | LLM judgment — context-aware | Decisions needing context; should reference gate results |
+| **3. Native Rules** | .claude/rules/, MEMORY.md | Weakest — forgotten across resets | **BANNED** for enforcement. Use CLAUDE.md for docs only |
+
+Every behavioral requirement should be a gate unless it requires LLM judgment. Haiku rules should reference gate outputs, not reimplement checks. See [CLAUDE.md](CLAUDE.md#enforcement-philosophy-gates--rules--memory) for full details.
+
 ## Architecture
 
 ```
@@ -363,6 +394,7 @@ Full catalog in `modules/` directory:
 | Module | Description |
 |--------|-------------|
 | `archive-not-delete` | Blocks file deletion, suggests archiving instead |
+| `audit-log-protect-gate` | Blocks deletion/truncation/overwrite of JSONL log files and audit trail |
 | `automate-everything-gate` | Blocks manual lint/check commands (flake8, pylint, shellcheck, etc.), forces CI/CD pipeline |
 | `aws-tagging-gate` | Enforces required tags on AWS resource creation |
 | `block-local-docker` | Blocks docker/docker-compose commands |
@@ -407,13 +439,15 @@ Full catalog in `modules/` directory:
 | `no-nested-claude` | Blocks nested claude -p calls (use context-reset for cross-project) |
 | `no-passive-rules` | Blocks .md rules when a hook module is better |
 | `no-playwright-direct` | Blocks raw mcp__playwright__* calls, requires Blueprint Extra MCP |
+| `blueprint-only-browser-gate` | Blocks Bash Selenium/Playwright/Puppeteer/ChromeDriver, redirects to Blueprint MCP |
 | `no-polling-gate` | Blocks LLM-driven polling (loops+sleep, log tailing, comment watching, watch) |
-| `no-rules-gate` | Blocks creation of ~/.claude/rules/ files (use hook modules instead) |
+| `no-native-memory-gate` | Blocks writes to ~/.claude/rules/, MEMORY.md, .claude/memory/ (use hook modules instead) |
 | `tunnel-check-gate` | Blocks process-grep SSH tunnel checks, suggests port connectivity test |
 | `hook-system-reminder` | Reminds Claude that enforcement is ONLY via hook-runner modules |
 | `inter-project-priority-gate` | Blocks non-XREF work when P0 inter-project TODOs are pending |
 | `mandate-gate` | Enforces Haiku stop-hook directives — blocks first tool call until Opus reads the mandate |
 | `mcp-manager-gate` | Blocks direct MCP server entries in .mcp.json and relay scripts |
+| `process-kill-gate` | Blocks bulk process termination (kill -9 -1, killall, pkill), allows specific PIDs |
 | `pr-first-gate` | Blocks spec/code edits on branches without an open PR |
 | `pr-per-task-gate` | Requires task ID in PR titles |
 | `preserve-iterated-content` | Warns on full-file rewrites of iterated files |
@@ -433,6 +467,12 @@ Full catalog in `modules/` directory:
 | `workflow-gate` | Enforces step order in active workflows |
 | `windowless-spawn-gate` | Blocks module writes using execSync without windowsHide:true |
 | `worktree-gate` | Blocks feature branch edits unless session is in a git worktree |
+| `worktree-scope-guard-gate` | Blocks EnterWorktree unless name matches project context |
+| `blueprint-guidance-gate` | Pattern-based guidance for Blueprint MCP usage (V1 incognito, SharePoint tabs) |
+| `portal-verify-gate` | Blocks cost validation completion without fresh portal evidence |
+| `sibling-session-detect-gate` | Non-blocking: warns when multiple sessions run in same project |
+| `stop-fired-check-gate` | Detects when stop hook failed to fire for previous turns |
+| `transcript-shared-reader-gate` | Shared JSONL transcript parsing helper for cross-module use |
 
 #### Project-Scoped PreToolUse
 | Module | Project | Description |
@@ -443,12 +483,14 @@ Full catalog in `modules/` directory:
 | `rdp-testbox-gate` | ddei-email-security | Reminds Claude of proven RDP pattern, separates user/Claude test servers |
 | `share-is-generic` | ddei-email-security | Domain-specific gate for email security project |
 | `use-workers` | hackathon26 | Forces delegation to fleet workers |
+| `dashboard-deploy-reminder-gate` | llm-token-tracker | Non-blocking reminder on dashboard file edits |
+| `no-local-dashboard-gate` | llm-token-tracker | Blocks curls to local dashboard API — forces prod verification |
 
-### PostToolUse (checks after tool execution)
+### PostToolUse (monitoring after tool execution — never blocks, T803)
 | Module | Description |
 |--------|-------------|
-| `background-task-audit` | Warns when background tasks return zero output — forces root cause investigation |
-| `commit-msg-check` | Blocks WIP/fixup commits and long first lines |
+| `background-task-audit` | Warns when background tasks return zero output |
+| `commit-msg-check` | Warns on WIP/fixup commits and long first lines |
 | `crlf-detector` | Warns when Write/Edit produces CRLF in shell scripts, YAML, Python |
 | `disk-space-detect` | Detects disk space errors in tool output, activates alert mode |
 | `hook-autocommit` | Auto-commits hook module edits |
@@ -459,11 +501,17 @@ Full catalog in `modules/` directory:
 | `troubleshoot-detector` | Detects fail-fail-succeed patterns |
 | `update-stale-docs` | Detects stale docs after code edits |
 | `empty-output-detector` | Warns when ls/cat/find/curl/kubectl/az return empty output |
+| `file-naming-check` | Validates file naming conventions for hook modules |
+| `git-commit-reminder-check` | Reminds to commit TODO.md/docs/specs changes (15-min cooldown) |
 | `inter-project-audit` | Logs inter-project TODO writes to JSONL audit trail |
 | `result-review-gate` | Injects review checklist when reading report/PDF/coverage files |
 | `test-evidence` | Records test pass/fail counts to evidence file for victory-gate validation |
-| `no-infra-excuse` | Blocks infrastructure excuses — reminds Claude it has AWS/Azure/RONE available |
+| `no-infra-excuse` | Warns against infrastructure excuses — reminds Claude it has AWS/Azure/RONE available |
+| `script-not-oneoff-check` | Warns when writing one-off scripts instead of reusable project scripts |
 | `spirit-check` | LLM audits tool calls against spirit-rules.yaml — catches creative workarounds that JS gates miss |
+| `decision-log-gate` | Warns when editing hook infrastructure without a decisions.jsonl entry |
+| `verify-todo-completion-gate` | Verifies file references when TODO items are marked done |
+| `portal-evidence-recorder-gate` | Records Blueprint portal navigations for portal-verify-gate evidence |
 | `user-correction-detector` | Real-time detection of user corrections via prompt-log.jsonl pattern matching |
 | `post-tool-use-gate` | LLM-powered analysis of tool results for quality and correctness |
 | `tool-event-guard` | Emits `tool.used` events to `$CLAUDE_EVENT_LOG` for worker observability (no-op locally) |
@@ -487,30 +535,6 @@ Full catalog in `modules/` directory:
 | `hook-integrity-monitor` | Spot-checks live module integrity each prompt (async, rate-limited) |
 | `prompt-logger` | Logs prompts to JSONL for audit |
 
-### Stop (controls session ending)
-| Module | Description |
-|--------|-------------|
-| `auto-continue` | Blocks stopping — always find the next task |
-| `auto-continue-gate` | LLM-powered stop analysis — Haiku evaluates rules from stop-haiku-rules.yaml |
-| `chat-export` | Auto-exports session to HTML on stop |
-| `config-sync` | Auto-commits and pushes ~/.claude changes to cloud backup |
-| `drift-review` | Checks work matches the active spec task |
-| `log-gotchas` | Captures debugging lessons before stopping |
-| `mark-turn-complete` | Writes turn marker for interrupt detection |
-| `never-give-up` | Blocks "impossible" — forces research first |
-| `push-unpushed` | Blocks stop with unpushed commits |
-| `reflection-score` | Gamified scoring system — tracks autonomy, corrections, streaks |
-| `self-reflection` | LLM-powered review of recent gate decisions (async, calls claude -p) |
-| `session-brain-analysis` | Sends session summary to unified-brain for cross-session analysis |
-| `stop-analysis-gate` | Haiku evaluates whether session should end — writes reasoning to stop-analysis.md |
-| `test-before-done` | Reminds to run e2e tests before done |
-| `unresolved-issues-check` | Blocks session end with stale TESTING NOW/IN PROGRESS/WIP tasks |
-
-#### Project-Scoped Stop
-| Module | Project | Description |
-|--------|---------|-------------|
-| `delegate-and-monitor` | hackathon26 | Delegates tasks to fleet workers |
-
 ### SessionStart (injects context)
 | Module | Description |
 |--------|-------------|
@@ -528,6 +552,9 @@ Full catalog in `modules/` directory:
 | `terminal-title` | Sets terminal title to project folder name |
 | `inter-project-priority` | Injects P0 inter-project TODOs (XREF tags) at session start |
 | `workflow-summary` | Injects active workflow summary |
+| `proxy-routing-check-gate` | Verifies ANTHROPIC_BASE_URL routes through local proxy |
+| `stop-hook-verify-check` | Verifies stop hook runners and modules are healthy on session start |
+| `unauthorized-change-check` | Detects undocumented changes to hook infrastructure via SHA256 hashing |
 
 ## Troubleshooting
 

@@ -5,17 +5,33 @@ archive/
 *.jsonl.*
 *.bak
 .DS_Store
+
+# Test artifacts
 .test-results/
 .test-async-tmp/
-SESSION_STATE.md
 .test-tmp-*
 .test-debug-*
 .spec-gate-helper.js
 .spec-gate-t321-helper.js
+scripts/test/archive/
+
+# Local state (not installed on other devices)
+SESSION_STATE.md
 .workflow-state.json
 workflow-config.json
-scripts/test/archive/
 run-modules/
 .coconut/
-.claude/worktrees/
+.claude/
 scripts/hermes-message.json
+modules.yaml
+watchdog-config.json
+ENFORCEMENT.md
+TODO-COMPLETED.md
+session-trace-*.md
+
+# Debug/temp files
+debug-*.json
+hook-debug.js
+audit-report-*.txt
+session-analysis-*.md
+*.rewrite-approved

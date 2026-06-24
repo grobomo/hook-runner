@@ -23,14 +23,14 @@ run_gate() {
 
 # === Blocked: Edit/Write to lessons.jsonl ===
 OUTPUT=$(run_gate "x" '{"tool_name":"Edit","tool_input":{"file_path":"/project/.claude/lessons.jsonl","old_string":"a","new_string":"b"}}')
-if echo "$OUTPUT" | grep -q "NO-LESSONS-FILE"; then
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
   pass "blocks Edit to lessons.jsonl"
 else
   fail "should block Edit to lessons.jsonl — got: $OUTPUT"
 fi
 
 OUTPUT=$(run_gate "x" '{"tool_name":"Write","tool_input":{"file_path":"C:\\Users\\test\\.claude\\lessons.jsonl","content":"test"}}')
-if echo "$OUTPUT" | grep -q "NO-LESSONS-FILE"; then
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
   pass "blocks Write to lessons.jsonl (Windows path)"
 else
   fail "should block Write to lessons.jsonl (Windows) — got: $OUTPUT"
@@ -38,21 +38,21 @@ fi
 
 # === Blocked: Bash append to lessons.jsonl ===
 OUTPUT=$(run_gate "x" '{"tool_name":"Bash","tool_input":{"command":"echo {\"lesson\":\"test\"} >> .claude/lessons.jsonl"}}')
-if echo "$OUTPUT" | grep -q "NO-LESSONS-FILE"; then
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
   pass "blocks Bash >> lessons.jsonl"
 else
   fail "should block Bash >> — got: $OUTPUT"
 fi
 
 OUTPUT=$(run_gate "x" '{"tool_name":"Bash","tool_input":{"command":"node -e \"fs.appendFileSync(lessons.jsonl, data)\""}}')
-if echo "$OUTPUT" | grep -q "NO-LESSONS-FILE"; then
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
   pass "blocks node appendFileSync lessons.jsonl"
 else
   fail "should block node appendFileSync — got: $OUTPUT"
 fi
 
 OUTPUT=$(run_gate "x" '{"tool_name":"Bash","tool_input":{"command":"printf \"{lesson: test}\" | tee -a lessons.jsonl"}}')
-if echo "$OUTPUT" | grep -q "NO-LESSONS-FILE"; then
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
   pass "blocks tee to lessons.jsonl"
 else
   fail "should block tee — got: $OUTPUT"
@@ -98,10 +98,10 @@ fi
 
 # === Block message quality ===
 OUTPUT=$(run_gate "x" '{"tool_name":"Write","tool_input":{"file_path":"/project/lessons.jsonl","content":"test"}}')
-if echo "$OUTPUT" | grep -q "hook module" && echo "$OUTPUT" | grep -q "run-modules"; then
-  pass "block message mentions hook module alternative"
+if echo "$OUTPUT" | grep -q "WHY:" && echo "$OUTPUT" | grep -q "NEXT STEPS:"; then
+  pass "block message has WHY + NEXT STEPS format"
 else
-  fail "block message should mention hook module alternative"
+  fail "block message should have WHY + NEXT STEPS format"
 fi
 
 echo ""

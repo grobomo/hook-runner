@@ -1,0 +1,9 @@
+# Stop Rule: unaddressed-tangents
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _12-unaddressed-tangents.yaml)
+
+name: unaddressed-tangents
+check: "Were there topics, questions, or requests in the conversation that the user raised but were never completed or addressed? (Not just mentioned — actually resolved with code changes, answers, or concrete output.) Only trigger if NO other rule above triggered."
+action: "CONTINUE — address the unresolved tangent. If it's investigative, do it. If it's a task, do it or add to TODO.md."

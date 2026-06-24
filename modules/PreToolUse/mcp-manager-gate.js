@@ -1,5 +1,5 @@
 // TOOLS: Bash, Edit, Write
-// WORKFLOW: wsl, starter
+// WORKFLOW: haiku-rules, starter
 // WHY: Claude added MCP server entries directly to .mcp.json instead of using
 // mcp-manager. Direct entries bypass lifecycle management (auto-start, idle
 // timeout, restart) and create orphaned server processes. Also blocks manual
@@ -60,13 +60,7 @@ module.exports = function(input) {
       log({ result: "block", reason: "direct MCP server in .mcp.json", file: filePath });
       return {
         decision: "block",
-        reason: "MCP-MANAGER: Do not add MCP servers directly to .mcp.json.\n" +
-          "Only mcp-manager belongs in .mcp.json.\n\n" +
-          "To add an MCP server:\n" +
-          "  1. Add it to servers.yaml (mcp-manager config)\n" +
-          "  2. Use: mcpm call mcp-manager add server=<name> command=<cmd>\n" +
-          "  3. Or edit servers.yaml directly and run: mcpm call mcp-manager reload\n\n" +
-          "mcp-manager handles: auto-start, idle timeout, restart, tool proxying."
+        reason: "BLOCKED: Direct MCP server entry added to .mcp.json without using the MCP manager\nWHY: Manual edits to .mcp.json bypass validation and configuration management, causing inconsistent server states\nNEXT STEPS:\n1. Remove the manual entry from .mcp.json\n2. Use the MCP manager tool to add the server with proper validation\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix mcp-manager-gate — {describe the issue}\""
       };
     }
   }
@@ -79,12 +73,7 @@ module.exports = function(input) {
         log({ result: "block", reason: "direct MCP server invocation", cmd: cmd.substring(0, 80) });
         return {
           decision: "block",
-          reason: "MCP-MANAGER: Do not start MCP servers directly.\n" +
-            "Detected: " + cmd.substring(0, 80) + "\n\n" +
-            "Use mcp-manager instead:\n" +
-            "  mcpm call mcp-manager start server=<name>\n" +
-            "  mcpm call mcp-manager call server=<name> tool=<tool> arguments='{...}'\n\n" +
-            "mcp-manager handles lifecycle, auto-stop, and tool proxying."
+          reason: "BLOCKED: Direct modification of MCP server entries in .mcp.json configuration file\nWHY: Previous incident where MCP servers were added directly to .mcp.json instead of using the proper manager interface, causing configuration inconsistencies and deployment failures\nNEXT STEPS:\n1. Use the MCP manager tool to add or modify server entries through the proper API\n2. If manual editing is necessary, validate changes against the schema before applying\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix mcp-manager-gate — {describe the issue}\""
         };
       }
     }

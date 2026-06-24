@@ -1,5 +1,5 @@
 // TOOLS: Bash
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: Windows scp/cp adds \r\n to SSH keys. OpenSSH rejects them with
 // "error in libcrypto". This happened repeatedly with fleet key deployment.
 "use strict";
@@ -13,9 +13,7 @@ module.exports = function(input) {
       /aws\s+s3\s+cp.*key/.test(cmd)) {
     return {
       decision: "block",
-      reason: "SSH KEY CRLF CHECK: Windows adds \\r\\n to SSH keys which breaks OpenSSH.\n" +
-        "Always pipe through tr -d '\\r' before uploading to Linux hosts or S3.\n" +
-        "Example: tr -d '\\r' < key.pem | ssh user@host 'cat > ~/.ssh/key.pem'"
+      reason: "BLOCKED: SSH key upload containing CRLF line endings\nWHY: Windows tools may add carriage returns to SSH keys, causing OpenSSH to reject authentication\nNEXT STEPS:\n1. Convert the key file using dos2unix or sed to remove \\r\\n characters\n2. Verify the key contains only LF line endings before uploading\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix crlf-ssh-key-check — {describe the issue}\""
     };
   }
 

@@ -95,8 +95,8 @@ check("upload-and-run on dirty tree: blocks", function() {
   var gate = loadGate();
   var r = gate(makeInput("bash scripts/upload-and-run.sh"));
   assert(r && r.decision === "block", "should block with uncommitted changes");
-  assert(r.reason.indexOf("DEPLOY GATE") >= 0);
-  assert(r.reason.indexOf("uncommitted") >= 0);
+  assert(/BLOCKED|deploy/i.test(r.reason));
+  assert(/uncommit|dirty|clean/i.test(r.reason));
   // Clean up
   fs.unlinkSync(path.join(tmpDir, "dirty.txt"));
 });

@@ -37,11 +37,11 @@ ok("double-quote credential allowed", passes('git config credential.helper "!gh 
 
 // Block message quality
 var r = gate({tool_name: "Bash", tool_input: {command: "git rebase --theirs"}});
-ok("block mentions REVERSED", r && /REVERSED/.test(r.reason));
-ok("block mentions upstream", r && /upstream/.test(r.reason));
+ok("block mentions rebase", r && /rebase|reverse/i.test(r.reason));
+ok("block has WHY + NEXT STEPS", r && /WHY:/.test(r.reason) && /NEXT STEPS:/i.test(r.reason));
 
 var r2 = gate({tool_name: "Bash", tool_input: {command: "git config credential.helper '!gh'"}});
-ok("cred block mentions double quotes", r2 && /double quotes/.test(r2.reason));
+ok("cred block mentions quotes", r2 && /quot/i.test(r2.reason));
 
 // Empty command
 ok("empty command allowed", passes(""));

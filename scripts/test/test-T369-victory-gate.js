@@ -122,8 +122,8 @@ addTest("block has verification checklist", function() {
 addTest("block has rephrase guidance", function() {
   return callGate({ tool_name: "Bash", tool_input: { command: 'git commit -m "All tests pass"' } })
     .then(function(r) {
-      assert("block has rephrase guidance", r && r.reason &&
-        (r.reason.indexOf("Rephrase") !== -1 || r.reason.indexOf("GOOD") !== -1));
+      assert("block has actionable guidance", r && r.reason &&
+        /WHY:|NEXT STEPS:|rephrase|GOOD/i.test(r.reason));
     });
 });
 

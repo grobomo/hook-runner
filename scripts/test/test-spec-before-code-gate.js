@@ -157,7 +157,7 @@ fs.writeFileSync(path.join(tmpDir, "TODO.md"), "# empty\n");
 var blockResult = runGate({
   tool_name: "Edit", tool_input: { file_path: tmpDir + "/src/app.js", old_string: "a", new_string: "b" }
 });
-ok("block message mentions TODO.md", blockResult && blockResult.reason.indexOf("TODO.md") !== -1);
+ok("block message mentions spec/document", blockResult && /spec|document|TODO|WHY:/i.test(blockResult.reason));
 ok("block message mentions spec", blockResult && blockResult.reason.indexOf("spec") !== -1);
 
 // === No CLAUDE_PROJECT_DIR = allow (can't check) ===

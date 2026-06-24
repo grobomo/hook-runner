@@ -1,0 +1,9 @@
+# Stop Rule: gate-block-followthrough
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _27-gate-block-followthrough.yaml)
+
+name: gate-block-followthrough
+check: "Did a gate block Claude during this session with a 'FALSE POSITIVE? File a TODO in hook-runner' instruction, and Claude dismissed it or worked around it without filing the TODO? Look for BLOCKED messages in the conversation that include FALSE POSITIVE instructions. If Claude received such a block and did NOT write a TODO in hook-runner's TODO.md, this rule triggers. Exception: if Claude determined it was NOT a false positive and adjusted its approach to comply with the gate's intent."
+action: "CONTINUE — a gate blocked you with false-positive instructions that you didn't follow through on. File the TODO in hook-runner/TODO.md now. Gate maintenance is higher priority than feature work — unfiled false positives degrade the system for every future session."

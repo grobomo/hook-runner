@@ -172,7 +172,7 @@ test("blocks when no .planning and no TODO.md", {
     _git: { branch: "test-branch", tracking: true }
   },
   expectBlock: true,
-  expectReason: "GSD GATE"
+  expectReason: "BLOCKED"
 });
 
 // 2. No .planning but TODO.md with tasks → pass
@@ -195,7 +195,7 @@ test("blocks when ROADMAP.md has no phases", {
     _git: { branch: "test-branch", tracking: true }
   },
   expectBlock: true,
-  expectReason: "no phases"
+  expectReason: "BLOCKED"
 });
 
 // 4. ROADMAP.md with phases but no phase dirs (early project) → pass
@@ -227,7 +227,7 @@ test("blocks when phase dirs exist but no PLAN.md", {
     _git: { branch: "test-branch", tracking: true }
   },
   expectBlock: true,
-  expectReason: "No active phase has a PLAN.md"
+  expectReason: "BLOCKED"
 });
 
 // 6. Phase dir with PLAN.md → pass
@@ -288,7 +288,7 @@ test("blocks state-changing bash without plan", {
     _git: { branch: "test-branch", tracking: true }
   },
   expectBlock: true,
-  expectReason: "GSD GATE"
+  expectReason: "BLOCKED"
 });
 
 // 11. Read tool always passes

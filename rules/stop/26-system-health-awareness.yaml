@@ -1,0 +1,9 @@
+# Stop Rule: system-health-awareness
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _26-system-health-awareness.yaml)
+
+name: system-health-awareness
+check: "Does the conversation show signs of system health issues that Claude hasn't addressed? Signs: mentions of high memory/CPU, many stale processes, accumulating browser tabs, disk space warnings, proxy errors, OOM kills, or any health-report-check warnings from session start that were acknowledged but not acted on. Exception: if Claude already ran cleanup or health checks this session."
+action: "CONTINUE — system health issue detected but not addressed. Run health checks first: check process count, close stale browser tabs, verify proxy health, review disk space. System stability is prerequisite to productive work."

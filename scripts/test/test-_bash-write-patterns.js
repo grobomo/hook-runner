@@ -90,5 +90,62 @@ assert(matches('echo "hello" > file.txt; cat other.txt'), "echo > file before se
 assert(matches('printf "data" > out.log && echo done'), "printf > file before && still matches");
 assert(matches('cat in.txt > out.txt; rm tmp'), "cat > file before semicolon still matches");
 
+// === T732: parseBashWrite() tests ===
+var parseBashWrite = patterns.parseBashWrite;
+var extractTargetPath = patterns.extractTargetPath;
+var extractContent = patterns.extractContent;
+
+assert(typeof parseBashWrite === "function", "parseBashWrite is a function");
+assert(typeof extractTargetPath === "function", "extractTargetPath is a function");
+assert(typeof extractContent === "function", "extractContent is a function");
+
+// parseBashWrite returns null for non-write commands
+assert(parseBashWrite("ls -la") === null, "parseBashWrite: ls returns null");
+assert(parseBashWrite("cat file.txt") === null, "parseBashWrite: cat without redirect returns null");
+assert(parseBashWrite("git status") === null, "parseBashWrite: git status returns null");
+assert(parseBashWrite("") === null, "parseBashWrite: empty string returns null");
+assert(parseBashWrite(null) === null, "parseBashWrite: null returns null");
+
+// parseBashWrite extracts target path from redirect commands
+var r = parseBashWrite('echo "hello" > /tmp/out.txt');
+assert(r !== null && r.targetPath === "/tmp/out.txt", "parseBashWrite: echo > extracts path");
+
+r = parseBashWrite('printf "data" > /tmp/result.log');
+assert(r !== null && r.targetPath === "/tmp/result.log", "parseBashWrite: printf > extracts path");
+
+r = parseBashWrite("tee /tmp/output.log");
+assert(r !== null && r.targetPath === "/tmp/output.log", "parseBashWrite: tee extracts path");
+
+r = parseBashWrite('tee -a "/tmp/append.log"');
+assert(r !== null && r.targetPath === "/tmp/append.log", "parseBashWrite: tee -a with quotes extracts path");
+
+// parseBashWrite extracts content from echo/printf
+r = parseBashWrite('echo "hello world" > /tmp/out.txt');
+assert(r !== null && r.content === "hello world", "parseBashWrite: echo extracts content");
+
+r = parseBashWrite('printf "formatted output" > /tmp/out.txt');
+assert(r !== null && r.content === "formatted output", "parseBashWrite: printf extracts content");
+
+// parseBashWrite extracts content from heredocs
+var heredocCmd = 'cat > /tmp/out.js <<\'EOF\'\nvar x = "hello";\nconsole.log(x);\nEOF';
+r = parseBashWrite(heredocCmd);
+assert(r !== null && r.targetPath === "/tmp/out.js", "parseBashWrite: heredoc extracts path");
+assert(r !== null && r.content !== null && r.content.indexOf('var x') >= 0, "parseBashWrite: heredoc extracts content");
+
+// parseBashWrite with sed -i (no content, just path)
+r = parseBashWrite("sed -i 's/foo/bar/' /tmp/file.txt");
+assert(r !== null && r.targetPath === "/tmp/file.txt", "parseBashWrite: sed -i extracts path");
+assert(r !== null && r.content === null, "parseBashWrite: sed -i has null content");
+
+// extractTargetPath edge cases
+assert(extractTargetPath('echo x >> "/tmp/append.log"') === "/tmp/append.log", "extractTargetPath: >> with quotes");
+assert(extractTargetPath("echo x >> /tmp/append.log") === "/tmp/append.log", "extractTargetPath: >> without quotes");
+assert(extractTargetPath('echo x > "/tmp/file.txt"') === "/tmp/file.txt", "extractTargetPath: > with double quotes");
+assert(extractTargetPath("echo x > '/tmp/file.txt'") === "/tmp/file.txt", "extractTargetPath: > with single quotes");
+
+// extractContent edge cases
+assert(extractContent("echo hello > /tmp/f") === "hello", "extractContent: unquoted echo");
+assert(extractContent("git status") === null, "extractContent: non-write returns null");
+
 console.log("\n=== Results: " + passed + " passed, " + failed + " failed ===");
 process.exit(failed > 0 ? 1 : 0);

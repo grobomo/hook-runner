@@ -59,14 +59,14 @@ fi
 
 # Create test modules
 cat > "$TMPDIR/blocking-mod.js" <<'EOF'
-// WORKFLOW: wsl
+// WORKFLOW: haiku-rules
 // BLOCKING: true
 // WHY: test module
 module.exports = function(input) { return null; };
 EOF
 
 cat > "$TMPDIR/non-blocking-mod.js" <<'EOF'
-// WORKFLOW: wsl
+// WORKFLOW: haiku-rules
 // WHY: test module
 module.exports = function(input) { return null; };
 EOF
@@ -89,7 +89,7 @@ EOF
 cat > "$TMPDIR/blocking-deep.js" <<'EOF'
 #!/usr/bin/env node
 "use strict";
-// WORKFLOW: wsl
+// WORKFLOW: haiku-rules
 // WHY: test
 //
 // ┌──────────────────────┐
@@ -220,9 +220,9 @@ else
   fail "run-stop.js only keeps first block (T641 regression)"
 fi
 
-# 18. run-stop.js writes analysis file
-if grep -q 'stop-analysis.md' "$REPO_DIR/run-stop.js"; then
-  pass "run-stop.js writes stop-analysis.md for TUI visibility"
+# 18. run-stop.js writes analysis file (session-scoped since T622)
+if grep -q 'stop-analysis-' "$REPO_DIR/run-stop.js"; then
+  pass "run-stop.js writes session-scoped stop-analysis file"
 else
   fail "run-stop.js missing analysis file write"
 fi

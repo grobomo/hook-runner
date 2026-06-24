@@ -206,9 +206,7 @@ module.exports = function(input) {
     if (branch === "main" || branch === "master") {
       return {
         decision: "block",
-        reason: "BRANCH GATE: Edits blocked on " + branch + ".\n" +
-          "REQUIRED: Call the EnterWorktree tool now.\n" +
-          "All work happens in worktrees. No exceptions."
+        reason: "BLOCKED: Direct commits to main branch\nWHY: Unreviewed code was merged to production, bypassing the required pull request process.\nNEXT STEPS:\n1. Create a pull request with your changes for peer review\n2. Merge only after approval and passing all checks\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix branch-pr-gate — {describe the issue}\""
       };
     }
 
@@ -216,10 +214,7 @@ module.exports = function(input) {
       if (/scripts\//.test(norm) || /cloudformation\//.test(norm)) return null;
       return {
         decision: "block",
-        reason: "BRANCH GATE: On feature branch '" + branch + "' but not a task branch.\n" +
-          "WHY: One PR per task = the dev team sees each unit of work individually.\n" +
-          "Committing to a bare feature branch bundles changes invisibly.\n" +
-          "FIX: git checkout -b " + branch.split("-")[0] + "-T<NNN>-<slug>"
+        reason: "BLOCKED: Direct commits to main branch\nWHY: Unreviewed code on main can introduce bugs and bypass quality checks that pull request review enforces.\nNEXT STEPS:\n1. Create a feature branch and push changes there instead\n2. Open a pull request for team review before merging to main\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix branch-pr-gate — {describe the issue}\""
       };
     }
     return null;
@@ -250,7 +245,7 @@ module.exports = function(input) {
       if (newBranch) {
         var nameErr = validateBranchName(newBranch[1]);
         if (nameErr) {
-          return { decision: "block", reason: "BRANCH NAME GATE: " + nameErr };
+          return { decision: "block", reason: "BRANCH NAME GATE: \nFALSE POSITIVE? File a TODO in hook-runner: \"Fix branch-pr-gate — {describe the issue}\"" + nameErr };
         }
       }
       return null; // valid name, allow creation
@@ -268,11 +263,7 @@ module.exports = function(input) {
 
       return {
         decision: "block",
-        reason: "BRANCH GATE: State-changing command blocked on " + branch + ".\n" +
-          "REQUIRED: Call the EnterWorktree tool now.\n" +
-          "All work happens in worktrees. No commits on main.\n" +
-          "Repair allowed: git reset --soft HEAD~N, git branch -f main origin/main\n" +
-          "Command: " + cmd.substring(0, 80)
+        reason: "BLOCKED: Direct commits to main branch\nWHY: Unreviewed changes to main bypass code review requirements and risk introducing bugs or security issues.\nNEXT STEPS:\n1. Create a feature branch and open a pull request for review\n2. Merge only after approval from a code reviewer\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix branch-pr-gate — {describe the issue}\""
       };
     }
 
@@ -295,7 +286,7 @@ module.exports = function(input) {
 
       return {
         decision: "block",
-        reason: "BRANCH GATE: State-changing command blocked on bare feature branch '" + branch + "'.\n" +
+        reason: "BRANCH GATE: State-changing command blocked on bare feature branch '\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix branch-pr-gate — {describe the issue}\"" + branch + "'.\n" +
           "WHY: Each task needs its own branch+PR so the dev team sees granular progress.\n" +
           "Bundling work on the feature branch makes individual changes invisible.\n" +
           "FIX: git checkout -b " + branch.split("-")[0] + "-T<NNN>-<slug>\n" +
@@ -337,7 +328,7 @@ module.exports = function(input) {
                 }
                 return {
                   decision: "block",
-                  reason: "PR MERGE GATE: Run completion test before merging " + taskNum + ":\n" +
+                  reason: "PR MERGE GATE: Run completion test before merging \nFALSE POSITIVE? File a TODO in hook-runner: \"Fix branch-pr-gate — {describe the issue}\"" + taskNum + ":\n" +
                     "WHY: Every PR must prove it works before merge. Merged PRs must be validated.\n" +
                     "No manual verification — automated tests are the only proof.\n" +
                     "FIX: bash " + scriptMatch[1] + "\n" +

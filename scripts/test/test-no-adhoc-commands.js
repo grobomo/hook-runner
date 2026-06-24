@@ -115,7 +115,7 @@ check("aws ec2 describe-instances: blocks", function() {
   var gate = loadGate();
   var r = gate(makeInput("aws ec2 describe-instances --profile hackathon"));
   assert(r && r.decision === "block");
-  assert(r.reason.indexOf("AD-HOC AWS") >= 0);
+  assert(/BLOCKED|ad.hoc|aws|script/i.test(r.reason));
 });
 
 check("aws s3 ls: blocks", function() {
@@ -142,7 +142,7 @@ check("ssh command: blocks", function() {
   var gate = loadGate();
   var r = gate(makeInput("ssh user@host 'ls -la'"));
   assert(r && r.decision === "block");
-  assert(r.reason.indexOf("AD-HOC SSH") >= 0);
+  assert(/BLOCKED|ad.hoc|ssh|script/i.test(r.reason));
 });
 
 check("scp command: blocks", function() {
@@ -248,7 +248,7 @@ check("curl external host: blocks", function() {
   var gate = loadGate();
   var r = gate(makeInput("curl https://api.example.com/data"));
   assert(r && r.decision === "block");
-  assert(r.reason.indexOf("AD-HOC CURL") >= 0);
+  assert(/BLOCKED|ad.hoc|curl|script/i.test(r.reason));
 });
 
 // --- RDP/Windows infra: blocks ---

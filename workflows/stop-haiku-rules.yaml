@@ -1,0 +1,119 @@
+# Stop Analysis Rules
+# ═══════════════════
+#
+# What: Haiku checks these rules at every stop event to decide if Claude
+#        should keep working or genuinely stop.
+#
+# How it works:
+#   1. Claude finishes a response and is about to stop
+#   2. The auto-continue-gate fires (Stop hook)
+#   3. It reads THIS file and builds a prompt from the rules below
+#   4. Sends context (user's last prompt + Claude's response + TODO items)
+#      plus all rules to Haiku
+#   5. Haiku checks each rule, returns DONE/CONTINUE/NEXT/DISPATCH
+#   6. If not DONE, Claude is told to keep working with the reason
+#
+# To add a new behavior: add a rule entry below. No code changes needed.
+# To disable a rule: comment it out or delete it.
+# Changes take effect immediately (file is read fresh each stop event).
+#
+# Rule format:
+#   - name: short-kebab-name     (shows in logs and block messages)
+#     check: "question for haiku" (what condition to look for)
+#     action: "VERB — instruction" (what to tell Claude if triggered)
+#
+# Paired config: ~/.claude/proxy/session-start-instructions.md
+#   (what Claude sees at session START — edit that for start-of-session behavior)
+
+rules:
+  - name: never-ask-permission
+    check: "Is Claude asking permission to do something the user already requested, OR presenting a ranked list of options and asking the user to pick when Claude already identified the best one? Look for patterns like 'Want me to...?', 'Should I...?', 'Which would you prefer?', or any table/list followed by a question asking the user to choose."
+    action: "CONTINUE — pick the best option and do it. The user said 'don't ask, just do' — if you identified the best choice, start it immediately without asking."
+
+  - name: never-give-up
+    check: "Is Claude declaring something 'impossible', 'can't be done', or giving up after one attempt? Or is Claude treating a missing credential/key/config as a permanent blocker when it could be regenerated, re-downloaded, or worked around?"
+    action: "CONTINUE — research alternatives before declaring impossible. Credentials can be regenerated (AWS CLI, keychain, credential-manager). SSH keys can be created fresh. Config files can be rebuilt. Past examples: 'can't screenshot VM' was solved by Azure Boot Diagnostics, 'can't send email' was solved by SMTP relay, 'SSH key missing' just needs aws ec2-instance-connect or a new key pair."
+
+  - name: suggest-context-reset
+    check: "ONLY trigger if at least TWO of these are true: (1) Claude explicitly signals session end ('next session', 'wrapping up', 'that covers it') while TODO items remain, (2) Claude is re-reading files it already read earlier in the session (sign of context loss), (3) Claude mentions compaction or lost context, (4) the same error or approach has been tried 3+ times. Do NOT trigger just because the session is long or many stop hooks fired — long productive sessions are cheaper than restarts ($2.33 each in cache_write). Productivity matters more than freshness."
+    action: "CONTINUE — tell Claude: 'Context appears degraded — save state to TODO.md and run context-reset autonomously (don't ask user). Remaining work continues in the fresh session.' This overrides todo-awareness — do NOT push more tasks into a degraded session."
+
+  - name: todo-awareness
+    check: "Is Claude stopping when TODO.md has unchecked items? ALL unchecked items count — whether from this session or previous sessions. The user directive is: 'do all the work, don't limit yourself to what I said in this session.' Check if TODO.md has any unchecked items (- [ ]) that are actionable (not BLOCKED, DEFERRED, or DESIGN NEEDED)."
+    action: "NEXT — there are remaining tasks in TODO.md. Start the next actionable one. Pick the most impactful task that doesn't require user input."
+
+  - name: cross-project-dispatch
+    check: "Did this session surface work that belongs in another project (e.g. a bug in a dependency, a TODO for hook-runner)?"
+    action: "DISPATCH — write the TODO in that project's TODO.md, then spawn a new session there with new_session.py."
+
+  - name: specs-need-docs-and-tests
+    check: "Did Claude write a feature spec, endpoint design, or TODO item for new functionality WITHOUT including documentation requirements and a test plan? Every spec must include: what to document (README, inline comments, API reference) and how to test (unit, integration, e2e)."
+    action: "CONTINUE — append documentation and test sections to the spec. Don't ask — just add them."
+
+  - name: incomplete-delivery
+    check: "Did the user ask for something with multiple parts and Claude only delivered one part?"
+    action: "CONTINUE — finish all parts before stopping."
+
+  - name: obvious-follow-up
+    check: "Is there an obvious next step that any reasonable developer would do? Examples: test after implementing, commit after fixing, start building after design is complete, begin the next task when the assistant says 'X is next'. Also triggers when the assistant's response itself names the next action (e.g. 'T1 is next', 'Ready to build', 'Next step is...')."
+    action: "CONTINUE — do the obvious follow-up without asking."
+
+  - name: e2e-before-done
+    check: "Did Claude mark a feature as 'done' or 'working' based ONLY on unit tests or dry-runs, without running an actual end-to-end test? Dry-runs and unit tests verify code structure, not real behavior. If the feature involves cross-process behavior (tab management, process killing, IPC, network calls), it MUST be tested live. Write a TODO item for the next session to verify if the feature actually works in production, so the result can be tracked across context resets."
+    action: "CONTINUE — write a TODO item with clear pass/fail criteria for the next session to verify the feature E2E. Use the TODO as a cross-session tracking mechanism. Never declare done without real E2E evidence."
+
+
+  - name: document-config-files
+    check: "Did Claude create or modify a config/yaml/json/jsonc file without adding inline comments explaining what it does, how to use it, and how to modify it?"
+    action: "CONTINUE — add self-documenting comments to the file. Every config file should explain itself to someone reading it cold."
+
+  - name: todo-maintenance
+    check: "Has the session done significant work that isn't reflected in TODO.md? (new features built, bugs fixed, tasks completed that should be checked off or added)"
+    action: "CONTINUE — update TODO.md with current session state before stopping. Check off completed items, add new discoveries."
+
+  - name: unaddressed-tangents
+    check: "Were there topics, questions, or requests in the conversation that the user raised but were never completed or addressed? (Not just mentioned — actually resolved with code changes, answers, or concrete output.) Only trigger if NO other rule above triggered."
+    action: "CONTINUE — address the unresolved tangent. If it's investigative, do it. If it's a task, do it or add to TODO.md."
+
+  - name: fix-false-positive-gates
+    check: "Did Claude hit a hook gate that incorrectly blocked a legitimate command (false positive)? For example: a gate blocking systemctl timer operations when it should only block proxy service restarts, or a gate blocking read-only commands."
+    action: "CONTINUE — fix the gate module that produced the false positive. Narrow its matching logic so it only blocks the specific dangerous operation it was designed for, not adjacent safe operations."
+
+  - name: never-stop-uncertain
+    check: "Is the user's last prompt unavailable, empty, or marked as '(not available)'? If so, check the assistant's response: does it clearly indicate MID-TASK state (asking permission, presenting options, offering to start work, 'Want me to...?', 'Should I...?', 'Ready to start?')? If the assistant is mid-task or asking questions, Claude must continue — stopping loses the session. However, if the assistant's response is clearly a FINAL state (session handoff written to TODO.md, explicit 'all tasks complete', context-reset initiated), then allow DONE even without a user prompt."
+    action: "CONTINUE — user prompt is unavailable and assistant appears mid-task. Pick the best option and proceed. Never stop when Claude is asking permission or presenting options — the user won't answer a hook."
+
+  - name: metacognate-next
+    check: "None of the above rules triggered AND user's last prompt IS available. Claude just completed work. Review the assistant's response to understand: (1) what work was done, (2) whether TODO.md has remaining user-requested items, (3) whether the response indicates completion or mid-task state. Only return DONE if the response clearly indicates all requested work is finished."
+    action: "Return NEXT only if user-initiated work remains. Return DONE if all user-requested work is visibly complete. When returning NEXT, name the specific task. When returning DONE, say why."
+
+  - name: user-instruction-override
+    check: "Did the user give an explicit instruction in chat (delete task X, stop working on Y, remove Z) that contradicts Claude's TODO.md or current actions? User chat instructions ALWAYS override Claude's written state."
+    action: "CONTINUE — the user's explicit instruction was not followed. Fix it now. User words in chat > Claude's TODO entries."
+
+  - name: answer-claudes-question
+    check: "Did Claude ask the user a question AND the answer is obvious from conversation context? If user's prior messages, tone, or stated priorities make the answer clear, provide it instead of surfacing unrelated TODOs."
+    action: "CONTINUE — answer Claude's question based on conversation context instead of pivoting to unrelated work."
+
+# Output format Haiku must return:
+# {"decision":"DONE|CONTINUE|NEXT|DISPATCH","reason":"one sentence","actions":["action 1","action 2"]}
+
+  - name: blueprint-cost-verify
+    check: "Did Claude say it cannot access a web portal, usage dashboard, or billing data? OR did Claude report pricing/cost data without verifying it against actual usage? This includes RDSec portal costs, Claude Enterprise (C4E) usage, Anthropic billing, or any web-accessible dashboard."
+    action: "CONTINUE — Blueprint MCP provides browser automation with the user's real Chrome profile (already authenticated). Use browser_navigate + browser_snapshot + browser_extract_content to visit the portal and pull actual data. Don't say you can't access web portals when Blueprint is available."
+
+  - name: never-ask-user-to-click
+    check: "Is Claude's response telling the user to do ANY manual action? This includes: 'click your account', 'approve on your phone', 'open this URL', 'enter this code', 'check your phone', 'click the account tile'. The ONLY acceptable exception is MFA phone approval which is physically impossible to automate. Everything else — clicking, navigating, typing, selecting — Claude must do autonomously via Blueprint MCP or programmatic APIs. If Blueprint can't interact with a page, Claude must find a programmatic workaround (e.g. MSAL login_hint to skip account picker, API calls instead of browser clicks)."
+    action: "CONTINUE — do the action yourself instead of asking the user. Use Blueprint MCP, MSAL with login_hint, or programmatic APIs. Never delegate browser/UI tasks to the user. The user's role is to direct strategy, not click buttons."
+
+  - name: prove-systems-work
+    check: "Did Claude build or modify a system and claim it's done without running it live and walking the user through the real output? Unit tests passing is NOT proof — the system must be demonstrated with real data, real API calls, and real output that the user can see. Simulated/mocked data doesn't count unless real APIs are genuinely unavailable."
+    action: "CONTINUE — run the system live with real data and show the user the actual output. Walk through what happened step by step. If a dependency is missing (expired token, unreachable API), fix that first before declaring done."
+
+  - name: fix-needs-gate
+    check: "Did Claude's response claim to have 'fixed' a bug or issue without also creating a mechanical gate (or TODO for a gate) to prevent recurrence? A fix without a gate is temporary — it will break again next session when context is lost. Exceptions: trivial typo fixes, documentation-only changes, and config adjustments don't need gates."
+    action: "CONTINUE — write a TODO item in hook-runner/TODO.md for a gate that mechanically prevents this bug from recurring. Fixes without gates recur. Gates are memory."
+
+  - name: correction-to-gate
+    check: "Did the user correct Claude's behavior during this session? Look for phrases like 'no, do X instead', 'stop doing Y', 'wrong approach', 'I said...', or the user repeating an instruction. If the user corrected a behavioral pattern (not just a one-off mistake), a gate should be created to enforce the correct behavior mechanically."
+    action: "CONTINUE — write a TODO item in hook-runner/TODO.md for a gate that mechanically enforces the corrected behavior. User corrections are signals that a gate is missing. The correction won't survive context reset — only a gate will."

@@ -1,62 +1,75 @@
-// TOOLS: Edit
-// WORKFLOW: shtd, starter
+// TOOLS: Edit, Write, Bash
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: Claude added hooks directly to settings.json instead of using the
-// hook-runner module system (run-modules/{Event}/*.js). Direct settings.json
-// hook entries bypass the modular architecture and create one-off hooks that
-// can't be independently managed, archived, or reasoned about.
+// hook-runner module system. Direct edits bypass backup, validation, and
+// rollback — a corrupt settings.json crashes Claude entirely.
+// T762: All settings.json hook changes must go through the watchdog's
+// install/uninstall commands which backup, validate, and auto-rollback.
 //
-// The hook-runner pattern: ONE runner per event in settings.json, modules in
-// run-modules/{Event}/. To add behavior, create a module — never edit the
-// hooks section of settings.json.
-//
-// Incident: 2026-04-04 — Claude added chat-export and terminal-title hooks
-// directly to settings.json Stop and SessionStart arrays instead of creating
-// run-modules/Stop/ and run-modules/SessionStart/ modules.
+// Incident: 2026-04-04 — Claude added chat-export hooks directly to settings.json
+// Incident: 2026-05-30 — User directed: settings.json must only be modified via
+//   approved scripts with backup + validation + auto-rollback.
 "use strict";
 
+var path = require("path");
+var bashHelper = require(path.join(__dirname, "_bash-write-patterns.js"));
+
 module.exports = function(input) {
-  if (input.tool_name !== "Edit") return null;
+  var tool = input.tool_name;
+  var ti = input.tool_input || {};
 
-  var filePath = ((input.tool_input || {}).file_path || "").replace(/\\/g, "/");
-
-  // Only gate ~/.claude/settings.json and ~/.claude/settings.local.json
-  if (!/\/\.claude\/settings(\.local)?\.json$/.test(filePath)) return null;
-
-  // Check if the edit touches the hooks section
-  var oldStr = (input.tool_input || {}).old_string || "";
-  var newStr = (input.tool_input || {}).new_string || "";
-
-  // Detect hook additions: new_string is longer and contains hook-like patterns
-  var hookPatterns = [
-    /"type"\s*:\s*"command"/,
-    /"command"\s*:/,
-    /"hooks"\s*:\s*\[/,
-    /"matcher"\s*:/,
-    /"type"\s*:\s*"prompt"/,
-    /"type"\s*:\s*"agent"/
-  ];
-
-  // Only block if new content adds hook entries (not if removing/simplifying)
-  var addsHooks = false;
-  for (var i = 0; i < hookPatterns.length; i++) {
-    if (hookPatterns[i].test(newStr) && !hookPatterns[i].test(oldStr)) {
-      addsHooks = true;
-      break;
+  // Determine if this targets settings.json
+  var filePath = "";
+  if (tool === "Edit" || tool === "Write") {
+    filePath = (ti.file_path || "").replace(/\\/g, "/");
+  } else if (tool === "Bash") {
+    var cmd = ti.command || "";
+    // Check if Bash command writes to settings.json
+    var parsed = bashHelper.parseBashWrite(cmd);
+    if (parsed) filePath = (parsed.targetPath || "").replace(/\\/g, "/");
+    // Also catch direct node/python scripts that modify settings
+    // Note: cat without redirection is read-only, so exclude plain cat
+    if (/settings\.json/.test(cmd) && (/write|echo|tee|sed|printf/.test(cmd) || /cat\s.*>/.test(cmd))) {
+      filePath = "settings.json";
     }
   }
+  if (!filePath) return null;
 
-  if (!addsHooks) return null;
+  // Only gate ~/.claude/settings.json and ~/.claude/settings.local.json
+  if (!/\/\.claude\/settings(\.local)?\.json$/.test(filePath) &&
+      filePath !== "settings.json") return null;
+
+  // For Edit: check if the edit touches hooks section
+  if (tool === "Edit") {
+    var oldStr = ti.old_string || "";
+    var newStr = ti.new_string || "";
+    var hookPatterns = [
+      /"type"\s*:\s*"(command|prompt|agent)"/,
+      /"command"\s*:/,
+      /"hooks"\s*:\s*\[/,
+      /"matcher"\s*:/,
+    ];
+    var addsHooks = false;
+    for (var i = 0; i < hookPatterns.length; i++) {
+      if (hookPatterns[i].test(newStr) && !hookPatterns[i].test(oldStr)) {
+        addsHooks = true;
+        break;
+      }
+    }
+    if (!addsHooks) return null;
+  }
+
+  // For Write: always block full rewrites of settings.json
+  // For Bash: always block if targeting settings.json
 
   return {
     decision: "block",
-    reason: "BLOCKED: Do not add hooks directly to settings.json. " +
-      "Use the hook-runner module system instead:\n\n" +
-      "  1. Create a module: ~/.claude/hooks/run-modules/{Event}/your-module.js\n" +
-      "  2. The runner (run-{event}.js) loads all modules automatically\n" +
-      "  3. For Stop hooks: ~/.claude/hooks/run-modules/Stop/\n" +
-      "  4. For SessionStart hooks: ~/.claude/hooks/run-modules/SessionStart/\n\n" +
-      "settings.json should only have ONE runner entry per event. " +
-      "All behavior goes in modules.\n\n" +
-      "See ~/.claude/rules/archive/hook-architecture.md for the full pattern."
+    reason: "BLOCKED: Direct modification of settings.json hook entries.\n" +
+      "WHY: A corrupt settings.json crashes Claude entirely — all changes must go through scripts with backup + validation + auto-rollback.\n" +
+      "NEXT STEPS:\n" +
+      "1. To add/remove hooks: node ~/.claude/hooks/hook-runner-watchdog.js install|uninstall\n" +
+      "2. To add behavior: create a module in ~/.claude/hooks/run-modules/{Event}/\n" +
+      "3. For non-hook settings (env vars, permissions): use the /update-config skill\n" +
+      "FALSE POSITIVE? File a TODO in hook-runner: \"Fix settings-hooks-gate — {describe the issue}\""
   };
 };

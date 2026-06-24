@@ -163,15 +163,7 @@ module.exports = function(input) {
   if (tasksWithoutTests.length > 0) {
     return {
       decision: "block",
-      reason: "TEST CHECKPOINT GATE: Tasks missing test coverage:\n" +
-        tasksWithoutTests.map(function(t) { return "  - " + t; }).join("\n") + "\n\n" +
-        "WHY: During the hackathon, PRs merged from mobile had no tests and broke production.\n" +
-        "Every task must have an automated e2e test as proof of completion — no manual verification.\n" +
-        "Tests are what make autonomous fleet workers reliable: a worker can't merge broken code\n" +
-        "if a test must pass first.\n\n" +
-        "FIX: Create scripts/test/test-TXXX-<name>.sh for each task, or add\n" +
-        "     `**Checkpoint**: `bash scripts/test/<test>.sh` exits 0` to spec phases.\n" +
-        "Blocked: " + path.basename(targetFile)
+      reason: "BLOCKED: Merge of code without test coverage\nWHY: Previous mobile PRs merged untested code to production, causing service outages\nNEXT STEPS:\n1. Add tests covering your changes before resubmitting\n2. Run test suite locally to verify coverage meets project standards\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix test-checkpoint-gate — {describe the issue}\""
     };
   }
 

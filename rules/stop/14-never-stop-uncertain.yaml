@@ -1,0 +1,9 @@
+# Stop Rule: never-stop-uncertain
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _14-never-stop-uncertain.yaml)
+
+name: never-stop-uncertain
+check: "Is the user's last prompt unavailable, empty, or marked as '(not available)'? If so, check the assistant's response: does it clearly indicate MID-TASK state (asking permission, presenting options, offering to start work, 'Want me to...?', 'Should I...?', 'Ready to start?')? If the assistant is mid-task or asking questions, Claude must continue — stopping loses the session. However, if the assistant's response is clearly a FINAL state (session handoff written to TODO.md, explicit 'all tasks complete', context-reset initiated), then allow DONE even without a user prompt."
+action: "CONTINUE — user prompt is unavailable and assistant appears mid-task. Pick the best option and proceed. Never stop when Claude is asking permission or presenting options — the user won't answer a hook."

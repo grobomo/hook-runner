@@ -31,10 +31,10 @@ check("Mentions end-to-end testing", function() {
   assert(r.reason.indexOf("end-to-end") !== -1);
 });
 
-check("Mentions unit tests as supplement", function() {
+check("Has WHY + NEXT STEPS format", function() {
   var gate = loadGate();
   var r = gate({});
-  assert(r.reason.indexOf("supplement") !== -1);
+  assert(/WHY:/.test(r.reason) && /NEXT STEPS:/i.test(r.reason));
 });
 
 check("Returns same result regardless of input", function() {

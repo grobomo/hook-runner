@@ -1,4 +1,5 @@
 // TOOLS: Bash, Edit, Write, Read, Agent
+// WORKFLOW: haiku-rules
 // WHY: Worker visibility was built on fragile probes (pgrep, /proc reads, file mtime).
 // This PostToolUse hook emits tool.used events to a JSONL event log, giving real-time
 // visibility into what Claude is doing. No-op when CLAUDE_EVENT_LOG is unset (local default).

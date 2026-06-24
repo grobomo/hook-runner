@@ -213,7 +213,7 @@ test("gate: blocks non-XREF work when XREF items pending", function() {
   });
   assert(result !== null, "should block");
   assert(result.decision === "block", "should be block decision");
-  assert(result.reason.indexOf("P0") !== -1, "should mention P0");
+  assert(/BLOCKED|P0|priority|XREF/i.test(result.reason), "should mention priority/XREF");
 
   cleanup(root);
 });

@@ -1,5 +1,5 @@
 // TOOLS: *
-// WORKFLOW: shtd, starter, gsd
+// WORKFLOW: shtd, starter, gsd, haiku-rules
 // WHY: Claude often ignores user corrections — the user says "no, wrong" or "I already
 // told you X" and Claude plows ahead with the same approach. The self-reflection system
 // catches this at session end, but by then the damage is done. This module detects
@@ -13,10 +13,8 @@ var os = require("os");
 var HOOKS_DIR = path.join(os.homedir(), ".claude", "hooks");
 var PROMPT_LOG = path.join(HOOKS_DIR, "prompt-log.jsonl");
 var CORRECTION_LOG = path.join(HOOKS_DIR, "correction-log.jsonl");
-// Per-session marker: tracks last prompt timestamp we already processed
-var LAST_SEEN_FILE = path.join(os.tmpdir(), ".correction-detector-last-" + process.ppid);
-// Cooldown: don't fire more than once per prompt
-var COOLDOWN_MS = 5000;
+// Tracks which prompt timestamps have already fired — one entry per prompt, not global cooldown
+var FIRED_LOG = path.join(os.tmpdir(), ".correction-detector-fired.json");
 
 // Strong correction patterns — high confidence, standalone triggers
 var STRONG_PATTERNS = [
@@ -81,26 +79,31 @@ function getLatestPrompt() {
   } catch (e) { return null; }
 }
 
-function alreadySeen(ts) {
+function alreadyFired(ts) {
   try {
-    var content = fs.readFileSync(LAST_SEEN_FILE, "utf-8").trim();
-    var data = JSON.parse(content);
-    if (data.ts === ts) {
-      if (data.fired) return true;
-      if (!data.fired && (Date.now() - data.seenAt) < COOLDOWN_MS) return true;
+    if (!fs.existsSync(FIRED_LOG)) return false;
+    var data = JSON.parse(fs.readFileSync(FIRED_LOG, "utf-8"));
+    // Clean entries older than 2 hours to prevent file growth
+    var cutoff = Date.now() - 2 * 60 * 60 * 1000;
+    var clean = {};
+    for (var k in data) {
+      if (data[k] > cutoff) clean[k] = data[k];
     }
-    return false;
+    if (Object.keys(clean).length !== Object.keys(data).length) {
+      fs.writeFileSync(FIRED_LOG, JSON.stringify(clean));
+    }
+    return !!clean[ts];
   } catch (e) { return false; }
 }
 
-function markSeen(ts, fired) {
+function markFired(ts) {
   try {
-    fs.writeFileSync(LAST_SEEN_FILE, JSON.stringify({
-      ts: ts,
-      fired: fired,
-      seenAt: Date.now(),
-      firedAt: fired ? Date.now() : 0
-    }));
+    var data = {};
+    if (fs.existsSync(FIRED_LOG)) {
+      try { data = JSON.parse(fs.readFileSync(FIRED_LOG, "utf-8")); } catch (e) { data = {}; }
+    }
+    data[ts] = Date.now();
+    fs.writeFileSync(FIRED_LOG, JSON.stringify(data));
   } catch (e) {}
 }
 
@@ -145,28 +148,19 @@ module.exports = function(input) {
   var prompt = getLatestPrompt();
   if (!prompt || !prompt.preview) return null;
 
-  // Dedup: don't fire twice for the same prompt
-  if (alreadySeen(prompt.ts)) return null;
+  // Dedup: don't fire twice for the same prompt — each prompt fires at most once
+  if (alreadyFired(prompt.ts)) return null;
 
   var match = detectCorrection(prompt.preview);
-  if (!match) {
-    markSeen(prompt.ts, false);
-    return null;
-  }
+  if (!match) return null;
 
   // Correction detected — mark as fired and log
-  markSeen(prompt.ts, true);
+  markFired(prompt.ts);
   logCorrection(prompt, match.pattern);
 
   return {
     decision: "block",
-    reason: "USER CORRECTION DETECTED (" + match.strength + "):\n" +
-      "  \"" + prompt.preview.substring(0, 150) + "\"\n\n" +
-      "The user is correcting your approach. Before continuing:\n" +
-      "  1. ACKNOWLEDGE the correction explicitly\n" +
-      "  2. EXPLAIN what you were doing wrong\n" +
-      "  3. ADJUST your approach based on what the user said\n\n" +
-      "Do NOT continue with the same approach. The user's correction is a constraint."
+    reason: "BLOCKED: Response proceeding despite explicit user correction or contradiction\nWHY: Claude ignored user feedback stating the previous response was incorrect, leading to continued propagation of wrong information\nNEXT STEPS:\n1. Review the user correction and acknowledge the error explicitly\n2. Provide a corrected response that addresses the user feedback directly\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix user-correction-detector — {describe the issue}\""
   };
 };
 

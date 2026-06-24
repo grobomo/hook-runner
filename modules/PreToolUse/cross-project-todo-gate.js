@@ -120,11 +120,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "[cross-project-todo-gate] BLOCKED: Writing cross-project TODO items into this project's TODO.md.\n" +
-      "Issues: " + issues.join("; ") + "\n\n" +
-      "DO THIS INSTEAD:\n" +
-      "1) Write the TODO items to the OTHER project's TODO.md (allowed by cwd-drift-detector)\n" +
-      "2) Only write items that belong to THIS project (" + path.basename(currentProject) + ") in this TODO.md\n" +
-      "3) If the other project doesn't exist yet, create it first with project-maker, then write its TODO.md"
+    reason: "BLOCKED: Cross-project TODO items cannot be written into this project\nWHY: Cross-project TODOs create maintenance burden and confusion when tracking issues across repository boundaries\nNEXT STEPS:\n1. Create the TODO item in the source project instead\n2. Use cross-project references or issue links to connect related work\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix cross-project-todo-gate — {describe the issue}\""
   };
 };

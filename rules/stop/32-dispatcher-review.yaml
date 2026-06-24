@@ -1,0 +1,12 @@
+# Stop Rule: dispatcher-review (T845)
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# WHY: Request-tracker dispatcher sessions repeatedly did direct implementation
+# work (SSH, code editing, config changes) instead of dispatching to worker
+# sessions. This rule catches violations at session end.
+#
+# Only fires in request-tracker project (Haiku checks cwd)
+
+name: dispatcher-review
+check: "Is this a request-tracker/dispatcher session? If so, did Claude do any direct implementation work instead of dispatching? Direct work includes: writing code in other projects, SSH to remote hosts, editing non-request-tracker files, running upgrades, or testing implementations. Managing work (writing TODOs, polling, checking status, spawning sessions) is fine. If NOT request-tracker, answer NO."
+action: "NEXT — Dispatcher did direct work instead of dispatching. Log the violation and write a self-correction note in TODO.md: 'Dispatcher session did direct work — should have dispatched to worker session instead.'"

@@ -38,17 +38,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "HOOK-RUNNER SYSTEM REMINDER — Read before proceeding.\n\n" +
-      "The ONLY enforcement mechanism is hook-runner modules:\n" +
-      "  Modules:  ~/.claude/hooks/run-modules/<Event>/<name>.js\n" +
-      "  Per-project: run-modules/PreToolUse/<project-name>/<name>.js\n" +
-      "  Config:   ~/.claude/hooks/modules.yaml\n" +
-      "  Source:   " + (process.env.CLAUDE_PROJECT_DIR || "hook-runner project") + "\n\n" +
-      "NEVER CREATE:\n" +
-      "  ~/.claude/rules/     — not a thing, not enforced, not read\n" +
-      "  .claude/rules/       — same, doesn't work, stop trying\n\n" +
-      "To add enforcement → create .js in hook-runner/run-modules/PreToolUse/\n" +
-      "To edit hooks → open a session in the hook-runner project\n\n" +
-      "Blocked: " + filePath.substring(0, 120)
+    reason: "BLOCKED: Automatic creation of .claude/rules/ files\nWHY: Native rules files are the weakest enforcement tier — they don't survive context resets and Claude can rationalize past them.\nNEXT STEPS:\n1. Create a hook-runner gate module instead (modules/PreToolUse/)\n2. All behavioral enforcement must use mechanical gates, not text rules\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix hook-system-reminder — {describe the issue}\""
   };
 };

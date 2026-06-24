@@ -128,10 +128,6 @@ module.exports = function(input) {
   // No spec found — block
   return {
     decision: "block",
-    reason: "SPEC-BEFORE-CODE: No spec found for this change.\n" +
-      "Before coding, document what you're doing:\n" +
-      "  Option A: Add a task to TODO.md: '- [ ] T###: Fix <what> — <why>'\n" +
-      "  Option B: The previous commit message (within 5 min) describes the work\n" +
-      "Write the spec first, then make your changes."
+    reason: "BLOCKED: Code change without a task spec\nWHY: Coding without documented requirements leads to solutions that do not address the actual problem and creates confusion during review.\nNEXT STEPS:\n1. Write a spec describing what needs to be fixed and why\n2. Share the spec before implementing code changes\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix spec-before-code-gate — {describe the issue}\""
   };
 };

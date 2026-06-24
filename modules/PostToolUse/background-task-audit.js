@@ -28,7 +28,7 @@ module.exports = function(input) {
   if (status === "completed" && output.length === 0) {
     return {
       decision: "block",
-      reason: "ZERO OUTPUT from completed background task " + taskId + ".\n\n" +
+      reason: "BLOCKED: Background task completed without producing output\nWHY: Claude previously dismissed zero-output tasks as expected behavior rather than investigating missing results or incomplete processing\nNEXT STEPS:\n1. Check task logs and input parameters to verify the task received correct data\n2. Review the task implementation for early returns, exception handling, or conditional logic that skips output generation\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix background-task-audit — {describe the issue}\"" + taskId + ".\n\n" +
         "A completed task with no output means one of:\n" +
         "  - Script crashed before printing (import error, missing module)\n" +
         "  - stdout not flushed (add PYTHONUNBUFFERED=1 env var)\n" +
@@ -43,7 +43,7 @@ module.exports = function(input) {
   if (retrieval === "timeout" && output.length === 0) {
     return {
       decision: "block",
-      reason: "TIMEOUT + ZERO OUTPUT from background task " + taskId + ".\n\n" +
+      reason: "BLOCKED: Background task completed with timeout and zero output\nWHY: Tasks timing out without producing results were being dismissed as expected resource contention, masking actual failures in task logic or resource allocation\nNEXT STEPS:\n1. Review task implementation for infinite loops, missing output, or early termination\n2. Increase timeout threshold if task legitimately requires more time, or restructure as non-blocking operation\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix background-task-audit — {describe the issue}\"" + taskId + ".\n\n" +
         "The task produced nothing before timing out. Root causes:\n" +
         "  - Process hanging at startup (import, SSH connect, auth prompt)\n" +
         "  - stdout buffering hiding output (use PYTHONUNBUFFERED=1)\n" +
@@ -78,7 +78,7 @@ module.exports = function(input) {
     if (checkCount >= 2) {
       return {
         decision: "block",
-        reason: "BACKGROUND TASK " + taskId + " polled " + checkCount +
+        reason: "BLOCKED: Background task execution without output verification\nWHY: Claude previously dismissed zero-output background tasks as resource contention, masking actual failures that went undetected\nNEXT STEPS:\n1. Verify the task produced expected output or logs before dismissing\n2. If output is missing, check task logs and error handlers rather than assuming resource issues\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix background-task-audit — {describe the issue}\"" + taskId + " polled " + checkCount +
           " times with ZERO output.\n\n" +
           "The task is running but has produced nothing after multiple checks.\n" +
           "REQUIRED: Stop the task. Run the command in foreground to find the hang point.\n" +

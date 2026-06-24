@@ -1,0 +1,9 @@
+# Stop Rule: prove-systems-work
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _20-prove-systems-work.yaml)
+
+name: prove-systems-work
+check: "Did Claude build or modify a system and claim it's done without running it live and walking the user through the real output? Unit tests passing is NOT proof — the system must be demonstrated with real data, real API calls, and real output that the user can see. Simulated/mocked data doesn't count unless real APIs are genuinely unavailable."
+action: "CONTINUE — run the system live with real data and show the user the actual output. Walk through what happened step by step. If a dependency is missing (expired token, unreachable API), fix that first before declaring done."

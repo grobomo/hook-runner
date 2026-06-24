@@ -6,7 +6,7 @@
 module.exports = function(input) {
   return {
     decision: "block",
-    reason: "FLEET MONITOR MODE — You are the coordinator.\n" +
+    reason: "FLEET MONITOR MODE — You are the coordinator.\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix delegate-and-monitor — {describe the issue}\"" +
       "1) Poll worker status: bash scripts/fleet/api-status.sh workers\n" +
       "2) Poll task status: bash scripts/fleet/api-status.sh tasks\n" +
       "3) If tasks stuck PENDING with idle workers, re-register workers and resubmit\n" +

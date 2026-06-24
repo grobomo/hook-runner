@@ -1,5 +1,5 @@
 // TOOLS: Bash
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: Claude circumvented a PreToolUse gate by using Bash (cat >, echo >) instead
 // of the blocked Write/Edit tool. This defeats the entire hook enforcement system.
 // If a gate blocks Write/Edit, Bash must not be used as a backdoor to write the same file.
@@ -27,12 +27,18 @@ var WRITE_PATTERNS = [
 
 // Extract the target file path from a write command
 function extractTargetPath(cmd) {
-  // Match: cat > "path" or cat > path or echo "x" > path or tee path
-  var m = cmd.match(/>\s*"([^"]+)"/);
+  // Handle >> (append) before > to avoid capturing second > as path
+  var m = cmd.match(/>>\s*"([^"]+)"/);
   if (m) return m[1];
-  m = cmd.match(/>\s*'([^']+)'/);
+  m = cmd.match(/>>\s*'([^']+)'/);
   if (m) return m[1];
-  m = cmd.match(/>\s*(\S+)/);
+  m = cmd.match(/>>\s*(\S+)/);
+  if (m) return m[1];
+  m = cmd.match(/[^>]>\s*"([^"]+)"/);
+  if (m) return m[1];
+  m = cmd.match(/[^>]>\s*'([^']+)'/);
+  if (m) return m[1];
+  m = cmd.match(/[^>]>\s*(\S+)/);
   if (m) return m[1];
   m = cmd.match(/\btee\s+"([^"]+)"/);
   if (m) return m[1];
@@ -93,14 +99,12 @@ module.exports = function(input) {
 
     return {
       decision: "block",
-      reason: "HOOK BYPASS BLOCKED: A PreToolUse gate (instruction-to-hook) is active " +
-        "but you're using Bash to write a file instead of using the Write/Edit tool.\n\n" +
-        "This is not allowed. Bash must not be used to circumvent hook enforcement.\n" +
-        "FIX: Address the gate's requirement first (create the hook/rule it asks for), " +
-        "then use Write/Edit for the original file.\n" +
-        "If the gate fired incorrectly, fix the gate — don't bypass it."
+      reason: "BLOCKED: Bash file write operation while instruction-to-hook gate is active\nWHY: This prevents circumventing PreToolUse gates by using shell redirection operators (cat >, echo >) to write files instead of calling the intended hook\nNEXT STEPS:\n1. Use the proper hook-enabled method for file operations instead of shell redirection\n2. Contact your administrator if you need to modify the gate configuration\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-hook-bypass — {describe the issue}\""
     };
   }
+
+  // Whitelist: writing to TODO.md or documentation is always allowed
+  if (/(?:TODO|CHANGELOG|TODO-COMPLETED)\.md/i.test(cmd)) return null;
 
   // Check if the Bash description mentions bypassing
   var desc = "";
@@ -121,9 +125,7 @@ module.exports = function(input) {
     if (bypassPatterns[k].test(desc) || bypassPatterns[k].test(cmd)) {
       return {
         decision: "block",
-        reason: "HOOK BYPASS BLOCKED: Your description or command mentions bypassing a hook.\n\n" +
-          "If a hook is wrong, fix the hook. If a hook is right, follow it.\n" +
-          "Never use Bash as a backdoor around Write/Edit enforcement."
+        reason: "BLOCKED: Attempt to use shell redirection operators to bypass PreToolUse hook restrictions\nWHY: Claude previously circumvented gate validation by using cat > and echo > instead of direct API calls\nNEXT STEPS:\n1. Use the intended tool or API method directly without shell redirection\n2. Contact your administrator if you need access to a restricted operation\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-hook-bypass — {describe the issue}\""
       };
     }
   }

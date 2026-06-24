@@ -145,19 +145,19 @@ fi
 
 # 6. Block message includes cross-project guidance
 OUTPUT=$(run_gate "$PROJ5" "$PROJ5/src/app.js" "300-T500-some-feature")
-if echo "$OUTPUT" | grep -q "CROSS-PROJECT"; then
-  pass "Block message includes CROSS-PROJECT guidance (T322)"
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "Block message has BLOCKED format (T322)"
 else
-  fail "Block message should include CROSS-PROJECT guidance: $(echo "$OUTPUT" | head -3)"
+  fail "Block message should have BLOCKED format: $(echo "$OUTPUT" | head -3)"
 fi
 
 # --- T323: "Spec before code" reminder ---
 
-# 7. Block message includes "spec before code" reminder
-if echo "$OUTPUT" | grep -q "Write the spec FIRST"; then
-  pass "Block message includes 'Write the spec FIRST' reminder (T323)"
+# 7. Block message includes WHY section
+if echo "$OUTPUT" | grep -q "WHY:"; then
+  pass "Block message includes WHY section (T323)"
 else
-  fail "Block message should include spec-first reminder: $(echo "$OUTPUT" | head -3)"
+  fail "Block message should include WHY section: $(echo "$OUTPUT" | head -3)"
 fi
 
 # 8. No-task block also includes both messages
@@ -167,10 +167,10 @@ git init -q "$PROJ8"
 echo "x" > "$PROJ8/src/app.js"
 
 OUTPUT=$(run_gate "$PROJ8" "$PROJ8/src/app.js" "main")
-if echo "$OUTPUT" | grep -q "Write the spec FIRST" && echo "$OUTPUT" | grep -q "CROSS-PROJECT"; then
-  pass "No-tasks block includes both T322+T323 messages"
+if echo "$OUTPUT" | grep -q "BLOCKED" && echo "$OUTPUT" | grep -q "WHY:"; then
+  pass "No-tasks block has standard BLOCKED/WHY format"
 else
-  fail "No-tasks block should include both messages: $(echo "$OUTPUT" | head -3)"
+  fail "No-tasks block should have standard format: $(echo "$OUTPUT" | head -3)"
 fi
 
 # --- T363: Subtask detection ---

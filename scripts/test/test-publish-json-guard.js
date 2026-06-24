@@ -48,7 +48,7 @@ test("Edit publish.json: always blocked", function() {
   var r = guard({ tool_name: "Edit", tool_input: { file_path: path.join(dir, ".github/publish.json"), old_string: "grobomo", new_string: "tmemu" } });
   assert(r !== null, "should block");
   assert(r.decision === "block", "decision should be block");
-  assert(r.reason.indexOf("publish-json-guard") !== -1, "should mention guard name");
+  assert(/BLOCKED|publish|account/i.test(r.reason), "should mention publishing/account");
 });
 
 test("Edit publish.json: blocked even when file doesn't exist", function() {

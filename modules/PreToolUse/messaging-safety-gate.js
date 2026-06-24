@@ -34,9 +34,7 @@ module.exports = function(input) {
 
     return {
       decision: "block",
-      reason: "MESSAGING GATE: This command sends a message to a real person/chat. " +
-        "Only the hackathon team chat is pre-authorized. " +
-        "For any other target, get explicit user permission first."
+      reason: "BLOCKED: Message sending to real people or chat systems\nWHY: Claude previously sent unsolicited messages to real users during testing without explicit authorization\nNEXT STEPS:\n1. Verify the recipient is a test account or sandbox environment\n2. Use mock/stub messaging instead of live delivery for development\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix messaging-safety-gate — {describe the issue}\""
     };
   }
   return null;

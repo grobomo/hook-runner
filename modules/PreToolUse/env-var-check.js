@@ -1,5 +1,5 @@
 // TOOLS: Bash, Edit, Write
-// WORKFLOW: shtd, gsd
+// WORKFLOW: shtd, gsd, haiku-rules
 // WHY: Missing env vars caused silent failures deep in workflows.
 "use strict";
 // PreToolUse: block code edits if required environment variables are missing.
@@ -60,9 +60,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "ENV VAR CHECK: Required environment variables are not set.\n" +
-      "Missing: " + missing.join(", ") + "\n" +
-      "Defined in: " + path.join(projectDir, ".env.required") + "\n" +
-      "Set them in your shell or add to Claude Code settings.json env section."
+    reason: "BLOCKED: Workflow execution due to missing required environment variables\nWHY: Unset environment variables cause silent failures deep in workflows, making bugs difficult to diagnose and fix\nNEXT STEPS:\n1. Set all required environment variables before running this workflow\n2. Check your configuration file or deployment documentation for the complete list of required variables\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix env-var-check — {describe the issue}\""
   };
 };

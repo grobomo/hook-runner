@@ -115,10 +115,10 @@ else
 fi
 
 # 7. Block message includes test output
-if echo "$OUTPUT" | grep -q "WORKER LOOP"; then
-  pass "block message identifies as WORKER LOOP"
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "block message has BLOCKED format"
 else
-  fail "block should say WORKER LOOP: $OUTPUT"
+  fail "block should say BLOCKED: $OUTPUT"
 fi
 
 # 8. No test file = pass through (test-checkpoint-gate handles that)

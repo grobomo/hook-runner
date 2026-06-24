@@ -82,7 +82,7 @@ check("2 failures then success: blocks with troubleshooting cycle", function() {
   var r = gate({ tool_name: "Bash", tool_input: { command: "correct-cmd" }, tool_output: "success output" });
   assert(r !== null, "should block");
   assert(r.decision === "block");
-  assert(r.reason.indexOf("TROUBLESHOOTING CYCLE") !== -1);
+  assert(/BLOCKED|troubleshoot/i.test(r.reason));
   assert(r.reason.indexOf("wrong-syntax") !== -1);
   assert(r.reason.indexOf("wrong-flag") !== -1);
   assert(r.reason.indexOf("correct-cmd") !== -1);

@@ -25,9 +25,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "PERFORMANCE: Do not use sleep between actions.\n" +
-      "Each Claude prompt takes 3-10s to process — pages will have loaded.\n" +
-      "Just call the next action directly. Sleep wastes time twice.\n" +
-      "If you truly need a delay, use sleep 1 (max 1 second)."
+    reason: "BLOCKED: Sleep calls between Blueprint MCP actions\nWHY: Claude was inserting sleep pauses between sequential Blueprint calls, incorrectly assuming pages needed time to load between operations\nNEXT STEPS:\n1. Remove sleep() calls from between Blueprint MCP invocations\n2. Chain Blueprint actions directly without delays\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix blueprint-no-sleep — {describe the issue}\""
   };
 };

@@ -41,11 +41,12 @@ module.exports = function(input) {
 
   for (var i = 0; i < patterns.length; i++) {
     if (patterns[i].test(content)) {
-      return { decision: "block", reason: "FRAGILE HEURISTIC DETECTED in " + path.split(/[/\\]/).pop() + ": " +
-        "You're writing pixel/color threshold code for visual judgment. " +
-        "This is fragile and will break on edge cases. " +
-        "Use claude -p or the Anthropic SDK to analyze images/PDFs instead. " +
-        "Describe the check in plain English as a prompt, send the artifact, parse structured output." };
+      return { decision: "block", reason: "BLOCKED: Fragile visual heuristic in \nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-fragile-heuristics — {describe the issue}\"" + path.split(/[/\\]/).pop() + ".\n" +
+        "WHY: Pixel-ratio thresholds and color-counting heuristics broke on dark login pages (F5) and white dashboards — visual checks need AI, not arithmetic.\n" +
+        "NEXT STEPS:\n" +
+        "1. Use claude -p or the Anthropic SDK to analyze images/PDFs\n" +
+        "2. Describe the check in plain English as a prompt\n" +
+        "3. Send the artifact, parse structured JSON output" };
     }
   }
 

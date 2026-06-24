@@ -1,0 +1,9 @@
+# Stop Rule: cross-project-dispatch
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _05-cross-project-dispatch.yaml)
+
+name: cross-project-dispatch
+check: "Did this session surface work that belongs in another project (e.g. a bug in a dependency, a TODO for hook-runner)?"
+action: "DISPATCH — write the TODO in that project's TODO.md, then spawn a new session there with new_session.py."

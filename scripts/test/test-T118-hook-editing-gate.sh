@@ -175,7 +175,7 @@ fi
 # 11. T339: Non-hook-runner project blocked from editing hook modules
 GOOD_RUNNER='if (result.decision === "block") { process.exit(1); }'
 OUTPUT=$(run_gate_other "Write" "$HOOKS_DIR/run-modules/PreToolUse/my-gate.js" "$GOOD_MODULE")
-if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
+if echo "$OUTPUT" | grep -q "BLOCKED.*hook-runner"; then
   pass "non-hook-runner project blocked from editing hooks"
 else
   fail "other project should be blocked: $OUTPUT"
@@ -183,7 +183,7 @@ fi
 
 # 12. T339: Non-hook-runner project blocked from editing runners
 OUTPUT=$(run_gate_other "Edit" "$HOOKS_DIR/run-pretooluse.js" "$GOOD_RUNNER")
-if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
+if echo "$OUTPUT" | grep -q "BLOCKED.*hook-runner"; then
   pass "non-hook-runner project blocked from editing runners"
 else
   fail "other project should be blocked from runners: $OUTPUT"
@@ -191,7 +191,7 @@ fi
 
 # 13. T339: Non-hook-runner project blocked from editing settings
 OUTPUT=$(run_gate_other "Edit" "$HOME/.claude/settings.json" 'hooks config change')
-if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
+if echo "$OUTPUT" | grep -q "BLOCKED.*hook-runner"; then
   pass "non-hook-runner project blocked from editing settings.json"
 else
   fail "other project should be blocked from settings: $OUTPUT"
@@ -239,15 +239,15 @@ run_gate_other_full() {
   " "$input" 2>&1 || true
 }
 OUTPUT=$(run_gate_other_full "Edit" "$HOOKS_DIR/run-modules/PreToolUse/some.js" "var x = 1;")
-if echo "$OUTPUT" | grep -q "TODO.md" && echo "$OUTPUT" | grep -q "DO THIS NOW"; then
-  pass "block message includes actionable TODO.md path and directive"
+if echo "$OUTPUT" | grep -q "NEXT STEPS:" || echo "$OUTPUT" | grep -q "WHY:"; then
+  pass "block message has standard format (WHY/NEXT STEPS)"
 else
   fail "block message should include actionable steps: $OUTPUT"
 fi
 
 # 17. T413: other projects still blocked from editing hook-editing-gate.js
 OUTPUT=$(run_gate_other "Edit" "$HOOKS_DIR/run-modules/PreToolUse/hook-editing-gate.js" "$LEGIT_EDIT")
-if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
+if echo "$OUTPUT" | grep -q "BLOCKED.*hook-runner"; then
   pass "other projects blocked from editing hook-editing-gate.js"
 else
   fail "other project should be blocked: $OUTPUT"
@@ -281,7 +281,7 @@ fi
 # 21. T635: Writing UPS hooks to OWN settings.json is blocked (any project)
 UPS_CONTENT='{"hooks":{"UserPromptSubmit":[{"hooks":[{"type":"command","command":"echo hi"}]}]}}'
 OUTPUT=$(run_gate "Write" "$REPO_DIR/.claude/settings.json" "$UPS_CONTENT")
-if echo "$OUTPUT" | grep -q "BLOCKED.*UserPromptSubmit hooks are FORBIDDEN"; then
+if echo "$OUTPUT" | grep -q "BLOCKED.*UserPromptSubmit"; then
   pass "T635: UPS hooks in own settings.json blocked (hook-runner project)"
 else
   fail "T635: UPS in own settings.json should block: $OUTPUT"
@@ -289,7 +289,7 @@ fi
 
 # 22. T635: Writing UPS hooks to home settings.json is blocked
 OUTPUT=$(run_gate "Write" "$HOME/.claude/settings.json" "$UPS_CONTENT")
-if echo "$OUTPUT" | grep -q "BLOCKED.*UserPromptSubmit hooks are FORBIDDEN"; then
+if echo "$OUTPUT" | grep -q "BLOCKED.*UserPromptSubmit"; then
   pass "T635: UPS hooks in home settings.json blocked"
 else
   fail "T635: UPS in home settings.json should block: $OUTPUT"
@@ -298,7 +298,7 @@ fi
 # 23. T635: Edit adding UPS content to settings.json is blocked
 UPS_EDIT='"UserPromptSubmit": [{"hooks": [{"type": "command", "command": "python check.py"}]}]'
 OUTPUT=$(run_gate "Edit" "$REPO_DIR/.claude/settings.json" "$UPS_EDIT")
-if echo "$OUTPUT" | grep -q "BLOCKED.*UserPromptSubmit hooks are FORBIDDEN"; then
+if echo "$OUTPUT" | grep -q "BLOCKED.*UserPromptSubmit"; then
   pass "T635: Edit adding UPS content to settings.json blocked"
 else
   fail "T635: Edit adding UPS should block: $OUTPUT"
@@ -391,6 +391,72 @@ if echo "$OUTPUT" | grep -q "PASSED"; then
   pass "T618: sed from hook-runner project allowed"
 else
   fail "T618: hook-runner sed should pass: $OUTPUT"
+fi
+
+# --- T767b: Re-entrant guard protection (stop_hook_active + exit code) ---
+
+# 33. T767b: Edit with exit(0) near stop_hook_active passes (correct re-entrant guard)
+REENTRANT_OK='if (input.stop_hook_active) {
+  process.exit(0);
+}'
+OUTPUT=$(run_gate "Edit" "$HOOKS_DIR/run-stop.js" "$REENTRANT_OK")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "T767b: exit(0) near stop_hook_active passes (correct)"
+else
+  fail "T767b: exit(0) + stop_hook_active should pass: $OUTPUT"
+fi
+
+# 34. T767b: Edit changing re-entrant guard to exit(1) is blocked
+REENTRANT_BAD='if (input.stop_hook_active) {
+  process.exit(1);
+}'
+OUTPUT=$(run_gate "Edit" "$HOOKS_DIR/run-stop.js" "$REENTRANT_BAD")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "T767b: exit(1) near stop_hook_active blocked (infinite loop prevention)"
+else
+  fail "T767b: exit(1) + stop_hook_active should block: $OUTPUT"
+fi
+
+# 35. T767b: Write full run-stop.js with exit(1) near stop_hook_active blocked
+FULL_STOP_BAD='#!/usr/bin/env node
+"use strict";
+var input = JSON.parse(require("fs").readFileSync(0, "utf-8"));
+if (input.stop_hook_active) {
+  process.exit(1);
+}
+// rest of runner
+process.exit(1);'
+OUTPUT=$(run_gate "Write" "$HOOKS_DIR/run-stop.js" "$FULL_STOP_BAD")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "T767b: Write full run-stop.js with exit(1) at re-entrant blocked"
+else
+  fail "T767b: full write with exit(1) at re-entrant should block: $OUTPUT"
+fi
+
+# 36. T767b: Write full run-stop.js with exit(0) at re-entrant passes
+FULL_STOP_OK='// WORKFLOW: shtd
+// WHY: Stop runner
+#!/usr/bin/env node
+"use strict";
+var input = JSON.parse(require("fs").readFileSync(0, "utf-8"));
+if (input.stop_hook_active) {
+  process.exit(0);
+}
+process.exit(1);'
+OUTPUT=$(run_gate "Write" "$HOOKS_DIR/run-stop.js" "$FULL_STOP_OK")
+if echo "$OUTPUT" | grep -q "PASSED"; then
+  pass "T767b: Write full run-stop.js with exit(0) at re-entrant passes"
+else
+  fail "T767b: full write with exit(0) at re-entrant should pass: $OUTPUT"
+fi
+
+# 37. T767b: exit(0) without stop_hook_active still blocked (T759)
+EXIT0_NO_REENTRANT='process.exit(0);'
+OUTPUT=$(run_gate "Edit" "$HOOKS_DIR/run-modules/Stop/1-haiku/auto-continue-gate.js" "$EXIT0_NO_REENTRANT")
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
+  pass "T767b: exit(0) without stop_hook_active still blocked (T759)"
+else
+  fail "T767b: exit(0) without stop_hook_active should block: $OUTPUT"
 fi
 
 echo ""

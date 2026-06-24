@@ -22,11 +22,12 @@ else
   assert "has file_path backslash normalization" "0" "1"
 fi
 
-# Test: runner uses exit(1) for blocks (not exit(0))
-if grep -q 'process.exit(1)' run-posttooluse.js 2>/dev/null; then
-  assert "uses exit(1) for blocks" "0" "0"
+# T803: PostToolUse NEVER blocks — removed exit(1) propagation.
+# Module blocks are logged+stderr only, not forwarded to Claude Code.
+if ! grep -q 'process.exit(1)' run-posttooluse.js 2>/dev/null; then
+  assert "never propagates blocks (T803)" "0" "0"
 else
-  assert "uses exit(1) for blocks" "0" "1"
+  assert "never propagates blocks (T803)" "0" "1"
 fi
 
 # Test: runner has stderr output before stdout for blocks

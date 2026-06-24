@@ -66,7 +66,7 @@ GOOD_RUNNER='if (result.decision) { process.exit(1); }'
 
 # 1. Non-hook-runner project blocked from editing hook modules
 OUTPUT=$(run_gate_other "Write" "$HOOKS_DIR/run-modules/PreToolUse/my-gate.js" "$GOOD_MODULE")
-if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
+if echo "$OUTPUT" | grep -q "BLOCKED.*hook-runner"; then
   pass "non-hook-runner project blocked from editing hooks"
 else
   fail "other project should be blocked: $OUTPUT"
@@ -74,7 +74,7 @@ fi
 
 # 2. Non-hook-runner project blocked from editing runners
 OUTPUT=$(run_gate_other "Edit" "$HOOKS_DIR/run-pretooluse.js" "$GOOD_RUNNER")
-if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
+if echo "$OUTPUT" | grep -q "BLOCKED.*hook-runner"; then
   pass "non-hook-runner project blocked from editing runners"
 else
   fail "other project should be blocked from runners: $OUTPUT"
@@ -82,7 +82,7 @@ fi
 
 # 3. Non-hook-runner project blocked from editing settings.json
 OUTPUT=$(run_gate_other "Edit" "$HOME/.claude/settings.json" "test content")
-if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
+if echo "$OUTPUT" | grep -q "BLOCKED.*hook-runner"; then
   pass "non-hook-runner project blocked from editing settings.json"
 else
   fail "other project should be blocked from settings: $OUTPUT"
@@ -122,7 +122,7 @@ fi
 
 # 8. Core hook files protected from other projects
 OUTPUT=$(run_gate_other "Edit" "$HOOKS_DIR/load-modules.js" "var x = 1;")
-if echo "$OUTPUT" | grep -q "BLOCKED.*locked to the hook-runner"; then
+if echo "$OUTPUT" | grep -q "BLOCKED.*hook-runner"; then
   pass "core hook files protected from other projects"
 else
   fail "core files should be protected: $OUTPUT"

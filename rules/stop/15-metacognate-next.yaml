@@ -1,0 +1,3 @@
+# SUPERSEDED by 15-keep-working.yaml — this file kept to avoid loader errors
+# Original: metacognate-next → renamed to keep-working (T801)
+# This rule is intentionally empty (no name/check/action = loader skips it)

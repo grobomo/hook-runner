@@ -45,7 +45,7 @@ module.exports = function(input) {
   if (!hasProjectTag) {
     return {
       decision: "block",
-      reason: "BLOCKED: AWS resource creation with --profile hackathon must include Project=hackathon26 tag. Add: --tags Key=Project,Value=hackathon26 (or include in CF template Tags). Command was: " + cmd.substring(0, 200)
+      reason: "BLOCKED: AWS resource creation without Project=hackathon26 tag when using --profile hackathon\nWHY: Untagged resources cannot be attributed to projects or cleaned up after hackathons, leaving orphaned infrastructure and cost attribution gaps\nNEXT STEPS:\n1. Add --tags Key=Project,Value=hackathon26 to your AWS CLI command\n2. Or include Tags section in your CloudFormation template with Project: hackathon26\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix aws-tagging-gate — {describe the issue}\""
     };
   }
 

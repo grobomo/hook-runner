@@ -44,7 +44,7 @@ var nnc = path.join(modulesDir, "PreToolUse", "no-nested-claude.js");
 
 ok("no-nested-claude: blocks claude -p", (function() {
   var r = runGate(nnc, { tool_name: "Bash", tool_input: { command: "claude -p 'what is 2+2'" } });
-  return r && r.decision === "block" && /NO NESTED CLAUDE/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|nested|subprocess/i.test(r.reason);
 })());
 
 ok("no-nested-claude: blocks pipe into claude", (function() {
@@ -108,7 +108,7 @@ try { fs.writeFileSync(stateFile, "test-alert\n"); } catch(e) {}
 
 ok("disk-space-guard: blocks rm -rf during alert", (function() {
   var r = runGate(dsg, { tool_name: "Bash", tool_input: { command: "rm -rf /tmp/junk" } });
-  return r && r.decision === "block" && /DISK SPACE GUARD/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|disk.*space/i.test(r.reason);
 })());
 
 ok("disk-space-guard: blocks rm -f during alert", (function() {
@@ -143,7 +143,7 @@ var bns = path.join(modulesDir, "PreToolUse", "blueprint-no-sleep.js");
 
 ok("no-unnecessary-sleep: blocks sleep 5", (function() {
   var r = runGate(bns, { tool_name: "Bash", tool_input: { command: "sleep 5" } });
-  return r && r.decision === "block" && /PERFORMANCE/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|sleep|blueprint/i.test(r.reason);
 })());
 
 ok("no-unnecessary-sleep: blocks sleep 30", (function() {
@@ -232,7 +232,7 @@ var eod = path.join(modulesDir, "PostToolUse", "empty-output-detector.js");
 
 ok("empty-output-detector: flags empty ls output", (function() {
   var r = runGate(eod, { tool_name: "Bash", tool_input: { command: "ls screenshots/" }, tool_result: "" });
-  return r && r.decision === "block" && /EMPTY OUTPUT/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|empty.*output/i.test(r.reason);
 })());
 
 ok("empty-output-detector: flags empty curl output", (function() {
@@ -273,7 +273,7 @@ if (fs.existsSync(stateFile)) try { fs.unlinkSync(stateFile); } catch(e) {}
 
 ok("disk-space-detect: detects ENOSPC", (function() {
   var r = runGate(dsd, { tool_name: "Bash", tool_input: { command: "npm install" }, tool_result: "Error: ENOSPC: no space left on device" });
-  return r && r.decision === "block" && /DISK SPACE ALERT/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|disk.*space/i.test(r.reason);
 })());
 
 ok("disk-space-detect: creates state file on alert", (function() {
@@ -340,7 +340,7 @@ ok("troubleshoot-detector: triggers on fail-fail-succeed", (function() {
   gate({ tool_name: "Bash", tool_input: { command: "attempt-2" }, tool_output: "Exit code 127" });
   // Then success
   var r = gate({ tool_name: "Bash", tool_input: { command: "finally-works" }, tool_output: "success output" });
-  return r && r.decision === "block" && /TROUBLESHOOTING CYCLE/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|troubleshoot/i.test(r.reason);
 })());
 
 ok("troubleshoot-detector: cooldown prevents repeat trigger", (function() {

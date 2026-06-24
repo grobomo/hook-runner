@@ -89,11 +89,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "PR-FIRST GATE: Branch '" + branch + "' has no open pull request.\n" +
-      "WHY: The dev team monitors progress via GitHub Mobile. Without a PR,\n" +
-      "nobody knows you're working. Create the PR FIRST, then write specs and code.\n" +
-      "Correct flow: task → PR → spec → failing tests → implement → e2e → merge\n" +
-      "FIX: gh pr create --title \"T...: description\" --body \"## Summary\\nWIP\"\n" +
-      "ALLOWED without PR: TODO.md, tasks.md, CHANGELOG.md edits"
+    reason: "BLOCKED: Direct commits to branches without a pull request\nWHY: Code and specs were created outside the review process, causing coordination and quality issues\nNEXT STEPS:\n1. Open a pull request for your branch before committing\n2. Ensure your changes go through code review before merging to main\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix pr-first-gate — {describe the issue}\""
   };
 };

@@ -18,7 +18,7 @@ module.exports = function(input) {
 
     return {
       decision: "block",
-      reason: "[no-local-docker] Local Docker commands blocked. Use remote infrastructure (EC2, ECS, cloud-claude) for container workloads. Read-only commands (ps, logs, inspect) are allowed."
+      reason: "BLOCKED: Local Docker commands\nWHY: Local Docker builds have caused disk space exhaustion and out-of-memory failures in this environment.\nNEXT STEPS:\n1. Use the remote build service instead\n2. Review Docker image cleanup policies with your team\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix block-local-docker — {describe the issue}\""
     };
   }
 

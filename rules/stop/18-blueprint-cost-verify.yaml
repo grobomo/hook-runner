@@ -1,0 +1,9 @@
+# Stop Rule: blueprint-cost-verify
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _18-blueprint-cost-verify.yaml)
+
+name: blueprint-cost-verify
+check: "Did Claude say it cannot access a web portal, usage dashboard, or billing data? OR did Claude report pricing/cost data without verifying it against actual usage? This includes RDSec portal costs, Claude Enterprise (C4E) usage, Anthropic billing, or any web-accessible dashboard."
+action: "CONTINUE — Blueprint MCP provides browser automation with the user's real Chrome profile (already authenticated). Use browser_navigate + browser_snapshot + browser_extract_content to visit the portal and pull actual data. Don't say you can't access web portals when Blueprint is available."

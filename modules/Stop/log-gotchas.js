@@ -1,4 +1,4 @@
-// WORKFLOW: shtd, gsd
+// WORKFLOW: shtd, gsd, haiku-rules
 // WHY: Hard-won lessons from debugging sessions get lost between context
 // resets. This gate ensures gotchas are captured as rule files so future
 // sessions don't repeat the same mistakes.
@@ -7,9 +7,6 @@
 module.exports = function(input) {
   return {
     decision: "block",
-    reason: "Before stopping: review what went wrong or was surprising. " +
-      "If any gotchas were encountered (unexpected behavior, workarounds, time wasted), " +
-      "write a rule file in the project's .claude/rules/ (or ~/.claude/rules/ if global). " +
-      "One file per topic, under 20 lines."
+    reason: "BLOCKED: Proceeding without documenting unexpected behavior or failures\nWHY: Debugging insights discovered during development are forgotten when context switches, forcing team members to rediscover the same problems later\nNEXT STEPS:\n1. Write down what went wrong, what surprised you, and why it happened\n2. Add this insight to the relevant code comments or documentation before moving forward\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix log-gotchas — {describe the issue}\""
   };
 };

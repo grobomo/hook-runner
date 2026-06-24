@@ -1,5 +1,5 @@
 // TOOLS: Bash
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: `gh auth switch` is broken with EMU accounts — the API still uses the EMU token
 // even after switching. Raw `gh` and `git push` commands silently use the wrong account,
 // causing 403s or pushing to the wrong org. gh_auto reads .github/publish.json and sets
@@ -38,8 +38,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "[gh-auto-gate] Raw gh/git remote commands use the wrong account with EMU.\n" +
-      "Use gh_auto (reads .github/publish.json) or set GH_TOKEN explicitly.\n\n" +
-      "Suggested fix:\n  " + suggestion
+    reason: "BLOCKED: Raw gh/git remote command without gh_auto\nWHY: gh auth switch is broken with EMU accounts because the API still uses the EMU token instead of switching properly\nNEXT STEPS:\n1. Use gh_auto wrapper to ensure correct token handling for EMU accounts\n2. Contact the platform team if you need to perform raw git operations\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix gh-auto-gate — {describe the issue}\""
   };
 };

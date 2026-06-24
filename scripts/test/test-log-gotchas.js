@@ -25,22 +25,22 @@ check("Always blocks", function() {
   assert(r.decision === "block");
 });
 
-check("Mentions rule files", function() {
+check("Has WHY section", function() {
   var gate = loadGate();
   var r = gate({});
-  assert(r.reason.indexOf("rule file") !== -1);
+  assert(/WHY:/.test(r.reason));
 });
 
-check("Mentions .claude/rules/", function() {
+check("Has NEXT STEPS section", function() {
   var gate = loadGate();
   var r = gate({});
-  assert(r.reason.indexOf(".claude/rules/") !== -1);
+  assert(/NEXT STEPS:/i.test(r.reason));
 });
 
-check("Mentions 20-line limit", function() {
+check("Mentions debugging or lessons", function() {
   var gate = loadGate();
   var r = gate({});
-  assert(r.reason.indexOf("20 lines") !== -1);
+  assert(/debug|lesson|gotcha|review|surprising/i.test(r.reason));
 });
 
 // --- Summary ---

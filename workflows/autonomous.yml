@@ -1,0 +1,28 @@
+name: autonomous
+description: >
+  Rules and gates for unattended operation. Claude manages itself without user input.
+  Self-correction, reflection, RCA enforcement, TODO tracking, and operational hygiene.
+  Extends starter for safety guarantees.
+version: 1
+enabled: false
+extends: haiku-rules
+
+modules:
+  # Self-correction — learn from mistakes
+  - reflection-first-gate
+  - correction-to-gate-check
+  - false-positive-followup-gate
+  - user-correction-detector
+  # Operational hygiene — document and automate
+  - rca-write-check
+  - rca-read-check
+  - script-not-oneoff-check
+  - automate-everything-gate
+  # Self-awareness — reflection and scoring
+  - self-reflection
+  - reflection-score
+  - self-healing-gate
+  # Quality enforcement
+  - test-before-done
+  - troubleshoot-detector
+  - empty-output-detector

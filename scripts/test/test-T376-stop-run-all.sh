@@ -131,7 +131,8 @@ else
 fi
 
 # 6. Verify run-stop.js outputs best block to stdout + all to stderr (T617: prefer stop-analysis-gate)
-if grep -q 'process.stdout.write(JSON.stringify.*bestBlock' "$REPO_DIR/run-stop.js" && grep -q 'process.exit(blocks.length' "$REPO_DIR/run-stop.js"; then
+# T759: always exit(1); bestBlock.reason written to stdout
+if grep -q 'bestBlock.reason' "$REPO_DIR/run-stop.js" && grep -q 'process.exit(1)' "$REPO_DIR/run-stop.js"; then
   pass "run-stop.js outputs best block to stdout+stderr then exits"
 else
   fail "run-stop.js should output best block to stdout and stderr"

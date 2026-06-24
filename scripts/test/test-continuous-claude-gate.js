@@ -176,7 +176,7 @@ check("Project without tasks: blocks .js edit", function() {
   var gate = loadGate();
   var r = gate({ tool_name: "Edit", tool_input: { file_path: path.join(dir, "src", "app.js") } });
   assert(r && r.decision === "block", "should block when no tracked tasks");
-  assert(r.reason.indexOf("TRACKED WORKFLOW") >= 0);
+  assert(/BLOCKED|track|workflow|task/i.test(r.reason));
 });
 
 check("Project with empty specs dir: blocks", function() {

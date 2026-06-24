@@ -1,31 +1,14 @@
 {
   "name": "hook-runner",
-  "version": "2.85.0",
+  "version": "3.1.0",
   "description": "Modular hook runner system for Claude Code. One runner per event, modules in folders.",
   "bin": {
-    "hook-runner": "setup.js"
+    "hook-runner": "cli/setup.js"
   },
   "files": [
-    "setup.js",
-    "demo.js",
-    "report.js",
-    "constants.js",
-    "workflow.js",
-    "workflow-cli.js",
-    "load-modules.js",
-    "hook-log.js",
-    "run-async.js",
-    "run-pretooluse.js",
-    "run-posttooluse.js",
-    "run-sessionstart.js",
-    "run-stop.js",
-    "run-userpromptsubmit.js",
-    "run-hidden.js",
-    "run-stop-bg.js",
-    "preflight.js",
-    "generate-manifest.js",
-    "watchdog.js",
-    "watchdog-config.json",
+    "src/",
+    "runners/",
+    "cli/",
     "modules/",
     "workflows/"
   ],

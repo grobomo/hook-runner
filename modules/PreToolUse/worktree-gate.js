@@ -83,11 +83,6 @@ module.exports = function(input) {
   // Main checkout + code file edit → blocked. EnterWorktree is the only way.
   return {
     decision: "block",
-    reason: "WORKTREE GATE: Edits blocked — you are in the main checkout.\n" +
-      "WHY: Multiple Claude tabs work on this project simultaneously.\n" +
-      "The main checkout stays clean. All work happens in worktrees.\n\n" +
-      "REQUIRED: Call the EnterWorktree tool now.\n" +
-      "It creates an isolated directory with its own branch. No alternatives.\n" +
-      "When done: commit, push, PR, then ExitWorktree."
+    reason: "BLOCKED: Code edits in the main checkout directory\nWHY: Multiple Claude tabs editing the same repository directory causes git conflicts and lost work\nNEXT STEPS:\n1. Create a git worktree for this task using git worktree add\n2. Switch to the new worktree path and continue editing there\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix worktree-gate — {describe the issue}\""
   };
 };

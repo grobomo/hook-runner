@@ -1,4 +1,4 @@
-// WORKFLOW: shtd, gsd
+// WORKFLOW: shtd, gsd, haiku-rules
 // WHY: Commits sat on local branches, invisible to mobile monitoring.
 "use strict";
 // Stop hook: block stopping if there are unpushed commits.
@@ -19,7 +19,7 @@ module.exports = function(input) {
     if (!remote) {
       return {
         decision: "block",
-        reason: "Branch '" + branch + "' has no remote tracking. Push first: git push -u origin " + branch
+        reason: "BLOCKED: Push to branch with unpushed commits\nWHY: Commits remaining on local branches become invisible to mobile monitoring systems, delaying detection of integration issues\nNEXT STEPS:\n1. Push all local commits to remote before proceeding\n2. Verify branch is up to date with origin using git status\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix push-unpushed — {describe the issue}\""
       };
     }
 

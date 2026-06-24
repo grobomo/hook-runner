@@ -1,5 +1,5 @@
 // TOOLS: Bash
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: Nested `claude -p` calls inside a session don't work reliably.
 // Cross-project work must use context_reset.py which opens a proper new terminal session.
 // Also blocks TaskCreate since it's a within-session tracker, not a session spawner.
@@ -33,8 +33,7 @@ module.exports = function(input) {
     if (/\bclaude\s+(--help|-h|--version|-v)\b/.test(cmd)) {
       return {
         decision: "block",
-        reason: "NO NESTED CLAUDE: claude info commands don't work as a subprocess.\n" +
-          "You already have Claude's capabilities — no need to call claude --help."
+        reason: "BLOCKED: Nested claude subprocess calls within an active session\nWHY: Claude processes launched as subprocesses during a session do not execute reliably and can cause the session to hang or fail\nNEXT STEPS:\n1. Run claude commands directly in your terminal instead of nesting them within another session\n2. If you need multiple claude invocations, execute them sequentially in separate terminal sessions\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-nested-claude — {describe the issue}\""
       };
     }
 
@@ -44,14 +43,7 @@ module.exports = function(input) {
         /\bclaude\s+-/.test(cmd)) {
       return {
         decision: "block",
-        reason: "NO NESTED CLAUDE: Running claude as a subprocess doesn't work from inside a session.\n" +
-          "ALTERNATIVES:\n" +
-          "  1. Run from a separate terminal: open a new tab and run the command there\n" +
-          "  2. Spawn a new session with context_reset.py:\n" +
-          "     python context_reset.py --target-project /path/to/project --no-close --prompt \"...\"\n" +
-          "  3. Detach the process (PowerShell):\n" +
-          "     Start-Process -NoNewWindow -FilePath claude -ArgumentList '-p','your prompt'\n" +
-          "NOTE: You ARE Claude — analyze data directly instead of calling claude -p on it."
+        reason: "BLOCKED: Nested claude subprocess invocation within an active session\nWHY: Nested claude -p calls do not execute reliably and can cause session instability or command failures\nNEXT STEPS:\n1. Run claude commands sequentially in separate sessions instead of nesting them\n2. Use shell scripting or task automation outside of the claude session if parallel execution is needed\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-nested-claude — {describe the issue}\""
       };
     }
   }

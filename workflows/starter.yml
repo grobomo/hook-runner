@@ -29,7 +29,7 @@ modules:
   - hook-editing-gate
   - hook-log-review-gate
   - no-hook-bypass
-  - no-rules-gate
+  - no-native-memory-gate
   - hook-autocommit
   - hook-health-monitor
   - hook-integrity-monitor

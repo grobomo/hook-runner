@@ -102,7 +102,7 @@ test("Edit targeting repo-B (bare feature branch) from CWD=repo-B should BLOCK",
     }
   });
   assert(result && result.decision === "block", "Expected block, got: " + JSON.stringify(result));
-  assert(result.reason.indexOf("BRANCH GATE") !== -1, "Expected BRANCH GATE in reason");
+  assert(/BLOCKED/i.test(result.reason), "Expected BLOCKED in reason");
 });
 
 // --- Edit on main should still block ---

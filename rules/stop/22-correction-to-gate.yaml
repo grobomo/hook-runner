@@ -1,0 +1,9 @@
+# Stop Rule: correction-to-gate
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _22-correction-to-gate.yaml)
+
+name: correction-to-gate
+check: "Did the user correct Claude's behavior during this session? Look for phrases like 'no, do X instead', 'stop doing Y', 'wrong approach', 'I said...', or the user repeating an instruction. If the user corrected a behavioral pattern (not just a one-off mistake), a gate should be created to enforce the correct behavior mechanically."
+action: "CONTINUE — write a TODO item in hook-runner/TODO.md for a gate that mechanically enforces the corrected behavior. User corrections are signals that a gate is missing. The correction won't survive context reset — only a gate will."

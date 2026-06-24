@@ -1,0 +1,9 @@
+# Stop Rule: priority-enforcement
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _28-priority-enforcement.yaml)
+
+name: priority-enforcement
+check: "Is Claude working on low-priority tasks while higher-priority items remain in TODO.md? Compare what Claude just worked on against unchecked TODO items. Signs of misaligned priority: working on cosmetic improvements while CRITICAL tasks are pending, reorganizing docs while bugs are open, adding nice-to-have features while blocking issues exist, polishing code that already works while new required functionality is unstarted. Exception: if Claude explicitly noted the priority trade-off and had a good reason (dependency, warm context, quick win en route to the bigger task)."
+action: "CONTINUE — check TODO.md for higher-priority items. You may be working on lower-impact tasks while critical work is pending. Review the TODO list, identify the highest-impact unchecked item, and switch to it."

@@ -56,7 +56,7 @@ check("ENOSPC: blocks", function() {
   var r = gate({ tool_name: "Bash", tool_input: { command: "npm install" }, tool_result: "Error: ENOSPC: no space left on device, write" });
   assert(r !== null, "should block");
   assert(r.decision === "block");
-  assert(r.reason.indexOf("DISK SPACE ALERT") !== -1);
+  assert(/BLOCKED|disk.*space/i.test(r.reason));
   cleanState();
 });
 

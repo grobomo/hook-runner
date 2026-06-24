@@ -72,7 +72,7 @@ module.exports = function(input) {
 
     return {
       decision: "block",
-      reason: "USE WORKERS — don't implement locally.\n" +
+      reason: "USE WORKERS — don't implement locally.\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix use-workers — {describe the issue}\"" +
         "Submit to fleet: bash scripts/fleet/api-submit.sh \"<task description>\"\n" +
         "Check status:    bash scripts/fleet/api-status.sh\n" +
         "Then poll for results. Workers create PRs you can merge.\n" +
@@ -95,7 +95,7 @@ module.exports = function(input) {
       if (/team-chat\.py/.test(normalized)) return null;
       return {
         decision: "block",
-        reason: "USE WORKERS — don't run boothapp code locally.\n" +
+        reason: "USE WORKERS — don't run boothapp code locally.\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix use-workers — {describe the issue}\"" +
           "Submit the task: bash scripts/fleet/api-submit.sh \"<what you want tested>\"\n" +
           "Workers have the full boothapp repo and test infrastructure.\n" +
           "Blocked: " + cmd.substring(0, 120)

@@ -97,8 +97,7 @@ module.exports = function(input) {
     if (result.allow) return null;
     return {
       decision: "block",
-      reason: (result.fallback_used ? "" : "HAIKU JUDGE: " + (result.reason || "") + "\n\n") +
-        buildBlockReason(msg, evidence)
+      reason: "BLOCKED: Premature victory declaration claiming all tests pass or work is complete\nWHY: Incomplete testing or unverified fixes can mask real failures that surface later in production or broader test suites\nNEXT STEPS:\n1. Run the full test suite end-to-end and verify all edge cases\n2. Check CI/CD pipeline results and review any skipped or conditional tests before declaring completion\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix victory-declaration-gate — {describe the issue}\""
     };
   });
 };

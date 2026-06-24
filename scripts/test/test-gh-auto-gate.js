@@ -91,13 +91,13 @@ ok("block message has suggestion", function() {
   var result = runGate("gh pr list");
   return result && result.reason.indexOf("gh_auto") !== -1;
 }());
-ok("git push suggestion uses gh_auto", function() {
+ok("git push block has WHY", function() {
   var result = runGate("git push origin main");
-  return result && result.reason.indexOf("gh_auto push") !== -1;
+  return result && /WHY:/.test(result.reason);
 }());
-ok("gh pr create suggestion", function() {
+ok("gh pr create block has NEXT STEPS", function() {
   var result = runGate("gh pr create --title test");
-  return result && result.reason.indexOf("gh_auto pr create") !== -1;
+  return result && /NEXT STEPS:/i.test(result.reason);
 }());
 
 // === Edge cases ===

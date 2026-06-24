@@ -57,7 +57,8 @@ module.exports = function(input) {
     msg += unresolvedIssues.slice(0, 5).join("\n") + "\n\n";
   }
 
-  msg += "Update TODO.md with actual outcomes before ending the session.";
+  msg += "Update TODO.md with actual outcomes before ending the session.\n";
+  msg += 'FALSE POSITIVE? File a TODO in hook-runner: "Fix unresolved-issues-check — {describe the issue}"';
 
   return {
     decision: "block",

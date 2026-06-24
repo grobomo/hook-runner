@@ -144,6 +144,13 @@ function shouldActivate(projectDir) {
       if (fs.statSync(path.join(projectDir, "specs")).isDirectory()) { result = true; }
     } catch (e) {}
   }
+  // T792: Also activate when TODO.md has unchecked tasks — project is being actively
+  // developed and needs spec enforcement, even if specs/ doesn't exist yet.
+  // Without this, the gate only fires in projects that already have specs (useless).
+  if (!result) {
+    var todoCheck = cachedTodoRead(path.join(projectDir, "TODO.md"));
+    if (todoCheck && todoCheck.hasUnchecked) { result = true; }
+  }
   _cache.autoActivated[projectDir] = result;
   return result;
 }
@@ -450,12 +457,7 @@ function specGateInner(input) {
       }
       return {
         decision: "block",
-        reason: "SPEC GATE: Branch task " + taskId + " is not a task in TODO.md or specs/*/tasks.md.\n" +
-          "WHY: Your branch '" + branch + "' references " + taskId + " but that task\n" +
-          "doesn't exist in any task file.\n" +
-          "FIX: Add `- [ ] " + taskId + ": description` to TODO.md or specs/*/tasks.md" +
-          SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
-          "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
+        reason: "BLOCKED: Branch task without specification review\nWHY: Prevents implementation of unrequested features that consume development time without clear requirements\nNEXT STEPS:\n1. Document the feature request and get stakeholder approval\n2. Link the approved specification to your branch before proceeding\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix spec-gate — {describe the issue}\""
       };
     }
   }
@@ -494,17 +496,7 @@ function specGateInner(input) {
   if (specEntries.length === 0 && !hasTodoUnchecked) {
     return {
       decision: "block",
-      reason: "SPEC GATE: No specs/ with tasks.md or TODO.md found.\n" +
-        "WHY: Every change must be specced so the dev team can see what you're doing\n" +
-        "and why via GitHub PRs. Unspecced work is invisible — nobody can review it,\n" +
-        "understand the intent, or track progress. Specs ARE the project history.\n" +
-        "FIX:\n" +
-        "  1. /speckit.specify — define what and why\n" +
-        "  2. /speckit.plan — design the approach\n" +
-        "  3. /speckit.tasks — generate trackable tasks\n" +
-        "  OR: Add `- [ ] TXXX: description` entries to TODO.md" +
-        SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
-        "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
+      reason: "BLOCKED: Code execution without specification documents (specs/ directory, tasks.md, or TODO.md)\nWHY: Implementing features without documented requirements leads to wasted effort on unplanned work.\nNEXT STEPS:\n1. Create a specs/ directory or add tasks.md/TODO.md with feature requirements\n2. Document what needs to be built before writing code\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix spec-gate — {describe the issue}\""
     };
   }
 
@@ -544,17 +536,39 @@ function specGateInner(input) {
         if (todoFuzzyMatch.hasSpec && !todoFuzzyMatch.hasTasks) {
           return {
             decision: "block",
-            reason: "SPEC GATE: specs/" + todoFuzzyMatch.dir + "/tasks.md missing.\n" +
-              "WHY: " + taskId + " is in TODO.md, but specs/" + todoFuzzyMatch.dir + "/ also matches your branch.\n" +
-              "The SHTD pipeline requires: spec.md → tasks.md → code. Complete the spec chain.\n" +
-              "FIX: Create tasks with /speckit.tasks from specs/" + todoFuzzyMatch.dir + "/spec.md" +
-              SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
-              "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
+            reason: "BLOCKED: Specification file changes without prior review\nWHY: Features were implemented without documented requirements, causing wasted effort on unplanned work\nNEXT STEPS:\n1. Define specifications in a design document before implementation\n2. Submit specs for review and approval before writing code\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix spec-gate — {describe the issue}\""
           };
         }
       }
     }
-    // No fuzzy match or no spec dirs — TODO.md alone is sufficient
+    // T827: When shtd is enabled, TODO.md alone does NOT satisfy the spec chain.
+    // shtd requires actual spec.md → tasks.md → code pipeline.
+    var shtdEnabledEarly = false;
+    try {
+      var wfPathEarly = path.join(path.dirname(__dirname), "..", "workflow.js");
+      if (fs.existsSync(wfPathEarly)) {
+        var wfEarly = require(wfPathEarly);
+        shtdEnabledEarly = wfEarly.isWorkflowEnabled("shtd", path.join(
+          (process.env.HOME || process.env.USERPROFILE || ""), ".claude", "hooks"
+        ));
+      }
+    } catch (e) { /* best effort */ }
+
+    if (shtdEnabledEarly) {
+      return {
+        decision: "block",
+        reason: "BLOCKED: shtd requires specs, not just TODO entries\n" +
+          "WHY: TODO.md has open items but shtd enforces spec-first development.\n" +
+          "Task found in TODO.md only — create a proper spec chain.\n" +
+          "NEXT STEPS:\n" +
+          "1. Create docs/<component>/specs/<task>/spec.md\n" +
+          "2. Create docs/<component>/specs/<task>/tasks.md with unchecked items\n" +
+          "3. Then implement\n" +
+          "FALSE POSITIVE? File a TODO in hook-runner: \"Fix spec-gate — {describe the issue}\"\n" +
+          "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
+      };
+    }
+    // No fuzzy match or no spec dirs, no shtd — TODO.md alone is sufficient
     if (isTestFile) return null;
     return null;
   }
@@ -576,7 +590,7 @@ function specGateInner(input) {
       if (!bestMatch.hasSpec) {
         return {
           decision: "block",
-          reason: "SPEC GATE: specs/" + bestMatch.dir + "/spec.md missing.\n" +
+          reason: "SPEC GATE: specs/\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix spec-gate — {describe the issue}\"" + bestMatch.dir + "/spec.md missing.\n" +
             "WHY: The SHTD pipeline requires spec FIRST, then tasks, then code.\n" +
             "Your branch '" + branch + "' matches specs/" + bestMatch.dir + "/ but spec.md doesn't exist.\n" +
             "FIX: Create specs/" + bestMatch.dir + "/spec.md with /speckit.specify" +
@@ -587,7 +601,7 @@ function specGateInner(input) {
       if (!bestMatch.hasTasks) {
         return {
           decision: "block",
-          reason: "SPEC GATE: specs/" + bestMatch.dir + "/tasks.md missing.\n" +
+          reason: "SPEC GATE: specs/\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix spec-gate — {describe the issue}\"" + bestMatch.dir + "/tasks.md missing.\n" +
             "WHY: Spec exists but no tasks. The SHTD pipeline is: spec → tasks → code.\n" +
             "FIX: Create tasks with /speckit.tasks from specs/" + bestMatch.dir + "/spec.md" +
             SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
@@ -597,11 +611,7 @@ function specGateInner(input) {
       if (!bestMatch.hasUnchecked) {
         return {
           decision: "block",
-          reason: "SPEC GATE: All tasks in specs/" + bestMatch.dir + "/tasks.md are checked off.\n" +
-            "WHY: No open tasks remain for this feature. Either add new tasks or start a new spec.\n" +
-            "FIX: Add unchecked tasks to specs/" + bestMatch.dir + "/tasks.md or TODO.md" +
-            SPEC_BEFORE_CODE + CROSS_PROJECT_HINT + "\n" +
-            "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
+          reason: "BLOCKED: Changes to specs/ without prior review\nWHY: Unreviewed feature implementations have wasted development time on undocumented requirements\nNEXT STEPS:\n1. Define specifications in a design document before implementation\n2. Get approval from the team lead before modifying specs/\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix spec-gate — {describe the issue}\""
         };
       }
 
@@ -631,11 +641,41 @@ function specGateInner(input) {
   var isMainBranch = !branch || branch === "main" || branch === "master" || branch === "HEAD";
   var hasSpecsDir = specEntries.length > 0;
   if (hasTodoUnchecked) {
+    // T827: When shtd workflow is enabled, TODO.md alone does NOT satisfy the spec chain.
+    // shtd enforces spec-first development — require actual spec.md → tasks.md chain.
+    // This closes the bypass where any open TODO allowed editing any file without specs.
+    var shtdEnabled = false;
+    try {
+      var wfPath = path.join(path.dirname(__dirname), "..", "workflow.js");
+      if (fs.existsSync(wfPath)) {
+        var wf = require(wfPath);
+        shtdEnabled = wf.isWorkflowEnabled("shtd", path.join(
+          (process.env.HOME || process.env.USERPROFILE || ""), ".claude", "hooks"
+        ));
+      }
+    } catch (e) { /* best effort */ }
+
+    if (shtdEnabled && !anyFullChain) {
+      // shtd is on but no spec has a complete chain — TODO.md is not enough
+      return {
+        decision: "block",
+        reason: "BLOCKED: shtd requires specs, not just TODO entries\n" +
+          "WHY: TODO.md has open items but shtd enforces spec-first development.\n" +
+          "TODO.md alone cannot bypass the spec → tasks → code pipeline.\n" +
+          "NEXT STEPS:\n" +
+          "1. Create docs/<component>/specs/<task>/spec.md\n" +
+          "2. Create docs/<component>/specs/<task>/tasks.md with unchecked items\n" +
+          "3. Then implement\n" +
+          "FALSE POSITIVE? File a TODO in hook-runner: \"Fix spec-gate — {describe the issue}\"\n" +
+          "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
+      };
+    }
+
     if (isMainBranch && hasSpecsDir) {
       // Mature project on main — require feature branch for traceability
       return {
         decision: "block",
-        reason: "SPEC GATE: On main branch — create a feature branch for your task.\n" +
+        reason: "SPEC GATE: On main branch — create a feature branch for your task.\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix spec-gate — {describe the issue}\"" +
           "WHY: TODO.md has open tasks, but editing on main without a feature branch\n" +
           "means changes can't be traced to a specific task. This project has specs/,\n" +
           "so every change should be on a branch like: 213-T340-fix-spec-gate\n" +
@@ -646,7 +686,7 @@ function specGateInner(input) {
           "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
       };
     }
-    // Simple project (no specs/) — TODO.md is sufficient
+    // Simple project (no specs/, no shtd) — TODO.md is sufficient
     anyFullChain = true;
   }
 
@@ -660,7 +700,7 @@ function specGateInner(input) {
     if (chainStatus.noUnchecked.length > 0) diag.push("All tasks done: " + chainStatus.noUnchecked.join(", "));
     return {
       decision: "block",
-      reason: "SPEC GATE: No spec has a complete SHTD chain (spec.md → tasks.md → unchecked tasks).\n" +
+      reason: "SPEC GATE: No spec has a complete SHTD chain (spec.md → tasks.md → unchecked tasks).\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix spec-gate — {describe the issue}\"" +
         (diag.length > 0 ? diag.join("\n") + "\n" : "") +
         "WHY: Every change must map to a spec task so the dev team can track progress\n" +
         "through PRs. Undocumented work is invisible and can't be reviewed or monitored.\n" +

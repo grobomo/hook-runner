@@ -1,0 +1,9 @@
+# Stop Rule: expert-decides-implementation
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _23-expert-decides-implementation.yaml)
+
+name: expert-decides-implementation
+check: "Is Claude asking the user a technical implementation question that Claude should decide itself? Examples: PID check methods, data structures, algorithm choices, gate event placement, error handling strategies, file naming, testing approaches, regex patterns, code architecture. NOT vision-level questions (what to build, why, priorities, which project)."
+action: "CONTINUE — you are the expert on implementation. Decide and do it. Only surface vision-level questions (what to build, why, priorities) to the user."

@@ -32,7 +32,7 @@ fs.writeFileSync(FLAG_FILE, JSON.stringify({
 var r1 = gate({tool_name: "Edit", tool_input: {file_path: "/src/app.js", new_string: "x"}});
 ok("flag: edit code blocked", r1 && r1.decision === "block");
 ok("block mentions instruction", r1 && /instruction/i.test(r1.reason));
-ok("block mentions detected pattern", r1 && /always X/.test(r1.reason));
+ok("block has WHY section", r1 && /WHY:/.test(r1.reason));
 
 // Re-create flag (might be cleared by allowed edits)
 fs.writeFileSync(FLAG_FILE, JSON.stringify({pattern: "always X", preview: "always run tests"}));

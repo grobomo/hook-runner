@@ -58,7 +58,7 @@ module.exports = function(input) {
 
   if (missingPR.length === 0) return null;
 
-  return { decision: "block", reason: "TASK COMPLETION GATE: Cannot mark task complete without a verified PR.\n\n" +
+  return { decision: "block", reason: "TASK COMPLETION GATE: Cannot mark task complete without a verified PR.\n\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix task-completion-gate — {describe the issue}\"" +
     "Lines missing PR reference:\n  " + missingPR.join("\n  ") + "\n\n" +
     "MANDATORY WORKFLOW:\n" +
     "  1. speckit.specify/plan/tasks → specs/<feature>/tasks.md\n" +

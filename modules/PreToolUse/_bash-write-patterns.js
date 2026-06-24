@@ -1,6 +1,9 @@
 // Shared helper: Bash patterns that indicate state-changing (write) operations.
 // Used by spec-gate.js and gsd-plan-gate.js to distinguish read-only
 // exploration from write operations that require task tracking.
+// T732: Enhanced with parseBashWrite() to extract target path + content from
+// Bash write commands. Used by no-hardcoded-paths, no-rules-gate, etc. to
+// apply content checks to Bash file mutations (not just Edit/Write).
 // Underscore prefix = helper, not a module (skipped by load-modules.js).
 // WHY: Gates blocked read-only commands like powershell OpenRead, python audit
 // scripts, and wsl session management — all clearly not code changes.
@@ -11,7 +14,7 @@
 // T542: Flip from default-deny allowlist to write-pattern detection.
 "use strict";
 
-module.exports = [
+var patterns = [
   // File modification utilities
   /\bsed\s+-i/,                     // in-place edit
   /\bawk\s+-i/,                     // in-place edit
@@ -45,3 +48,78 @@ module.exports = [
   /\bconda\s+(install|create)\b/,
   /\bmake\b/,                       // build via make
 ];
+
+// T732: Extract target file path from a Bash write command.
+// Returns the file path being written to, or null if not detectable.
+function extractTargetPath(cmd) {
+  var m;
+  // tee <path>
+  m = cmd.match(/\btee\s+(?:-a\s+)?["']([^"']+)["']/);
+  if (m) return m[1];
+  m = cmd.match(/\btee\s+(?:-a\s+)?(\S+)/);
+  if (m) return m[1];
+  // >> (append) before > to avoid double-match
+  m = cmd.match(/>>\s*["']([^"']+)["']/);
+  if (m) return m[1];
+  m = cmd.match(/>>\s*(\S+)/);
+  if (m) return m[1];
+  // > (overwrite) — exclude fd redirects (2>, &>)
+  m = cmd.match(/(?<![0-9&])>\s*["']([^"']+)["']/);
+  if (m) return m[1];
+  m = cmd.match(/(?<![0-9&])>\s*(\S+)/);
+  if (m && m[1] !== "/dev/null") return m[1];
+  // sed -i <file> (last non-flag arg)
+  m = cmd.match(/\bsed\s+-i['"]*\s+(?:'[^']*'|"[^"]*")\s+["']?([^"'\s]+)/);
+  if (m) return m[1];
+  m = cmd.match(/\bsed\s+-i\s+.*\s(\S+)$/);
+  if (m) return m[1];
+  // cp/mv: destination is the last argument
+  m = cmd.match(/\b(?:cp|mv)\s+(?:-[a-zA-Z]+\s+)*\S+\s+["']([^"']+)["']\s*$/);
+  if (m) return m[1];
+  m = cmd.match(/\b(?:cp|mv)\s+(?:-[a-zA-Z]+\s+)*\S+\s+(\S+)\s*$/);
+  if (m) return m[1];
+  return null;
+}
+
+// T732: Extract the content being written from a Bash command.
+// Works for: echo/printf strings, heredoc bodies, tee with heredoc.
+// Returns the content string, or null if content isn't visible in the command.
+function extractContent(cmd) {
+  // Heredoc: cat/tee > file <<'MARKER' or <<MARKER ... content ... MARKER
+  var heredocMatch = cmd.match(/<<-?\s*['"]?(\w+)['"]?\s*\n([\s\S]*?)\n\1(?:\s|$)/);
+  if (heredocMatch) return heredocMatch[2];
+  // echo/printf: extract everything between the command and the redirect operator.
+  // Lenient — doesn't try to parse shell quoting exactly, just grabs the
+  // argument portion. Handles escaped quotes, nested quotes, etc.
+  var redirectMatch = cmd.match(/\b(?:echo|printf)\s+([\s\S]*?)\s*(?:>>?\s*\S)/);
+  if (redirectMatch) {
+    var content = redirectMatch[1];
+    // Strip surrounding quotes if present
+    if ((content[0] === '"' && content[content.length - 1] === '"') ||
+        (content[0] === "'" && content[content.length - 1] === "'")) {
+      content = content.slice(1, -1);
+    }
+    return content;
+  }
+  return null;
+}
+
+// T732: Parse a Bash command for file-write info.
+// Returns {targetPath, content} or null if not a file-write command.
+// content may be null even when targetPath is set (e.g., cp, sed -i).
+function parseBashWrite(cmd) {
+  if (!cmd) return null;
+  var isWrite = patterns.some(function(rx) { return rx.test(cmd); });
+  if (!isWrite) return null;
+  var targetPath = extractTargetPath(cmd);
+  if (!targetPath) return null;
+  var content = extractContent(cmd);
+  return { targetPath: targetPath, content: content };
+}
+
+// Backwards-compatible: module.exports is the patterns array
+// New API: module.exports.parseBashWrite, .extractTargetPath, .extractContent
+module.exports = patterns;
+module.exports.parseBashWrite = parseBashWrite;
+module.exports.extractTargetPath = extractTargetPath;
+module.exports.extractContent = extractContent;

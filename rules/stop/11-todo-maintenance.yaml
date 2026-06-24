@@ -1,0 +1,9 @@
+# Stop Rule: todo-maintenance
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _11-todo-maintenance.yaml)
+
+name: todo-maintenance
+check: "Has the session done significant work that isn't reflected in TODO.md? (new features built, bugs fixed, tasks completed that should be checked off or added)"
+action: "CONTINUE — update TODO.md with current session state before stopping. Check off completed items, add new discoveries."

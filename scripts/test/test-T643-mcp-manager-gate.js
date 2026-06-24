@@ -107,14 +107,14 @@ var r = gate({
     content: '{ "mcpServers": { "test": { "command": "node" } } }'
   }
 });
-ok("block mentions servers.yaml", r && /servers\.yaml/.test(r.reason));
-ok("block mentions mcp-manager", r && /mcp-manager/.test(r.reason));
+ok("block mentions MCP/manager", r && /BLOCKED|MCP|manager|mcp/i.test(r.reason));
+ok("block has WHY section", r && /WHY:/.test(r.reason));
 
 var r2 = gate({
   tool_name: "Bash", tool_input: { command: "npx @modelcontextprotocol/server-filesystem /tmp" }
 });
-ok("bash block mentions mcp-manager", r2 && /mcp-manager/.test(r2.reason));
-ok("bash block shows detected command", r2 && /Detected/.test(r2.reason));
+ok("bash block mentions MCP/server", r2 && /BLOCKED|MCP|server/i.test(r2.reason));
+ok("bash block has NEXT STEPS", r2 && /NEXT STEPS:/i.test(r2.reason));
 
 console.log("\n" + pass + "/" + (pass + fail) + " passed");
 process.exit(fail > 0 ? 1 : 0);

@@ -1,0 +1,9 @@
+# Stop Rule: todo-awareness
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _04-todo-awareness.yaml)
+
+name: todo-awareness
+check: "Is Claude stopping when TODO.md has unchecked items? ALL unchecked items count — whether from this session or previous sessions. The user directive is: 'do all the work, don't limit yourself to what I said in this session.' Check if TODO.md has any unchecked items (- [ ]) that are actionable (not BLOCKED, DEFERRED, or DESIGN NEEDED)."
+action: "NEXT — there are remaining tasks in TODO.md. Start the next actionable one. Pick the most impactful task that doesn't require user input."

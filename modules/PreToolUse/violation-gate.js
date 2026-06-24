@@ -1,5 +1,5 @@
 // TOOLS: Bash, Edit, Write
-// WORKFLOW: wsl
+// WORKFLOW: haiku-rules
 // WHY: Haiku spirit-check (PostToolUse) detects violations but can't block.
 // This gate reads the state file and blocks Opus on the NEXT tool call,
 // forcing it to read the analysis and correct course.
@@ -46,9 +46,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "SPIRIT VIOLATION: " + state.rule + "\n\n" +
-      state.violation_description + "\n\n" +
-      "Read ~/.claude/hooks/violation-analysis.md for details.\n" +
-      "Correct the issue, then retry your tool call."
+    reason: "BLOCKED: Spirit violation detected [\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix violation-gate — {describe the issue}\"" + state.rule + "] (severity: " + state.severity + ").\nWHY: " + (state.violation_description || "Haiku spirit-check flagged this action as violating gate principles.") + "\nNEXT STEPS:\n1. Read violation-analysis.md for full analysis\n2. Address the violation before continuing"
   };
 };

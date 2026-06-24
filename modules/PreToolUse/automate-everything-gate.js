@@ -49,14 +49,7 @@ module.exports = function(input) {
       var toolName = normalized.split(/\s/)[0];
       return {
         decision: "block",
-        reason: "AUTOMATE-EVERYTHING: Manual lint/check command detected: " + toolName + "\n" +
-          "WHY: Ad-hoc checks die with the session. The next session repeats the same mistakes.\n\n" +
-          "FIX: Add the check to a persistent pipeline:\n" +
-          "  1. CI/CD: Add to .github/workflows/ (runs on every push/PR)\n" +
-          "  2. Pre-commit: Add to .pre-commit-config.yaml\n" +
-          "  3. Build script: Add to scripts/test/ or Makefile\n\n" +
-          "Then run it VIA the pipeline, not standalone.\n" +
-          "Command was: " + cmd.substring(0, 120)
+        reason: "BLOCKED: Manual lint/check commands (flake8, pylint, shellcheck, etc.)\nWHY: These commands should run automatically in CI/CD pipelines, not be executed manually during development, to ensure consistent code quality standards across all commits.\nNEXT STEPS:\n1. Remove the manual command and rely on pre-commit hooks or CI pipeline checks instead\n2. Review the project's linting configuration to ensure all checks run automatically on push\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix automate-everything-gate — {describe the issue}\""
       };
     }
   }

@@ -1,0 +1,9 @@
+# Stop Rule: band-aid-detection
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _24-band-aid-detection.yaml)
+
+name: band-aid-detection
+check: "Did Claude's response implement a quick workaround, temporary fix, or one-off manual step for a problem that has occurred before or will likely recur? Signs: TEMPORARY/WORKAROUND/HACK comments, manual cleanup of something that accumulates, re-doing something that was done last session, fixing symptoms instead of root cause. Exceptions: explicitly user-requested workarounds, time-critical hotfixes with a TODO for proper fix."
+action: "CONTINUE — this looks like a band-aid. Design a repeatable, automated solution: a gate, a SessionStart module, a script, or a cron job. One-off fixes waste future sessions. Write the systematic fix as a TODO with a gate spec."

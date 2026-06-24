@@ -18,14 +18,7 @@ module.exports = function(input) {
     if (/lessons\.jsonl$/i.test(filePath)) {
       return {
         decision: "block",
-        reason: "NO-LESSONS-FILE: Writing to lessons.jsonl is blocked.\n" +
-          "WHY: Text file lessons are never enforced. Claude ignores them next session.\n" +
-          "Only hook modules (.js in run-modules/) actually prevent mistakes.\n\n" +
-          "FIX: Create a hook module instead:\n" +
-          "  1. Write a .js module in hook-runner/modules/PreToolUse/\n" +
-          "  2. Add a test in scripts/test/\n" +
-          "  3. The module blocks the bad pattern and suggests the fix\n\n" +
-          "Blocked: " + path.basename(filePath)
+        reason: "BLOCKED: Writing to lessons.jsonl files\nWHY: Claude was persisting unstructured text as lessons learned data, causing malformed or incomplete entries in the lessons file.\nNEXT STEPS:\n1. Use a structured format (JSON objects) instead of plain text when writing lesson entries\n2. Validate lesson data before writing to ensure required fields are present\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-lessons-file-gate — {describe the issue}\""
       };
     }
   }
@@ -36,11 +29,7 @@ module.exports = function(input) {
     if (/lessons\.jsonl/i.test(cmd) && />>|>\s|appendFile|writeFile|tee\b/.test(cmd)) {
       return {
         decision: "block",
-        reason: "NO-LESSONS-FILE: Writing to lessons.jsonl via Bash is blocked.\n" +
-          "WHY: Text file lessons are never enforced. Claude ignores them next session.\n" +
-          "Only hook modules (.js in run-modules/) actually prevent mistakes.\n\n" +
-          "FIX: Create a hook module instead of writing a lesson.\n\n" +
-          "Command was: " + cmd.substring(0, 120)
+        reason: "BLOCKED: Writing to lessons.jsonl files via Bash commands\nWHY: Claude previously wrote lessons learned as unstructured text to lessons.jsonl, causing malformed JSONL records that broke downstream parsing.\nNEXT STEPS:\n1. Use the lessons API endpoint instead of direct file writes\n2. Ensure each lesson entry is valid JSON before persisting\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-lessons-file-gate — {describe the issue}\""
       };
     }
   }

@@ -90,17 +90,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "TRACKED WORKFLOW GATE: No tracked tasks found.\n" +
-      "WHY: Every code change must map to a spec task so the dev team can see\n" +
-      "progress via GitHub PRs. Untracked work is invisible — nobody can review,\n" +
-      "monitor, or understand what changed or why.\n" +
-      "FIX (new project):\n" +
-      "  1. Create feature branch: git checkout -b <NNN>-<verb-noun>\n" +
-      "  2. Generate tasks: /speckit.specify → /speckit.plan → /speckit.tasks\n" +
-      "  3. This creates specs/<feature>/tasks.md with T### checkboxes\n" +
-      "  4. Then implementation code is unblocked\n" +
-      "FIX (existing project):\n" +
-      "  Add the work to specs/<feature>/tasks.md before writing code.\n" +
-      "Blocked: " + path.basename(targetFile)
+    reason: "BLOCKED: Code changes without tracked tasks\nWHY: Features were implemented without task tracking, making progress invisible and unaccountable\nNEXT STEPS:\n1. Create a tracked task in your project management system\n2. Reference the task ID in your commit message or pull request\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix continuous-claude-gate — {describe the issue}\""
   };
 };

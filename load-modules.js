@@ -52,7 +52,7 @@ function getHeaderLines(filePath) {
  *
  * Supported tags:
  *   // TOOLS: Bash, Edit, Write    — which tools this module intercepts
- *   // WORKFLOW: shtd, wsl         — only runs when these workflows are active
+ *   // WORKFLOW: shtd, haiku-rules  — only runs when these workflows are active
  *   // BLOCKING: true              — Stop modules: run synchronously (visible block/pass)
  *   // requires: mod1, mod2        — skip if these modules aren't installed
  *
@@ -80,7 +80,7 @@ function parseModuleMeta(filePath) {
       }
     }
 
-    // // WORKFLOW: shtd, wsl
+    // // WORKFLOW: shtd, haiku-rules
     var wfMatch = line.match(/^\/\/\s*WORKFLOW:\s*(.+)/i);
     if (wfMatch && meta.workflows.length === 0) {
       var wfs = wfMatch[1].split(",");
@@ -241,7 +241,40 @@ function loadWorkflowGroups(projectDir) {
     }
   } catch (e) { /* ignore */ }
 
-  var result = { enabled: enabled, disabled: disabled };
+  // 4. T796: Resolve extends chains — enabling X also enables what X extends
+  var extendsMap = {};
+  for (var d2 = 0; d2 < dirs.length; d2++) {
+    if (!fs.existsSync(dirs[d2])) continue;
+    var extFiles;
+    try { extFiles = fs.readdirSync(dirs[d2]); } catch (e) { continue; }
+    for (var ef = 0; ef < extFiles.length; ef++) {
+      if (!(extFiles[ef].slice(-4) === ".yml" || extFiles[ef].slice(-5) === ".yaml")) continue;
+      try {
+        var extContent = fs.readFileSync(path.join(dirs[d2], extFiles[ef]), "utf-8");
+        var extNameMatch = extContent.match(/^name:\s*(\S+)/m);
+        var extExtendsMatch = extContent.match(/^extends:\s*(\S+)/m);
+        if (extNameMatch && extExtendsMatch) {
+          extendsMap[extNameMatch[1]] = extExtendsMatch[1];
+        }
+      } catch (e) { /* skip */ }
+    }
+  }
+  // Walk extends chains: if X is enabled and X extends Y, enable Y too
+  var changed = true;
+  var maxIter = 10; // prevent infinite loops in circular extends
+  while (changed && maxIter-- > 0) {
+    changed = false;
+    var eKeys = Object.keys(enabled);
+    for (var ek = 0; ek < eKeys.length; ek++) {
+      var parent = extendsMap[eKeys[ek]];
+      if (parent && !enabled[parent] && !disabled[parent]) {
+        enabled[parent] = true;
+        changed = true;
+      }
+    }
+  }
+
+  var result = { enabled: enabled, disabled: disabled, extends: extendsMap };
   _groupsCache = result;
   _groupsCacheTime = now;
   _groupsCacheKey = projectDir;
@@ -350,13 +383,35 @@ module.exports = function loadModules(eventDir, toolName) {
     }
   }
 
-  // 3. Filter by active workflow — skip modules tagged for inactive workflows
+  // 3. T752: Plugin modules — scan ~/.claude/hooks/plugins/*/
+  var home = process.env.HOME || process.env.USERPROFILE || "";
+  var pluginsDir = path.join(home, ".claude", "hooks", "plugins");
+  var eventName = path.basename(eventDir); // e.g., "PreToolUse"
+  if (fs.existsSync(pluginsDir)) {
+    try {
+      var pluginDirs = fs.readdirSync(pluginsDir, { withFileTypes: true });
+      for (var pi = 0; pi < pluginDirs.length; pi++) {
+        if (!pluginDirs[pi].isDirectory()) continue;
+        var pluginEventDir = path.join(pluginsDir, pluginDirs[pi].name, eventName);
+        if (!fs.existsSync(pluginEventDir)) continue;
+        try {
+          var pluginFiles = fs.readdirSync(pluginEventDir)
+            .filter(function(f) { return f.indexOf(".js") === f.length - 3 && f.charAt(0) !== "_"; })
+            .sort()
+            .map(function(f) { return path.join(pluginEventDir, f); });
+          allFiles = allFiles.concat(pluginFiles);
+        } catch (e) { /* skip broken plugin */ }
+      }
+    } catch (e) { /* plugins dir unreadable */ }
+  }
+
+  // 4. Filter by active workflow — skip modules tagged for inactive workflows
   var afterWorkflow = filterByWorkflow(allFiles);
 
-  // 4. Filter by tool name — skip modules that don't match the current tool
+  // 5. Filter by tool name — skip modules that don't match the current tool
   var afterTool = toolName ? filterByTool(afterWorkflow, toolName) : afterWorkflow;
 
-  // 5. Validate dependencies — skip modules with missing deps
+  // 6. Validate dependencies — skip modules with missing deps
   return validateDeps(afterTool);
 };
 

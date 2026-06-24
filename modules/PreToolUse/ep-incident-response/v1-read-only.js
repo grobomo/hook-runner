@@ -55,7 +55,7 @@ module.exports = function(input) {
         reason: "V1 READ-ONLY GATE: This command could MODIFY the customer's Vision One environment.\n" +
           "POLICY: EP incident response is strictly read-only. No writes, no response actions,\n" +
           "no blocklist changes, no endpoint isolation. Read and analyze only.\n" +
-          "Matched: " + WRITE_PATTERNS[i].toString()
+          "Matched: \nFALSE POSITIVE? File a TODO in hook-runner: \"Fix v1-read-only — {describe the issue}\"" + WRITE_PATTERNS[i].toString()
       };
     }
   }

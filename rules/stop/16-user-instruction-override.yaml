@@ -1,0 +1,9 @@
+# Stop Rule: user-instruction-override
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _16-user-instruction-override.yaml)
+
+name: user-instruction-override
+check: "Did the user give an explicit instruction in chat (delete task X, stop working on Y, remove Z) that contradicts Claude's TODO.md or current actions? User chat instructions ALWAYS override Claude's written state."
+action: "CONTINUE — the user's explicit instruction was not followed. Fix it now. User words in chat > Claude's TODO entries."

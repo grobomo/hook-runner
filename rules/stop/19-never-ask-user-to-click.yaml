@@ -1,0 +1,9 @@
+# Stop Rule: never-ask-user-to-click
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _19-never-ask-user-to-click.yaml)
+
+name: never-ask-user-to-click
+check: "Is Claude's response telling the user to do ANY manual action? This includes: 'click your account', 'approve on your phone', 'open this URL', 'enter this code', 'check your phone', 'click the account tile'. The ONLY acceptable exception is MFA phone approval which is physically impossible to automate. Everything else — clicking, navigating, typing, selecting — Claude must do autonomously via Blueprint MCP or programmatic APIs. If Blueprint can't interact with a page, Claude must find a programmatic workaround (e.g. MSAL login_hint to skip account picker, API calls instead of browser clicks)."
+action: "CONTINUE — do the action yourself instead of asking the user. Use Blueprint MCP, MSAL with login_hint, or programmatic APIs. Never delegate browser/UI tasks to the user. The user's role is to direct strategy, not click buttons."

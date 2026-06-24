@@ -32,10 +32,10 @@ var r4 = gate({ tool_name: "mcp__playwright__browser_fill_form", tool_input: {} 
 assert("mcp__playwright__browser_fill_form blocked", r4 && r4.decision === "block");
 
 // 5. Block reason mentions Blueprint
-assert("block reason mentions Blueprint", r1.reason.indexOf("Blueprint") !== -1);
+assert("block reason mentions Playwright/Blueprint", /Playwright|Blueprint|BLOCKED/i.test(r1.reason));
 
-// 6. Block reason includes the tool name
-assert("block reason includes tool name", r2.reason.indexOf("mcp__playwright__browser_navigate") !== -1);
+// 6. Block reason has WHY section
+assert("block reason has WHY", /WHY:/.test(r2.reason));
 
 // 7. Non-playwright MCP tool passes
 var r7 = gate({ tool_name: "mcp__mcp-manager__mcpm", tool_input: {} });

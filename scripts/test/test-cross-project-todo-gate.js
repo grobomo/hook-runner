@@ -86,8 +86,8 @@ ok("other project TODO not gated", gate({tool_name: "Edit", tool_input: {file_pa
 
 // --- Block message quality ---
 var r = editTodo("- [ ] cross-project fix for auth");
-ok("block mentions cross-project-todo-gate", r && /cross-project-todo-gate/i.test(r.reason));
-ok("block mentions DO THIS INSTEAD", r && /DO THIS INSTEAD/i.test(r.reason));
+ok("block mentions cross-project", r && /cross-project/i.test(r.reason));
+ok("block has WHY + NEXT STEPS", r && /WHY:/.test(r.reason) && /NEXT STEPS:/i.test(r.reason));
 
 // --- No CLAUDE_PROJECT_DIR → passes ---
 delete process.env.CLAUDE_PROJECT_DIR;

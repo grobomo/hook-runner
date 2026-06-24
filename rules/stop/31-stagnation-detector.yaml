@@ -1,0 +1,10 @@
+# Stop Rule: stagnation-detector (T835)
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# WHY: Jun 3 session printed "Monitoring" 40 times in a row with no
+# actual work done. Claude got stuck in a "Stable. No changes." loop
+# for 2+ hours while real TODO items sat unfinished.
+
+name: stagnation-detector
+check: "Does Claude's response consist primarily of status-checking language with no substantive work? Look for: 'Stable', 'No changes', 'Monitoring', 'All systems healthy', 'Nothing to report', 'Checking status', or similar idle/watchdog-style responses repeated without making code changes, writing files, or completing tasks. Short responses (<200 chars) that just report status without doing work count as stagnation."
+action: "CONTINUE — Claude is stagnating. Stop monitoring and do real work. Check TODO.md for unchecked items and start the next one. If no TODO items exist, organize-optimize-secure the project. If truly nothing to do, save state and run context-reset."

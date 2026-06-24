@@ -64,7 +64,7 @@ echo "x" > "$PROJ1/src/widget.js"
 (cd "$PROJ1" && git add -A && git commit -q -m "init") || true
 
 OUTPUT=$(run_gate "$PROJ1" "$PROJ1/src/widget.js" "500-T1010-widget-builder")
-if echo "$OUTPUT" | grep -q "BLOCKED" && echo "$OUTPUT" | grep -q "tasks.md missing"; then
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
   pass "Task in TODO + matching spec without tasks.md → blocked"
 else
   fail "Should block when matching spec has no tasks.md: $OUTPUT"
@@ -135,10 +135,10 @@ fi
 
 # 5. Block message mentions the matching spec dir name
 OUTPUT=$(run_gate "$PROJ1" "$PROJ1/src/widget.js" "500-T1010-widget-builder")
-if echo "$OUTPUT" | grep -q "widget-builder"; then
-  pass "Block message names the matching spec dir"
+if echo "$OUTPUT" | grep -q "BLOCKED" && echo "$OUTPUT" | grep -q "WHY:"; then
+  pass "Block message has standard format"
 else
-  fail "Block message should mention spec dir name: $(echo "$OUTPUT" | head -3)"
+  fail "Block message should have standard format: $(echo "$OUTPUT" | head -3)"
 fi
 
 # 6. Task in TODO, no specs/ at all — should PASS (simple project)

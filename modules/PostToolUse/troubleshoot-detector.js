@@ -1,4 +1,4 @@
-// WORKFLOW: shtd, gsd
+// WORKFLOW: shtd, gsd, haiku-rules
 // TOOLS: Bash
 // WHY: Claude tried 3 wrong ways to call claude -p before finding the right
 // pattern in an existing project. The troubleshooting cycle wasted time and
@@ -79,7 +79,7 @@ module.exports = function(input) {
   state.lastPrompted = Date.now();
   saveState(state);
 
-  return { decision: "block", reason: "TROUBLESHOOTING CYCLE DETECTED: " + recentFailures + " failed attempts before success.\n" +
+  return { decision: "block", reason: "BLOCKED: Repeated troubleshooting attempts without progress\nWHY: Multiple failed command attempts detected, indicating confusion about correct syntax or approach rather than a single mistake\nNEXT STEPS:\n1. Review the correct command syntax documentation before retrying\n2. If still stuck, start fresh with a simpler test case to isolate the actual issue\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix troubleshoot-detector — {describe the issue}\"" + recentFailures + " failed attempts before success.\n" +
     "Failed commands:\n  " + failedCmds + "\n" +
     "Successful command: " + cmd.substring(0, 200) + "\n\n" +
     "You just learned something the hard way. To prevent repeating this:\n" +

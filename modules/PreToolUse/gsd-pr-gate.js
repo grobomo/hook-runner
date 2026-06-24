@@ -46,9 +46,7 @@ module.exports = function(input) {
     if (activePhases.length > 0 && activePhases.indexOf(phaseNum) === -1) {
       return {
         decision: "block",
-        reason: "GSD PR GATE: Branch references phase " + phaseNum + " which is not active.\n" +
-          "Active phases: " + activePhases.join(", ") + "\n" +
-          "Create a PR from a branch that maps to an active phase."
+        reason: "BLOCKED: Pull request merged without GSD phase reference\nWHY: PRs created without phase references make it impossible to track work against GSD milestones and impact analysis\nNEXT STEPS:\n1. Add GSD phase identifier to your branch name (e.g., gsd-phase-2-feature-name)\n2. Ensure PR title or description explicitly references the target GSD phase\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix gsd-pr-gate — {describe the issue}\""
       };
     }
     return null; // valid GSD phase branch
@@ -64,10 +62,7 @@ module.exports = function(input) {
     }
     return {
       decision: "block",
-      reason: "GSD PR GATE: PR title must reference a phase or task.\n" +
-        "Branch '" + branch + "' doesn't follow GSD naming, and title\n" +
-        "'" + title + "' has no phase reference.\n" +
-        "Add 'Phase N:' to the title, or use a phase branch: <seq>-phase-<N>-<slug>"
+      reason: "BLOCKED: PR creation without GSD phase or task reference\nWHY: PRs created without phase references made it impossible to track work against GSD milestones and caused planning visibility issues\nNEXT STEPS:\n1. Add a GSD phase identifier (e.g., \"GSD-Phase1\" or \"GSD-Task-123\") to your PR title\n2. If unsure of the correct phase, check the GSD project board or ask your tech lead\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix gsd-pr-gate — {describe the issue}\""
     };
   }
 

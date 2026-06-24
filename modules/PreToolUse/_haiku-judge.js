@@ -9,7 +9,9 @@ var fs = require("fs");
 
 // Read central config — single source of truth for all haiku gates
 var HOME = process.env.HOME || process.env.USERPROFILE || "";
-var CONFIG_PATH = path.join(HOME, ".claude", "proxy", "haiku-config.json");
+// T806: config moved from proxy/ to hooks/ — fallback to old path
+var CONFIG_PATH = path.join(HOME, ".claude", "hooks", "haiku-config.json");
+if (!fs.existsSync(CONFIG_PATH)) CONFIG_PATH = path.join(HOME, ".claude", "proxy", "haiku-config.json");
 var _cfg = null;
 try { _cfg = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8")); } catch (e) { _cfg = {}; }
 var _proxy = _cfg.proxy || {};

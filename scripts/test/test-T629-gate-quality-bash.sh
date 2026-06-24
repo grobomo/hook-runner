@@ -27,12 +27,12 @@ run_gate() {
 
 # --- Section 1: Bash write detection ---
 
-# 1. Block: cp .js to hooks/run-modules/
+# 1. Allow: cp .js to hooks/run-modules/ from hook-runner project (T822)
 RESULT=$(run_gate '{"tool_name":"Bash","tool_input":{"command":"cp /tmp/test.js ~/.claude/hooks/run-modules/PreToolUse/test.js"}}')
 if echo "$RESULT" | head -1 | grep -q "BLOCK"; then
-  pass "Blocks cp to hooks/run-modules/"
+  fail "Should allow cp from hook-runner project — got: $RESULT"
 else
-  fail "Should block cp to hooks/run-modules/ — got: $RESULT"
+  pass "Allows cp to hooks/run-modules/ from hook-runner project"
 fi
 
 # 2. Block: python write_text to hook module
@@ -51,10 +51,10 @@ else
   fail "Should block redirect — got: $RESULT"
 fi
 
-# 4. Block: heredoc to hook-runner/modules/
-RESULT=$(run_gate '{"tool_name":"Bash","tool_input":{"command":"cat <<EOF > hook-runner/modules/PreToolUse/bad.js\ncode\nEOF"}}')
+# 4. Block: heredoc to live hooks/run-modules/ (T735: repo path no longer triggers Bash block)
+RESULT=$(run_gate '{"tool_name":"Bash","tool_input":{"command":"cat <<EOF > ~/.claude/hooks/run-modules/PreToolUse/bad.js\ncode\nEOF"}}')
 if echo "$RESULT" | head -1 | grep -q "BLOCK"; then
-  pass "Blocks heredoc to hook-runner/modules/"
+  pass "Blocks heredoc to hooks/run-modules/"
 else
   fail "Should block heredoc — got: $RESULT"
 fi
@@ -75,12 +75,12 @@ else
   fail "Should block sed -i — got: $RESULT"
 fi
 
-# 7. Block: mv to hook module
+# 7. mv from hook-runner project: T779 allows mv from hook-runner (the only project that can edit hooks)
 RESULT=$(run_gate '{"tool_name":"Bash","tool_input":{"command":"mv /tmp/gate.js hooks/run-modules/PreToolUse/gate.js"}}')
-if echo "$RESULT" | head -1 | grep -q "BLOCK"; then
-  pass "Blocks mv to hooks/run-modules/"
+if echo "$RESULT" | head -1 | grep -q "PASS"; then
+  pass "Allows mv from hook-runner project (T779)"
 else
-  fail "Should block mv — got: $RESULT"
+  fail "Should allow mv from hook-runner — got: $RESULT"
 fi
 
 # --- Section 2: Bash read-only operations pass ---

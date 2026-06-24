@@ -1,0 +1,9 @@
+# Stop Rule: e2e-before-done
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _09-e2e-before-done.yaml)
+
+name: e2e-before-done
+check: "Did Claude mark a feature as 'done' or 'working' based ONLY on unit tests or dry-runs, without running an actual end-to-end test? Dry-runs and unit tests verify code structure, not real behavior. If the feature involves cross-process behavior (tab management, process killing, IPC, network calls), it MUST be tested live. Write a TODO item for the next session to verify if the feature actually works in production, so the result can be tracked across context resets."
+action: "CONTINUE — write a TODO item with clear pass/fail criteria for the next session to verify the feature E2E. Use the TODO as a cross-session tracking mechanism. Never declare done without real E2E evidence."

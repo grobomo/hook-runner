@@ -18,8 +18,7 @@ module.exports = function(input) {
       if (!/T\d{3}/.test(title)) {
         return {
           decision: "block",
-          reason: "PR title must include a task ID (e.g. T001). " +
-                  "Use speckit to generate tasks first: /speckit.tasks"
+          reason: "BLOCKED: PR submitted without a task ID in the title\nWHY: Batched PRs with multiple tasks prevented effective mobile monitoring and made rollbacks impossible to trace to specific work\nNEXT STEPS:\n1. Add a task ID (e.g. T001) to your PR title\n2. Ensure one task ID per PR to maintain clear deployment tracking\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix pr-per-task-gate — {describe the issue}\""
         };
       }
     }

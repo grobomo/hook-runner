@@ -62,9 +62,7 @@ module.exports = function(input) {
   if (GH_COMMENT_POLL.test(cmd) && !GH_COMMENT_POST.test(cmd)) {
     return {
       decision: "block",
-      reason: BLOCK_MSG + "\n\nDETECTED: Polling GitHub comments (gh api .../comments).\n" +
-        "If you need to POST a comment, add --method POST.\n" +
-        "If checking for replies, set up a webhook or use `gh api --jq` once, then move on."
+      reason: "BLOCKED: Repeated polling of GitHub API endpoints (comments, logs, deploys)\nWHY: Polling GitHub comments and log tails in loops cost $10k/month in unnecessary API calls and compute.\nNEXT STEPS:\n1. Use gh api --jq to fetch once, then process the result instead of looping\n2. For monitoring replies or changes, set up a GitHub webhook or use event-driven patterns instead\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-polling-gate — {describe the issue}\""
     };
   }
 
@@ -73,8 +71,7 @@ module.exports = function(input) {
     if (LOG_TAIL[i].test(cmd)) {
       return {
         decision: "block",
-        reason: BLOCK_MSG + "\n\nDETECTED: Log tailing/following (blocks forever in LLM context).\n" +
-          "Use a single snapshot instead: journalctl -n 50, tail -n 50, kubectl logs --tail=50."
+        reason: "BLOCKED: Log tailing/following operations that stream indefinitely (journalctl -f, tail -f, kubectl logs -f, polling GitHub/deploy APIs)\nWHY: Streaming logs consume unbounded tokens and context, causing runaway costs like the $10k/month GitHub polling incident\nNEXT STEPS:\n1. Use single snapshots instead: journalctl -n 50, tail -n 50, kubectl logs --tail=50\n2. For one-time status checks, query APIs directly without polling loops\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-polling-gate — {describe the issue}\""
       };
     }
   }
@@ -83,8 +80,7 @@ module.exports = function(input) {
   if (WATCH_CMD.test(cmd)) {
     return {
       decision: "block",
-      reason: BLOCK_MSG + "\n\nDETECTED: `watch` command (runs indefinitely).\n" +
-        "Run the underlying command once instead."
+      reason: "BLOCKED: watch command (runs indefinitely)\nWHY: Polling loops caused $10k/month in unnecessary API costs by continuously querying GitHub comments and logs\nNEXT STEPS:\n1. Run the underlying command once instead of using watch\n2. For ongoing monitoring, use event-based alternatives or scheduled jobs with explicit intervals\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-polling-gate — {describe the issue}\""
     };
   }
 

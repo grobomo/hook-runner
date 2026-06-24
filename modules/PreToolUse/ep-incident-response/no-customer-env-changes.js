@@ -26,7 +26,7 @@ module.exports = function(input) {
         reason: "CUSTOMER ENV GATE: AWS command without explicit --profile hackathon.\n" +
           "POLICY: Only our hackathon account (" + HACKATHON_ACCOUNT + ") is allowed.\n" +
           "Never run AWS commands against customer accounts.\n" +
-          "FIX: Add --profile hackathon to the command."
+          "FIX: Add --profile hackathon to the command.\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-customer-env-changes — {describe the issue}\""
       };
     }
 
@@ -36,7 +36,7 @@ module.exports = function(input) {
         decision: "block",
         reason: "CUSTOMER ENV GATE: Azure CLI is blocked for this project.\n" +
           "POLICY: EP incident response uses AWS (hackathon account) only.\n" +
-          "Azure commands could accidentally target the customer's environment."
+          "Azure commands could accidentally target the customer's environment.\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-customer-env-changes — {describe the issue}\""
       };
     }
   }
@@ -50,7 +50,7 @@ module.exports = function(input) {
       return {
         decision: "block",
         reason: "CUSTOMER ENV GATE: v1-policy with write operations is blocked.\n" +
-          "POLICY: Read-only access to customer V1. No policy changes."
+          "POLICY: Read-only access to customer V1. No policy changes.\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-customer-env-changes — {describe the issue}\""
       };
     }
   }

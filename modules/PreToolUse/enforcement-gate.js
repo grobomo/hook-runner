@@ -45,7 +45,7 @@ module.exports = function(input) {
   if (!gitRoot) {
     return {
       decision: "block",
-      reason: "No git repo at " + projectDir + ". Run: git init && git add -A && git commit -m 'Initial commit'. Every project must be tracked in git."
+      reason: "BLOCKED: Code edits in repository without TODO.md or with uncommitted changes\nWHY: Edits in untracked directories have caused lost work when changes were not properly documented or committed\nNEXT STEPS:\n1. Create a TODO.md file in the repository root to track pending changes\n2. Commit all current changes to git before proceeding with new edits\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix enforcement-gate — {describe the issue}\""
     };
   }
 
@@ -85,7 +85,7 @@ module.exports = function(input) {
       if (status.length > 0) {
         return {
           decision: "block",
-          reason: "Dirty working tree on " + branch + " in " + gitRoot + ". Commit or branch before making new changes. Run: git add <files> && git commit -m 'description'"
+          reason: "BLOCKED: Code edits in repository with dirty working tree\nWHY: Uncommitted changes can be lost when hooks or automated processes modify your branch, causing unrecoverable work loss.\nNEXT STEPS:\n1. Run git status to review your uncommitted changes\n2. Commit your changes or stash them before proceeding\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix enforcement-gate — {describe the issue}\""
         };
       }
     }
@@ -97,7 +97,7 @@ module.exports = function(input) {
   if (!fs.existsSync(path.join(gitRoot, "TODO.md"))) {
     return {
       decision: "block",
-      reason: "No TODO.md in " + gitRoot + ". Write a plan to TODO.md before making code changes. Document what you're doing and why."
+      reason: "BLOCKED: Code edits in repository without TODO.md or with uncommitted changes\nWHY: Editing code in repos without a TODO.md file or with a dirty working tree has caused lost work and unclear change tracking.\nNEXT STEPS:\n1. Create a TODO.md file in the repository root documenting your changes\n2. Commit or stash any uncommitted changes before proceeding\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix enforcement-gate — {describe the issue}\""
     };
   }
 

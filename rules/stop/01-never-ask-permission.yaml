@@ -1,0 +1,9 @@
+# Stop Rule: never-ask-permission
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _01-never-ask-permission.yaml)
+
+name: never-ask-permission
+check: "Is Claude asking permission to do something the user already requested, OR presenting a ranked list of options and asking the user to pick when Claude already identified the best one? Look for patterns like 'Want me to...?', 'Should I...?', 'Which would you prefer?', or any table/list followed by a question asking the user to choose."
+action: "CONTINUE — pick the best option and do it. The user said 'don't ask, just do' — if you identified the best choice, start it immediately without asking."

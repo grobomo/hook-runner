@@ -59,7 +59,7 @@ check("file.report.html: blocks", function() {
   var r = gate({ tool_name: "Read", tool_input: { file_path: "/tmp/hook-runner.report.html" } });
   assert(r !== null, "should block");
   assert(r.decision === "block");
-  assert(r.reason.indexOf("REPORT FILE READ") !== -1);
+  assert(/BLOCKED|report|review/i.test(r.reason));
 });
 
 check("report.json: blocks", function() {

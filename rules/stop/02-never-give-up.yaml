@@ -1,0 +1,9 @@
+# Stop Rule: never-give-up
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _02-never-give-up.yaml)
+
+name: never-give-up
+check: "Is Claude declaring something 'impossible', 'can't be done', or giving up after one attempt? Or is Claude treating a missing credential/key/config as a permanent blocker when it could be regenerated, re-downloaded, or worked around?"
+action: "CONTINUE — research alternatives before declaring impossible. Credentials can be regenerated (AWS CLI, keychain, credential-manager). SSH keys can be created fresh. Config files can be rebuilt. Past examples: 'can't screenshot VM' was solved by Azure Boot Diagnostics, 'can't send email' was solved by SMTP relay, 'SSH key missing' just needs aws ec2-instance-connect or a new key pair."

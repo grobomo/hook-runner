@@ -1,0 +1,9 @@
+# Stop Rule: destructive-action-review
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _25-destructive-action-review.yaml)
+
+name: destructive-action-review
+check: "Did Claude's response run a destructive or irreversible command (kill, rm, delete, truncate, overwrite, drop, reset --hard, force-push, uninstall) WITHOUT first running a preview or dry-run to verify the scope? Exceptions: deleting known temp files, removing test artifacts, git clean on untracked test files."
+action: "CORRECT — you ran a destructive action without preview. This is how you killed your own tab, lost gate modules, and deleted user data. Always preview first (--dry-run, list before delete, diff before overwrite). If the action already happened, verify nothing important was lost."

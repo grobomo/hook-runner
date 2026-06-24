@@ -1,0 +1,9 @@
+# Stop Rule: obvious-follow-up
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _08-obvious-follow-up.yaml)
+
+name: obvious-follow-up
+check: "Is there an obvious next step that any reasonable developer would do? Examples: test after implementing, commit after fixing, start building after design is complete, begin the next task when the assistant says 'X is next'. Also triggers when the assistant's response itself names the next action (e.g. 'T1 is next', 'Ready to build', 'Next step is...')."
+action: "CONTINUE — do the obvious follow-up without asking."

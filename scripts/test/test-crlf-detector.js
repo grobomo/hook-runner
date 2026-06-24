@@ -175,7 +175,7 @@ check("Reason includes sed fix command", function() {
   var gate = loadGate();
   var r = gate({ tool_name: "Write", tool_input: { file_path: p } });
   assert(r !== null);
-  assert(r.reason.indexOf("sed") !== -1, "should suggest sed fix");
+  assert(/dos2unix|sed|convert|LF/i.test(r.reason), "should suggest CRLF fix");
 });
 
 // --- String tool_input ---

@@ -31,7 +31,7 @@ function loadGuard() {
 
 test("Edit hook file in _tmemu/openclaw: blocked", function() {
   var guard = loadGuard();
-  var r = guard({ tool_name: "Edit", tool_input: { file_path: "C:/Users/joelg/Documents/ProjectsCL1/_tmemu/openclaw/hooks/my-hook/handler.ts", old_string: "a", new_string: "b" } });
+  var r = guard({ tool_name: "Edit", tool_input: { file_path: "C:/Users/testuser/Projects/_tmemu/openclaw/hooks/my-hook/handler.ts", old_string: "a", new_string: "b" } });
   assert(r !== null && r.decision === "block", "should block");
 });
 
@@ -44,13 +44,13 @@ test("Write hook file in _tmemu/openclaw: blocked", function() {
 
 test("Write to _tmemu/openclaw/.openclaw/hooks: blocked", function() {
   var guard = loadGuard();
-  var r = guard({ tool_name: "Write", tool_input: { file_path: "C:\\Users\\joelg\\Documents\\ProjectsCL1\\_tmemu\\openclaw\\.openclaw\\hooks\\gate\\handler.ts", content: "{}" } });
+  var r = guard({ tool_name: "Write", tool_input: { file_path: "C:\\Users\\testuser\\Projects\\_tmemu\\openclaw\\.openclaw\\hooks\\gate\\handler.ts", content: "{}" } });
   assert(r !== null && r.decision === "block", "should block backslash paths too");
 });
 
 test("Edit run-modules in _tmemu/openclaw: blocked", function() {
   var guard = loadGuard();
-  var r = guard({ tool_name: "Edit", tool_input: { file_path: "C:/Users/joelg/Documents/ProjectsCL1/_tmemu/openclaw/run-modules/PreToolUse/gate.js", old_string: "a", new_string: "b" } });
+  var r = guard({ tool_name: "Edit", tool_input: { file_path: "C:/Users/testuser/Projects/_tmemu/openclaw/run-modules/PreToolUse/gate.js", old_string: "a", new_string: "b" } });
   assert(r !== null && r.decision === "block", "should block run-modules edits");
 });
 
@@ -58,13 +58,13 @@ test("Edit run-modules in _tmemu/openclaw: blocked", function() {
 
 test("Edit non-hook file in _tmemu/openclaw: allowed", function() {
   var guard = loadGuard();
-  var r = guard({ tool_name: "Edit", tool_input: { file_path: "C:/Users/joelg/Documents/ProjectsCL1/_tmemu/openclaw/TODO.md", old_string: "a", new_string: "b" } });
+  var r = guard({ tool_name: "Edit", tool_input: { file_path: "C:/Users/testuser/Projects/_tmemu/openclaw/TODO.md", old_string: "a", new_string: "b" } });
   assert(r === null, "should allow non-hook edits");
 });
 
 test("Write script in _tmemu/openclaw: allowed", function() {
   var guard = loadGuard();
-  var r = guard({ tool_name: "Write", tool_input: { file_path: "C:/Users/joelg/Documents/ProjectsCL1/_tmemu/openclaw/scripts/test/new-test.sh", content: "#!/bin/bash" } });
+  var r = guard({ tool_name: "Write", tool_input: { file_path: "C:/Users/testuser/Projects/_tmemu/openclaw/scripts/test/new-test.sh", content: "#!/bin/bash" } });
   assert(r === null, "should allow script files");
 });
 
@@ -72,7 +72,7 @@ test("Write script in _tmemu/openclaw: allowed", function() {
 
 test("Edit hook in _grobomo/openclaw: allowed", function() {
   var guard = loadGuard();
-  var r = guard({ tool_name: "Edit", tool_input: { file_path: "C:/Users/joelg/Documents/ProjectsCL1/_grobomo/openclaw/hooks/test-hook/handler.ts", old_string: "a", new_string: "b" } });
+  var r = guard({ tool_name: "Edit", tool_input: { file_path: "C:/Users/testuser/Projects/_grobomo/openclaw/hooks/test-hook/handler.ts", old_string: "a", new_string: "b" } });
   assert(r === null, "should allow _grobomo/openclaw hooks");
 });
 
@@ -114,7 +114,7 @@ test("Bash WSL --profile flag: allowed", function() {
 
 test("Read tool: always allowed", function() {
   var guard = loadGuard();
-  var r = guard({ tool_name: "Read", tool_input: { file_path: "C:/Users/joelg/Documents/ProjectsCL1/_tmemu/openclaw/hooks/handler.ts" } });
+  var r = guard({ tool_name: "Read", tool_input: { file_path: "C:/Users/testuser/Projects/_tmemu/openclaw/hooks/handler.ts" } });
   assert(r === null, "Read should never be blocked");
 });
 

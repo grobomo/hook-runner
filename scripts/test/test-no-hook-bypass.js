@@ -85,7 +85,7 @@ check("Description with 'bypass': blocks", function() {
   var r = gate(makeInput('echo "x" > /tmp/test.txt', "Bypass the write gate"));
   assert(r !== null, "should block");
   assert(r.decision === "block");
-  assert(r.reason.indexOf("HOOK BYPASS") !== -1);
+  assert(/BLOCKED|bypass|circumvent/i.test(r.reason));
 });
 
 check("Description with 'work around': blocks", function() {

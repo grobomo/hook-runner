@@ -23,7 +23,7 @@ run_gate() {
 # === Blocked: standalone lint commands ===
 for cmd in "flake8 src/" "pylint app.py" "mypy src/" "ruff check ." "shellcheck script.sh" "semgrep --config auto" "eslint src/"; do
   OUTPUT=$(run_gate "Bash" "$cmd")
-  if echo "$OUTPUT" | grep -q "AUTOMATE-EVERYTHING"; then
+  if echo "$OUTPUT" | grep -q "BLOCKED"; then
     pass "blocks: $cmd"
   else
     fail "should block: $cmd — got: $OUTPUT"
@@ -33,7 +33,7 @@ done
 # === Blocked: python -m variants ===
 for cmd in "python -m py_compile app.py" "python -m flake8 src/" "python -m pylint app.py" "python -m mypy src/"; do
   OUTPUT=$(run_gate "Bash" "$cmd")
-  if echo "$OUTPUT" | grep -q "AUTOMATE-EVERYTHING"; then
+  if echo "$OUTPUT" | grep -q "BLOCKED"; then
     pass "blocks: $cmd"
   else
     fail "should block: $cmd — got: $OUTPUT"
@@ -43,7 +43,7 @@ done
 # === Blocked: check-only mode ===
 for cmd in "black --check src/" "isort --check src/" "prettier --check src/"; do
   OUTPUT=$(run_gate "Bash" "$cmd")
-  if echo "$OUTPUT" | grep -q "AUTOMATE-EVERYTHING"; then
+  if echo "$OUTPUT" | grep -q "BLOCKED"; then
     pass "blocks: $cmd"
   else
     fail "should block: $cmd — got: $OUTPUT"
@@ -52,14 +52,14 @@ done
 
 # === Blocked: PowerShell linting ===
 OUTPUT=$(run_gate "Bash" "Invoke-ScriptAnalyzer -Path test.ps1")
-if echo "$OUTPUT" | grep -q "AUTOMATE-EVERYTHING"; then
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
   pass "blocks: Invoke-ScriptAnalyzer"
 else
   fail "should block: Invoke-ScriptAnalyzer — got: $OUTPUT"
 fi
 
 OUTPUT=$(run_gate "Bash" "powershell -c Invoke-ScriptAnalyzer -Path test.ps1")
-if echo "$OUTPUT" | grep -q "AUTOMATE-EVERYTHING"; then
+if echo "$OUTPUT" | grep -q "BLOCKED"; then
   pass "blocks: powershell Invoke-ScriptAnalyzer"
 else
   fail "should block: powershell Invoke-ScriptAnalyzer — got: $OUTPUT"

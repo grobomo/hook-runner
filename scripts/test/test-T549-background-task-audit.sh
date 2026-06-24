@@ -27,7 +27,7 @@ OUT=$($H completed-zero-output)
 check "blocks completed + zero output" '[ "$OUT" = "block" ]'
 
 OUT=$($H completed-zero-reason)
-check "reason mentions ZERO OUTPUT" 'echo "$OUT" | grep -qi "ZERO OUTPUT"'
+check "reason mentions output/BLOCKED" 'echo "$OUT" | grep -qi "BLOCKED\|output"'
 
 OUT=$($H completed-zero-reason)
 check "reason suggests foreground run" 'echo "$OUT" | grep -qi "foreground"'

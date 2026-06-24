@@ -27,9 +27,10 @@ module.exports = function(input) {
   var home = (require("os").homedir() || "").replace(/\\/g, "/");
   if (!home || norm.indexOf(home + "/.claude/rules/") === -1) return null;
 
-  return { decision: "block", reason: "BLOCKED: Don't create passive .md rule files in ~/.claude/rules/. " +
-    "Persistent lessons must be ACTIVE hook modules in " +
-    "~/.claude/hooks/run-modules/<Event>/*.js — they execute and enforce. " +
-    "Rule files are passive and get ignored. " +
-    "If this is a project-specific rule, put it in the project's .claude/rules/ instead." };
+  return { decision: "block", reason: "BLOCKED: Creating passive .md rule file in ~/.claude/rules/.\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-passive-rules — {describe the issue}\"" +
+    "WHY: Rule files are passive text that Claude can ignore — hook modules are active code that executes and enforces.\n" +
+    "NEXT STEPS:\n" +
+    "1. Create a hook module instead: ~/.claude/hooks/run-modules/PreToolUse/<name>-gate.js\n" +
+    "2. If this is project-specific, put it in the project's .claude/rules/ (those are fine)\n" +
+    "3. For global enforcement, only hook-runner modules work reliably" };
 };

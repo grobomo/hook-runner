@@ -1,4 +1,4 @@
-// WORKFLOW: shtd, gsd
+// WORKFLOW: shtd, gsd, haiku-rules
 // TOOLS: Bash
 // WHY: Claude treats empty command output as success — e.g., `ls screenshots/` returning
 // nothing means no screenshots exist, but Claude proceeds as if they do. Empty output
@@ -54,7 +54,7 @@ module.exports = function(input) {
   // Non-blocking advisory
   return {
     decision: "block",
-    reason: "EMPTY OUTPUT from command that normally produces output.\n\n" +
+    reason: "BLOCKED: Command execution with empty output treated as success\nWHY: Empty output from commands like `ls` on missing directories can mask failures, leading to silent data loss or skipped operations\nNEXT STEPS:\n1. Verify the directory exists and contains expected files\n2. Add explicit output validation or error checking to the command\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix empty-output-detector — {describe the issue}\"" +
       "Command: " + cmd.substring(0, 150) + "\n\n" +
       "This likely means:\n" +
       "  - Directory is empty (no files where expected)\n" +

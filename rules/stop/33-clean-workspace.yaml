@@ -1,0 +1,12 @@
+# Stop Rule: clean-workspace (T846)
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# WHY: User complaint — "you would just stop the claude process without closing
+# the windows terminal tab, which is not acceptable." Sessions that killed
+# processes left orphan terminal windows on 2026-06-02/03.
+#
+# Only fires in request-tracker/manager sessions (Haiku checks cwd)
+
+name: clean-workspace
+check: "Is this a request-tracker/manager session? If so, did Claude terminate any process (kill, taskkill, Stop-Process, manage.py cleanup) during this session without also closing the associated terminal window/tab? Check the conversation for process termination commands. If NOT request-tracker, answer NO."
+action: "CONTINUE — Orphaned terminal tabs detected. Before stopping, close any terminal windows whose processes were killed during this session. Use taskkill or close-tab commands to clean up."

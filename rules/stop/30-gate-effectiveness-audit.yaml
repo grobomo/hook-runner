@@ -1,0 +1,9 @@
+# Stop Rule: gate-effectiveness-audit
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _30-gate-effectiveness-audit.yaml)
+
+name: gate-effectiveness-audit
+check: "Did Claude enable, create, or modify a gate during this session without verifying it actually fires? Signs: gate code was deployed but never tested with a real trigger, gate was enabled in workflow config but no hook-log entry shows it ran, a gate was 'fixed' but no test confirmed the fix works against the original problem. Exception: if Claude ran the test suite and all tests passed, or if the gate was verified via a real tool call during the session."
+action: "CONTINUE — you modified a gate without verifying it fires in practice. Run a quick verification: check hook-log.jsonl for recent entries from this gate, or trigger the gate with a test scenario. Untested gates are as good as disabled — spec-gate was broken for weeks because nobody checked if it was actually running."

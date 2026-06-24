@@ -1,5 +1,5 @@
 // TOOLS: Bash
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: Background claude -p self-analysis opened a visible terminal tab that
 // stole focus from the user's work. On Windows, child_process.spawn with
 // detached+windowsHide still flashes a console.
@@ -37,9 +37,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "FOCUS STEAL: This spawns a background process that flashes a " +
-      "console window on Windows. Use run_in_background parameter instead, " +
-      "or for long-running daemons use a scheduled task with hidden window.\n" +
-      "If opening a file, use: start \"\" \"path/to/file.ext\""
+    reason: "BLOCKED: Background process spawn via nohup/Start-Process that would create detached terminal windows\nWHY: Background Claude processes opening visible terminals can steal focus and interrupt user workflows\nNEXT STEPS:\n1. Use subprocess with stdout/stderr redirected to files instead of nohup\n2. If background execution is required, use daemon mode with proper process management\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-focus-steal — {describe the issue}\""
   };
 };

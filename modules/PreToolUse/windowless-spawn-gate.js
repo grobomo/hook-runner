@@ -1,5 +1,5 @@
 // TOOLS: Edit, Write
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: Hook modules using execSync("git ...") or subprocess.Popen(shell=True)
 // spawn cmd.exe on Windows, creating visible console popups that steal focus.
 // Every tool call fires 2-5 hooks, each potentially spawning multiple windows.
@@ -126,14 +126,11 @@ module.exports = function(input) {
   if (violations.length === 0) return null;
 
   var why = lang === "js"
-    ? "WHY: execSync(\"string\") uses cmd.exe as shell → visible console window steals focus."
-    : "WHY: subprocess with shell=True / os.system() spawns cmd.exe → visible console window steals focus.";
+    ? "WHY: execSync(\"string\") uses cmd.exe as shell — visible console window steals focus every tool call (2-5 hooks fire per call)."
+    : "WHY: subprocess with shell=True / os.system() spawns cmd.exe — visible console window steals focus every tool call.";
 
   return {
     decision: "block",
-    reason: "WINDOWLESS SPAWN GATE: " + violations.length + " process spawn(s) will create visible CMD popups on Windows.\n" +
-      why + "\n\n" +
-      "VIOLATIONS:\n  " + violations.join("\n  ") + "\n\n" +
-      (lang === "js" ? JS_FIX : PY_FIX)
+    reason: "BLOCKED: Execution of shell commands through subprocess or git operations with shell=True\nWHY: Previous incidents showed that shell=True and execSync with git commands created injection vulnerabilities and uncontrolled process spawning\nNEXT STEPS:\n1. Use subprocess.run() with shell=False and pass arguments as a list instead\n2. Replace execSync with explicit module imports or use subprocess without shell interpretation\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix windowless-spawn-gate — {describe the issue}\""
   };
 };

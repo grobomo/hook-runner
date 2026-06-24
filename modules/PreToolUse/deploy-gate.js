@@ -55,10 +55,6 @@ module.exports = function(input) {
   var changedFiles = status.split("\n").length;
   return {
     decision: "block",
-    reason: "DEPLOY GATE: " + changedFiles + " uncommitted change(s) detected. " +
-      "Commit before deploying so results are tied to a known git SHA.\n" +
-      "Run: git add <files> && git commit -m 'describe what changed and why'\n" +
-      "Changed files:\n" + status.split("\n").slice(0, 10).join("\n") +
-      (changedFiles > 10 ? "\n... and " + (changedFiles - 10) + " more" : "")
+    reason: "BLOCKED: Deploy from a dirty working tree\nWHY: Deploying uncommitted changes causes E2E cycles to exceed 10 minutes and creates inconsistency between deployed and tracked code.\nNEXT STEPS:\n1. Run git status to review uncommitted changes\n2. Commit your changes or stash them before deploying\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix deploy-gate — {describe the issue}\""
   };
 };

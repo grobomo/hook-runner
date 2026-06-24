@@ -37,10 +37,7 @@ module.exports = function(input) {
   if (!gsdMatch) {
     return {
       decision: "block",
-      reason: "GSD BRANCH GATE: Branch '" + branchName + "' doesn't follow GSD naming.\n" +
-        "Pattern: <seq>-phase-<N>-<slug>\n" +
-        "Examples: 001-phase-1-replace-f5, 042-phase-3-e2e-test\n" +
-        "Or use shtd-style: <NNN>-T<NNN>-<slug>"
+      reason: "BLOCKED: Branch creation without roadmap phase assignment\nWHY: Previous GSD branches were created without linking to roadmap phases, causing disconnected work tracking and unclear priorities\nNEXT STEPS:\n1. Assign the branch to a roadmap phase before creation\n2. Verify phase mapping in the branch metadata or update your branch naming convention\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix gsd-branch-gate — {describe the issue}\""
     };
   }
 
@@ -57,9 +54,7 @@ module.exports = function(input) {
   if (activePhases.indexOf(phaseNum) === -1) {
     return {
       decision: "block",
-      reason: "GSD BRANCH GATE: Phase " + phaseNum + " is not an active phase.\n" +
-        "Active phases: " + activePhases.join(", ") + "\n" +
-        "Check .planning/ROADMAP.md and create a branch for an active phase."
+      reason: "BLOCKED: Branch creation without an associated roadmap phase\nWHY: Previous GSD branches lacked roadmap phase connections, causing tracking and planning misalignment\nNEXT STEPS:\n1. Specify the target roadmap phase for this branch\n2. Update branch naming or metadata to reflect the phase association\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix gsd-branch-gate — {describe the issue}\""
     };
   }
 

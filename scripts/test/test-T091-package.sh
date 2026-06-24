@@ -22,10 +22,10 @@ fi
 # Test: bin field points to setup.js
 result=$(node -e "
 var p = JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));
-console.log(p.bin && p.bin['hook-runner'] === 'setup.js' ? 'OK' : 'MISSING');
+console.log(p.bin && p.bin['hook-runner'] === 'cli/setup.js' ? 'OK' : 'MISSING');
 " "$REPO_DIR/package.json" 2>&1)
 if [ "$result" = "OK" ]; then
-  pass "bin.hook-runner points to setup.js"
+  pass "bin.hook-runner points to cli/setup.js"
 else
   fail "bin field incorrect: $result"
 fi
@@ -46,7 +46,7 @@ fi
 result=$(node -e "
 var p = JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));
 var f = p.files || [];
-var needed = ['setup.js','report.js','workflow.js','load-modules.js','hook-log.js','run-async.js','modules/','workflows/'];
+var needed = ['src/','runners/','cli/','modules/','workflows/'];
 var missing = needed.filter(function(n){ return f.indexOf(n) === -1; });
 console.log(missing.length === 0 ? 'OK' : 'MISSING:' + missing.join(','));
 " "$REPO_DIR/package.json" 2>&1)

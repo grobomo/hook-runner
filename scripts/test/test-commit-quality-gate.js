@@ -48,11 +48,11 @@ ok("--amend skipped", passes('git commit --amend'));
 
 // Block message quality
 var r = gate({tool_name: "Bash", tool_input: {command: 'git commit -m "fix"'}});
-ok("block mentions word count", r && /words/.test(r.reason));
-ok("block mentions min", r && /min/.test(r.reason));
+ok("short commit blocks with WHY", r && /WHY:/.test(r.reason));
+ok("short commit has NEXT STEPS", r && /NEXT STEPS:/i.test(r.reason));
 
 var r2 = gate({tool_name: "Bash", tool_input: {command: 'git commit -m "update the test suite for gates"'}});
-ok("generic block mentions detail", r2 && /GENERIC/.test(r2.reason));
+ok("generic commit blocks", r2 && r2.decision === "block");
 
 // Edge cases
 ok("empty command passes", passes(""));

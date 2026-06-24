@@ -42,11 +42,7 @@ function saveCache(cache) {
 function blockMsg(count, filePath) {
   return {
     decision: "block",
-    reason: "CAUTION: Write (full rewrite) on a file with " + count +
-      " commits of history. This file has been iterated — a rewrite may " +
-      "discard carefully refined content. Use Edit for surgical changes instead. " +
-      "If a full rewrite is truly needed, the user must explicitly approve it. " +
-      "File: " + path.basename(filePath)
+    reason: "BLOCKED: Full rewrite of a file containing user-authored content\nWHY: A previous rewrite condensed a stop hook module, losing the original user message structure and intent\nNEXT STEPS:\n1. Review the file diff to confirm changes preserve user content\n2. Use targeted edits instead of full rewrites, or request explicit user approval first\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix preserve-iterated-content — {describe the issue}\""
   };
 }
 

@@ -202,6 +202,40 @@ else
   fail "Active project with full chain → edit allowed: got $RESULT"
 fi
 
+# === Test 11: T792 — TODO.md activates gate even without specs/ or publish.json ===
+# Previously this was dormant. Now shouldActivate returns true because TODO.md has items.
+# Gate still allows the edit (TODO is sufficient for simple projects) but enforcement runs.
+PROJ11="$TMPDIR/todo-activates"
+mkdir -p "$PROJ11/src"
+git init -q "$PROJ11"
+cat > "$PROJ11/TODO.md" <<'EOF'
+- [ ] T042: Build the feature
+EOF
+echo "x" > "$PROJ11/src/app.js"
+init_git "$PROJ11"
+
+# On a task branch matching T042 → gate runs, finds T042 in TODO, allows
+RESULT=$(run_gate "$PROJ11" "$PROJ11/src/app.js" "fix-T042-feature")
+if [ "$RESULT" = "NULL" ]; then
+  pass "T792: TODO.md activates gate, task branch matches TODO item → allowed"
+else
+  fail "T792: TODO.md activates gate, task branch matches → got $RESULT"
+fi
+
+# === Test 12: Without TODO.md and without specs/ → truly dormant ===
+PROJ12="$TMPDIR/truly-dormant"
+mkdir -p "$PROJ12/src"
+git init -q "$PROJ12"
+echo "x" > "$PROJ12/src/app.js"
+init_git "$PROJ12"
+
+RESULT=$(run_gate "$PROJ12" "$PROJ12/src/app.js" "fix-something")
+if [ "$RESULT" = "NULL" ]; then
+  pass "Truly dormant: no TODO, no specs, no publish.json → gate inactive"
+else
+  fail "Truly dormant: got $RESULT"
+fi
+
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="
 [ "$FAIL" -eq 0 ] || exit 1

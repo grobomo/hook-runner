@@ -38,8 +38,8 @@ ok("non-numeric sleep allowed", passes("sleep"));
 
 // Block message quality
 var r = gate({tool_name: "Bash", tool_input: {command: "sleep 5"}});
-ok("block mentions performance", r && /PERFORMANCE/i.test(r.reason));
-ok("block mentions 3-10s", r && /3-10s/.test(r.reason));
+ok("block mentions sleep/Blueprint", r && /sleep|blueprint/i.test(r.reason));
+ok("block has WHY + NEXT STEPS", r && /WHY:/.test(r.reason) && /NEXT STEPS:/i.test(r.reason));
 
 console.log("\n" + pass + "/" + (pass+fail) + " passed");
 process.exit(fail > 0 ? 1 : 0);

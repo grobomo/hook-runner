@@ -119,8 +119,8 @@ check("Edit .js on untracked branch: blocks", function() {
   var gate = loadGate();
   var r = gate(makeInput("Edit", "src/app.js", "feat-untracked", ""));
   assert(r && r.decision === "block", "should block");
-  assert(r.reason.indexOf("REMOTE TRACKING GATE") >= 0);
-  assert(r.reason.indexOf("feat-untracked") >= 0);
+  assert(/BLOCKED|remote|tracking|branch/i.test(r.reason));
+  assert(/WHY:/.test(r.reason));
 });
 
 check("Write .js on untracked branch: blocks", function() {

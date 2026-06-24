@@ -1,5 +1,5 @@
 // TOOLS: Bash
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: Generic commit messages like "fix" or "update" make git history useless.
 // When debugging E2E failures across 10+ deploy cycles, you need to know what
 // each commit actually changed and why. Bad messages waste 10+ minutes per cycle.
@@ -42,10 +42,7 @@ module.exports = function(input) {
   if (words.length < MIN_WORDS) {
     return {
       decision: "block",
-      reason: "COMMIT MESSAGE TOO SHORT: " + words.length + " words (min " + MIN_WORDS + ").\n" +
-        "Your message: \"" + msg + "\"\n" +
-        "Good format: \"Fix <what> — <why>\" or \"Add <feature> for <purpose>\"\n" +
-        "Example: \"Fix F5 marketplace import — winpath() needed when MSYS_NO_PATHCONV=1\""
+      reason: "BLOCKED: Commit message is too vague to be useful in git history\nWHY: Generic messages like \"fix\" or \"update\" make it impossible to understand what changed or why when reviewing history months later\nNEXT STEPS:\n1. Rewrite the commit message with specific details about what was changed and why\n2. Use the format: brief summary, blank line, then detailed explanation if needed\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix commit-quality-gate — {describe the issue}\""
     };
   }
 
@@ -53,9 +50,7 @@ module.exports = function(input) {
   if (GENERIC_STARTS.test(msg) && words.length < 8) {
     return {
       decision: "block",
-      reason: "COMMIT MESSAGE TOO GENERIC: starts with '" + words[0] + "' without enough detail.\n" +
-        "Your message: \"" + msg + "\"\n" +
-        "Say WHAT changed and WHY. Example: \"Fix spec-gate cache — stale hasUnchecked when tasks.md edited\""
+      reason: "BLOCKED: Commit message is too generic and does not describe the actual changes\nWHY: Vague commit messages like \"fix\" or \"update\" make git history unreadable and complicate debugging, blame tracking, and understanding why changes were made\nNEXT STEPS:\n1. Rewrite your commit message to describe what changed and why (e.g., \"Fix null pointer exception in user validation\" or \"Update database schema to support new fields\")\n2. Amend your commit using git commit --amend and push again\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix commit-quality-gate — {describe the issue}\""
     };
   }
 

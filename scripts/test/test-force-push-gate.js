@@ -36,8 +36,8 @@ ok("-f to develop passes", passes("git push -f origin develop"));
 
 // Block message quality
 var r = gate({tool_name: "Bash", tool_input: {command: "git push --force origin main"}});
-ok("block mentions destructive", r && /destructive/i.test(r.reason));
-ok("block mentions revert", r && /revert/i.test(r.reason));
+ok("block has WHY", r && /WHY:/.test(r.reason));
+ok("block has NEXT STEPS", r && /NEXT STEPS:/.test(r.reason));
 
 // Edge cases
 ok("empty command passes", passes(""));

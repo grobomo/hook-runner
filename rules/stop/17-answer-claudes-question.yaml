@@ -1,0 +1,9 @@
+# Stop Rule: answer-claudes-question
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _17-answer-claudes-question.yaml)
+
+name: answer-claudes-question
+check: "Did Claude ask the user a question AND the answer is obvious from conversation context? If user's prior messages, tone, or stated priorities make the answer clear, provide it instead of surfacing unrelated TODOs."
+action: "CONTINUE — answer Claude's question based on conversation context instead of pivoting to unrelated work."

@@ -1,0 +1,9 @@
+# Stop Rule: spec-before-code-review
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _29-spec-before-code-review.yaml)
+
+name: spec-before-code-review
+check: "Did Claude write significant code (new module, new feature, new system component — not a bug fix or config tweak) without first creating a spec, design doc, or TODO entry explaining the intent? Signs: multiple new files created without a corresponding spec or TODO, complex logic without documented rationale, new gates without a WHY comment that references a real incident. Exception: trivial fixes, test files, config changes, and documentation don't need specs."
+action: "CONTINUE — you built code without documenting intent first. Write a spec or TODO entry explaining WHY this code exists, what problem it solves, and how it should behave. Code without documented intent becomes mysterious in the next session."

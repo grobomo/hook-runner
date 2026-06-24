@@ -31,7 +31,7 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "RDP + TESTBOX RULES — Read this ENTIRE message.\n\n" +
+    reason: "RDP + TESTBOX RULES — Read this ENTIRE message.\n\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix rdp-testbox-gate — {describe the issue}\"" +
       "TWO SEPARATE TEST SERVERS:\n" +
       "  USER's testbox:   ddei-testbox (joel-scripts/testbox-*.sh) — NEVER TOUCH\n" +
       "  Claude's tester:  ddei-tester  (E2E scripts) — yours to create/destroy\n\n" +

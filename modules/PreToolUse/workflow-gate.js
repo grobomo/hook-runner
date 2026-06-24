@@ -59,7 +59,7 @@ module.exports = function(input) {
     var reasons = (check.reasons || []).join('; ');
     return {
       decision: 'block',
-      reason: '[workflow] "' + state.workflow + '" step "' + current + '" blocked: ' + reasons
+      reason: "BLOCKED: Workflow execution with out-of-order steps\nWHY: Build, test, and deploy steps must run in sequence to prevent deploying untested code or building against incomplete setup.\nNEXT STEPS:\n1. Review workflow configuration to ensure steps execute in correct order: setup, build, test, deploy\n2. Add explicit step dependencies if your workflow tool supports them\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix workflow-gate — {describe the issue}\""
     };
   }
 

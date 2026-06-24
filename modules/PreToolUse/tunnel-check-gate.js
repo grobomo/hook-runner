@@ -18,15 +18,17 @@ var PROCESS_GREP_SSH = [
 var MANAGEMENT_SKIP = /\b(kill|stop|terminate|taskkill|pkill)\b/i;
 
 var BLOCK_MSG =
-  "TUNNEL CHECK: Do not grep for SSH processes to check tunnel status.\n" +
-  "Process detection is unreliable — tunnel may be running but grep misses it.\n\n" +
-  "TEST PORT CONNECTIVITY INSTEAD:\n" +
-  "  python -c \"import urllib.request,ssl; c=ssl.create_default_context(); " +
+  "BLOCKED: Process-grep SSH tunnel check.\n" +
+  "WHY: Process detection is unreliable — tunnel may be running but grep misses it (happened repeatedly with tasklist/ps).\n" +
+  "NEXT STEPS:\n" +
+  "1. Test port connectivity instead:\n" +
+  "   python -c \"import urllib.request,ssl; c=ssl.create_default_context(); " +
   "c.check_hostname=False; c.verify_mode=ssl.CERT_NONE; " +
   "print(urllib.request.urlopen('https://127.0.0.1:10448/loginPage.ddei'," +
-  "timeout=5,context=c).status)\"\n\n" +
-  "Or run: python scripts/health-check.py --quick\n\n" +
-  "If login page loads, tunnel is up. Connection refused = down.";
+  "timeout=5,context=c).status)\"\n" +
+  "2. Or run: python scripts/health-check.py --quick\n" +
+  "3. If login page loads, tunnel is up. Connection refused = down.\n" +
+  "FALSE POSITIVE? File a TODO in hook-runner: \"Fix tunnel-check-gate — {describe the issue}\"";
 
 module.exports = function(input) {
   if (input.tool_name !== "Bash") return null;

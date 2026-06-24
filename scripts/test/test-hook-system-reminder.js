@@ -55,8 +55,8 @@ var r9 = gate({ tool_name: "Write", tool_input: { file_path: winPath } });
 assert("Windows backslash paths blocked", r9 && r9.decision === "block");
 
 // 10. Block message contains reminder text
-assert("block message mentions hook-runner", r2.reason.indexOf("hook-runner") !== -1);
-assert("block message mentions NEVER CREATE", r2.reason.indexOf("NEVER CREATE") !== -1);
+assert("block message mentions hooks/rules", /hook|rule|enforcement|WHY:/i.test(r2.reason));
+assert("block message has format", /BLOCKED|NEXT STEPS:/i.test(r2.reason));
 
 // 12. JSONL data files in ~/.claude/ pass (T552)
 var r12 = gate({ tool_name: "Write", tool_input: { file_path: home + "/.claude/hooks/self-analysis-lessons.jsonl" } });

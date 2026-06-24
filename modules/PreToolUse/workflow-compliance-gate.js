@@ -81,7 +81,7 @@ module.exports = function(input) {
         var hookLog = getHookLog();
         if (hookLog) {
           hookLog.logHook("PreToolUse", "workflow-compliance-gate", "block", {
-            tool: input.tool_name, reason: "cached-block", project: projectDir
+            tool: input.tool_name, reason: "cached-block\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix workflow-compliance-gate — {describe the issue}\"", project: projectDir
           });
         }
       }
@@ -124,14 +124,7 @@ module.exports = function(input) {
   if (violations.length > 0) {
     result = {
       decision: "block",
-      reason: "WORKFLOW COMPLIANCE: Globally enforced workflow(s) disabled at project level.\n" +
-        "Violations: " + violations.join(", ") + "\n" +
-        "WHY: All Claude sessions must follow globally enforced workflows. A session without\n" +
-        "SHTD ran ad-hoc commands for 45 minutes — unspecced, untracked, unreviewable work.\n" +
-        "FIX: Remove the project-level override:\n" +
-        "  Delete or fix: " + projectConfigPath + "\n" +
-        "  Global config requires: " + violations.join(", ") + " = true\n" +
-        "Exception whitelist (manual only): ~/.claude/hooks/workflow-exceptions.json"
+      reason: "BLOCKED: Ad-hoc command execution without workflow compliance controls\nWHY: A previous session ran unmonitored commands for 45 minutes, creating audit and safety risks\nNEXT STEPS:\n1. Re-enable workflow compliance gates at the project level in configuration\n2. Contact your project admin to restore required approval workflows before proceeding\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix workflow-compliance-gate — {describe the issue}\""
     };
     var hookLog3 = getHookLog();
     if (hookLog3) {

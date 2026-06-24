@@ -1,5 +1,5 @@
 // TOOLS: Stop
-// WORKFLOW: wsl
+// WORKFLOW: haiku-rules
 // BLOCKING: true
 // WHY: Claude stops without checking if there's more to do — forgets TODOs,
 //      cross-project work, and user requests that aren't finished yet.
@@ -32,15 +32,100 @@ var path = require("path");
 var child_process = require("child_process");
 var haiku = require(path.join(process.env.HOME || "", ".claude", "hooks", "haiku-client"));
 
-var RULES_PATH = path.join(process.env.HOME || "", ".claude", "proxy", "stop-haiku-rules.yaml");
-var LOG_PATH = path.join(process.env.HOME || "", ".claude", "hooks", "hook-log.jsonl");
-var MANDATE_PATH = path.join(process.env.HOME || "", ".claude", "hooks", "mandate.json");
+var HOME = process.env.HOME || "/home/ubu";
+// T806: rules moved from proxy/ to hooks/rules/ — fallback to old path
+var RULES_PATH = path.join(HOME, ".claude", "hooks", "rules", "stop-haiku-rules.yaml");
+if (!fs.existsSync(RULES_PATH)) RULES_PATH = path.join(HOME, ".claude", "proxy", "stop-haiku-rules.yaml");
+var LOG_PATH = path.join(HOME, ".claude", "hooks", "hook-log.jsonl");
+var SESSION_PREFIX = (process.env.CLAUDE_SESSION_ID || "unknown").slice(0, 8);
+var MANDATE_PATH = path.join(HOME, ".claude", "hooks", "mandate-" + SESSION_PREFIX + ".json");
+var MANDATE_LOG_PATH = path.join(HOME, ".claude", "hooks", "mandate-log.jsonl");
+var CORRECTIONS_PATH = path.join(HOME, ".claude", "hooks", "stop-corrections.jsonl");
+var DEDUP_WINDOW_MS = 10 * 60 * 1000;
+var CORRECTIONS_WINDOW_MS = 60 * 60 * 1000;
 
 function log(entry) {
   entry.ts = new Date().toISOString();
   entry.module = "auto-continue-gate";
   entry.event = "Stop";
   try { fs.appendFileSync(LOG_PATH, JSON.stringify(entry) + "\n", "utf-8"); } catch (e) {}
+}
+
+function getSessionId() {
+  return (process.env.CLAUDE_SESSION_ID || "unknown").slice(0, 8);
+}
+
+function readMandateLog() {
+  try {
+    var content = fs.readFileSync(MANDATE_LOG_PATH, "utf-8").trim();
+    if (!content) return [];
+    return content.split("\n").map(function(line) {
+      try { return JSON.parse(line); } catch (e) { return null; }
+    }).filter(Boolean);
+  } catch (e) { return []; }
+}
+
+function writeMandateEntry(entry) {
+  var entries = readMandateLog();
+  entries.push(entry);
+  if (entries.length > 20) entries = entries.slice(-20);
+  try {
+    fs.writeFileSync(MANDATE_LOG_PATH, entries.map(function(e) { return JSON.stringify(e); }).join("\n") + "\n", "utf-8");
+  } catch (e) {}
+}
+
+function hasRecentMandate() {
+  var entries = readMandateLog();
+  var now = Date.now();
+  var sessionId = getSessionId();
+  for (var i = entries.length - 1; i >= 0; i--) {
+    var e = entries[i];
+    if (!e.ts) continue;
+    var age = now - new Date(e.ts).getTime();
+    if (age > DEDUP_WINDOW_MS) break;
+    if (e.session === sessionId && e.type !== "rejection") return e;
+  }
+  return null;
+}
+
+// T837: Track rejected suggestions so Haiku doesn't re-suggest them
+function getRecentRejections() {
+  var entries = readMandateLog();
+  var now = Date.now();
+  var sessionId = getSessionId();
+  var rejected = [];
+  for (var i = entries.length - 1; i >= 0; i--) {
+    var e = entries[i];
+    if (!e.ts) continue;
+    var age = now - new Date(e.ts).getTime();
+    if (age > DEDUP_WINDOW_MS * 3) break; // 30-minute rejection memory
+    if (e.session === sessionId && e.type === "rejection") {
+      rejected.push(e.rule || e.action || "");
+    }
+  }
+  return rejected;
+}
+
+function getRecentCorrections() {
+  try {
+    var content = fs.readFileSync(CORRECTIONS_PATH, "utf-8").trim();
+    if (!content) return [];
+    var now = Date.now();
+    var sessionId = getSessionId();
+    var corrections = [];
+    var lines = content.split("\n");
+    for (var i = lines.length - 1; i >= 0; i--) {
+      try {
+        var e = JSON.parse(lines[i]);
+        if (!e.ts || !e.correction) continue;
+        if (now - new Date(e.ts).getTime() > CORRECTIONS_WINDOW_MS) break;
+        if (e.session && e.session !== sessionId) continue;
+        corrections.unshift(e.correction);
+        if (corrections.length >= 5) break;
+      } catch (ex) {}
+    }
+    return corrections;
+  } catch (e) { return []; }
 }
 
 // --- Simple YAML parser (just needs name/check/action from rules list) ---
@@ -78,14 +163,27 @@ function findGitRoot(startDir) {
   return null;
 }
 
+// T834: Filter dispatched/cross-project items — they belong to other sessions
+var DISPATCHED_RE = /\b(dispatched|Dispatched as T\d+|assigned to|owned by|cross-project|BLOCKED:.*project not cloned)\b/i;
+
 function readTodo(root) {
   if (!root) return null;
   try {
     var content = fs.readFileSync(path.join(root, "TODO.md"), "utf-8");
     var unchecked = content.split("\n")
-      .filter(function(l) { return /- \[ \]/.test(l); })
+      .filter(function(l) { return /- \[ \]/.test(l) && !DISPATCHED_RE.test(l); })
       .map(function(l) { return l.replace(/^[\s-]*\[ \]\s*/, "").trim(); });
     return unchecked.length > 0 ? unchecked : null;
+  } catch (e) { return null; }
+}
+
+// T836: Read project role from TODO.md header (e.g. "## ROLE: manager" or "ROLE: gate-builder")
+function readProjectRole(root) {
+  if (!root) return null;
+  try {
+    var content = fs.readFileSync(path.join(root, "TODO.md"), "utf-8");
+    var match = content.match(/^#+\s*ROLE:\s*(.+)/m) || content.match(/^ROLE:\s*(.+)/m);
+    return match ? match[1].trim() : null;
   } catch (e) { return null; }
 }
 
@@ -119,13 +217,16 @@ module.exports = function(input) {
   }
   if (!userPrompt) userPrompt = "(not available)";
 
-  // Gather TODOs
+  // Gather TODOs and project role
   var root = findGitRoot(process.cwd());
   var todos = readTodo(root);
+  var projectRole = readProjectRole(root);
 
   // Load rules from directory (preferred) or single file (fallback)
   var rules = [];
-  var RULES_DIR = path.join(path.dirname(RULES_PATH), "stop-rules");
+  // T835: check both "stop" and "stop-rules" directory names
+  var RULES_DIR = path.join(path.dirname(RULES_PATH), "stop");
+  if (!fs.existsSync(RULES_DIR)) RULES_DIR = path.join(path.dirname(RULES_PATH), "stop-rules");
   try {
     if (fs.existsSync(RULES_DIR)) {
       var files = fs.readdirSync(RULES_DIR)
@@ -156,11 +257,34 @@ module.exports = function(input) {
     return null;
   }
 
-  // Check prior mandate state
+  // Dedup: skip Haiku if this session already got a mandate recently
+  var recentMandate = hasRecentMandate();
+  if (recentMandate) {
+    log({ result: "dedup_skip", recent_rule: recentMandate.rule, recent_gate: recentMandate.gate, age_s: Math.round((Date.now() - new Date(recentMandate.ts).getTime()) / 1000) });
+    return null;
+  }
+
+  // Check prior mandate state + T837: detect rejections
   var mandateContext = "";
   try {
     var mandate = JSON.parse(fs.readFileSync(MANDATE_PATH, "utf-8"));
     if (mandate.seen) {
+      // T837: If Claude's response mentions the mandate was dispatched/irrelevant, log rejection
+      var rejectionPatterns = /\b(already dispatched|is dispatched|was dispatched|not actionable|outside.*scope|belongs to another|cross-project)\b/i;
+      if (rejectionPatterns.test(assistantText)) {
+        writeMandateEntry({
+          type: "rejection",
+          rule: mandate.source_rule || "unknown",
+          action: (mandate.action || "").slice(0, 100),
+          reason: "Claude determined mandate was not actionable",
+          session: getSessionId(),
+          ts: new Date().toISOString()
+        });
+        log({ result: "mandate_rejected", rule: mandate.source_rule });
+        try { fs.unlinkSync(MANDATE_PATH); } catch (e) {}
+        // Don't re-analyze — the mandate was rejected
+        return null;
+      }
       mandateContext = "\nPRIOR MANDATE [" + (mandate.source_rule || "unknown") + "]: " + (mandate.action || "") +
         (mandate.actions && mandate.actions.length > 0 ? " (actions: " + mandate.actions.join(", ") + ")" : "") +
         "\nThe prior mandate was delivered to Opus. Evaluate whether it was fulfilled.";
@@ -172,13 +296,27 @@ module.exports = function(input) {
     return (i + 1) + ". " + r.name + ": " + r.check + "\n   → If yes: " + r.action;
   }).join("\n");
 
+  var corrections = getRecentCorrections();
+  var correctionsBlock = corrections.length > 0
+    ? "\nCORRECTIONS FROM SESSION (these override stale assumptions):\n- " + corrections.join("\n- ")
+    : "";
+
+  // T837: Include recently rejected suggestions so Haiku doesn't repeat them
+  var rejections = getRecentRejections();
+  var rejectionsBlock = rejections.length > 0
+    ? "\nREJECTED SUGGESTIONS (do NOT re-suggest these — Claude already determined they don't apply):\n- " + rejections.join("\n- ")
+    : "";
+
   var prompt = [
     "You are a self-check-in advisor. Analyze the context against these rules and decide what should happen next.",
     "",
     "RULES (check each one):",
     rulesBlock,
+    correctionsBlock,
+    rejectionsBlock,
     "",
     "CONTEXT:",
+    projectRole ? "Project role: " + projectRole + " (only suggest actions appropriate for this role)" : "",
     "User's last prompt: " + (userPrompt || "").slice(0, 400),
     "Assistant's last response (tail): " + assistantText.slice(-600),
     "Current TODO items: " + (todos ? todos.slice(0, 5).join("; ") : "none"),
@@ -227,6 +365,7 @@ module.exports = function(input) {
 
     if (decision === "CONTINUE" || decision === "NEXT" || decision === "DISPATCH") {
       var actionList = actions.length > 0 ? "\nActions: " + actions.join(" | ") : "";
+      writeMandateEntry({ rule: triggeredRule, decision: decision, gate: "auto-continue-gate", session: getSessionId(), ts: new Date().toISOString() });
       try {
         fs.writeFileSync(MANDATE_PATH, JSON.stringify({
           action: reason,
@@ -240,14 +379,14 @@ module.exports = function(input) {
       } catch (e) {}
       return {
         decision: "block",
-        reason: "SELF-CHECK [" + triggeredRule + "]: " + decision + " — " + reason + actionList,
+        reason: "SELF-CHECK [\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix auto-continue-gate — {describe the issue}\"" + triggeredRule + "]: " + decision + " — " + reason + actionList,
       };
     }
 
     try { fs.unlinkSync(MANDATE_PATH); } catch (e) {}
     return {
       decision: "block",
-      reason: "SELF-CHECK [" + triggeredRule + "]: DONE — " + reason + "\nNo further action needed. You may stop.",
+      reason: "SELF-CHECK [\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix auto-continue-gate — {describe the issue}\"" + triggeredRule + "]: DONE — " + reason + "\nNo further action needed. You may stop.",
     };
   } catch (e) {
     log({ result: "error", error: e.message || String(e) });

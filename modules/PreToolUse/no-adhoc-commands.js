@@ -39,11 +39,7 @@ module.exports = function(input) {
     if (/localhost|127\.0\.0\.1/.test(normalized)) return null;
     return {
       decision: "block",
-      reason: "NO AD-HOC CURL to external hosts. Use scripts/fleet/api-*.sh for fleet API calls.\n" +
-        "  api-submit.sh  — submit tasks\n" +
-        "  api-status.sh  — check workers/tasks/health\n" +
-        "  api-cancel.sh  — cancel tasks\n" +
-        "Blocked: " + cmd.substring(0, 150)
+      reason: "BLOCKED: Ad-hoc curl commands to external hosts\nWHY: Session-based commands are lost when sessions terminate, but scripts persist and can be recovered\nNEXT STEPS:\n1. Use scripts/fleet/api-*.sh for fleet API calls instead\n2. Store command logic in versioned scripts for reliability and auditability\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-adhoc-commands — {describe the issue}\""
     };
   }
 
@@ -51,9 +47,7 @@ module.exports = function(input) {
   if (/\baws\s+\w+/.test(normalized)) {
     return {
       decision: "block",
-      reason: "NO AD-HOC AWS. Use or create a script in scripts/aws/.\n" +
-        "If no script exists for what you need, create one first, then call it.\n" +
-        "Blocked: " + cmd.substring(0, 150)
+      reason: "BLOCKED: Ad-hoc AWS/SSH/Azure commands\nWHY: Session-based commands are lost when the session ends, but scripts persist and can be reused and audited\nNEXT STEPS:\n1. Create or use an existing script in scripts/aws/\n2. Run the script instead of executing commands directly\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-adhoc-commands — {describe the issue}\""
     };
   }
 
@@ -61,8 +55,7 @@ module.exports = function(input) {
   if (/^\s*(ssh|scp)\s/.test(normalized)) {
     return {
       decision: "block",
-      reason: "NO AD-HOC SSH/SCP. Create a script in scripts/ for the operation.\n" +
-        "Blocked: " + cmd.substring(0, 150)
+      reason: "BLOCKED: Ad-hoc SSH/SCP commands executed in this session\nWHY: Ad-hoc commands are lost when the session ends, but scripts in scripts/ persist and can be recovered or reused\nNEXT STEPS:\n1. Create a script file in scripts/ directory for your operation\n2. Execute the script instead of running commands directly\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-adhoc-commands — {describe the issue}\""
     };
   }
 
@@ -70,7 +63,7 @@ module.exports = function(input) {
   if (/^\s*docker\s+(exec|run|cp|stop|rm|kill|restart)\b/.test(normalized)) {
     return {
       decision: "block",
-      reason: "NO AD-HOC DOCKER. Create a script in scripts/ for the operation.\n" +
+      reason: "NO AD-HOC DOCKER. Create a script in scripts/ for the operation.\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-adhoc-commands — {describe the issue}\"" +
         "Blocked: " + cmd.substring(0, 150)
     };
   }
@@ -79,7 +72,7 @@ module.exports = function(input) {
   if (/^\s*kubectl\s/.test(normalized)) {
     return {
       decision: "block",
-      reason: "NO AD-HOC KUBECTL. Create a script in scripts/k8s/ for the operation.\n" +
+      reason: "NO AD-HOC KUBECTL. Create a script in scripts/k8s/ for the operation.\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-adhoc-commands — {describe the issue}\"" +
         "Blocked: " + cmd.substring(0, 150)
     };
   }
@@ -90,7 +83,7 @@ module.exports = function(input) {
   if (/^\s*az\s+\w+/.test(cmdNoEnv)) {
     return {
       decision: "block",
-      reason: "NO AD-HOC AZ CLI. Use e2e-deploy.sh or create a script in scripts/.\n" +
+      reason: "NO AD-HOC AZ CLI. Use e2e-deploy.sh or create a script in scripts/.\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-adhoc-commands — {describe the issue}\"" +
         "Blocked: " + cmd.substring(0, 150)
     };
   }
@@ -99,7 +92,7 @@ module.exports = function(input) {
   if (/^\s*terraform\s/.test(cmdNoEnv)) {
     return {
       decision: "block",
-      reason: "NO AD-HOC TERRAFORM. Use deploy.ps1 or e2e-deploy.sh.\n" +
+      reason: "NO AD-HOC TERRAFORM. Use deploy.ps1 or e2e-deploy.sh.\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-adhoc-commands — {describe the issue}\"" +
         "Blocked: " + cmd.substring(0, 150)
     };
   }
@@ -108,7 +101,7 @@ module.exports = function(input) {
   if (/^\s*azcopy\s/.test(cmdNoEnv)) {
     return {
       decision: "block",
-      reason: "NO AD-HOC AZCOPY. Create a script in scripts/ for the operation.\n" +
+      reason: "NO AD-HOC AZCOPY. Create a script in scripts/ for the operation.\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-adhoc-commands — {describe the issue}\"" +
         "Blocked: " + cmd.substring(0, 150)
     };
   }
@@ -119,7 +112,7 @@ module.exports = function(input) {
   if (/\bmstsc\b/.test(normalized) || /\bcmdkey\b/.test(normalized)) {
     return {
       decision: "block",
-      reason: "NO AD-HOC RDP. Use: bash open-rdp.sh (or source e2e-config.sh && open_rdp)\n" +
+      reason: "NO AD-HOC RDP. Use: bash open-rdp.sh (or source e2e-config.sh && open_rdp)\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-adhoc-commands — {describe the issue}\"" +
         "Blocked: " + cmd.substring(0, 150)
     };
   }
@@ -130,7 +123,7 @@ module.exports = function(input) {
   if (/\bpowershell\.exe\b/.test(normalized) && /\b(Set-ItemProperty|Remove-ItemProperty|HKLM:|HKCU:|Enable-Net|Restart-Service)\b/.test(normalized)) {
     return {
       decision: "block",
-      reason: "NO AD-HOC POWERSHELL infra commands. Use harden_tester_for_rdp() in e2e-config.sh or create a script.\n" +
+      reason: "NO AD-HOC POWERSHELL infra commands. Use harden_tester_for_rdp() in e2e-config.sh or create a script.\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-adhoc-commands — {describe the issue}\"" +
         "Blocked: " + cmd.substring(0, 150)
     };
   }

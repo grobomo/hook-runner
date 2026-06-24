@@ -43,11 +43,7 @@ module.exports = function(input) {
   if (!tracking) {
     return {
       decision: "block",
-      reason: "REMOTE TRACKING GATE: Branch '" + branch + "' has no remote tracking.\n" +
-        "WHY: Untracked branches are invisible on GitHub Mobile. The dev team monitors\n" +
-        "progress via push notifications — if your branch doesn't track a remote,\n" +
-        "nobody knows you're working.\n" +
-        "FIX: git push -u origin " + branch
+      reason: "BLOCKED: Commits on untracked branches\nWHY: Untracked branches were not visible on mobile clients, causing loss of work visibility\nNEXT STEPS:\n1. Ensure branch is tracked in the remote repository\n2. Verify branch appears in mobile client before proceeding\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix remote-tracking-gate — {describe the issue}\""
     };
   }
   return null;

@@ -1,4 +1,5 @@
 // TOOLS: *
+// WORKFLOW: haiku-rules
 // WHY: Workers needed coarse-grained checkpoints. This Stop module emits claude.stopped
 // events to the event log every time Claude exits (every 5-10 min). Combined with
 // tool.used events from PostToolUse, enables stuck detection without pgrep/proc probes.

@@ -66,15 +66,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "HOOK LOG REVIEW GATE: Review hook-log.jsonl before creating/editing module '" + moduleName + "'.\n" +
-      "WHY: Hook modules must be evidence-based. Without reviewing actual blocks and\n" +
-      "conversation logs, you risk solving the wrong problem (T542 lesson).\n" +
-      "REQUIRED STEPS:\n" +
-      "  1. Read ~/.claude/hooks/hook-log.jsonl — grep for related blocks/errors\n" +
-      "  2. Identify the ACTUAL commands/scenarios that triggered the issue\n" +
-      "  3. Only then create/edit the module with the real evidence\n" +
-      "After reviewing, run:\n" +
-      "  touch " + REVIEW_FLAG.replace(/\\/g, "/") + "\n" +
-      "to confirm review is done (valid for 4 hours)."
+    reason: "BLOCKED: Creating or editing a hook module without reviewing the hook log\nWHY: Claude previously created hook modules that solved the wrong problem due to insufficient context about what was actually logged\nNEXT STEPS:\n1. Review hook-log.jsonl to understand the actual behavior and requirements\n2. Create or edit the module with confirmed understanding of the real issue\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix hook-log-review-gate — {describe the issue}\""
   };
 };

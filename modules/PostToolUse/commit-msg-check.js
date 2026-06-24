@@ -63,7 +63,7 @@ module.exports = function(input) {
   if (warnings.length > 0) {
     return {
       decision: "block",
-      reason: "Commit message issues:\n" + warnings.map(function(w) { return "- " + w; }).join("\n")
+      reason: "BLOCKED: Commit message does not meet quality standards\nWHY: Poor commit messages make repository history difficult to navigate and understand project changes\nNEXT STEPS:\n1. Rewrite your commit message to be clear, descriptive, and follow conventional commit format\n2. Use `git commit --amend` to update the message before pushing\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix commit-msg-check — {describe the issue}\"" + warnings.map(function(w) { return "- " + w; }).join("\n")
     };
   }
 

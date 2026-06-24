@@ -1,0 +1,9 @@
+# Stop Rule: fix-needs-gate
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _21-fix-needs-gate.yaml)
+
+name: fix-needs-gate
+check: "Did Claude's response claim to have 'fixed' a bug or issue without also creating a mechanical gate (or TODO for a gate) to prevent recurrence? A fix without a gate is temporary — it will break again next session when context is lost. Exceptions: trivial typo fixes, documentation-only changes, and config adjustments don't need gates."
+action: "CONTINUE — write a TODO item in hook-runner/TODO.md for a gate that mechanically prevents this bug from recurring. Fixes without gates recur. Gates are memory."

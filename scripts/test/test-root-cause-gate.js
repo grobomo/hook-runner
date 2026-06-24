@@ -39,7 +39,7 @@ ok("empty command allowed", passes(""));
 // Block message quality
 var r = gate({tool_name: "Bash", tool_input: {command: "git reset --hard"}});
 ok("block mentions root cause", r && /root cause/i.test(r.reason));
-ok("block mentions diagnose", r && /diagnose/i.test(r.reason));
+ok("block has WHY + NEXT STEPS", r && /WHY:/.test(r.reason) && /NEXT STEPS:/i.test(r.reason));
 
 console.log("\n" + pass + "/" + (pass+fail) + " passed");
 process.exit(fail > 0 ? 1 : 0);

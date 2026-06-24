@@ -1,5 +1,5 @@
 // TOOLS: Bash
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: Force-pushing to main/master can destroy shared history and others' work.
 // There is no undo for a force-push that overwrites remote commits.
 "use strict";
@@ -26,7 +26,7 @@ module.exports = function(input) {
     if (branchPattern.test(norm)) {
       return {
         decision: "block",
-        reason: "BLOCKED: Force-push to " + protectedBranches[i] + " is destructive and irreversible. Use a regular push or create a revert commit instead."
+        reason: "BLOCKED: Force-push to main or master branch\nWHY: Force-pushes rewrite shared history and destroy teammates' work, causing lost commits and broken collaboration\nNEXT STEPS:\n1. Use `git push` without the force flag to respect shared history\n2. If you need to undo changes, use `git revert` or `git reset` on a feature branch first, then merge normally\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix force-push-gate — {describe the issue}\""
       };
     }
   }

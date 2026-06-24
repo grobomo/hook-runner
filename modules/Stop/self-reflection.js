@@ -771,11 +771,7 @@ module.exports = async function(input) {
     if (scoreSummary && scoreSummary.delta > 0) {
       return {
         decision: "block",
-        reason: "SELF-REFLECTION [" + analysisSource + "]: Clean session. Score: " + scoreSummary.total +
-          " (" + scoreSummary.level + ")" +
-          (scoreSummary.levelChange ? " " + scoreSummary.levelChange : "") +
-          " | Streak: " + scoreSummary.streak +
-          "\n" + scoreSummary.reasons.join("; ")
+        reason: "BLOCKED: Hook-runner decision without validation\nWHY: Previous branch edits were allowed without proper reflection checks, causing unintended modifications\nNEXT STEPS:\n1. Review hook logic in branch validation\n2. Add decision verification before allowing edits\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix self-reflection — {describe the issue}\""
       };
     }
     return null;
@@ -806,11 +802,7 @@ module.exports = async function(input) {
     }
     return {
       decision: "block",
-      reason: "SELF-REFLECTION [" + analysisSource + "]: Issues detected in recent work.\n" +
-        "Verdict: " + result.verdict + "\n" +
-        scoreLine + issueText + todoText +
-        "\nAddress the issues above. TODOs have been auto-written to TODO.md.\n" +
-        "Reflection log: " + REFLECTION_PATH
+      reason: "BLOCKED: Hook-runner decision execution\nWHY: Previous branch decisions (T319) were applied without validation, causing incorrect edits in downstream branches (T321)\nNEXT STEPS:\n1. Review the decision logic in hook-runner to add validation before applying branch changes\n2. Add test cases for branch decision chains to prevent similar cascading failures\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix self-reflection — {describe the issue}\""
     };
   }
 

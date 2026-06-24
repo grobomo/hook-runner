@@ -1,5 +1,5 @@
 // TOOLS: Bash
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: Claude deleted files that turned out to be needed later.
 // Block destructive delete commands. Always archive, never delete.
 // Returns null to pass, {decision:"block", reason:"..."} to block.
@@ -26,7 +26,7 @@ module.exports = function(input) {
     /\brm\s+-r\b/,
     /\brm\s+--recursive\b/,
     /\brm\b(?!.*\.log\b)(?!.*\.tmp\b)(?!.*node_modules\b)(?!.*__pycache__\b)(?!.*\.pyc\b)/,
-    /\brmdir\b/,
+    /\brmdir\s+\/[sS]\b/i,   // rmdir /s is recursive delete (Windows); plain rmdir is safe (empty dirs only)
     /\bdel\s+\/[sS]\b/i,
     /\brd\s+\/[sS]\b/i,
   ];
@@ -56,7 +56,7 @@ module.exports = function(input) {
       }
       return {
         decision: "block",
-        reason: "BLOCKED: Destructive delete detected. NEVER delete files or directories. Move to archive/ instead. Use: mv <path> archive/ (create archive/ if needed, add to .gitignore). Command was: " + cmd.substring(0, 200)
+        reason: "BLOCKED: Destructive delete command\nWHY: Files were permanently deleted and later discovered to be necessary for recovery or future use\nNEXT STEPS:\n1. Review whether files should be archived or moved instead of deleted\n2. Consider using version control or backup systems before removal\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix archive-not-delete — {describe the issue}\""
       };
     }
   }

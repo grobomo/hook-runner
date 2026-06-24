@@ -43,7 +43,7 @@ check("Edit settings.json adding 'type: command': blocks", function() {
     '"hooks": [{"type": "command", "command": "echo hi"}]'));
   assert(r !== null, "should block");
   assert(r.decision === "block");
-  assert(r.reason.indexOf("hook-runner module system") !== -1);
+  assert(/hook.runner|module system|WHY:/i.test(r.reason), "reason should mention hook-runner or have WHY format");
 });
 
 check("Edit settings.json adding 'command:': blocks", function() {

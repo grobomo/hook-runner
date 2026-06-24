@@ -89,9 +89,7 @@ module.exports = function(input) {
     if (/\bgit\s+(switch\s+-c|checkout\s+-b|branch\s+\S)/.test(cmd2)) {
       return {
         decision: "block",
-        reason: "[cwd-drift] BLOCKED: Creating git branches in " + path.basename(targetProject) + " from another project.\n" +
-          "Branch creation is substantive work — do it from the correct project.\n" +
-          "Write tasks to " + targetProject + "/TODO.md, then spawn a new tab with context-reset."
+        reason: "BLOCKED: Operation attempted outside the current working directory context\nWHY: This prevents accidental edits to unrelated projects when context has drifted between multiple project directories\nNEXT STEPS:\n1. Verify you are in the correct project directory with pwd\n2. Use cd to explicitly switch to the intended project before continuing\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix cwd-drift-detector — {describe the issue}\""
       };
     }
   }
@@ -101,11 +99,6 @@ module.exports = function(input) {
   var currentName = path.basename(currentProject);
   return {
     decision: "block",
-    reason: "[cwd-drift] BLOCKED: You're in " + currentName + " but tried to access " + targetName + ".\n" +
-      "DO THIS NOW:\n" +
-      "1) Write " + targetName + " tasks to " + targetProject + "/TODO.md (use Write tool — that path is allowed once for this)\n" +
-      "2) Run: python " + PROJECTS_ROOT + "/context-reset/context_reset.py --project-dir " + targetProject + "\n" +
-      "   This spawns a NEW Claude tab that picks up TODO.md and works independently.\n" +
-      "3) Continue working on " + currentName + " tasks in THIS session. Do not touch " + targetName + " files again."
+    reason: "BLOCKED: Operation would change working directory or access files outside the current project context\nWHY: This prevents accidentally modifying or reading files in other projects when focused on a specific one, which causes confusion about which codebase was actually changed\nNEXT STEPS:\n1. Verify you are working in the correct project directory\n2. If you need to switch projects, explicitly confirm the new project context first\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix cwd-drift-detector — {describe the issue}\""
   };
 };

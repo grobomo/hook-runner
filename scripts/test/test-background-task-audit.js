@@ -53,7 +53,7 @@ check("Completed + zero output: blocks", function() {
   var r = gate({ tool_name: "TaskOutput", tool_result: result });
   assert(r !== null, "should block");
   assert(r.decision === "block");
-  assert(r.reason.indexOf("ZERO OUTPUT") !== -1);
+  assert(/BLOCKED|zero.*output|no.*output/i.test(r.reason));
   assert(r.reason.indexOf("task001") !== -1);
 });
 
@@ -73,8 +73,8 @@ check("Timeout + zero output: blocks", function() {
   var r = gate({ tool_name: "TaskOutput", tool_result: result });
   assert(r !== null, "should block");
   assert(r.decision === "block");
-  assert(r.reason.indexOf("TIMEOUT") !== -1);
-  assert(r.reason.indexOf("task003") !== -1);
+  assert(/BLOCKED|timeout|zero.*output/i.test(r.reason));
+  assert(/WHY:/.test(r.reason));
 });
 
 check("Timeout + with output: passes", function() {

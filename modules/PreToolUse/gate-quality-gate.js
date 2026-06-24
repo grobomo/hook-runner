@@ -1,5 +1,5 @@
 // TOOLS: Edit, Write, Bash
-// WORKFLOW: wsl
+// WORKFLOW: haiku-rules
 // WHY: Gates were created with vague names, no comments, overlapping responsibilities,
 //       and no incident history — making the hook system unmaintainable.
 //       T629: Python script wrote broken code via Bash (path.write_text) — gate missed it.
@@ -57,7 +57,7 @@ module.exports = function(input) {
   if (tool === "Bash") {
     var cmd = ((input.tool_input || {}).command || "");
     var hitsHookDir = cmd.indexOf("hooks/run-modules/") >= 0 ||
-                      cmd.indexOf("hook-runner/modules/") >= 0;
+                      cmd.indexOf(".claude/hooks/run-modules/") >= 0;
     if (!hitsHookDir) return null;
 
     if (!cmd.match(/\.js\b/)) return null;
@@ -65,8 +65,15 @@ module.exports = function(input) {
     // Allow .pending → .js renames (verification workflow activation)
     if (/\bmv\s.*\.js\.pending\s.*\.js\b/.test(cmd)) return null;
 
+    // T779+T822: Allow mv/cp from hook-runner project (the only project that can edit hooks)
+    var projDir = (process.env.CLAUDE_PROJECT_DIR || "").replace(/\\/g, "/").toLowerCase();
+    var cwd = process.cwd().replace(/\\/g, "/").toLowerCase();
+    var isHR = projDir.indexOf("/hook-runner") !== -1 || cwd.indexOf("/hook-runner") !== -1;
+    if (isHR && /\b(mv|cp)\s/.test(cmd)) return null;
+
     var writePatterns = [
-      /(?<![2&])>\s*[^\s&]/,
+      // T823: Exclude redirects to /dev/null (not a real write target)
+      /(?<![2&])>\s*(?!\/dev\/null\b)[^\s&]/,
       /\btee\s/,
       /\bsed\s+-i/,
       /\bcp\s/,
@@ -83,13 +90,13 @@ module.exports = function(input) {
     return {
       decision: "block",
       reason: [
-        "GATE QUALITY: Bash command writes to hook module directory.",
-        "",
-        "Use Edit or Write tools instead — they trigger quality checks",
-        "for // WHY:, // TOOLS:, logging, and naming conventions.",
-        "",
-        "Bash writes bypass all gate quality validation.",
-        "Blocked command: " + cmd.slice(0, 120),
+        "BLOCKED: Bash write to hook module directory.",
+        "WHY: Bash writes bypass all gate quality validation (// WHY:, // TOOLS:, logging, naming conventions).",
+        "NEXT STEPS:",
+        "1. Use Edit or Write tools instead — they trigger quality checks automatically",
+        "2. If you need Bash for a bulk rename, write a .js.pending file first for verification",
+        "Command: " + cmd.slice(0, 120),
+        "FALSE POSITIVE? File a TODO in hook-runner: \"Fix gate-quality-gate — {describe the issue}\"",
       ].join("\n"),
     };
   }
@@ -115,12 +122,11 @@ module.exports = function(input) {
     return {
       decision: "block",
       reason: [
-        "GATE QUALITY: Filename '" + basename + "' doesn't follow naming convention.",
-        "",
-        "Gate files must end in -gate.js, -guard.js, or -check.js",
-        "Helper files (shared utilities) should start with _ (e.g., _bash-write-patterns.js)",
-        "",
-        "Blocked: " + basename,
+        "BLOCKED: Filename '" + basename + "' doesn't follow naming convention.",
+        "WHY: Non-standard names make gates undiscoverable and confuse the module loader.",
+        "NEXT STEPS:",
+        "1. Rename to end in -gate.js, -guard.js, or -check.js (e.g., my-feature-gate.js)",
+        "2. For shared utilities, prefix with _ (e.g., _bash-write-patterns.js)\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix gate-quality-gate — {describe the issue}\"",
       ].join("\n"),
     };
   }
@@ -135,12 +141,12 @@ module.exports = function(input) {
       return {
         decision: "block",
         reason: [
-          "GATE QUALITY: New hooks must be written as .js.pending for verification.",
-          "",
-          "Write to: " + filePath + ".pending",
-          "Then verify before activating.",
-          "",
-          "Blocked: " + basename,
+          "BLOCKED: New live hook must be .js.pending for verification.",
+          "WHY: Direct .js writes to live hooks skip the verification workflow — bugs go live instantly.",
+          "NEXT STEPS:",
+          "1. Write to: " + filePath + ".pending",
+          "2. Test the module: node setup.js --test-module " + basename.replace(".js", ""),
+          "3. Activate: mv " + filePath + ".pending \nFALSE POSITIVE? File a TODO in hook-runner: \"Fix gate-quality-gate — {describe the issue}\"" + filePath,
         ].join("\n"),
       };
     }
@@ -172,7 +178,13 @@ module.exports = function(input) {
     if (issues.length > 0) {
       return {
         decision: "block",
-        reason: "GATE QUALITY: " + issues.join(", ") + "\nBlocked: " + basename,
+        reason: "BLOCKED: New gate module missing required metadata: \nFALSE POSITIVE? File a TODO in hook-runner: \"Fix gate-quality-gate — {describe the issue}\"" + issues.join(", ") + "\n" +
+          "WHY: Gates without WHY/TOOLS/logging are invisible, unattributable, and unmaintainable.\n" +
+          "NEXT STEPS:\n" +
+          "1. Add // WHY: comment explaining the incident that caused this gate\n" +
+          "2. Add // TOOLS: listing the tool(s) this gate applies to\n" +
+          "3. Add logging (appendFileSync to hook-log.jsonl)\n" +
+          "File: " + basename,
       };
     }
   }
@@ -183,13 +195,17 @@ module.exports = function(input) {
     if (oldStr.indexOf("// WHY:") !== -1 && newStr.indexOf("// WHY:") === -1) {
       return {
         decision: "block",
-        reason: "GATE QUALITY: Edit removes '// WHY:' comment.\nBlocked: " + basename,
+        reason: "BLOCKED: Edit removes '// WHY:' comment from \nFALSE POSITIVE? File a TODO in hook-runner: \"Fix gate-quality-gate — {describe the issue}\"" + basename + ".\n" +
+          "WHY: The WHY comment is the gate's institutional memory — without it, future sessions can't understand the gate's purpose and may disable it.\n" +
+          "NEXT STEPS:\n1. Keep the // WHY: comment (update its text if needed)\n2. If the gate is being removed entirely, use the _disabled/ folder instead",
       };
     }
     if (oldStr.indexOf("// TOOLS:") !== -1 && newStr.indexOf("// TOOLS:") === -1) {
       return {
         decision: "block",
-        reason: "GATE QUALITY: Edit removes '// TOOLS:' comment.\nBlocked: " + basename,
+        reason: "BLOCKED: Edit removes '// TOOLS:' tag from \nFALSE POSITIVE? File a TODO in hook-runner: \"Fix gate-quality-gate — {describe the issue}\"" + basename + ".\n" +
+          "WHY: The TOOLS tag enables load-time filtering — without it, this module loads for every tool call (~5ms overhead per invocation across all tools).\n" +
+          "NEXT STEPS:\n1. Keep the // TOOLS: tag (update its value if the gate now applies to different tools)\n2. If the gate applies to all tools, use // TOOLS: *",
       };
     }
   }

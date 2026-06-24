@@ -222,10 +222,7 @@ module.exports = function(input) {
     if (state.worktreeRequired && !isInWorktree()) {
       return {
         decision: "block",
-        reason: "COMMIT COUNTER — WORKTREE REQUIRED: Cannot commit on the main checkout.\n" +
-          "A previous check found files that need an isolated worktree.\n" +
-          "REQUIRED: Call EnterWorktree first, then commit in the worktree.\n" +
-          "This flag clears automatically once you're in a worktree."
+        reason: "BLOCKED: Commit operation on main checkout\nWHY: Multiple file changes accumulate without commits, causing context loss when the session resets\nNEXT STEPS:\n1. Switch to a worktree branch before making changes\n2. Commit frequently to preserve progress across session boundaries\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix commit-counter-gate — {describe the issue}\""
       };
     }
     writeCounter(0, false);
@@ -282,12 +279,7 @@ module.exports = function(input) {
       });
       return {
         decision: "block",
-        reason: "COMMIT COUNTER — WRONG BRANCH: " + count + " edits, but files don't belong to this branch.\n" +
-          "Branch: " + branch + " (keywords: " + mismatch.branchKeywords.join(", ") + ")\n" +
-          "Changed files are in: " + topDirs.join(", ") + " (keywords: " + mismatch.fileKeywords.join(", ") + ")\n\n" +
-          "DO NOT commit to this branch. These files belong to a different workstream.\n" +
-          "REQUIRED: Call EnterWorktree to create an isolated worktree for this work.\n" +
-          "EnterWorktree gives you a clean branch in a separate directory — no conflicts."
+        reason: "BLOCKED: Multiple file changes without committing to version control\nWHY: Uncommitted changes accumulate beyond context window, causing loss of work when context resets or switching branches\nNEXT STEPS:\n1. Commit your changes with git commit before making additional file modifications\n2. Push to your branch to preserve work across sessions\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix commit-counter-gate — {describe the issue}\""
       };
     }
 
@@ -297,17 +289,14 @@ module.exports = function(input) {
       writeCounter(count, true);
       return {
         decision: "block",
-        reason: "COMMIT COUNTER: " + count + " file modifications since last commit (" + gitCount + " files changed in git).\n" +
-          "You are in the main checkout, not a worktree.\n" +
-          "REQUIRED: Call EnterWorktree to create an isolated worktree, then commit there.\n" +
-          "Worktrees prevent file conflicts with other simultaneous sessions."
+        reason: "BLOCKED: Continuing code changes without committing (20+ files modified)\nWHY: Prevents loss of work when context resets mid-session before changes are saved to version control\nNEXT STEPS:\n1. Run git commit to save your current changes\n2. Resume your task after committing\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix commit-counter-gate — {describe the issue}\""
       };
     }
 
     // In a worktree, branch looks right — standard commit guidance
     return {
       decision: "block",
-      reason: "COMMIT COUNTER: " + count + " file modifications since last commit (" + gitCount + " files changed in git).\n" +
+      reason: "COMMIT COUNTER: \nFALSE POSITIVE? File a TODO in hook-runner: \"Fix commit-counter-gate — {describe the issue}\"" + count + " file modifications since last commit (" + gitCount + " files changed in git).\n" +
         "Commit now with a descriptive message before continuing.\n" +
         "Run: git add <files> && git commit -m 'describe what changed and why'"
     };

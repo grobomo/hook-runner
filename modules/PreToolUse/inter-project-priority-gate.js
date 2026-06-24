@@ -103,11 +103,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "INTER-PROJECT PRIORITY GATE: " + xrefItems.length + " P0 item(s) pending.\n" +
-      "These are from other projects and represent live bugs or critical feedback:\n" +
-      itemList + "\n\n" +
-      "Address these FIRST before working on normal backlog.\n" +
-      "Create a branch referencing the XREF task ID, fix it, mark it complete in TODO.md.\n" +
-      "This gate will unblock once all XREF items in TODO.md are checked off."
+    reason: "BLOCKED: Cross-project TODO item (XREF tag) submitted without priority resolution\nWHY: Untracked inter-project dependencies have caused production incidents when linked systems changed without coordination\nNEXT STEPS:\n1. Resolve the XREF reference in the linked project first\n2. Update the TODO item with the resolved dependency status before resubmitting\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix inter-project-priority-gate — {describe the issue}\""
   };
 };

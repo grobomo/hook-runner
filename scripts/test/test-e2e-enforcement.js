@@ -66,6 +66,17 @@ function createIsolatedEnv(modules, opts) {
         fs.copyFileSync(src, dest);
       }
     }
+    // T732: Also copy _ prefixed helpers (e.g. _bash-write-patterns.js) that modules require
+    try {
+      var catalogFiles = fs.readdirSync(path.join(catalogDir, eventName));
+      for (var h = 0; h < catalogFiles.length; h++) {
+        if (catalogFiles[h].startsWith("_") && catalogFiles[h].endsWith(".js")) {
+          var hSrc = path.join(catalogDir, eventName, catalogFiles[h]);
+          var hDst = path.join(eventDir, catalogFiles[h]);
+          if (!fs.existsSync(hDst)) fs.copyFileSync(hSrc, hDst);
+        }
+      }
+    } catch (ex) {}
   }
 
   return { tmpBase: tmpBase, modulesDir: modulesDir, projectDir: projectDir };
@@ -176,7 +187,7 @@ test("git-destructive-guard: blocks git reset --hard", {
     _git: { branch: "test-branch", tracking: true }
   },
   expectBlock: true,
-  expectReason: "DESTRUCTIVE"
+  expectReason: "BLOCKED"
 });
 
 // 2. git-destructive-guard: should block git checkout .
@@ -189,7 +200,7 @@ test("git-destructive-guard: blocks git checkout .", {
     _git: { branch: "test-branch", tracking: true }
   },
   expectBlock: true,
-  expectReason: "DESTRUCTIVE"
+  expectReason: "BLOCKED"
 });
 
 // 3. archive-not-delete: should block rm command
@@ -217,10 +228,10 @@ test("force-push-gate: blocks force push", {
   expectBlock: true
 });
 
-// 5. no-rules-gate: should block creating .claude/rules files
+// 5. no-native-memory-gate: should block creating .claude/rules files
 test("no-rules-gate: blocks creating rules files", {
   runner: "run-pretooluse.js",
-  modules: [{ event: "PreToolUse", name: "no-rules-gate.js" }],
+  modules: [{ event: "PreToolUse", name: "no-native-memory-gate.js" }],
   input: {
     tool_name: "Write",
     tool_input: {

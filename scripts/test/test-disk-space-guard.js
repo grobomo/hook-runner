@@ -47,8 +47,8 @@ ok("alert: node passes", passes("node setup.js"));
 
 // Block message quality
 var r = gate({tool_name: "Bash", tool_input: {command: "rm -rf old/"}});
-ok("block mentions disk space", r && /DISK SPACE/i.test(r.reason));
-ok("block mentions disk-monitor", r && /disk.monitor/i.test(r.reason));
+ok("block mentions disk/destructive", r && /disk|destructive|space/i.test(r.reason));
+ok("block has WHY + NEXT STEPS", r && /WHY:/.test(r.reason) && /NEXT STEPS:/i.test(r.reason));
 
 // Exports
 ok("exports DISK_ERROR_PATTERNS", Array.isArray(gate.DISK_ERROR_PATTERNS));

@@ -98,12 +98,7 @@ module.exports = function(input) {
 
     return {
       decision: "block",
-      reason: "WORKER LOOP: Test failed for " + taskId + " — fix before creating PR.\n" +
-        "WHY: Workers must prove their implementation works before creating a PR.\n" +
-        "The test is the acceptance criteria — if it doesn't pass, the work isn't done.\n" +
-        "Script: " + testScript + "\n" +
-        "Output:\n" + output.trim() + "\n\n" +
-        "FIX: Fix the failing test, then retry `gh pr create`."
+      reason: "BLOCKED: PR creation while tests are failing\nWHY: Worker loop PRs were being created before test validation completed, causing integration failures in the CCC fleet.\nNEXT STEPS:\n1. Wait for all tests to pass before proceeding with PR creation\n2. Review test output logs to identify and fix failing tests\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix worker-loop — {describe the issue}\""
     };
   }
 };

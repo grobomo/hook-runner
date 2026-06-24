@@ -1,5 +1,5 @@
 // TOOLS: Bash, Edit, Write
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: ep-incident-response (private customer data) was published to grobomo (public).
 // Root cause: nothing prevented Claude from editing publish.json or git remotes,
 // which control which GitHub account receives pushes. This gate blocks modifications
@@ -25,9 +25,7 @@ module.exports = function(input) {
       }
       return {
         decision: "block",
-        reason: "[publish-json-guard] publish.json controls GitHub account routing.\n" +
-          "Editing it can redirect pushes to the wrong org (e.g. private data \u2192 public repo).\n" +
-          "If this change is intentional, the user must edit the file manually."
+        reason: "BLOCKED: Publishing sensitive data through publish.json to public repositories\nWHY: Customer data was previously exposed to public systems when publish.json routed credentials without proper access controls\nNEXT STEPS:\n1. Review publish.json routing configuration and remove any public repository destinations\n2. Verify all sensitive fields are marked internal-only before publishing\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix publish-json-guard — {describe the issue}\""
       };
     }
   }
@@ -43,8 +41,7 @@ module.exports = function(input) {
     if (/^\s*(cd\s+[^;]+;\s*)?git\s+remote\s+(set-url|add|remove|rename)\b/.test(firstLine)) {
       return {
         decision: "block",
-        reason: "[publish-json-guard] Changing git remotes can redirect pushes to the wrong org.\n" +
-          "If this change is intentional, the user must run the command manually."
+        reason: "BLOCKED: Publishing JSON configuration to public repositories\nWHY: Customer data was previously exposed when configuration was pushed to an incorrect public remote, compromising private information.\nNEXT STEPS:\n1. Verify the git remote URL matches your intended private repository\n2. Review the JSON content to ensure no sensitive data is included before publishing\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix publish-json-guard — {describe the issue}\""
       };
     }
 
@@ -65,8 +62,7 @@ module.exports = function(input) {
       }
       return {
         decision: "block",
-        reason: "[publish-json-guard] Modifying publish.json via shell can break GitHub account routing.\n" +
-          "If this change is intentional, the user must edit the file manually."
+        reason: "BLOCKED: Direct modification of publish.json via shell commands\nWHY: Publishing sensitive customer data to public repositories has exposed private information in the past\nNEXT STEPS:\n1. Use the standard deployment pipeline instead of manual shell edits\n2. Review publish.json changes through code review before merging to main\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix publish-json-guard — {describe the issue}\""
       };
     }
 
@@ -74,7 +70,7 @@ module.exports = function(input) {
     if (/^\s*(cd\s+[^;]+;\s*)?git\s+config\b.*\bremote\./.test(firstLine)) {
       return {
         decision: "block",
-        reason: "[publish-json-guard] Changing git remote config can redirect pushes to the wrong org.\n" +
+        reason: "[publish-json-guard] Changing git remote config can redirect pushes to the wrong org.\n\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix publish-json-guard — {describe the issue}\"" +
           "If this change is intentional, the user must run the command manually."
       };
     }

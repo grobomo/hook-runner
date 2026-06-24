@@ -1,0 +1,9 @@
+# Stop Rule: fix-false-positive-gates
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _13-fix-false-positive-gates.yaml)
+
+name: fix-false-positive-gates
+check: "Did Claude hit a hook gate that incorrectly blocked a legitimate command (false positive)? For example: a gate blocking systemctl timer operations when it should only block proxy service restarts, or a gate blocking read-only commands."
+action: "CONTINUE — fix the gate module that produced the false positive. Narrow its matching logic so it only blocks the specific dangerous operation it was designed for, not adjacent safe operations."

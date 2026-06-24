@@ -1,5 +1,5 @@
 // TOOLS: Bash
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: Claude ran rm -rf on temp files when disk was full without asking.
 // Deleting files to free space is dangerous — wrong target = lost work.
 // This gate blocks destructive commands when the previous error was disk-related.
@@ -59,13 +59,7 @@ module.exports = function(input) {
     if (DESTRUCTIVE_PATTERNS[i].test(cmd)) {
       return {
         decision: "block",
-        reason: "DISK SPACE GUARD: Destructive command blocked during disk space emergency.\n" +
-          "WHY: Deleting files to free space risks destroying important data.\n" +
-          "Run the disk-monitor scan first to identify safe cleanup candidates:\n" +
-          "  python ~/.claude/skills/disk-monitor/scan.py --min-size-mb 100\n" +
-          "Present the categorized results and wait for explicit user approval.\n" +
-          "See ~/.claude/rules/disk-space-safety.md for the approved process.\n" +
-          "Command blocked: " + cmd.substring(0, 100)
+        reason: "BLOCKED: Destructive command during disk space emergency\nWHY: Previous execution ran rm -rf on temporary files without confirmation when disk was full, causing unintended data loss\nNEXT STEPS:\n1. Free disk space by removing large files manually or expanding storage\n2. Retry the operation after confirming sufficient disk space is available\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix disk-space-guard — {describe the issue}\""
       };
     }
   }

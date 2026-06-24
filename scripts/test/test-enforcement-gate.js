@@ -37,7 +37,7 @@ var tmpFile = path.join(tmpDir, "app.js");
 process.env.CLAUDE_PROJECT_DIR = tmpDir;
 var r1 = gate({tool_name: "Edit", tool_input: {file_path: tmpFile}});
 ok("no git repo blocks", r1 && r1.decision === "block");
-ok("no git repo mentions git init", r1 && /git init/i.test(r1.reason));
+ok("no git repo has WHY section", r1 && /WHY:/.test(r1.reason));
 
 // --- Block edits when no TODO.md (but has .git) ---
 var gitDir = path.join(os.tmpdir(), "enforcement-git-" + Date.now());

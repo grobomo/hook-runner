@@ -96,6 +96,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "Modified " + basename + " — related test file(s) found: " + unique.join(", ") + ". Run tests before committing."
+    reason: "BLOCKED: Commit without test coverage verification\nWHY: Source files were modified but existing tests never ran, allowing regressions to slip into production undetected.\nNEXT STEPS:\n1. Run your test suite locally to verify all affected code paths are covered\n2. Ensure modified files have corresponding test updates before committing\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix test-coverage-check — {describe the issue}\"" + basename + " — related test file(s) found: " + unique.join(", ") + ". Run tests before committing."
   };
 };

@@ -34,14 +34,7 @@ module.exports = function(input) {
     if (excusePatterns[i].test(result)) {
       return {
         decision: "block",
-        reason: "NO-INFRA-EXCUSE: Stop claiming you can't test something.\n" +
-          "You have infrastructure available:\n" +
-          "  - AWS: EC2 spot instances via 'aws' skill (spin up in 60s)\n" +
-          "  - Azure: VMs via az CLI\n" +
-          "  - Docker: Build containers via EC2 (docker-in-cloud)\n" +
-          "  - RONE: K8s namespace for containerized workloads\n\n" +
-          "FIX: Spin up the environment you need and test for real.\n" +
-          "  If you genuinely need credentials or access you don't have, say THAT specifically."
+        reason: "BLOCKED: Claim that testing cannot be performed due to missing infrastructure\nWHY: Previous responses incorrectly stated that feature validation was impossible without a real environment, when testing approaches were actually available\nNEXT STEPS:\n1. Identify specific testing constraints and document what can be validated locally\n2. Propose concrete testing strategies (unit tests, mocks, simulation) instead of declaring impossibility\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-infra-excuse — {describe the issue}\""
       };
     }
   }

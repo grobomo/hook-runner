@@ -7,9 +7,10 @@ cd "$(dirname "$0")/../.."
 echo "=== hook-runner: tool-event-guard (T655) ==="
 MOD="modules/PostToolUse/tool-event-guard.js"
 PASS=0; FAIL=0
-TMPDIR_TEST="${TMPDIR:-/tmp}/hook-t655-$$"
-trap 'rm -rf "$TMPDIR_TEST"' EXIT
-mkdir -p "$TMPDIR_TEST"
+TMPDIR_TEST_RAW="${TMPDIR:-/tmp}/hook-t655-$$"
+mkdir -p "$TMPDIR_TEST_RAW"
+TMPDIR_TEST="$(cd "$TMPDIR_TEST_RAW" && (pwd -W 2>/dev/null || pwd))"
+trap 'rm -rf "$TMPDIR_TEST_RAW"' EXIT
 
 assert() {
   local desc="$1" expected="$2" actual="$3"

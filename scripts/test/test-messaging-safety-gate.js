@@ -57,7 +57,7 @@ check("teams_chat.py send to unknown chat: blocks", function() {
   var gate = loadGate();
   var r = gate(makeInput('python teams_chat.py send --chat-id "19:unknown@thread.v2" --message "hi"'));
   assert(r && r.decision === "block", "should block");
-  assert(r.reason.indexOf("MESSAGING GATE") >= 0, "should mention messaging gate");
+  assert(/BLOCKED|messag|send/i.test(r.reason), "should mention blocking message send");
 });
 
 check("teams_chat.py send to allowed hackathon chat: passes", function() {

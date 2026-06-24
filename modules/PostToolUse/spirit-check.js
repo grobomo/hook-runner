@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 "use strict";
-// WORKFLOW: wsl
+// WORKFLOW: haiku-rules
 // TOOLS: Bash, Edit, Write
 // WHY: JS gates catch literal violations (rm -rf, git reset --hard) but miss
 // creative workarounds (mv to /dev/null, echo '' > file, python overwrite).

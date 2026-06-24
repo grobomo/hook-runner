@@ -57,7 +57,7 @@ module.exports = function(input) {
           reason: "DATA EXFIL GATE: The '" + skill + "' skill sends data externally.\n" +
             "POLICY: Zero customer data leaves this laptop. Investigation results,\n" +
             "alerts, detections, and RCA reports stay local only.\n" +
-            "Code (without customer data) may sync to tmemu GitHub."
+            "Code (without customer data) may sync to tmemu GitHub.\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-data-exfil — {describe the issue}\""
         };
       }
     }
@@ -74,7 +74,7 @@ module.exports = function(input) {
         decision: "block",
         reason: "DATA EXFIL GATE: This command could transmit customer data externally.\n" +
           "POLICY: Zero customer data leaves this laptop.\n" +
-          "Matched: " + BLOCKED_BASH_PATTERNS[j].toString()
+          "Matched: \nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-data-exfil — {describe the issue}\"" + BLOCKED_BASH_PATTERNS[j].toString()
       };
     }
   }
@@ -88,7 +88,7 @@ module.exports = function(input) {
           reason: "DATA EXFIL GATE: Git operation includes a path that likely contains customer data.\n" +
             "POLICY: Customer data never goes to GitHub, even tmemu private repos.\n" +
             "Matched path: " + CUSTOMER_DATA_PATHS[k].toString() + "\n" +
-            "FIX: Add the path to .gitignore instead."
+            "FIX: Add the path to .gitignore instead.\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix no-data-exfil — {describe the issue}\""
         };
       }
     }

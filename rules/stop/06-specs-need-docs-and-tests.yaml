@@ -1,0 +1,9 @@
+# Stop Rule: specs-need-docs-and-tests
+# Loaded by auto-continue-gate.js at every Stop event
+#
+# Format: name, check (question for Haiku), action (instruction if triggered)
+# To disable: rename file with _ prefix (e.g., _06-specs-need-docs-and-tests.yaml)
+
+name: specs-need-docs-and-tests
+check: "Did Claude write a feature spec, endpoint design, or TODO item for new functionality WITHOUT including documentation requirements and a test plan? Every spec must include: what to document (README, inline comments, API reference) and how to test (unit, integration, e2e)."
+action: "CONTINUE — append documentation and test sections to the spec. Don't ask — just add them."

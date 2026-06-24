@@ -213,10 +213,7 @@ module.exports = function(input) {
     if (phases.length === 0) {
       return {
         decision: "block",
-        reason: "GSD GATE: .planning/ROADMAP.md exists but has no phases.\n" +
-          "WHY: Every code change must trace to a roadmap phase for team visibility.\n" +
-          "FIX: Add phases to ROADMAP.md with /gsd-new-milestone or /gsd-add-phase\n" +
-          "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
+        reason: "BLOCKED: Code changes without a GSD plan document containing defined phases\nWHY: Unplanned coding leads to untracked work and lost visibility into what was actually built\nNEXT STEPS:\n1. Add phase definitions to .planning/ROADMAP.md (e.g., Discovery, Implementation, Testing, Release)\n2. Map your intended changes to specific phases before proceeding\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix gsd-plan-gate — {describe the issue}\""
       };
     }
 
@@ -243,12 +240,7 @@ module.exports = function(input) {
 
       return {
         decision: "block",
-        reason: "GSD GATE: No active phase has a PLAN.md.\n" +
-          "WHY: Code changes must be planned before execution so the team can\n" +
-          "review the approach via PRs and track progress on the roadmap.\n" +
-          "FIX: Run /gsd-plan-phase to create a plan, then execute it.\n" +
-          "Phases in roadmap: " + phases.map(function(p) { return p.number + " " + p.name; }).join(", ") + "\n" +
-          "Blocked: " + (isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile))
+        reason: "BLOCKED: Code changes without a documented GSD plan\nWHY: Unplanned work creates untracked changes and makes it impossible to review what was actually attempted and why\nNEXT STEPS:\n1. Create a PLAN.md file in the active phase documenting the approach before coding\n2. Include problem statement, proposed solution, and acceptance criteria in the plan\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix gsd-plan-gate — {describe the issue}\""
       };
     }
 
@@ -260,12 +252,6 @@ module.exports = function(input) {
   var blocked = isBash ? "Bash: " + (cmd || "").substring(0, 80) : path.basename(targetFile);
   return {
     decision: "block",
-    reason: "GSD GATE: No .planning/ROADMAP.md or TODO.md with tasks found.\n" +
-      "WHY: Every change must be tracked — either through GSD phases or TODO.md tasks.\n" +
-      "Untracked work is invisible to the team and can't be reviewed.\n" +
-      "FIX:\n" +
-      "  Option A: /gsd-new-project to initialize GSD planning\n" +
-      "  Option B: Add tasks to TODO.md: '- [ ] description'\n" +
-      "Blocked: " + blocked
+    reason: "BLOCKED: Code changes without a GSD plan tracked in .planning/ROADMAP.md or TODO.md\nWHY: Unplanned coding leads to lost work context, duplicate effort, and tasks that cannot be tracked or reviewed\nNEXT STEPS:\n1. Create .planning/ROADMAP.md or .planning/TODO.md with your planned tasks\n2. Document what you will build, why, and acceptance criteria before coding\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix gsd-plan-gate — {describe the issue}\""
   };
 };

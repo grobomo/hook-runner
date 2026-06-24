@@ -95,12 +95,6 @@ module.exports = function(input) {
 
   return {
     decision: "block",
-    reason: "UNRESOLVED ISSUES in TODO.md (" + issues.length + " found):\n\n" +
-      issues.slice(0, 8).join("\n") +
-      (issues.length > 8 ? "\n  ... and " + (issues.length - 8) + " more" : "") +
-      "\n\nBefore committing:\n" +
-      "  1. Address each issue (fix it, file a plan, or mark as known)\n" +
-      "  2. Update TODO.md with the resolution\n" +
-      "  3. Or add 'known'/'pre-existing'/'intermittent' to commit message to acknowledge"
+    reason: "BLOCKED: Code commit with unresolved issues in TODO.md or test reports\nWHY: Committing code while known failures, timeouts, or incomplete tasks exist risks deploying broken functionality to production\nNEXT STEPS:\n1. Review TODO.md and test reports to identify all FAIL and timeout entries\n2. Either fix the issues or move them to a future milestone before retrying commit\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix unresolved-issues-gate — {describe the issue}\""
   };
 };

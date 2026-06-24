@@ -1,5 +1,5 @@
 // TOOLS: Bash
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: Claude ran `git reset --hard` and `git checkout .` to "clean up" working
 // trees, destroying uncommitted work. These ops are rarely the right solution —
 // investigate root cause instead. Only rebase was gated (git-rebase-safety);
@@ -22,12 +22,7 @@ module.exports = function(input) {
   if (/git\s+reset\s+--hard/.test(cmd)) {
     return {
       decision: "block",
-      reason: "DESTRUCTIVE: git reset --hard destroys uncommitted changes permanently.\n" +
-        "Alternatives:\n" +
-        "  git stash        — save changes for later\n" +
-        "  git reset --soft — move HEAD but keep changes staged\n" +
-        "  git checkout <file> — revert specific files only\n" +
-        "If you truly need --hard, ask the user first."
+      reason: "BLOCKED: git reset --hard and git checkout . commands\nWHY: These commands destructively discard uncommitted changes without recovery, causing loss of work when used inappropriately for cleanup.\nNEXT STEPS:\n1. Review changes with git diff or git status before proceeding\n2. Use git stash to save work temporarily instead, or commit changes to a branch\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix git-destructive-guard — {describe the issue}\""
     };
   }
 
@@ -46,11 +41,7 @@ module.exports = function(input) {
     if (subcmd === "checkout" && args && !/[.\/\\]/.test(args) && !/^--\s/.test(args)) return null;
     return {
       decision: "block",
-      reason: "DESTRUCTIVE: `git " + subcmd + " " + args + "` discards uncommitted changes.\n" +
-        "Alternatives:\n" +
-        "  git stash                — save changes for later\n" +
-        "  git diff <file>          — review changes first\n" +
-        "If you truly need to discard changes, ask the user first."
+      reason: "BLOCKED: Destructive git operations (git reset --hard, git checkout .)\nWHY: Claude previously used these commands to discard uncommitted changes, permanently losing work without any recovery option.\nNEXT STEPS:\n1. Use git stash to safely preserve changes before any cleanup operations\n2. Review changes with git diff before committing or discarding them\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix git-destructive-guard — {describe the issue}\""
     };
   }
 
@@ -58,9 +49,7 @@ module.exports = function(input) {
   if (/git\s+clean\s+-[a-z]*f/.test(cmd)) {
     return {
       decision: "block",
-      reason: "DESTRUCTIVE: git clean -f permanently deletes untracked files.\n" +
-        "Run git clean -n first to preview what would be deleted.\n" +
-        "If you truly need to clean, ask the user first."
+      reason: "BLOCKED: git clean -f and other destructive git operations (reset --hard, checkout .)\nWHY: Claude previously used these commands to \"clean up\" working directories, causing unintended loss of uncommitted changes and work in progress.\nNEXT STEPS:\n1. Review your changes with git status and git diff before proceeding\n2. Use git stash to safely save work, or commit changes to a branch instead\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix git-destructive-guard — {describe the issue}\""
     };
   }
 

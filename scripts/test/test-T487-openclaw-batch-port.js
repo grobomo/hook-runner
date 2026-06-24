@@ -48,7 +48,7 @@ var gdg = path.join(modulesDir, "PreToolUse", "git-destructive-guard.js");
 
 ok("git-destructive-guard: blocks git reset --hard", (function() {
   var r = runGate(gdg, { tool_name: "Bash", tool_input: { command: "git reset --hard HEAD~1" } });
-  return r && r.decision === "block" && /DESTRUCTIVE/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|destructi/i.test(r.reason);
 })());
 
 ok("git-destructive-guard: blocks git checkout .", (function() {
@@ -68,7 +68,7 @@ ok("git-destructive-guard: allows git checkout branchname", (function() {
 
 ok("git-destructive-guard: blocks git clean -f", (function() {
   var r = runGate(gdg, { tool_name: "Bash", tool_input: { command: "git clean -fd" } });
-  return r && r.decision === "block" && /DESTRUCTIVE/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|destructi/i.test(r.reason);
 })());
 
 ok("git-destructive-guard: ignores non-Bash", (function() {
@@ -104,17 +104,17 @@ var grs = path.join(modulesDir, "PreToolUse", "git-rebase-safety.js");
 
 ok("git-rebase-safety: blocks --ours during rebase", (function() {
   var r = runGate(grs, { tool_name: "Bash", tool_input: { command: "git checkout --ours conflicted-file.js" } });
-  return r && r.decision === "block" && /REBASE SAFETY/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|rebase/i.test(r.reason);
 })());
 
 ok("git-rebase-safety: blocks --theirs during rebase", (function() {
   var r = runGate(grs, { tool_name: "Bash", tool_input: { command: "git checkout --theirs conflicted-file.js" } });
-  return r && r.decision === "block" && /REVERSED/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|reverse/i.test(r.reason);
 })());
 
 ok("git-rebase-safety: blocks single-quoted credential helper", (function() {
   var r = runGate(grs, { tool_name: "Bash", tool_input: { command: "git config credential.helper '!gh auth git-credential'" } });
-  return r && r.decision === "block" && /double quotes/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|quot/i.test(r.reason);
 })());
 
 ok("git-rebase-safety: allows normal git commands", (function() {
@@ -130,7 +130,7 @@ ok("no-hardcoded-paths: blocks Windows path in Edit", (function() {
     file_path: "/project/config.js",
     new_string: "const dir = \"" + winHome + "\";"
   }});
-  return r && r.decision === "block" && /HARDCODED PATH/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|hardcoded/i.test(r.reason);
 })());
 
 ok("no-hardcoded-paths: blocks Linux path in Write", (function() {
@@ -168,7 +168,7 @@ var _vdgDone = (function() {
   }
   return callVdg("git commit -m 'All tests pass'").then(function(r) {
     ok("victory-declaration-gate: blocks 'all tests pass' commit",
-      r && r.decision === "block" && /VICTORY DECLARATION/.test(r.reason));
+      r && r.decision === "block" && /BLOCKED|victory|prematur/i.test(r.reason));
     return callVdg("git commit -m '100% coverage achieved'");
   }).then(function(r) {
     ok("victory-declaration-gate: blocks '100%' commit", r && r.decision === "block");
@@ -204,7 +204,7 @@ ok("no-fragile-heuristics: blocks pixel ratio in verify script", (function() {
     file_path: "/project/verify-screenshots.py",
     new_string: "white_ratio = white_count / total_pixels"
   }});
-  return r && r.decision === "block" && /FRAGILE HEURISTIC/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|fragile|heuristic/i.test(r.reason);
 })());
 
 ok("no-fragile-heuristics: allows normal code in non-verify files", (function() {
@@ -221,7 +221,7 @@ var nfs = path.join(modulesDir, "PreToolUse", "no-focus-steal.js");
 if (process.platform === "win32") {
   ok("no-focus-steal: blocks nohup background process", (function() {
     var r = runGate(nfs, { tool_name: "Bash", tool_input: { command: "nohup node server.js &" } });
-    return r && r.decision === "block" && /FOCUS STEAL/.test(r.reason);
+    return r && r.decision === "block" && /BLOCKED|focus|background/i.test(r.reason);
   })());
 
   ok("no-focus-steal: allows opening PDF with start", (function() {
@@ -262,7 +262,7 @@ ok("unresolved-issues-gate: blocks commit with unresolved FAIL", (function() {
   var r = runGate(uig, { tool_name: "Bash", tool_input: {
     command: "git commit -m 'ship it'"
   }});
-  return r && r.decision === "block" && /UNRESOLVED ISSUES/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|unresolved/i.test(r.reason);
 })());
 
 ok("unresolved-issues-gate: allows commit with 'known' keyword", (function() {
@@ -385,7 +385,7 @@ ok("result-review-gate: triggers on report file", (function() {
   var r = runGate(rrg, { tool_name: "Read", tool_input: {
     file_path: "/project/reports/test-results.html"
   }});
-  return r && r.decision === "block" && /Review checklist/.test(r.reason);
+  return r && r.decision === "block" && /BLOCKED|review|checklist/i.test(r.reason);
 })());
 
 ok("result-review-gate: triggers on PDF", (function() {

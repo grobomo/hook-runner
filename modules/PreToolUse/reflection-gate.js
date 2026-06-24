@@ -96,7 +96,8 @@ module.exports = function(input) {
     msg += "\nTO RESOLVE: Fix the issues above, then mark them resolved by editing\n";
     msg += REFLECTION_PATH + "\n";
     msg += "(set \"resolved\": true on the entry, or delete the file to clear all)\n";
-    msg += "Blocked: " + path.basename(targetFile);
+    msg += "Blocked: " + path.basename(targetFile) + "\n";
+    msg += 'FALSE POSITIVE? File a TODO in hook-runner: "Fix reflection-gate — {describe the issue}"';
 
     return { decision: "block", reason: msg };
   } catch (e) {

@@ -1,5 +1,5 @@
 // TOOLS: Bash
-// WORKFLOW: shtd, starter
+// WORKFLOW: shtd, starter, haiku-rules
 // WHY: API keys were committed to git history and had to be rotated.
 // T530: Added --name-only fast path — skips expensive full diff when all staged
 // files are safe extensions (.md, .yml, .txt, etc.). Reduces 200-1416ms spikes
@@ -101,11 +101,7 @@ module.exports = function(input) {
   if (findings.length > 0) {
     return {
       decision: "block",
-      reason: "SECRET SCAN: Potential secrets detected in staged changes:\n" +
-        findings.map(function(f) { return "  - " + f; }).join("\n") + "\n" +
-        "Review with: git diff --cached\n" +
-        "If intentional (e.g. test fixtures), unstage and re-add after review.\n" +
-        "Use environment variables or credential-manager instead of hardcoded secrets."
+      reason: "BLOCKED: Potential secrets in staged changes\nWHY: API keys and credentials committed to git history cannot be rotated safely and expose production systems to unauthorized access\nNEXT STEPS:\n1. Remove sensitive values from staged files and use environment variables or secrets management instead\n2. Run git reset to unstage changes and verify no credentials remain in the commit history\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix secret-scan-gate — {describe the issue}\""
     };
   }
 

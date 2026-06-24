@@ -11,9 +11,8 @@ var BLOCKED_PATTERNS = [
   // Internal meeting references
   /\b[Cc]adence\s+notes?\b/,
   /\bsession\s+notes?\s+\d/i,
-  // Employee names — never in deliverables
-  /\bjoelg?\b/i,
-  /\bjoel[\s-]?ginsberg\b/i,
+  // Employee names — never in deliverables (add your own names here)
+  // /\byourname\b/i,
   // AI tool references — customer shouldn't see these
   /\bClaude\s+(Code|session|context)\b/i,
   // Internal ticket / task references
@@ -65,7 +64,7 @@ module.exports = function(input) {
             "Found: \"" + match[0] + "\" in line: " + trimmed.substring(0, 80) + "\n\n" +
             "share/ is shipped to many customers. It must be 100% generic.\n" +
             "Put customer-specific notes in: notes/, specs/, CLAUDE.md, or .claude/rules/\n" +
-            "Code comments in share/ should explain WHY the code works, not which customer drove the change."
+            "Code comments in share/ should explain WHY the code works, not which customer drove the change.\nFALSE POSITIVE? File a TODO in hook-runner: \"Fix share-is-generic — {describe the issue}\""
         };
       }
     }
